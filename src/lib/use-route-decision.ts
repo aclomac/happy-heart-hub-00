@@ -196,8 +196,6 @@ export function useRouteDecision(): RouteDecision {
       }
     }
   }, [auth.userId, companyId, companiesQ.data]);
-    }
-  }, [auth.userId, companyId, companiesQ.data]);
 
   const debug: DecisionDebug = {
     authLoading: auth.loading,
