@@ -9,6 +9,14 @@ import {
   useCurrentCompanyId,
   getLastSelectedCompanyId,
 } from "@/lib/use-company";
+import {
+  isDemoMode,
+  getDemoSession,
+  getDemoCompanies,
+  DEMO_USER_ID,
+  DEMO_USER_EMAIL,
+  DEMO_COMPANY_ID,
+} from "@/lib/demo/localStore";
 
 export type RouteDecision =
   | { status: "loading"; debug: DecisionDebug }
