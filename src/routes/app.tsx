@@ -5,6 +5,7 @@ import { RouteOrchestrator } from "@/components/erp/RouteOrchestrator";
 import { RouteAccessGuard } from "@/components/erp/RouteAccessGuard";
 import { MaintenanceGate } from "@/components/erp/MaintenanceGate";
 import { AnnouncementBanner } from "@/components/erp/AnnouncementBanner";
+import { DemoModeBanner } from "@/components/erp/DemoModeBanner";
 import { SupportChatWidget } from "@/components/erp/SupportChatWidget";
 import { I18nProvider } from "@/lib/i18n";
 
