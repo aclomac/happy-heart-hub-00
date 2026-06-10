@@ -87,31 +87,38 @@ export function CompanySwitcher({
   const [switchTarget, setSwitchTarget] = useState<CompanyInfo | null>(null);
 
   const { data: companies, isLoading } = useQuery({
-    queryKey: ["all-companies"],
+    queryKey: ["all-companies", isDemoMode() ? "demo" : "live"],
     queryFn: async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return [];
+      // Demo mode: serve from localStorage; never touch Supabase.
+      if (isDemoMode()) {
+        return getDemoCompanies().map((c) => ({ ...c, role: "owner" }));
+      }
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) return [];
 
-      const [myRes, sharedRes] = await Promise.all([
-        supabase.from("companies").select("*").eq("owner_id", user.id),
-        supabase.from("company_members").select("role, companies(*)").eq("user_id", user.id),
-      ]);
+        const [myRes, sharedRes] = await Promise.all([
+          supabase.from("companies").select("*").eq("owner_id", user.id),
+          supabase.from("company_members").select("role, companies(*)").eq("user_id", user.id),
+        ]);
 
-      const my = (myRes.data || []).map((c) => ({ ...c, role: "owner" }));
-      const shared = (sharedRes.data || [])
-        .filter((m) => m.companies)
-        .map((m) => ({ ...m.companies, role: m.role }));
+        const my = (myRes.data || []).map((c) => ({ ...c, role: "owner" }));
+        const shared = (sharedRes.data || [])
+          .filter((m) => m.companies)
+          .map((m) => ({ ...m.companies, role: m.role }));
 
-      // Unique by ID
-      const all = [...my, ...shared];
-      const seen = new Set();
-      return all.filter((c) => {
-        if (seen.has(c.id)) return false;
-        seen.add(c.id);
-        return true;
-      });
+        const all = [...my, ...shared];
+        const seen = new Set();
+        return all.filter((c) => {
+          if (seen.has(c.id)) return false;
+          seen.add(c.id);
+          return true;
+        });
+      } catch {
+        return [];
+      }
     },
   });
 
