@@ -261,6 +261,10 @@ export function CompanySwitcher({
 
   const renameCompany = useMutation({
     mutationFn: async ({ id, name }: { id: string; name: string }) => {
+      if (isDemoMode()) {
+        renameDemoCompany(id, name);
+        return;
+      }
       const { error } = await supabase.from("companies").update({ name }).eq("id", id);
       if (error) throw error;
 
