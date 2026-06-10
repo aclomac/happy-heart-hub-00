@@ -3,26 +3,34 @@
 // app usable in offline/demo mode without exposing real protected data.
 import { createMiddleware } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "./types";
 
 const DEMO_USER_ID = "00000000-0000-0000-0000-000000000001";
-const DEMO_CLAIMS = {
-  sub: DEMO_USER_ID,
-  email: "demo@erpovo.com",
-  role: "authenticated",
-  aud: "authenticated",
-} as Record<string, unknown>;
+
+function buildDemoSupabaseClient(): SupabaseClient<Database> {
+  const url = process.env.SUPABASE_URL || "https://demo.invalid.supabase.co";
+  const key = process.env.SUPABASE_PUBLISHABLE_KEY || "demo-key";
+  return createClient<Database>(url, key, {
+    auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
+  });
+}
 
 function buildDemoContext() {
-  // Reuse the stub admin client as a safe supabase handle for the demo user.
-  // It returns empty data rather than throwing.
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { supabaseAdmin } = require("./client.server") as typeof import("./client.server");
+  const now = Math.floor(Date.now() / 1000);
   return {
-    supabase: supabaseAdmin,
+    supabase: buildDemoSupabaseClient(),
     userId: DEMO_USER_ID,
-    claims: DEMO_CLAIMS,
+    claims: {
+      iss: "demo",
+      sub: DEMO_USER_ID,
+      aud: "authenticated",
+      exp: now + 60 * 60,
+      iat: now,
+      email: "demo@erpovo.com",
+      phone: "",
+      role: "authenticated",
+    },
   };
 }
 
