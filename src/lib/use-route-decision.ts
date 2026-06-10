@@ -58,6 +58,18 @@ function useAuthUser() {
 
   useEffect(() => {
     let active = true;
+    // Demo session short-circuits Supabase auth entirely.
+    if (isDemoMode()) {
+      const s = getDemoSession();
+      setState({
+        loading: false,
+        userId: s?.userId ?? DEMO_USER_ID,
+        email: s?.email ?? DEMO_USER_EMAIL,
+      });
+      return () => {
+        active = false;
+      };
+    }
     const timeout = new Promise<"timeout">((resolve) =>
       window.setTimeout(() => resolve("timeout"), AUTH_RESOLVE_TIMEOUT_MS),
     );
