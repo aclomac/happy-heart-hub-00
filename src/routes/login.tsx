@@ -25,15 +25,34 @@ function Login() {
     const useEmail = overrideEmail ?? email;
     const usePass = overridePass ?? pass;
     setLoading(true);
+
+    // DEMO-SAFE bypass: if demo credentials, try Supabase first, then fall back
+    // to a local-only "session" stored in localStorage so the app works without
+    // a real Supabase account.
+    const isDemo = useEmail === DEMO_EMAIL && usePass === DEMO_PASSWORD;
+
     const { error } = await supabase.auth.signInWithPassword({
       email: useEmail,
       password: usePass,
     });
-    if (error) {
+
+    if (error && !isDemo) {
       setLoading(false);
       toast.error(error.message);
       return;
     }
+
+    if (error && isDemo) {
+      // Local demo session marker — UI guards can read this when supabase auth fails.
+      try {
+        localStorage.setItem(
+          "erpovo:demoSession",
+          JSON.stringify({ email: DEMO_EMAIL, userId: "00000000-0000-0000-0000-000000000001" }),
+        );
+      } catch {}
+      toast.success("Signed in as Demo (local mode)");
+    }
+
     if (useEmail === DEMO_EMAIL) {
       try {
         const report = await seedDemoData();
@@ -52,6 +71,7 @@ function Login() {
     }
     nav({ to: "/app", replace: true });
   };
+
 
   const handleDemoLogin = async () => {
     setEmail(DEMO_EMAIL);
