@@ -9,38 +9,1615 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SuperAdminRouteImport } from './routes/super-admin'
+import { Route as SignupRouteImport } from './routes/signup'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as ContactRouteImport } from './routes/contact'
+import { Route as CompaniesRouteImport } from './routes/companies'
+import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SuperAdminIndexRouteImport } from './routes/super-admin.index'
+import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as SuperAdminSupportRouteImport } from './routes/super-admin.support'
+import { Route as SuperAdminSubscriptionsRouteImport } from './routes/super-admin.subscriptions'
+import { Route as SuperAdminSettingsRouteImport } from './routes/super-admin.settings'
+import { Route as SuperAdminReportsRouteImport } from './routes/super-admin.reports'
+import { Route as SuperAdminPlatformAdminsRouteImport } from './routes/super-admin.platform-admins'
+import { Route as SuperAdminPlansRouteImport } from './routes/super-admin.plans'
+import { Route as SuperAdminPaymentsRouteImport } from './routes/super-admin.payments'
+import { Route as SuperAdminPaymentGatewaysRouteImport } from './routes/super-admin.payment-gateways'
+import { Route as SuperAdminFeatureControlRouteImport } from './routes/super-admin.feature-control'
+import { Route as SuperAdminDevicesRouteImport } from './routes/super-admin.devices'
+import { Route as SuperAdminCustomersRouteImport } from './routes/super-admin.customers'
+import { Route as SuperAdminCouponsRouteImport } from './routes/super-admin.coupons'
+import { Route as SuperAdminCompaniesRouteImport } from './routes/super-admin.companies'
+import { Route as SuperAdminAuditLogsRouteImport } from './routes/super-admin.audit-logs'
+import { Route as SuperAdminAnnouncementsRouteImport } from './routes/super-admin.announcements'
+import { Route as StoreSlugRouteImport } from './routes/store.$slug'
+import { Route as AppWarehousesRouteImport } from './routes/app.warehouses'
+import { Route as AppUtilitiesRouteImport } from './routes/app.utilities'
+import { Route as AppSyncRouteImport } from './routes/app.sync'
+import { Route as AppSupportRouteImport } from './routes/app.support'
+import { Route as AppSubscriptionRouteImport } from './routes/app.subscription'
+import { Route as AppStockTransfersRouteImport } from './routes/app.stock-transfers'
+import { Route as AppStockMovementsRouteImport } from './routes/app.stock-movements'
+import { Route as AppStockAdjustmentsRouteImport } from './routes/app.stock-adjustments'
+import { Route as AppSettingsRouteImport } from './routes/app.settings'
+import { Route as AppSalesReportsRouteImport } from './routes/app.sales-reports'
+import { Route as AppSalesRouteImport } from './routes/app.sales'
+import { Route as AppSaleOrdersRouteImport } from './routes/app.sale-orders'
+import { Route as AppSaleInvoiceSettingsRouteImport } from './routes/app.sale-invoice-settings'
+import { Route as AppSalarySetupRouteImport } from './routes/app.salary-setup'
+import { Route as AppSalaryPaymentsRouteImport } from './routes/app.salary-payments'
+import { Route as AppReportsRouteImport } from './routes/app.reports'
+import { Route as AppRecycleBinRouteImport } from './routes/app.recycle-bin'
+import { Route as AppPurchasesRouteImport } from './routes/app.purchases'
+import { Route as AppPurchaseReportsRouteImport } from './routes/app.purchase-reports'
+import { Route as AppPurchaseOrdersRouteImport } from './routes/app.purchase-orders'
+import { Route as AppPurchaseBillSettingsRouteImport } from './routes/app.purchase-bill-settings'
+import { Route as AppPrintTransactionsRouteImport } from './routes/app.print-transactions'
+import { Route as AppPosRouteImport } from './routes/app.pos'
+import { Route as AppPlansRouteImport } from './routes/app.plans'
+import { Route as AppPayrollReportsRouteImport } from './routes/app.payroll-reports'
+import { Route as AppPayrollRouteImport } from './routes/app.payroll'
+import { Route as AppPaymentsInRouteImport } from './routes/app.payments-in'
+import { Route as AppPaymentOutRouteImport } from './routes/app.payment-out'
+import { Route as AppPartyGroupsRouteImport } from './routes/app.party-groups'
+import { Route as AppPartiesRouteImport } from './routes/app.parties'
+import { Route as AppOtherIncomeRouteImport } from './routes/app.other-income'
+import { Route as AppOnlineStoreRouteImport } from './routes/app.online-store'
+import { Route as AppMarketingToolsRouteImport } from './routes/app.marketing-tools'
+import { Route as AppItemsRouteImport } from './routes/app.items'
+import { Route as AppItemCategoriesRouteImport } from './routes/app.item-categories'
+import { Route as AppExpensesRouteImport } from './routes/app.expenses'
+import { Route as AppExpenseCategoriesRouteImport } from './routes/app.expense-categories'
+import { Route as AppEstimatesRouteImport } from './routes/app.estimates'
+import { Route as AppEmployeesRouteImport } from './routes/app.employees'
+import { Route as AppDeviceLimitRouteImport } from './routes/app.device-limit'
+import { Route as AppDeliveryChallansRouteImport } from './routes/app.delivery-challans'
+import { Route as AppDebitNotesRouteImport } from './routes/app.debit-notes'
+import { Route as AppCreditNotesRouteImport } from './routes/app.credit-notes'
+import { Route as AppCashRouteImport } from './routes/app.cash'
+import { Route as AppAuditRouteImport } from './routes/app.audit'
+import { Route as AppAttendanceRouteImport } from './routes/app.attendance'
+import { Route as AppUtilitiesIndexRouteImport } from './routes/app.utilities.index'
+import { Route as SuperAdminPaymentsIdRouteImport } from './routes/super-admin.payments.$id'
+import { Route as SuperAdminDevicesIdRouteImport } from './routes/super-admin.devices.$id'
+import { Route as SuperAdminCustomersUserIdRouteImport } from './routes/super-admin.customers.$userId'
+import { Route as SuperAdminCouponsIdRouteImport } from './routes/super-admin.coupons.$id'
+import { Route as SuperAdminCompaniesCompanyIdRouteImport } from './routes/super-admin.companies.$companyId'
+import { Route as AppUtilitiesImportPartiesRouteImport } from './routes/app.utilities.import-parties'
+import { Route as AppUtilitiesImportItemsRouteImport } from './routes/app.utilities.import-items'
+import { Route as AppUtilitiesImportExportRouteImport } from './routes/app.utilities.import-export'
+import { Route as AppUtilitiesExportItemsRouteImport } from './routes/app.utilities.export-items'
+import { Route as AppUtilitiesCloseFinancialYearRouteImport } from './routes/app.utilities.close-financial-year'
+import { Route as AppUtilitiesBulkUpdateItemsRouteImport } from './routes/app.utilities.bulk-update-items'
+import { Route as AppUtilitiesBarcodeGeneratorRouteImport } from './routes/app.utilities.barcode-generator'
+import { Route as AppUpgradePlanRouteImport } from './routes/app.upgrade.$plan'
+import { Route as AppSalesNewRouteImport } from './routes/app.sales.new'
+import { Route as AppSaleOrdersNewRouteImport } from './routes/app.sale-orders.new'
+import { Route as AppReportsInventoryRouteImport } from './routes/app.reports.inventory'
+import { Route as AppPurchasesNewRouteImport } from './routes/app.purchases.new'
+import { Route as AppPurchaseOrdersNewRouteImport } from './routes/app.purchase-orders.new'
+import { Route as AppPaymentsInNewRouteImport } from './routes/app.payments-in.new'
+import { Route as AppPaymentOutNewRouteImport } from './routes/app.payment-out.new'
+import { Route as AppPartiesIdRouteImport } from './routes/app.parties.$id'
+import { Route as AppExpensesNewRouteImport } from './routes/app.expenses.new'
+import { Route as AppEstimatesNewRouteImport } from './routes/app.estimates.new'
+import { Route as AppDeliveryChallansNewRouteImport } from './routes/app.delivery-challans.new'
+import { Route as AppDebitNotesNewRouteImport } from './routes/app.debit-notes.new'
+import { Route as AppCreditNotesNewRouteImport } from './routes/app.credit-notes.new'
+import { Route as AppAdminSecurityTestsRouteImport } from './routes/app.admin.security-tests'
+import { Route as AppAdminPaymentsRouteImport } from './routes/app.admin.payments'
+import { Route as AppAdminPaymentSettingsRouteImport } from './routes/app.admin.payment-settings'
+import { Route as AppAdminAccessMatrixRouteImport } from './routes/app.admin.access-matrix'
+import { Route as AppSubscriptionReceiptIdRouteImport } from './routes/app.subscription.receipt.$id'
+import { Route as AppStockTransfersIdEditRouteImport } from './routes/app.stock-transfers.$id.edit'
+import { Route as AppStockAdjustmentsIdEditRouteImport } from './routes/app.stock-adjustments.$id.edit'
+import { Route as AppSalesIdEditRouteImport } from './routes/app.sales.$id.edit'
+import { Route as AppSaleOrdersIdEditRouteImport } from './routes/app.sale-orders.$id.edit'
+import { Route as AppPurchasesIdEditRouteImport } from './routes/app.purchases.$id.edit'
+import { Route as AppPurchaseOrdersIdEditRouteImport } from './routes/app.purchase-orders.$id.edit'
+import { Route as AppPayrollSalarySlipsIdRouteImport } from './routes/app.payroll.salary-slips.$id'
+import { Route as AppPayrollSalaryPaymentsIdRouteImport } from './routes/app.payroll.salary-payments.$id'
+import { Route as AppPayrollEmployeesIdRouteImport } from './routes/app.payroll.employees.$id'
+import { Route as AppPayrollAttendanceIdRouteImport } from './routes/app.payroll.attendance.$id'
+import { Route as AppPaymentsInIdEditRouteImport } from './routes/app.payments-in.$id.edit'
+import { Route as AppPaymentOutIdEditRouteImport } from './routes/app.payment-out.$id.edit'
+import { Route as AppItemsIdEditRouteImport } from './routes/app.items.$id.edit'
+import { Route as AppExpensesIdEditRouteImport } from './routes/app.expenses.$id.edit'
+import { Route as AppEstimatesIdEditRouteImport } from './routes/app.estimates.$id.edit'
+import { Route as AppDeliveryChallansIdEditRouteImport } from './routes/app.delivery-challans.$id.edit'
+import { Route as AppDebitNotesIdEditRouteImport } from './routes/app.debit-notes.$id.edit'
+import { Route as AppCreditNotesIdEditRouteImport } from './routes/app.credit-notes.$id.edit'
+import { Route as AppCashTransfersIdRouteImport } from './routes/app.cash.transfers.$id'
+import { Route as AppCashLoanPaymentsIdRouteImport } from './routes/app.cash.loan-payments.$id'
+import { Route as AppCashChequesIdRouteImport } from './routes/app.cash.cheques.$id'
 
+const SuperAdminRoute = SuperAdminRouteImport.update({
+  id: '/super-admin',
+  path: '/super-admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompaniesRoute = CompaniesRouteImport.update({
+  id: '/companies',
+  path: '/companies',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppRoute = AppRouteImport.update({
+  id: '/app',
+  path: '/app',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SuperAdminIndexRoute = SuperAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SuperAdminRoute,
+} as any)
+const AppIndexRoute = AppIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const SuperAdminSupportRoute = SuperAdminSupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => SuperAdminRoute,
+} as any)
+const SuperAdminSubscriptionsRoute = SuperAdminSubscriptionsRouteImport.update({
+  id: '/subscriptions',
+  path: '/subscriptions',
+  getParentRoute: () => SuperAdminRoute,
+} as any)
+const SuperAdminSettingsRoute = SuperAdminSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => SuperAdminRoute,
+} as any)
+const SuperAdminReportsRoute = SuperAdminReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => SuperAdminRoute,
+} as any)
+const SuperAdminPlatformAdminsRoute =
+  SuperAdminPlatformAdminsRouteImport.update({
+    id: '/platform-admins',
+    path: '/platform-admins',
+    getParentRoute: () => SuperAdminRoute,
+  } as any)
+const SuperAdminPlansRoute = SuperAdminPlansRouteImport.update({
+  id: '/plans',
+  path: '/plans',
+  getParentRoute: () => SuperAdminRoute,
+} as any)
+const SuperAdminPaymentsRoute = SuperAdminPaymentsRouteImport.update({
+  id: '/payments',
+  path: '/payments',
+  getParentRoute: () => SuperAdminRoute,
+} as any)
+const SuperAdminPaymentGatewaysRoute =
+  SuperAdminPaymentGatewaysRouteImport.update({
+    id: '/payment-gateways',
+    path: '/payment-gateways',
+    getParentRoute: () => SuperAdminRoute,
+  } as any)
+const SuperAdminFeatureControlRoute =
+  SuperAdminFeatureControlRouteImport.update({
+    id: '/feature-control',
+    path: '/feature-control',
+    getParentRoute: () => SuperAdminRoute,
+  } as any)
+const SuperAdminDevicesRoute = SuperAdminDevicesRouteImport.update({
+  id: '/devices',
+  path: '/devices',
+  getParentRoute: () => SuperAdminRoute,
+} as any)
+const SuperAdminCustomersRoute = SuperAdminCustomersRouteImport.update({
+  id: '/customers',
+  path: '/customers',
+  getParentRoute: () => SuperAdminRoute,
+} as any)
+const SuperAdminCouponsRoute = SuperAdminCouponsRouteImport.update({
+  id: '/coupons',
+  path: '/coupons',
+  getParentRoute: () => SuperAdminRoute,
+} as any)
+const SuperAdminCompaniesRoute = SuperAdminCompaniesRouteImport.update({
+  id: '/companies',
+  path: '/companies',
+  getParentRoute: () => SuperAdminRoute,
+} as any)
+const SuperAdminAuditLogsRoute = SuperAdminAuditLogsRouteImport.update({
+  id: '/audit-logs',
+  path: '/audit-logs',
+  getParentRoute: () => SuperAdminRoute,
+} as any)
+const SuperAdminAnnouncementsRoute = SuperAdminAnnouncementsRouteImport.update({
+  id: '/announcements',
+  path: '/announcements',
+  getParentRoute: () => SuperAdminRoute,
+} as any)
+const StoreSlugRoute = StoreSlugRouteImport.update({
+  id: '/store/$slug',
+  path: '/store/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppWarehousesRoute = AppWarehousesRouteImport.update({
+  id: '/warehouses',
+  path: '/warehouses',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppUtilitiesRoute = AppUtilitiesRouteImport.update({
+  id: '/utilities',
+  path: '/utilities',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSyncRoute = AppSyncRouteImport.update({
+  id: '/sync',
+  path: '/sync',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSupportRoute = AppSupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSubscriptionRoute = AppSubscriptionRouteImport.update({
+  id: '/subscription',
+  path: '/subscription',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppStockTransfersRoute = AppStockTransfersRouteImport.update({
+  id: '/stock-transfers',
+  path: '/stock-transfers',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppStockMovementsRoute = AppStockMovementsRouteImport.update({
+  id: '/stock-movements',
+  path: '/stock-movements',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppStockAdjustmentsRoute = AppStockAdjustmentsRouteImport.update({
+  id: '/stock-adjustments',
+  path: '/stock-adjustments',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSettingsRoute = AppSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSalesReportsRoute = AppSalesReportsRouteImport.update({
+  id: '/sales-reports',
+  path: '/sales-reports',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSalesRoute = AppSalesRouteImport.update({
+  id: '/sales',
+  path: '/sales',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSaleOrdersRoute = AppSaleOrdersRouteImport.update({
+  id: '/sale-orders',
+  path: '/sale-orders',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSaleInvoiceSettingsRoute = AppSaleInvoiceSettingsRouteImport.update({
+  id: '/sale-invoice-settings',
+  path: '/sale-invoice-settings',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSalarySetupRoute = AppSalarySetupRouteImport.update({
+  id: '/salary-setup',
+  path: '/salary-setup',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSalaryPaymentsRoute = AppSalaryPaymentsRouteImport.update({
+  id: '/salary-payments',
+  path: '/salary-payments',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppReportsRoute = AppReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppRecycleBinRoute = AppRecycleBinRouteImport.update({
+  id: '/recycle-bin',
+  path: '/recycle-bin',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPurchasesRoute = AppPurchasesRouteImport.update({
+  id: '/purchases',
+  path: '/purchases',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPurchaseReportsRoute = AppPurchaseReportsRouteImport.update({
+  id: '/purchase-reports',
+  path: '/purchase-reports',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPurchaseOrdersRoute = AppPurchaseOrdersRouteImport.update({
+  id: '/purchase-orders',
+  path: '/purchase-orders',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPurchaseBillSettingsRoute = AppPurchaseBillSettingsRouteImport.update({
+  id: '/purchase-bill-settings',
+  path: '/purchase-bill-settings',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPrintTransactionsRoute = AppPrintTransactionsRouteImport.update({
+  id: '/print-transactions',
+  path: '/print-transactions',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPosRoute = AppPosRouteImport.update({
+  id: '/pos',
+  path: '/pos',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPlansRoute = AppPlansRouteImport.update({
+  id: '/plans',
+  path: '/plans',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPayrollReportsRoute = AppPayrollReportsRouteImport.update({
+  id: '/payroll-reports',
+  path: '/payroll-reports',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPayrollRoute = AppPayrollRouteImport.update({
+  id: '/payroll',
+  path: '/payroll',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPaymentsInRoute = AppPaymentsInRouteImport.update({
+  id: '/payments-in',
+  path: '/payments-in',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPaymentOutRoute = AppPaymentOutRouteImport.update({
+  id: '/payment-out',
+  path: '/payment-out',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPartyGroupsRoute = AppPartyGroupsRouteImport.update({
+  id: '/party-groups',
+  path: '/party-groups',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPartiesRoute = AppPartiesRouteImport.update({
+  id: '/parties',
+  path: '/parties',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOtherIncomeRoute = AppOtherIncomeRouteImport.update({
+  id: '/other-income',
+  path: '/other-income',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOnlineStoreRoute = AppOnlineStoreRouteImport.update({
+  id: '/online-store',
+  path: '/online-store',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMarketingToolsRoute = AppMarketingToolsRouteImport.update({
+  id: '/marketing-tools',
+  path: '/marketing-tools',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppItemsRoute = AppItemsRouteImport.update({
+  id: '/items',
+  path: '/items',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppItemCategoriesRoute = AppItemCategoriesRouteImport.update({
+  id: '/item-categories',
+  path: '/item-categories',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppExpensesRoute = AppExpensesRouteImport.update({
+  id: '/expenses',
+  path: '/expenses',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppExpenseCategoriesRoute = AppExpenseCategoriesRouteImport.update({
+  id: '/expense-categories',
+  path: '/expense-categories',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppEstimatesRoute = AppEstimatesRouteImport.update({
+  id: '/estimates',
+  path: '/estimates',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppEmployeesRoute = AppEmployeesRouteImport.update({
+  id: '/employees',
+  path: '/employees',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDeviceLimitRoute = AppDeviceLimitRouteImport.update({
+  id: '/device-limit',
+  path: '/device-limit',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDeliveryChallansRoute = AppDeliveryChallansRouteImport.update({
+  id: '/delivery-challans',
+  path: '/delivery-challans',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDebitNotesRoute = AppDebitNotesRouteImport.update({
+  id: '/debit-notes',
+  path: '/debit-notes',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCreditNotesRoute = AppCreditNotesRouteImport.update({
+  id: '/credit-notes',
+  path: '/credit-notes',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCashRoute = AppCashRouteImport.update({
+  id: '/cash',
+  path: '/cash',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAuditRoute = AppAuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAttendanceRoute = AppAttendanceRouteImport.update({
+  id: '/attendance',
+  path: '/attendance',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppUtilitiesIndexRoute = AppUtilitiesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppUtilitiesRoute,
+} as any)
+const SuperAdminPaymentsIdRoute = SuperAdminPaymentsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => SuperAdminPaymentsRoute,
+} as any)
+const SuperAdminDevicesIdRoute = SuperAdminDevicesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => SuperAdminDevicesRoute,
+} as any)
+const SuperAdminCustomersUserIdRoute =
+  SuperAdminCustomersUserIdRouteImport.update({
+    id: '/$userId',
+    path: '/$userId',
+    getParentRoute: () => SuperAdminCustomersRoute,
+  } as any)
+const SuperAdminCouponsIdRoute = SuperAdminCouponsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => SuperAdminCouponsRoute,
+} as any)
+const SuperAdminCompaniesCompanyIdRoute =
+  SuperAdminCompaniesCompanyIdRouteImport.update({
+    id: '/$companyId',
+    path: '/$companyId',
+    getParentRoute: () => SuperAdminCompaniesRoute,
+  } as any)
+const AppUtilitiesImportPartiesRoute =
+  AppUtilitiesImportPartiesRouteImport.update({
+    id: '/import-parties',
+    path: '/import-parties',
+    getParentRoute: () => AppUtilitiesRoute,
+  } as any)
+const AppUtilitiesImportItemsRoute = AppUtilitiesImportItemsRouteImport.update({
+  id: '/import-items',
+  path: '/import-items',
+  getParentRoute: () => AppUtilitiesRoute,
+} as any)
+const AppUtilitiesImportExportRoute =
+  AppUtilitiesImportExportRouteImport.update({
+    id: '/import-export',
+    path: '/import-export',
+    getParentRoute: () => AppUtilitiesRoute,
+  } as any)
+const AppUtilitiesExportItemsRoute = AppUtilitiesExportItemsRouteImport.update({
+  id: '/export-items',
+  path: '/export-items',
+  getParentRoute: () => AppUtilitiesRoute,
+} as any)
+const AppUtilitiesCloseFinancialYearRoute =
+  AppUtilitiesCloseFinancialYearRouteImport.update({
+    id: '/close-financial-year',
+    path: '/close-financial-year',
+    getParentRoute: () => AppUtilitiesRoute,
+  } as any)
+const AppUtilitiesBulkUpdateItemsRoute =
+  AppUtilitiesBulkUpdateItemsRouteImport.update({
+    id: '/bulk-update-items',
+    path: '/bulk-update-items',
+    getParentRoute: () => AppUtilitiesRoute,
+  } as any)
+const AppUtilitiesBarcodeGeneratorRoute =
+  AppUtilitiesBarcodeGeneratorRouteImport.update({
+    id: '/barcode-generator',
+    path: '/barcode-generator',
+    getParentRoute: () => AppUtilitiesRoute,
+  } as any)
+const AppUpgradePlanRoute = AppUpgradePlanRouteImport.update({
+  id: '/upgrade/$plan',
+  path: '/upgrade/$plan',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSalesNewRoute = AppSalesNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AppSalesRoute,
+} as any)
+const AppSaleOrdersNewRoute = AppSaleOrdersNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AppSaleOrdersRoute,
+} as any)
+const AppReportsInventoryRoute = AppReportsInventoryRouteImport.update({
+  id: '/inventory',
+  path: '/inventory',
+  getParentRoute: () => AppReportsRoute,
+} as any)
+const AppPurchasesNewRoute = AppPurchasesNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AppPurchasesRoute,
+} as any)
+const AppPurchaseOrdersNewRoute = AppPurchaseOrdersNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AppPurchaseOrdersRoute,
+} as any)
+const AppPaymentsInNewRoute = AppPaymentsInNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AppPaymentsInRoute,
+} as any)
+const AppPaymentOutNewRoute = AppPaymentOutNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AppPaymentOutRoute,
+} as any)
+const AppPartiesIdRoute = AppPartiesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AppPartiesRoute,
+} as any)
+const AppExpensesNewRoute = AppExpensesNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AppExpensesRoute,
+} as any)
+const AppEstimatesNewRoute = AppEstimatesNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AppEstimatesRoute,
+} as any)
+const AppDeliveryChallansNewRoute = AppDeliveryChallansNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AppDeliveryChallansRoute,
+} as any)
+const AppDebitNotesNewRoute = AppDebitNotesNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AppDebitNotesRoute,
+} as any)
+const AppCreditNotesNewRoute = AppCreditNotesNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AppCreditNotesRoute,
+} as any)
+const AppAdminSecurityTestsRoute = AppAdminSecurityTestsRouteImport.update({
+  id: '/admin/security-tests',
+  path: '/admin/security-tests',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminPaymentsRoute = AppAdminPaymentsRouteImport.update({
+  id: '/admin/payments',
+  path: '/admin/payments',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminPaymentSettingsRoute = AppAdminPaymentSettingsRouteImport.update({
+  id: '/admin/payment-settings',
+  path: '/admin/payment-settings',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminAccessMatrixRoute = AppAdminAccessMatrixRouteImport.update({
+  id: '/admin/access-matrix',
+  path: '/admin/access-matrix',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSubscriptionReceiptIdRoute =
+  AppSubscriptionReceiptIdRouteImport.update({
+    id: '/receipt/$id',
+    path: '/receipt/$id',
+    getParentRoute: () => AppSubscriptionRoute,
+  } as any)
+const AppStockTransfersIdEditRoute = AppStockTransfersIdEditRouteImport.update({
+  id: '/$id/edit',
+  path: '/$id/edit',
+  getParentRoute: () => AppStockTransfersRoute,
+} as any)
+const AppStockAdjustmentsIdEditRoute =
+  AppStockAdjustmentsIdEditRouteImport.update({
+    id: '/$id/edit',
+    path: '/$id/edit',
+    getParentRoute: () => AppStockAdjustmentsRoute,
+  } as any)
+const AppSalesIdEditRoute = AppSalesIdEditRouteImport.update({
+  id: '/$id/edit',
+  path: '/$id/edit',
+  getParentRoute: () => AppSalesRoute,
+} as any)
+const AppSaleOrdersIdEditRoute = AppSaleOrdersIdEditRouteImport.update({
+  id: '/$id/edit',
+  path: '/$id/edit',
+  getParentRoute: () => AppSaleOrdersRoute,
+} as any)
+const AppPurchasesIdEditRoute = AppPurchasesIdEditRouteImport.update({
+  id: '/$id/edit',
+  path: '/$id/edit',
+  getParentRoute: () => AppPurchasesRoute,
+} as any)
+const AppPurchaseOrdersIdEditRoute = AppPurchaseOrdersIdEditRouteImport.update({
+  id: '/$id/edit',
+  path: '/$id/edit',
+  getParentRoute: () => AppPurchaseOrdersRoute,
+} as any)
+const AppPayrollSalarySlipsIdRoute = AppPayrollSalarySlipsIdRouteImport.update({
+  id: '/salary-slips/$id',
+  path: '/salary-slips/$id',
+  getParentRoute: () => AppPayrollRoute,
+} as any)
+const AppPayrollSalaryPaymentsIdRoute =
+  AppPayrollSalaryPaymentsIdRouteImport.update({
+    id: '/salary-payments/$id',
+    path: '/salary-payments/$id',
+    getParentRoute: () => AppPayrollRoute,
+  } as any)
+const AppPayrollEmployeesIdRoute = AppPayrollEmployeesIdRouteImport.update({
+  id: '/employees/$id',
+  path: '/employees/$id',
+  getParentRoute: () => AppPayrollRoute,
+} as any)
+const AppPayrollAttendanceIdRoute = AppPayrollAttendanceIdRouteImport.update({
+  id: '/attendance/$id',
+  path: '/attendance/$id',
+  getParentRoute: () => AppPayrollRoute,
+} as any)
+const AppPaymentsInIdEditRoute = AppPaymentsInIdEditRouteImport.update({
+  id: '/$id/edit',
+  path: '/$id/edit',
+  getParentRoute: () => AppPaymentsInRoute,
+} as any)
+const AppPaymentOutIdEditRoute = AppPaymentOutIdEditRouteImport.update({
+  id: '/$id/edit',
+  path: '/$id/edit',
+  getParentRoute: () => AppPaymentOutRoute,
+} as any)
+const AppItemsIdEditRoute = AppItemsIdEditRouteImport.update({
+  id: '/$id/edit',
+  path: '/$id/edit',
+  getParentRoute: () => AppItemsRoute,
+} as any)
+const AppExpensesIdEditRoute = AppExpensesIdEditRouteImport.update({
+  id: '/$id/edit',
+  path: '/$id/edit',
+  getParentRoute: () => AppExpensesRoute,
+} as any)
+const AppEstimatesIdEditRoute = AppEstimatesIdEditRouteImport.update({
+  id: '/$id/edit',
+  path: '/$id/edit',
+  getParentRoute: () => AppEstimatesRoute,
+} as any)
+const AppDeliveryChallansIdEditRoute =
+  AppDeliveryChallansIdEditRouteImport.update({
+    id: '/$id/edit',
+    path: '/$id/edit',
+    getParentRoute: () => AppDeliveryChallansRoute,
+  } as any)
+const AppDebitNotesIdEditRoute = AppDebitNotesIdEditRouteImport.update({
+  id: '/$id/edit',
+  path: '/$id/edit',
+  getParentRoute: () => AppDebitNotesRoute,
+} as any)
+const AppCreditNotesIdEditRoute = AppCreditNotesIdEditRouteImport.update({
+  id: '/$id/edit',
+  path: '/$id/edit',
+  getParentRoute: () => AppCreditNotesRoute,
+} as any)
+const AppCashTransfersIdRoute = AppCashTransfersIdRouteImport.update({
+  id: '/transfers/$id',
+  path: '/transfers/$id',
+  getParentRoute: () => AppCashRoute,
+} as any)
+const AppCashLoanPaymentsIdRoute = AppCashLoanPaymentsIdRouteImport.update({
+  id: '/loan-payments/$id',
+  path: '/loan-payments/$id',
+  getParentRoute: () => AppCashRoute,
+} as any)
+const AppCashChequesIdRoute = AppCashChequesIdRouteImport.update({
+  id: '/cheques/$id',
+  path: '/cheques/$id',
+  getParentRoute: () => AppCashRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/app': typeof AppRouteWithChildren
+  '/companies': typeof CompaniesRoute
+  '/contact': typeof ContactRoute
+  '/login': typeof LoginRoute
+  '/pricing': typeof PricingRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/signup': typeof SignupRoute
+  '/super-admin': typeof SuperAdminRouteWithChildren
+  '/app/attendance': typeof AppAttendanceRoute
+  '/app/audit': typeof AppAuditRoute
+  '/app/cash': typeof AppCashRouteWithChildren
+  '/app/credit-notes': typeof AppCreditNotesRouteWithChildren
+  '/app/debit-notes': typeof AppDebitNotesRouteWithChildren
+  '/app/delivery-challans': typeof AppDeliveryChallansRouteWithChildren
+  '/app/device-limit': typeof AppDeviceLimitRoute
+  '/app/employees': typeof AppEmployeesRoute
+  '/app/estimates': typeof AppEstimatesRouteWithChildren
+  '/app/expense-categories': typeof AppExpenseCategoriesRoute
+  '/app/expenses': typeof AppExpensesRouteWithChildren
+  '/app/item-categories': typeof AppItemCategoriesRoute
+  '/app/items': typeof AppItemsRouteWithChildren
+  '/app/marketing-tools': typeof AppMarketingToolsRoute
+  '/app/online-store': typeof AppOnlineStoreRoute
+  '/app/other-income': typeof AppOtherIncomeRoute
+  '/app/parties': typeof AppPartiesRouteWithChildren
+  '/app/party-groups': typeof AppPartyGroupsRoute
+  '/app/payment-out': typeof AppPaymentOutRouteWithChildren
+  '/app/payments-in': typeof AppPaymentsInRouteWithChildren
+  '/app/payroll': typeof AppPayrollRouteWithChildren
+  '/app/payroll-reports': typeof AppPayrollReportsRoute
+  '/app/plans': typeof AppPlansRoute
+  '/app/pos': typeof AppPosRoute
+  '/app/print-transactions': typeof AppPrintTransactionsRoute
+  '/app/purchase-bill-settings': typeof AppPurchaseBillSettingsRoute
+  '/app/purchase-orders': typeof AppPurchaseOrdersRouteWithChildren
+  '/app/purchase-reports': typeof AppPurchaseReportsRoute
+  '/app/purchases': typeof AppPurchasesRouteWithChildren
+  '/app/recycle-bin': typeof AppRecycleBinRoute
+  '/app/reports': typeof AppReportsRouteWithChildren
+  '/app/salary-payments': typeof AppSalaryPaymentsRoute
+  '/app/salary-setup': typeof AppSalarySetupRoute
+  '/app/sale-invoice-settings': typeof AppSaleInvoiceSettingsRoute
+  '/app/sale-orders': typeof AppSaleOrdersRouteWithChildren
+  '/app/sales': typeof AppSalesRouteWithChildren
+  '/app/sales-reports': typeof AppSalesReportsRoute
+  '/app/settings': typeof AppSettingsRoute
+  '/app/stock-adjustments': typeof AppStockAdjustmentsRouteWithChildren
+  '/app/stock-movements': typeof AppStockMovementsRoute
+  '/app/stock-transfers': typeof AppStockTransfersRouteWithChildren
+  '/app/subscription': typeof AppSubscriptionRouteWithChildren
+  '/app/support': typeof AppSupportRoute
+  '/app/sync': typeof AppSyncRoute
+  '/app/utilities': typeof AppUtilitiesRouteWithChildren
+  '/app/warehouses': typeof AppWarehousesRoute
+  '/store/$slug': typeof StoreSlugRoute
+  '/super-admin/announcements': typeof SuperAdminAnnouncementsRoute
+  '/super-admin/audit-logs': typeof SuperAdminAuditLogsRoute
+  '/super-admin/companies': typeof SuperAdminCompaniesRouteWithChildren
+  '/super-admin/coupons': typeof SuperAdminCouponsRouteWithChildren
+  '/super-admin/customers': typeof SuperAdminCustomersRouteWithChildren
+  '/super-admin/devices': typeof SuperAdminDevicesRouteWithChildren
+  '/super-admin/feature-control': typeof SuperAdminFeatureControlRoute
+  '/super-admin/payment-gateways': typeof SuperAdminPaymentGatewaysRoute
+  '/super-admin/payments': typeof SuperAdminPaymentsRouteWithChildren
+  '/super-admin/plans': typeof SuperAdminPlansRoute
+  '/super-admin/platform-admins': typeof SuperAdminPlatformAdminsRoute
+  '/super-admin/reports': typeof SuperAdminReportsRoute
+  '/super-admin/settings': typeof SuperAdminSettingsRoute
+  '/super-admin/subscriptions': typeof SuperAdminSubscriptionsRoute
+  '/super-admin/support': typeof SuperAdminSupportRoute
+  '/app/': typeof AppIndexRoute
+  '/super-admin/': typeof SuperAdminIndexRoute
+  '/app/admin/access-matrix': typeof AppAdminAccessMatrixRoute
+  '/app/admin/payment-settings': typeof AppAdminPaymentSettingsRoute
+  '/app/admin/payments': typeof AppAdminPaymentsRoute
+  '/app/admin/security-tests': typeof AppAdminSecurityTestsRoute
+  '/app/credit-notes/new': typeof AppCreditNotesNewRoute
+  '/app/debit-notes/new': typeof AppDebitNotesNewRoute
+  '/app/delivery-challans/new': typeof AppDeliveryChallansNewRoute
+  '/app/estimates/new': typeof AppEstimatesNewRoute
+  '/app/expenses/new': typeof AppExpensesNewRoute
+  '/app/parties/$id': typeof AppPartiesIdRoute
+  '/app/payment-out/new': typeof AppPaymentOutNewRoute
+  '/app/payments-in/new': typeof AppPaymentsInNewRoute
+  '/app/purchase-orders/new': typeof AppPurchaseOrdersNewRoute
+  '/app/purchases/new': typeof AppPurchasesNewRoute
+  '/app/reports/inventory': typeof AppReportsInventoryRoute
+  '/app/sale-orders/new': typeof AppSaleOrdersNewRoute
+  '/app/sales/new': typeof AppSalesNewRoute
+  '/app/upgrade/$plan': typeof AppUpgradePlanRoute
+  '/app/utilities/barcode-generator': typeof AppUtilitiesBarcodeGeneratorRoute
+  '/app/utilities/bulk-update-items': typeof AppUtilitiesBulkUpdateItemsRoute
+  '/app/utilities/close-financial-year': typeof AppUtilitiesCloseFinancialYearRoute
+  '/app/utilities/export-items': typeof AppUtilitiesExportItemsRoute
+  '/app/utilities/import-export': typeof AppUtilitiesImportExportRoute
+  '/app/utilities/import-items': typeof AppUtilitiesImportItemsRoute
+  '/app/utilities/import-parties': typeof AppUtilitiesImportPartiesRoute
+  '/super-admin/companies/$companyId': typeof SuperAdminCompaniesCompanyIdRoute
+  '/super-admin/coupons/$id': typeof SuperAdminCouponsIdRoute
+  '/super-admin/customers/$userId': typeof SuperAdminCustomersUserIdRoute
+  '/super-admin/devices/$id': typeof SuperAdminDevicesIdRoute
+  '/super-admin/payments/$id': typeof SuperAdminPaymentsIdRoute
+  '/app/utilities/': typeof AppUtilitiesIndexRoute
+  '/app/cash/cheques/$id': typeof AppCashChequesIdRoute
+  '/app/cash/loan-payments/$id': typeof AppCashLoanPaymentsIdRoute
+  '/app/cash/transfers/$id': typeof AppCashTransfersIdRoute
+  '/app/credit-notes/$id/edit': typeof AppCreditNotesIdEditRoute
+  '/app/debit-notes/$id/edit': typeof AppDebitNotesIdEditRoute
+  '/app/delivery-challans/$id/edit': typeof AppDeliveryChallansIdEditRoute
+  '/app/estimates/$id/edit': typeof AppEstimatesIdEditRoute
+  '/app/expenses/$id/edit': typeof AppExpensesIdEditRoute
+  '/app/items/$id/edit': typeof AppItemsIdEditRoute
+  '/app/payment-out/$id/edit': typeof AppPaymentOutIdEditRoute
+  '/app/payments-in/$id/edit': typeof AppPaymentsInIdEditRoute
+  '/app/payroll/attendance/$id': typeof AppPayrollAttendanceIdRoute
+  '/app/payroll/employees/$id': typeof AppPayrollEmployeesIdRoute
+  '/app/payroll/salary-payments/$id': typeof AppPayrollSalaryPaymentsIdRoute
+  '/app/payroll/salary-slips/$id': typeof AppPayrollSalarySlipsIdRoute
+  '/app/purchase-orders/$id/edit': typeof AppPurchaseOrdersIdEditRoute
+  '/app/purchases/$id/edit': typeof AppPurchasesIdEditRoute
+  '/app/sale-orders/$id/edit': typeof AppSaleOrdersIdEditRoute
+  '/app/sales/$id/edit': typeof AppSalesIdEditRoute
+  '/app/stock-adjustments/$id/edit': typeof AppStockAdjustmentsIdEditRoute
+  '/app/stock-transfers/$id/edit': typeof AppStockTransfersIdEditRoute
+  '/app/subscription/receipt/$id': typeof AppSubscriptionReceiptIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/companies': typeof CompaniesRoute
+  '/contact': typeof ContactRoute
+  '/login': typeof LoginRoute
+  '/pricing': typeof PricingRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/signup': typeof SignupRoute
+  '/app/attendance': typeof AppAttendanceRoute
+  '/app/audit': typeof AppAuditRoute
+  '/app/cash': typeof AppCashRouteWithChildren
+  '/app/credit-notes': typeof AppCreditNotesRouteWithChildren
+  '/app/debit-notes': typeof AppDebitNotesRouteWithChildren
+  '/app/delivery-challans': typeof AppDeliveryChallansRouteWithChildren
+  '/app/device-limit': typeof AppDeviceLimitRoute
+  '/app/employees': typeof AppEmployeesRoute
+  '/app/estimates': typeof AppEstimatesRouteWithChildren
+  '/app/expense-categories': typeof AppExpenseCategoriesRoute
+  '/app/expenses': typeof AppExpensesRouteWithChildren
+  '/app/item-categories': typeof AppItemCategoriesRoute
+  '/app/items': typeof AppItemsRouteWithChildren
+  '/app/marketing-tools': typeof AppMarketingToolsRoute
+  '/app/online-store': typeof AppOnlineStoreRoute
+  '/app/other-income': typeof AppOtherIncomeRoute
+  '/app/parties': typeof AppPartiesRouteWithChildren
+  '/app/party-groups': typeof AppPartyGroupsRoute
+  '/app/payment-out': typeof AppPaymentOutRouteWithChildren
+  '/app/payments-in': typeof AppPaymentsInRouteWithChildren
+  '/app/payroll': typeof AppPayrollRouteWithChildren
+  '/app/payroll-reports': typeof AppPayrollReportsRoute
+  '/app/plans': typeof AppPlansRoute
+  '/app/pos': typeof AppPosRoute
+  '/app/print-transactions': typeof AppPrintTransactionsRoute
+  '/app/purchase-bill-settings': typeof AppPurchaseBillSettingsRoute
+  '/app/purchase-orders': typeof AppPurchaseOrdersRouteWithChildren
+  '/app/purchase-reports': typeof AppPurchaseReportsRoute
+  '/app/purchases': typeof AppPurchasesRouteWithChildren
+  '/app/recycle-bin': typeof AppRecycleBinRoute
+  '/app/reports': typeof AppReportsRouteWithChildren
+  '/app/salary-payments': typeof AppSalaryPaymentsRoute
+  '/app/salary-setup': typeof AppSalarySetupRoute
+  '/app/sale-invoice-settings': typeof AppSaleInvoiceSettingsRoute
+  '/app/sale-orders': typeof AppSaleOrdersRouteWithChildren
+  '/app/sales': typeof AppSalesRouteWithChildren
+  '/app/sales-reports': typeof AppSalesReportsRoute
+  '/app/settings': typeof AppSettingsRoute
+  '/app/stock-adjustments': typeof AppStockAdjustmentsRouteWithChildren
+  '/app/stock-movements': typeof AppStockMovementsRoute
+  '/app/stock-transfers': typeof AppStockTransfersRouteWithChildren
+  '/app/subscription': typeof AppSubscriptionRouteWithChildren
+  '/app/support': typeof AppSupportRoute
+  '/app/sync': typeof AppSyncRoute
+  '/app/warehouses': typeof AppWarehousesRoute
+  '/store/$slug': typeof StoreSlugRoute
+  '/super-admin/announcements': typeof SuperAdminAnnouncementsRoute
+  '/super-admin/audit-logs': typeof SuperAdminAuditLogsRoute
+  '/super-admin/companies': typeof SuperAdminCompaniesRouteWithChildren
+  '/super-admin/coupons': typeof SuperAdminCouponsRouteWithChildren
+  '/super-admin/customers': typeof SuperAdminCustomersRouteWithChildren
+  '/super-admin/devices': typeof SuperAdminDevicesRouteWithChildren
+  '/super-admin/feature-control': typeof SuperAdminFeatureControlRoute
+  '/super-admin/payment-gateways': typeof SuperAdminPaymentGatewaysRoute
+  '/super-admin/payments': typeof SuperAdminPaymentsRouteWithChildren
+  '/super-admin/plans': typeof SuperAdminPlansRoute
+  '/super-admin/platform-admins': typeof SuperAdminPlatformAdminsRoute
+  '/super-admin/reports': typeof SuperAdminReportsRoute
+  '/super-admin/settings': typeof SuperAdminSettingsRoute
+  '/super-admin/subscriptions': typeof SuperAdminSubscriptionsRoute
+  '/super-admin/support': typeof SuperAdminSupportRoute
+  '/app': typeof AppIndexRoute
+  '/super-admin': typeof SuperAdminIndexRoute
+  '/app/admin/access-matrix': typeof AppAdminAccessMatrixRoute
+  '/app/admin/payment-settings': typeof AppAdminPaymentSettingsRoute
+  '/app/admin/payments': typeof AppAdminPaymentsRoute
+  '/app/admin/security-tests': typeof AppAdminSecurityTestsRoute
+  '/app/credit-notes/new': typeof AppCreditNotesNewRoute
+  '/app/debit-notes/new': typeof AppDebitNotesNewRoute
+  '/app/delivery-challans/new': typeof AppDeliveryChallansNewRoute
+  '/app/estimates/new': typeof AppEstimatesNewRoute
+  '/app/expenses/new': typeof AppExpensesNewRoute
+  '/app/parties/$id': typeof AppPartiesIdRoute
+  '/app/payment-out/new': typeof AppPaymentOutNewRoute
+  '/app/payments-in/new': typeof AppPaymentsInNewRoute
+  '/app/purchase-orders/new': typeof AppPurchaseOrdersNewRoute
+  '/app/purchases/new': typeof AppPurchasesNewRoute
+  '/app/reports/inventory': typeof AppReportsInventoryRoute
+  '/app/sale-orders/new': typeof AppSaleOrdersNewRoute
+  '/app/sales/new': typeof AppSalesNewRoute
+  '/app/upgrade/$plan': typeof AppUpgradePlanRoute
+  '/app/utilities/barcode-generator': typeof AppUtilitiesBarcodeGeneratorRoute
+  '/app/utilities/bulk-update-items': typeof AppUtilitiesBulkUpdateItemsRoute
+  '/app/utilities/close-financial-year': typeof AppUtilitiesCloseFinancialYearRoute
+  '/app/utilities/export-items': typeof AppUtilitiesExportItemsRoute
+  '/app/utilities/import-export': typeof AppUtilitiesImportExportRoute
+  '/app/utilities/import-items': typeof AppUtilitiesImportItemsRoute
+  '/app/utilities/import-parties': typeof AppUtilitiesImportPartiesRoute
+  '/super-admin/companies/$companyId': typeof SuperAdminCompaniesCompanyIdRoute
+  '/super-admin/coupons/$id': typeof SuperAdminCouponsIdRoute
+  '/super-admin/customers/$userId': typeof SuperAdminCustomersUserIdRoute
+  '/super-admin/devices/$id': typeof SuperAdminDevicesIdRoute
+  '/super-admin/payments/$id': typeof SuperAdminPaymentsIdRoute
+  '/app/utilities': typeof AppUtilitiesIndexRoute
+  '/app/cash/cheques/$id': typeof AppCashChequesIdRoute
+  '/app/cash/loan-payments/$id': typeof AppCashLoanPaymentsIdRoute
+  '/app/cash/transfers/$id': typeof AppCashTransfersIdRoute
+  '/app/credit-notes/$id/edit': typeof AppCreditNotesIdEditRoute
+  '/app/debit-notes/$id/edit': typeof AppDebitNotesIdEditRoute
+  '/app/delivery-challans/$id/edit': typeof AppDeliveryChallansIdEditRoute
+  '/app/estimates/$id/edit': typeof AppEstimatesIdEditRoute
+  '/app/expenses/$id/edit': typeof AppExpensesIdEditRoute
+  '/app/items/$id/edit': typeof AppItemsIdEditRoute
+  '/app/payment-out/$id/edit': typeof AppPaymentOutIdEditRoute
+  '/app/payments-in/$id/edit': typeof AppPaymentsInIdEditRoute
+  '/app/payroll/attendance/$id': typeof AppPayrollAttendanceIdRoute
+  '/app/payroll/employees/$id': typeof AppPayrollEmployeesIdRoute
+  '/app/payroll/salary-payments/$id': typeof AppPayrollSalaryPaymentsIdRoute
+  '/app/payroll/salary-slips/$id': typeof AppPayrollSalarySlipsIdRoute
+  '/app/purchase-orders/$id/edit': typeof AppPurchaseOrdersIdEditRoute
+  '/app/purchases/$id/edit': typeof AppPurchasesIdEditRoute
+  '/app/sale-orders/$id/edit': typeof AppSaleOrdersIdEditRoute
+  '/app/sales/$id/edit': typeof AppSalesIdEditRoute
+  '/app/stock-adjustments/$id/edit': typeof AppStockAdjustmentsIdEditRoute
+  '/app/stock-transfers/$id/edit': typeof AppStockTransfersIdEditRoute
+  '/app/subscription/receipt/$id': typeof AppSubscriptionReceiptIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/app': typeof AppRouteWithChildren
+  '/companies': typeof CompaniesRoute
+  '/contact': typeof ContactRoute
+  '/login': typeof LoginRoute
+  '/pricing': typeof PricingRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/signup': typeof SignupRoute
+  '/super-admin': typeof SuperAdminRouteWithChildren
+  '/app/attendance': typeof AppAttendanceRoute
+  '/app/audit': typeof AppAuditRoute
+  '/app/cash': typeof AppCashRouteWithChildren
+  '/app/credit-notes': typeof AppCreditNotesRouteWithChildren
+  '/app/debit-notes': typeof AppDebitNotesRouteWithChildren
+  '/app/delivery-challans': typeof AppDeliveryChallansRouteWithChildren
+  '/app/device-limit': typeof AppDeviceLimitRoute
+  '/app/employees': typeof AppEmployeesRoute
+  '/app/estimates': typeof AppEstimatesRouteWithChildren
+  '/app/expense-categories': typeof AppExpenseCategoriesRoute
+  '/app/expenses': typeof AppExpensesRouteWithChildren
+  '/app/item-categories': typeof AppItemCategoriesRoute
+  '/app/items': typeof AppItemsRouteWithChildren
+  '/app/marketing-tools': typeof AppMarketingToolsRoute
+  '/app/online-store': typeof AppOnlineStoreRoute
+  '/app/other-income': typeof AppOtherIncomeRoute
+  '/app/parties': typeof AppPartiesRouteWithChildren
+  '/app/party-groups': typeof AppPartyGroupsRoute
+  '/app/payment-out': typeof AppPaymentOutRouteWithChildren
+  '/app/payments-in': typeof AppPaymentsInRouteWithChildren
+  '/app/payroll': typeof AppPayrollRouteWithChildren
+  '/app/payroll-reports': typeof AppPayrollReportsRoute
+  '/app/plans': typeof AppPlansRoute
+  '/app/pos': typeof AppPosRoute
+  '/app/print-transactions': typeof AppPrintTransactionsRoute
+  '/app/purchase-bill-settings': typeof AppPurchaseBillSettingsRoute
+  '/app/purchase-orders': typeof AppPurchaseOrdersRouteWithChildren
+  '/app/purchase-reports': typeof AppPurchaseReportsRoute
+  '/app/purchases': typeof AppPurchasesRouteWithChildren
+  '/app/recycle-bin': typeof AppRecycleBinRoute
+  '/app/reports': typeof AppReportsRouteWithChildren
+  '/app/salary-payments': typeof AppSalaryPaymentsRoute
+  '/app/salary-setup': typeof AppSalarySetupRoute
+  '/app/sale-invoice-settings': typeof AppSaleInvoiceSettingsRoute
+  '/app/sale-orders': typeof AppSaleOrdersRouteWithChildren
+  '/app/sales': typeof AppSalesRouteWithChildren
+  '/app/sales-reports': typeof AppSalesReportsRoute
+  '/app/settings': typeof AppSettingsRoute
+  '/app/stock-adjustments': typeof AppStockAdjustmentsRouteWithChildren
+  '/app/stock-movements': typeof AppStockMovementsRoute
+  '/app/stock-transfers': typeof AppStockTransfersRouteWithChildren
+  '/app/subscription': typeof AppSubscriptionRouteWithChildren
+  '/app/support': typeof AppSupportRoute
+  '/app/sync': typeof AppSyncRoute
+  '/app/utilities': typeof AppUtilitiesRouteWithChildren
+  '/app/warehouses': typeof AppWarehousesRoute
+  '/store/$slug': typeof StoreSlugRoute
+  '/super-admin/announcements': typeof SuperAdminAnnouncementsRoute
+  '/super-admin/audit-logs': typeof SuperAdminAuditLogsRoute
+  '/super-admin/companies': typeof SuperAdminCompaniesRouteWithChildren
+  '/super-admin/coupons': typeof SuperAdminCouponsRouteWithChildren
+  '/super-admin/customers': typeof SuperAdminCustomersRouteWithChildren
+  '/super-admin/devices': typeof SuperAdminDevicesRouteWithChildren
+  '/super-admin/feature-control': typeof SuperAdminFeatureControlRoute
+  '/super-admin/payment-gateways': typeof SuperAdminPaymentGatewaysRoute
+  '/super-admin/payments': typeof SuperAdminPaymentsRouteWithChildren
+  '/super-admin/plans': typeof SuperAdminPlansRoute
+  '/super-admin/platform-admins': typeof SuperAdminPlatformAdminsRoute
+  '/super-admin/reports': typeof SuperAdminReportsRoute
+  '/super-admin/settings': typeof SuperAdminSettingsRoute
+  '/super-admin/subscriptions': typeof SuperAdminSubscriptionsRoute
+  '/super-admin/support': typeof SuperAdminSupportRoute
+  '/app/': typeof AppIndexRoute
+  '/super-admin/': typeof SuperAdminIndexRoute
+  '/app/admin/access-matrix': typeof AppAdminAccessMatrixRoute
+  '/app/admin/payment-settings': typeof AppAdminPaymentSettingsRoute
+  '/app/admin/payments': typeof AppAdminPaymentsRoute
+  '/app/admin/security-tests': typeof AppAdminSecurityTestsRoute
+  '/app/credit-notes/new': typeof AppCreditNotesNewRoute
+  '/app/debit-notes/new': typeof AppDebitNotesNewRoute
+  '/app/delivery-challans/new': typeof AppDeliveryChallansNewRoute
+  '/app/estimates/new': typeof AppEstimatesNewRoute
+  '/app/expenses/new': typeof AppExpensesNewRoute
+  '/app/parties/$id': typeof AppPartiesIdRoute
+  '/app/payment-out/new': typeof AppPaymentOutNewRoute
+  '/app/payments-in/new': typeof AppPaymentsInNewRoute
+  '/app/purchase-orders/new': typeof AppPurchaseOrdersNewRoute
+  '/app/purchases/new': typeof AppPurchasesNewRoute
+  '/app/reports/inventory': typeof AppReportsInventoryRoute
+  '/app/sale-orders/new': typeof AppSaleOrdersNewRoute
+  '/app/sales/new': typeof AppSalesNewRoute
+  '/app/upgrade/$plan': typeof AppUpgradePlanRoute
+  '/app/utilities/barcode-generator': typeof AppUtilitiesBarcodeGeneratorRoute
+  '/app/utilities/bulk-update-items': typeof AppUtilitiesBulkUpdateItemsRoute
+  '/app/utilities/close-financial-year': typeof AppUtilitiesCloseFinancialYearRoute
+  '/app/utilities/export-items': typeof AppUtilitiesExportItemsRoute
+  '/app/utilities/import-export': typeof AppUtilitiesImportExportRoute
+  '/app/utilities/import-items': typeof AppUtilitiesImportItemsRoute
+  '/app/utilities/import-parties': typeof AppUtilitiesImportPartiesRoute
+  '/super-admin/companies/$companyId': typeof SuperAdminCompaniesCompanyIdRoute
+  '/super-admin/coupons/$id': typeof SuperAdminCouponsIdRoute
+  '/super-admin/customers/$userId': typeof SuperAdminCustomersUserIdRoute
+  '/super-admin/devices/$id': typeof SuperAdminDevicesIdRoute
+  '/super-admin/payments/$id': typeof SuperAdminPaymentsIdRoute
+  '/app/utilities/': typeof AppUtilitiesIndexRoute
+  '/app/cash/cheques/$id': typeof AppCashChequesIdRoute
+  '/app/cash/loan-payments/$id': typeof AppCashLoanPaymentsIdRoute
+  '/app/cash/transfers/$id': typeof AppCashTransfersIdRoute
+  '/app/credit-notes/$id/edit': typeof AppCreditNotesIdEditRoute
+  '/app/debit-notes/$id/edit': typeof AppDebitNotesIdEditRoute
+  '/app/delivery-challans/$id/edit': typeof AppDeliveryChallansIdEditRoute
+  '/app/estimates/$id/edit': typeof AppEstimatesIdEditRoute
+  '/app/expenses/$id/edit': typeof AppExpensesIdEditRoute
+  '/app/items/$id/edit': typeof AppItemsIdEditRoute
+  '/app/payment-out/$id/edit': typeof AppPaymentOutIdEditRoute
+  '/app/payments-in/$id/edit': typeof AppPaymentsInIdEditRoute
+  '/app/payroll/attendance/$id': typeof AppPayrollAttendanceIdRoute
+  '/app/payroll/employees/$id': typeof AppPayrollEmployeesIdRoute
+  '/app/payroll/salary-payments/$id': typeof AppPayrollSalaryPaymentsIdRoute
+  '/app/payroll/salary-slips/$id': typeof AppPayrollSalarySlipsIdRoute
+  '/app/purchase-orders/$id/edit': typeof AppPurchaseOrdersIdEditRoute
+  '/app/purchases/$id/edit': typeof AppPurchasesIdEditRoute
+  '/app/sale-orders/$id/edit': typeof AppSaleOrdersIdEditRoute
+  '/app/sales/$id/edit': typeof AppSalesIdEditRoute
+  '/app/stock-adjustments/$id/edit': typeof AppStockAdjustmentsIdEditRoute
+  '/app/stock-transfers/$id/edit': typeof AppStockTransfersIdEditRoute
+  '/app/subscription/receipt/$id': typeof AppSubscriptionReceiptIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/app'
+    | '/companies'
+    | '/contact'
+    | '/login'
+    | '/pricing'
+    | '/reset-password'
+    | '/signup'
+    | '/super-admin'
+    | '/app/attendance'
+    | '/app/audit'
+    | '/app/cash'
+    | '/app/credit-notes'
+    | '/app/debit-notes'
+    | '/app/delivery-challans'
+    | '/app/device-limit'
+    | '/app/employees'
+    | '/app/estimates'
+    | '/app/expense-categories'
+    | '/app/expenses'
+    | '/app/item-categories'
+    | '/app/items'
+    | '/app/marketing-tools'
+    | '/app/online-store'
+    | '/app/other-income'
+    | '/app/parties'
+    | '/app/party-groups'
+    | '/app/payment-out'
+    | '/app/payments-in'
+    | '/app/payroll'
+    | '/app/payroll-reports'
+    | '/app/plans'
+    | '/app/pos'
+    | '/app/print-transactions'
+    | '/app/purchase-bill-settings'
+    | '/app/purchase-orders'
+    | '/app/purchase-reports'
+    | '/app/purchases'
+    | '/app/recycle-bin'
+    | '/app/reports'
+    | '/app/salary-payments'
+    | '/app/salary-setup'
+    | '/app/sale-invoice-settings'
+    | '/app/sale-orders'
+    | '/app/sales'
+    | '/app/sales-reports'
+    | '/app/settings'
+    | '/app/stock-adjustments'
+    | '/app/stock-movements'
+    | '/app/stock-transfers'
+    | '/app/subscription'
+    | '/app/support'
+    | '/app/sync'
+    | '/app/utilities'
+    | '/app/warehouses'
+    | '/store/$slug'
+    | '/super-admin/announcements'
+    | '/super-admin/audit-logs'
+    | '/super-admin/companies'
+    | '/super-admin/coupons'
+    | '/super-admin/customers'
+    | '/super-admin/devices'
+    | '/super-admin/feature-control'
+    | '/super-admin/payment-gateways'
+    | '/super-admin/payments'
+    | '/super-admin/plans'
+    | '/super-admin/platform-admins'
+    | '/super-admin/reports'
+    | '/super-admin/settings'
+    | '/super-admin/subscriptions'
+    | '/super-admin/support'
+    | '/app/'
+    | '/super-admin/'
+    | '/app/admin/access-matrix'
+    | '/app/admin/payment-settings'
+    | '/app/admin/payments'
+    | '/app/admin/security-tests'
+    | '/app/credit-notes/new'
+    | '/app/debit-notes/new'
+    | '/app/delivery-challans/new'
+    | '/app/estimates/new'
+    | '/app/expenses/new'
+    | '/app/parties/$id'
+    | '/app/payment-out/new'
+    | '/app/payments-in/new'
+    | '/app/purchase-orders/new'
+    | '/app/purchases/new'
+    | '/app/reports/inventory'
+    | '/app/sale-orders/new'
+    | '/app/sales/new'
+    | '/app/upgrade/$plan'
+    | '/app/utilities/barcode-generator'
+    | '/app/utilities/bulk-update-items'
+    | '/app/utilities/close-financial-year'
+    | '/app/utilities/export-items'
+    | '/app/utilities/import-export'
+    | '/app/utilities/import-items'
+    | '/app/utilities/import-parties'
+    | '/super-admin/companies/$companyId'
+    | '/super-admin/coupons/$id'
+    | '/super-admin/customers/$userId'
+    | '/super-admin/devices/$id'
+    | '/super-admin/payments/$id'
+    | '/app/utilities/'
+    | '/app/cash/cheques/$id'
+    | '/app/cash/loan-payments/$id'
+    | '/app/cash/transfers/$id'
+    | '/app/credit-notes/$id/edit'
+    | '/app/debit-notes/$id/edit'
+    | '/app/delivery-challans/$id/edit'
+    | '/app/estimates/$id/edit'
+    | '/app/expenses/$id/edit'
+    | '/app/items/$id/edit'
+    | '/app/payment-out/$id/edit'
+    | '/app/payments-in/$id/edit'
+    | '/app/payroll/attendance/$id'
+    | '/app/payroll/employees/$id'
+    | '/app/payroll/salary-payments/$id'
+    | '/app/payroll/salary-slips/$id'
+    | '/app/purchase-orders/$id/edit'
+    | '/app/purchases/$id/edit'
+    | '/app/sale-orders/$id/edit'
+    | '/app/sales/$id/edit'
+    | '/app/stock-adjustments/$id/edit'
+    | '/app/stock-transfers/$id/edit'
+    | '/app/subscription/receipt/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/companies'
+    | '/contact'
+    | '/login'
+    | '/pricing'
+    | '/reset-password'
+    | '/signup'
+    | '/app/attendance'
+    | '/app/audit'
+    | '/app/cash'
+    | '/app/credit-notes'
+    | '/app/debit-notes'
+    | '/app/delivery-challans'
+    | '/app/device-limit'
+    | '/app/employees'
+    | '/app/estimates'
+    | '/app/expense-categories'
+    | '/app/expenses'
+    | '/app/item-categories'
+    | '/app/items'
+    | '/app/marketing-tools'
+    | '/app/online-store'
+    | '/app/other-income'
+    | '/app/parties'
+    | '/app/party-groups'
+    | '/app/payment-out'
+    | '/app/payments-in'
+    | '/app/payroll'
+    | '/app/payroll-reports'
+    | '/app/plans'
+    | '/app/pos'
+    | '/app/print-transactions'
+    | '/app/purchase-bill-settings'
+    | '/app/purchase-orders'
+    | '/app/purchase-reports'
+    | '/app/purchases'
+    | '/app/recycle-bin'
+    | '/app/reports'
+    | '/app/salary-payments'
+    | '/app/salary-setup'
+    | '/app/sale-invoice-settings'
+    | '/app/sale-orders'
+    | '/app/sales'
+    | '/app/sales-reports'
+    | '/app/settings'
+    | '/app/stock-adjustments'
+    | '/app/stock-movements'
+    | '/app/stock-transfers'
+    | '/app/subscription'
+    | '/app/support'
+    | '/app/sync'
+    | '/app/warehouses'
+    | '/store/$slug'
+    | '/super-admin/announcements'
+    | '/super-admin/audit-logs'
+    | '/super-admin/companies'
+    | '/super-admin/coupons'
+    | '/super-admin/customers'
+    | '/super-admin/devices'
+    | '/super-admin/feature-control'
+    | '/super-admin/payment-gateways'
+    | '/super-admin/payments'
+    | '/super-admin/plans'
+    | '/super-admin/platform-admins'
+    | '/super-admin/reports'
+    | '/super-admin/settings'
+    | '/super-admin/subscriptions'
+    | '/super-admin/support'
+    | '/app'
+    | '/super-admin'
+    | '/app/admin/access-matrix'
+    | '/app/admin/payment-settings'
+    | '/app/admin/payments'
+    | '/app/admin/security-tests'
+    | '/app/credit-notes/new'
+    | '/app/debit-notes/new'
+    | '/app/delivery-challans/new'
+    | '/app/estimates/new'
+    | '/app/expenses/new'
+    | '/app/parties/$id'
+    | '/app/payment-out/new'
+    | '/app/payments-in/new'
+    | '/app/purchase-orders/new'
+    | '/app/purchases/new'
+    | '/app/reports/inventory'
+    | '/app/sale-orders/new'
+    | '/app/sales/new'
+    | '/app/upgrade/$plan'
+    | '/app/utilities/barcode-generator'
+    | '/app/utilities/bulk-update-items'
+    | '/app/utilities/close-financial-year'
+    | '/app/utilities/export-items'
+    | '/app/utilities/import-export'
+    | '/app/utilities/import-items'
+    | '/app/utilities/import-parties'
+    | '/super-admin/companies/$companyId'
+    | '/super-admin/coupons/$id'
+    | '/super-admin/customers/$userId'
+    | '/super-admin/devices/$id'
+    | '/super-admin/payments/$id'
+    | '/app/utilities'
+    | '/app/cash/cheques/$id'
+    | '/app/cash/loan-payments/$id'
+    | '/app/cash/transfers/$id'
+    | '/app/credit-notes/$id/edit'
+    | '/app/debit-notes/$id/edit'
+    | '/app/delivery-challans/$id/edit'
+    | '/app/estimates/$id/edit'
+    | '/app/expenses/$id/edit'
+    | '/app/items/$id/edit'
+    | '/app/payment-out/$id/edit'
+    | '/app/payments-in/$id/edit'
+    | '/app/payroll/attendance/$id'
+    | '/app/payroll/employees/$id'
+    | '/app/payroll/salary-payments/$id'
+    | '/app/payroll/salary-slips/$id'
+    | '/app/purchase-orders/$id/edit'
+    | '/app/purchases/$id/edit'
+    | '/app/sale-orders/$id/edit'
+    | '/app/sales/$id/edit'
+    | '/app/stock-adjustments/$id/edit'
+    | '/app/stock-transfers/$id/edit'
+    | '/app/subscription/receipt/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/app'
+    | '/companies'
+    | '/contact'
+    | '/login'
+    | '/pricing'
+    | '/reset-password'
+    | '/signup'
+    | '/super-admin'
+    | '/app/attendance'
+    | '/app/audit'
+    | '/app/cash'
+    | '/app/credit-notes'
+    | '/app/debit-notes'
+    | '/app/delivery-challans'
+    | '/app/device-limit'
+    | '/app/employees'
+    | '/app/estimates'
+    | '/app/expense-categories'
+    | '/app/expenses'
+    | '/app/item-categories'
+    | '/app/items'
+    | '/app/marketing-tools'
+    | '/app/online-store'
+    | '/app/other-income'
+    | '/app/parties'
+    | '/app/party-groups'
+    | '/app/payment-out'
+    | '/app/payments-in'
+    | '/app/payroll'
+    | '/app/payroll-reports'
+    | '/app/plans'
+    | '/app/pos'
+    | '/app/print-transactions'
+    | '/app/purchase-bill-settings'
+    | '/app/purchase-orders'
+    | '/app/purchase-reports'
+    | '/app/purchases'
+    | '/app/recycle-bin'
+    | '/app/reports'
+    | '/app/salary-payments'
+    | '/app/salary-setup'
+    | '/app/sale-invoice-settings'
+    | '/app/sale-orders'
+    | '/app/sales'
+    | '/app/sales-reports'
+    | '/app/settings'
+    | '/app/stock-adjustments'
+    | '/app/stock-movements'
+    | '/app/stock-transfers'
+    | '/app/subscription'
+    | '/app/support'
+    | '/app/sync'
+    | '/app/utilities'
+    | '/app/warehouses'
+    | '/store/$slug'
+    | '/super-admin/announcements'
+    | '/super-admin/audit-logs'
+    | '/super-admin/companies'
+    | '/super-admin/coupons'
+    | '/super-admin/customers'
+    | '/super-admin/devices'
+    | '/super-admin/feature-control'
+    | '/super-admin/payment-gateways'
+    | '/super-admin/payments'
+    | '/super-admin/plans'
+    | '/super-admin/platform-admins'
+    | '/super-admin/reports'
+    | '/super-admin/settings'
+    | '/super-admin/subscriptions'
+    | '/super-admin/support'
+    | '/app/'
+    | '/super-admin/'
+    | '/app/admin/access-matrix'
+    | '/app/admin/payment-settings'
+    | '/app/admin/payments'
+    | '/app/admin/security-tests'
+    | '/app/credit-notes/new'
+    | '/app/debit-notes/new'
+    | '/app/delivery-challans/new'
+    | '/app/estimates/new'
+    | '/app/expenses/new'
+    | '/app/parties/$id'
+    | '/app/payment-out/new'
+    | '/app/payments-in/new'
+    | '/app/purchase-orders/new'
+    | '/app/purchases/new'
+    | '/app/reports/inventory'
+    | '/app/sale-orders/new'
+    | '/app/sales/new'
+    | '/app/upgrade/$plan'
+    | '/app/utilities/barcode-generator'
+    | '/app/utilities/bulk-update-items'
+    | '/app/utilities/close-financial-year'
+    | '/app/utilities/export-items'
+    | '/app/utilities/import-export'
+    | '/app/utilities/import-items'
+    | '/app/utilities/import-parties'
+    | '/super-admin/companies/$companyId'
+    | '/super-admin/coupons/$id'
+    | '/super-admin/customers/$userId'
+    | '/super-admin/devices/$id'
+    | '/super-admin/payments/$id'
+    | '/app/utilities/'
+    | '/app/cash/cheques/$id'
+    | '/app/cash/loan-payments/$id'
+    | '/app/cash/transfers/$id'
+    | '/app/credit-notes/$id/edit'
+    | '/app/debit-notes/$id/edit'
+    | '/app/delivery-challans/$id/edit'
+    | '/app/estimates/$id/edit'
+    | '/app/expenses/$id/edit'
+    | '/app/items/$id/edit'
+    | '/app/payment-out/$id/edit'
+    | '/app/payments-in/$id/edit'
+    | '/app/payroll/attendance/$id'
+    | '/app/payroll/employees/$id'
+    | '/app/payroll/salary-payments/$id'
+    | '/app/payroll/salary-slips/$id'
+    | '/app/purchase-orders/$id/edit'
+    | '/app/purchases/$id/edit'
+    | '/app/sale-orders/$id/edit'
+    | '/app/sales/$id/edit'
+    | '/app/stock-adjustments/$id/edit'
+    | '/app/stock-transfers/$id/edit'
+    | '/app/subscription/receipt/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRouteWithChildren
+  CompaniesRoute: typeof CompaniesRoute
+  ContactRoute: typeof ContactRoute
+  LoginRoute: typeof LoginRoute
+  PricingRoute: typeof PricingRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
+  SignupRoute: typeof SignupRoute
+  SuperAdminRoute: typeof SuperAdminRouteWithChildren
+  StoreSlugRoute: typeof StoreSlugRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/super-admin': {
+      id: '/super-admin'
+      path: '/super-admin'
+      fullPath: '/super-admin'
+      preLoaderRoute: typeof SuperAdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/companies': {
+      id: '/companies'
+      path: '/companies'
+      fullPath: '/companies'
+      preLoaderRoute: typeof CompaniesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app': {
+      id: '/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +1625,1329 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/super-admin/': {
+      id: '/super-admin/'
+      path: '/'
+      fullPath: '/super-admin/'
+      preLoaderRoute: typeof SuperAdminIndexRouteImport
+      parentRoute: typeof SuperAdminRoute
+    }
+    '/app/': {
+      id: '/app/'
+      path: '/'
+      fullPath: '/app/'
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/super-admin/support': {
+      id: '/super-admin/support'
+      path: '/support'
+      fullPath: '/super-admin/support'
+      preLoaderRoute: typeof SuperAdminSupportRouteImport
+      parentRoute: typeof SuperAdminRoute
+    }
+    '/super-admin/subscriptions': {
+      id: '/super-admin/subscriptions'
+      path: '/subscriptions'
+      fullPath: '/super-admin/subscriptions'
+      preLoaderRoute: typeof SuperAdminSubscriptionsRouteImport
+      parentRoute: typeof SuperAdminRoute
+    }
+    '/super-admin/settings': {
+      id: '/super-admin/settings'
+      path: '/settings'
+      fullPath: '/super-admin/settings'
+      preLoaderRoute: typeof SuperAdminSettingsRouteImport
+      parentRoute: typeof SuperAdminRoute
+    }
+    '/super-admin/reports': {
+      id: '/super-admin/reports'
+      path: '/reports'
+      fullPath: '/super-admin/reports'
+      preLoaderRoute: typeof SuperAdminReportsRouteImport
+      parentRoute: typeof SuperAdminRoute
+    }
+    '/super-admin/platform-admins': {
+      id: '/super-admin/platform-admins'
+      path: '/platform-admins'
+      fullPath: '/super-admin/platform-admins'
+      preLoaderRoute: typeof SuperAdminPlatformAdminsRouteImport
+      parentRoute: typeof SuperAdminRoute
+    }
+    '/super-admin/plans': {
+      id: '/super-admin/plans'
+      path: '/plans'
+      fullPath: '/super-admin/plans'
+      preLoaderRoute: typeof SuperAdminPlansRouteImport
+      parentRoute: typeof SuperAdminRoute
+    }
+    '/super-admin/payments': {
+      id: '/super-admin/payments'
+      path: '/payments'
+      fullPath: '/super-admin/payments'
+      preLoaderRoute: typeof SuperAdminPaymentsRouteImport
+      parentRoute: typeof SuperAdminRoute
+    }
+    '/super-admin/payment-gateways': {
+      id: '/super-admin/payment-gateways'
+      path: '/payment-gateways'
+      fullPath: '/super-admin/payment-gateways'
+      preLoaderRoute: typeof SuperAdminPaymentGatewaysRouteImport
+      parentRoute: typeof SuperAdminRoute
+    }
+    '/super-admin/feature-control': {
+      id: '/super-admin/feature-control'
+      path: '/feature-control'
+      fullPath: '/super-admin/feature-control'
+      preLoaderRoute: typeof SuperAdminFeatureControlRouteImport
+      parentRoute: typeof SuperAdminRoute
+    }
+    '/super-admin/devices': {
+      id: '/super-admin/devices'
+      path: '/devices'
+      fullPath: '/super-admin/devices'
+      preLoaderRoute: typeof SuperAdminDevicesRouteImport
+      parentRoute: typeof SuperAdminRoute
+    }
+    '/super-admin/customers': {
+      id: '/super-admin/customers'
+      path: '/customers'
+      fullPath: '/super-admin/customers'
+      preLoaderRoute: typeof SuperAdminCustomersRouteImport
+      parentRoute: typeof SuperAdminRoute
+    }
+    '/super-admin/coupons': {
+      id: '/super-admin/coupons'
+      path: '/coupons'
+      fullPath: '/super-admin/coupons'
+      preLoaderRoute: typeof SuperAdminCouponsRouteImport
+      parentRoute: typeof SuperAdminRoute
+    }
+    '/super-admin/companies': {
+      id: '/super-admin/companies'
+      path: '/companies'
+      fullPath: '/super-admin/companies'
+      preLoaderRoute: typeof SuperAdminCompaniesRouteImport
+      parentRoute: typeof SuperAdminRoute
+    }
+    '/super-admin/audit-logs': {
+      id: '/super-admin/audit-logs'
+      path: '/audit-logs'
+      fullPath: '/super-admin/audit-logs'
+      preLoaderRoute: typeof SuperAdminAuditLogsRouteImport
+      parentRoute: typeof SuperAdminRoute
+    }
+    '/super-admin/announcements': {
+      id: '/super-admin/announcements'
+      path: '/announcements'
+      fullPath: '/super-admin/announcements'
+      preLoaderRoute: typeof SuperAdminAnnouncementsRouteImport
+      parentRoute: typeof SuperAdminRoute
+    }
+    '/store/$slug': {
+      id: '/store/$slug'
+      path: '/store/$slug'
+      fullPath: '/store/$slug'
+      preLoaderRoute: typeof StoreSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/warehouses': {
+      id: '/app/warehouses'
+      path: '/warehouses'
+      fullPath: '/app/warehouses'
+      preLoaderRoute: typeof AppWarehousesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/utilities': {
+      id: '/app/utilities'
+      path: '/utilities'
+      fullPath: '/app/utilities'
+      preLoaderRoute: typeof AppUtilitiesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/sync': {
+      id: '/app/sync'
+      path: '/sync'
+      fullPath: '/app/sync'
+      preLoaderRoute: typeof AppSyncRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/support': {
+      id: '/app/support'
+      path: '/support'
+      fullPath: '/app/support'
+      preLoaderRoute: typeof AppSupportRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/subscription': {
+      id: '/app/subscription'
+      path: '/subscription'
+      fullPath: '/app/subscription'
+      preLoaderRoute: typeof AppSubscriptionRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/stock-transfers': {
+      id: '/app/stock-transfers'
+      path: '/stock-transfers'
+      fullPath: '/app/stock-transfers'
+      preLoaderRoute: typeof AppStockTransfersRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/stock-movements': {
+      id: '/app/stock-movements'
+      path: '/stock-movements'
+      fullPath: '/app/stock-movements'
+      preLoaderRoute: typeof AppStockMovementsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/stock-adjustments': {
+      id: '/app/stock-adjustments'
+      path: '/stock-adjustments'
+      fullPath: '/app/stock-adjustments'
+      preLoaderRoute: typeof AppStockAdjustmentsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/settings': {
+      id: '/app/settings'
+      path: '/settings'
+      fullPath: '/app/settings'
+      preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/sales-reports': {
+      id: '/app/sales-reports'
+      path: '/sales-reports'
+      fullPath: '/app/sales-reports'
+      preLoaderRoute: typeof AppSalesReportsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/sales': {
+      id: '/app/sales'
+      path: '/sales'
+      fullPath: '/app/sales'
+      preLoaderRoute: typeof AppSalesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/sale-orders': {
+      id: '/app/sale-orders'
+      path: '/sale-orders'
+      fullPath: '/app/sale-orders'
+      preLoaderRoute: typeof AppSaleOrdersRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/sale-invoice-settings': {
+      id: '/app/sale-invoice-settings'
+      path: '/sale-invoice-settings'
+      fullPath: '/app/sale-invoice-settings'
+      preLoaderRoute: typeof AppSaleInvoiceSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/salary-setup': {
+      id: '/app/salary-setup'
+      path: '/salary-setup'
+      fullPath: '/app/salary-setup'
+      preLoaderRoute: typeof AppSalarySetupRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/salary-payments': {
+      id: '/app/salary-payments'
+      path: '/salary-payments'
+      fullPath: '/app/salary-payments'
+      preLoaderRoute: typeof AppSalaryPaymentsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/reports': {
+      id: '/app/reports'
+      path: '/reports'
+      fullPath: '/app/reports'
+      preLoaderRoute: typeof AppReportsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/recycle-bin': {
+      id: '/app/recycle-bin'
+      path: '/recycle-bin'
+      fullPath: '/app/recycle-bin'
+      preLoaderRoute: typeof AppRecycleBinRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/purchases': {
+      id: '/app/purchases'
+      path: '/purchases'
+      fullPath: '/app/purchases'
+      preLoaderRoute: typeof AppPurchasesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/purchase-reports': {
+      id: '/app/purchase-reports'
+      path: '/purchase-reports'
+      fullPath: '/app/purchase-reports'
+      preLoaderRoute: typeof AppPurchaseReportsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/purchase-orders': {
+      id: '/app/purchase-orders'
+      path: '/purchase-orders'
+      fullPath: '/app/purchase-orders'
+      preLoaderRoute: typeof AppPurchaseOrdersRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/purchase-bill-settings': {
+      id: '/app/purchase-bill-settings'
+      path: '/purchase-bill-settings'
+      fullPath: '/app/purchase-bill-settings'
+      preLoaderRoute: typeof AppPurchaseBillSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/print-transactions': {
+      id: '/app/print-transactions'
+      path: '/print-transactions'
+      fullPath: '/app/print-transactions'
+      preLoaderRoute: typeof AppPrintTransactionsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/pos': {
+      id: '/app/pos'
+      path: '/pos'
+      fullPath: '/app/pos'
+      preLoaderRoute: typeof AppPosRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/plans': {
+      id: '/app/plans'
+      path: '/plans'
+      fullPath: '/app/plans'
+      preLoaderRoute: typeof AppPlansRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/payroll-reports': {
+      id: '/app/payroll-reports'
+      path: '/payroll-reports'
+      fullPath: '/app/payroll-reports'
+      preLoaderRoute: typeof AppPayrollReportsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/payroll': {
+      id: '/app/payroll'
+      path: '/payroll'
+      fullPath: '/app/payroll'
+      preLoaderRoute: typeof AppPayrollRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/payments-in': {
+      id: '/app/payments-in'
+      path: '/payments-in'
+      fullPath: '/app/payments-in'
+      preLoaderRoute: typeof AppPaymentsInRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/payment-out': {
+      id: '/app/payment-out'
+      path: '/payment-out'
+      fullPath: '/app/payment-out'
+      preLoaderRoute: typeof AppPaymentOutRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/party-groups': {
+      id: '/app/party-groups'
+      path: '/party-groups'
+      fullPath: '/app/party-groups'
+      preLoaderRoute: typeof AppPartyGroupsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/parties': {
+      id: '/app/parties'
+      path: '/parties'
+      fullPath: '/app/parties'
+      preLoaderRoute: typeof AppPartiesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/other-income': {
+      id: '/app/other-income'
+      path: '/other-income'
+      fullPath: '/app/other-income'
+      preLoaderRoute: typeof AppOtherIncomeRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/online-store': {
+      id: '/app/online-store'
+      path: '/online-store'
+      fullPath: '/app/online-store'
+      preLoaderRoute: typeof AppOnlineStoreRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/marketing-tools': {
+      id: '/app/marketing-tools'
+      path: '/marketing-tools'
+      fullPath: '/app/marketing-tools'
+      preLoaderRoute: typeof AppMarketingToolsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/items': {
+      id: '/app/items'
+      path: '/items'
+      fullPath: '/app/items'
+      preLoaderRoute: typeof AppItemsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/item-categories': {
+      id: '/app/item-categories'
+      path: '/item-categories'
+      fullPath: '/app/item-categories'
+      preLoaderRoute: typeof AppItemCategoriesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/expenses': {
+      id: '/app/expenses'
+      path: '/expenses'
+      fullPath: '/app/expenses'
+      preLoaderRoute: typeof AppExpensesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/expense-categories': {
+      id: '/app/expense-categories'
+      path: '/expense-categories'
+      fullPath: '/app/expense-categories'
+      preLoaderRoute: typeof AppExpenseCategoriesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/estimates': {
+      id: '/app/estimates'
+      path: '/estimates'
+      fullPath: '/app/estimates'
+      preLoaderRoute: typeof AppEstimatesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/employees': {
+      id: '/app/employees'
+      path: '/employees'
+      fullPath: '/app/employees'
+      preLoaderRoute: typeof AppEmployeesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/device-limit': {
+      id: '/app/device-limit'
+      path: '/device-limit'
+      fullPath: '/app/device-limit'
+      preLoaderRoute: typeof AppDeviceLimitRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/delivery-challans': {
+      id: '/app/delivery-challans'
+      path: '/delivery-challans'
+      fullPath: '/app/delivery-challans'
+      preLoaderRoute: typeof AppDeliveryChallansRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/debit-notes': {
+      id: '/app/debit-notes'
+      path: '/debit-notes'
+      fullPath: '/app/debit-notes'
+      preLoaderRoute: typeof AppDebitNotesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/credit-notes': {
+      id: '/app/credit-notes'
+      path: '/credit-notes'
+      fullPath: '/app/credit-notes'
+      preLoaderRoute: typeof AppCreditNotesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/cash': {
+      id: '/app/cash'
+      path: '/cash'
+      fullPath: '/app/cash'
+      preLoaderRoute: typeof AppCashRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/audit': {
+      id: '/app/audit'
+      path: '/audit'
+      fullPath: '/app/audit'
+      preLoaderRoute: typeof AppAuditRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/attendance': {
+      id: '/app/attendance'
+      path: '/attendance'
+      fullPath: '/app/attendance'
+      preLoaderRoute: typeof AppAttendanceRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/utilities/': {
+      id: '/app/utilities/'
+      path: '/'
+      fullPath: '/app/utilities/'
+      preLoaderRoute: typeof AppUtilitiesIndexRouteImport
+      parentRoute: typeof AppUtilitiesRoute
+    }
+    '/super-admin/payments/$id': {
+      id: '/super-admin/payments/$id'
+      path: '/$id'
+      fullPath: '/super-admin/payments/$id'
+      preLoaderRoute: typeof SuperAdminPaymentsIdRouteImport
+      parentRoute: typeof SuperAdminPaymentsRoute
+    }
+    '/super-admin/devices/$id': {
+      id: '/super-admin/devices/$id'
+      path: '/$id'
+      fullPath: '/super-admin/devices/$id'
+      preLoaderRoute: typeof SuperAdminDevicesIdRouteImport
+      parentRoute: typeof SuperAdminDevicesRoute
+    }
+    '/super-admin/customers/$userId': {
+      id: '/super-admin/customers/$userId'
+      path: '/$userId'
+      fullPath: '/super-admin/customers/$userId'
+      preLoaderRoute: typeof SuperAdminCustomersUserIdRouteImport
+      parentRoute: typeof SuperAdminCustomersRoute
+    }
+    '/super-admin/coupons/$id': {
+      id: '/super-admin/coupons/$id'
+      path: '/$id'
+      fullPath: '/super-admin/coupons/$id'
+      preLoaderRoute: typeof SuperAdminCouponsIdRouteImport
+      parentRoute: typeof SuperAdminCouponsRoute
+    }
+    '/super-admin/companies/$companyId': {
+      id: '/super-admin/companies/$companyId'
+      path: '/$companyId'
+      fullPath: '/super-admin/companies/$companyId'
+      preLoaderRoute: typeof SuperAdminCompaniesCompanyIdRouteImport
+      parentRoute: typeof SuperAdminCompaniesRoute
+    }
+    '/app/utilities/import-parties': {
+      id: '/app/utilities/import-parties'
+      path: '/import-parties'
+      fullPath: '/app/utilities/import-parties'
+      preLoaderRoute: typeof AppUtilitiesImportPartiesRouteImport
+      parentRoute: typeof AppUtilitiesRoute
+    }
+    '/app/utilities/import-items': {
+      id: '/app/utilities/import-items'
+      path: '/import-items'
+      fullPath: '/app/utilities/import-items'
+      preLoaderRoute: typeof AppUtilitiesImportItemsRouteImport
+      parentRoute: typeof AppUtilitiesRoute
+    }
+    '/app/utilities/import-export': {
+      id: '/app/utilities/import-export'
+      path: '/import-export'
+      fullPath: '/app/utilities/import-export'
+      preLoaderRoute: typeof AppUtilitiesImportExportRouteImport
+      parentRoute: typeof AppUtilitiesRoute
+    }
+    '/app/utilities/export-items': {
+      id: '/app/utilities/export-items'
+      path: '/export-items'
+      fullPath: '/app/utilities/export-items'
+      preLoaderRoute: typeof AppUtilitiesExportItemsRouteImport
+      parentRoute: typeof AppUtilitiesRoute
+    }
+    '/app/utilities/close-financial-year': {
+      id: '/app/utilities/close-financial-year'
+      path: '/close-financial-year'
+      fullPath: '/app/utilities/close-financial-year'
+      preLoaderRoute: typeof AppUtilitiesCloseFinancialYearRouteImport
+      parentRoute: typeof AppUtilitiesRoute
+    }
+    '/app/utilities/bulk-update-items': {
+      id: '/app/utilities/bulk-update-items'
+      path: '/bulk-update-items'
+      fullPath: '/app/utilities/bulk-update-items'
+      preLoaderRoute: typeof AppUtilitiesBulkUpdateItemsRouteImport
+      parentRoute: typeof AppUtilitiesRoute
+    }
+    '/app/utilities/barcode-generator': {
+      id: '/app/utilities/barcode-generator'
+      path: '/barcode-generator'
+      fullPath: '/app/utilities/barcode-generator'
+      preLoaderRoute: typeof AppUtilitiesBarcodeGeneratorRouteImport
+      parentRoute: typeof AppUtilitiesRoute
+    }
+    '/app/upgrade/$plan': {
+      id: '/app/upgrade/$plan'
+      path: '/upgrade/$plan'
+      fullPath: '/app/upgrade/$plan'
+      preLoaderRoute: typeof AppUpgradePlanRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/sales/new': {
+      id: '/app/sales/new'
+      path: '/new'
+      fullPath: '/app/sales/new'
+      preLoaderRoute: typeof AppSalesNewRouteImport
+      parentRoute: typeof AppSalesRoute
+    }
+    '/app/sale-orders/new': {
+      id: '/app/sale-orders/new'
+      path: '/new'
+      fullPath: '/app/sale-orders/new'
+      preLoaderRoute: typeof AppSaleOrdersNewRouteImport
+      parentRoute: typeof AppSaleOrdersRoute
+    }
+    '/app/reports/inventory': {
+      id: '/app/reports/inventory'
+      path: '/inventory'
+      fullPath: '/app/reports/inventory'
+      preLoaderRoute: typeof AppReportsInventoryRouteImport
+      parentRoute: typeof AppReportsRoute
+    }
+    '/app/purchases/new': {
+      id: '/app/purchases/new'
+      path: '/new'
+      fullPath: '/app/purchases/new'
+      preLoaderRoute: typeof AppPurchasesNewRouteImport
+      parentRoute: typeof AppPurchasesRoute
+    }
+    '/app/purchase-orders/new': {
+      id: '/app/purchase-orders/new'
+      path: '/new'
+      fullPath: '/app/purchase-orders/new'
+      preLoaderRoute: typeof AppPurchaseOrdersNewRouteImport
+      parentRoute: typeof AppPurchaseOrdersRoute
+    }
+    '/app/payments-in/new': {
+      id: '/app/payments-in/new'
+      path: '/new'
+      fullPath: '/app/payments-in/new'
+      preLoaderRoute: typeof AppPaymentsInNewRouteImport
+      parentRoute: typeof AppPaymentsInRoute
+    }
+    '/app/payment-out/new': {
+      id: '/app/payment-out/new'
+      path: '/new'
+      fullPath: '/app/payment-out/new'
+      preLoaderRoute: typeof AppPaymentOutNewRouteImport
+      parentRoute: typeof AppPaymentOutRoute
+    }
+    '/app/parties/$id': {
+      id: '/app/parties/$id'
+      path: '/$id'
+      fullPath: '/app/parties/$id'
+      preLoaderRoute: typeof AppPartiesIdRouteImport
+      parentRoute: typeof AppPartiesRoute
+    }
+    '/app/expenses/new': {
+      id: '/app/expenses/new'
+      path: '/new'
+      fullPath: '/app/expenses/new'
+      preLoaderRoute: typeof AppExpensesNewRouteImport
+      parentRoute: typeof AppExpensesRoute
+    }
+    '/app/estimates/new': {
+      id: '/app/estimates/new'
+      path: '/new'
+      fullPath: '/app/estimates/new'
+      preLoaderRoute: typeof AppEstimatesNewRouteImport
+      parentRoute: typeof AppEstimatesRoute
+    }
+    '/app/delivery-challans/new': {
+      id: '/app/delivery-challans/new'
+      path: '/new'
+      fullPath: '/app/delivery-challans/new'
+      preLoaderRoute: typeof AppDeliveryChallansNewRouteImport
+      parentRoute: typeof AppDeliveryChallansRoute
+    }
+    '/app/debit-notes/new': {
+      id: '/app/debit-notes/new'
+      path: '/new'
+      fullPath: '/app/debit-notes/new'
+      preLoaderRoute: typeof AppDebitNotesNewRouteImport
+      parentRoute: typeof AppDebitNotesRoute
+    }
+    '/app/credit-notes/new': {
+      id: '/app/credit-notes/new'
+      path: '/new'
+      fullPath: '/app/credit-notes/new'
+      preLoaderRoute: typeof AppCreditNotesNewRouteImport
+      parentRoute: typeof AppCreditNotesRoute
+    }
+    '/app/admin/security-tests': {
+      id: '/app/admin/security-tests'
+      path: '/admin/security-tests'
+      fullPath: '/app/admin/security-tests'
+      preLoaderRoute: typeof AppAdminSecurityTestsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/admin/payments': {
+      id: '/app/admin/payments'
+      path: '/admin/payments'
+      fullPath: '/app/admin/payments'
+      preLoaderRoute: typeof AppAdminPaymentsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/admin/payment-settings': {
+      id: '/app/admin/payment-settings'
+      path: '/admin/payment-settings'
+      fullPath: '/app/admin/payment-settings'
+      preLoaderRoute: typeof AppAdminPaymentSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/admin/access-matrix': {
+      id: '/app/admin/access-matrix'
+      path: '/admin/access-matrix'
+      fullPath: '/app/admin/access-matrix'
+      preLoaderRoute: typeof AppAdminAccessMatrixRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/subscription/receipt/$id': {
+      id: '/app/subscription/receipt/$id'
+      path: '/receipt/$id'
+      fullPath: '/app/subscription/receipt/$id'
+      preLoaderRoute: typeof AppSubscriptionReceiptIdRouteImport
+      parentRoute: typeof AppSubscriptionRoute
+    }
+    '/app/stock-transfers/$id/edit': {
+      id: '/app/stock-transfers/$id/edit'
+      path: '/$id/edit'
+      fullPath: '/app/stock-transfers/$id/edit'
+      preLoaderRoute: typeof AppStockTransfersIdEditRouteImport
+      parentRoute: typeof AppStockTransfersRoute
+    }
+    '/app/stock-adjustments/$id/edit': {
+      id: '/app/stock-adjustments/$id/edit'
+      path: '/$id/edit'
+      fullPath: '/app/stock-adjustments/$id/edit'
+      preLoaderRoute: typeof AppStockAdjustmentsIdEditRouteImport
+      parentRoute: typeof AppStockAdjustmentsRoute
+    }
+    '/app/sales/$id/edit': {
+      id: '/app/sales/$id/edit'
+      path: '/$id/edit'
+      fullPath: '/app/sales/$id/edit'
+      preLoaderRoute: typeof AppSalesIdEditRouteImport
+      parentRoute: typeof AppSalesRoute
+    }
+    '/app/sale-orders/$id/edit': {
+      id: '/app/sale-orders/$id/edit'
+      path: '/$id/edit'
+      fullPath: '/app/sale-orders/$id/edit'
+      preLoaderRoute: typeof AppSaleOrdersIdEditRouteImport
+      parentRoute: typeof AppSaleOrdersRoute
+    }
+    '/app/purchases/$id/edit': {
+      id: '/app/purchases/$id/edit'
+      path: '/$id/edit'
+      fullPath: '/app/purchases/$id/edit'
+      preLoaderRoute: typeof AppPurchasesIdEditRouteImport
+      parentRoute: typeof AppPurchasesRoute
+    }
+    '/app/purchase-orders/$id/edit': {
+      id: '/app/purchase-orders/$id/edit'
+      path: '/$id/edit'
+      fullPath: '/app/purchase-orders/$id/edit'
+      preLoaderRoute: typeof AppPurchaseOrdersIdEditRouteImport
+      parentRoute: typeof AppPurchaseOrdersRoute
+    }
+    '/app/payroll/salary-slips/$id': {
+      id: '/app/payroll/salary-slips/$id'
+      path: '/salary-slips/$id'
+      fullPath: '/app/payroll/salary-slips/$id'
+      preLoaderRoute: typeof AppPayrollSalarySlipsIdRouteImport
+      parentRoute: typeof AppPayrollRoute
+    }
+    '/app/payroll/salary-payments/$id': {
+      id: '/app/payroll/salary-payments/$id'
+      path: '/salary-payments/$id'
+      fullPath: '/app/payroll/salary-payments/$id'
+      preLoaderRoute: typeof AppPayrollSalaryPaymentsIdRouteImport
+      parentRoute: typeof AppPayrollRoute
+    }
+    '/app/payroll/employees/$id': {
+      id: '/app/payroll/employees/$id'
+      path: '/employees/$id'
+      fullPath: '/app/payroll/employees/$id'
+      preLoaderRoute: typeof AppPayrollEmployeesIdRouteImport
+      parentRoute: typeof AppPayrollRoute
+    }
+    '/app/payroll/attendance/$id': {
+      id: '/app/payroll/attendance/$id'
+      path: '/attendance/$id'
+      fullPath: '/app/payroll/attendance/$id'
+      preLoaderRoute: typeof AppPayrollAttendanceIdRouteImport
+      parentRoute: typeof AppPayrollRoute
+    }
+    '/app/payments-in/$id/edit': {
+      id: '/app/payments-in/$id/edit'
+      path: '/$id/edit'
+      fullPath: '/app/payments-in/$id/edit'
+      preLoaderRoute: typeof AppPaymentsInIdEditRouteImport
+      parentRoute: typeof AppPaymentsInRoute
+    }
+    '/app/payment-out/$id/edit': {
+      id: '/app/payment-out/$id/edit'
+      path: '/$id/edit'
+      fullPath: '/app/payment-out/$id/edit'
+      preLoaderRoute: typeof AppPaymentOutIdEditRouteImport
+      parentRoute: typeof AppPaymentOutRoute
+    }
+    '/app/items/$id/edit': {
+      id: '/app/items/$id/edit'
+      path: '/$id/edit'
+      fullPath: '/app/items/$id/edit'
+      preLoaderRoute: typeof AppItemsIdEditRouteImport
+      parentRoute: typeof AppItemsRoute
+    }
+    '/app/expenses/$id/edit': {
+      id: '/app/expenses/$id/edit'
+      path: '/$id/edit'
+      fullPath: '/app/expenses/$id/edit'
+      preLoaderRoute: typeof AppExpensesIdEditRouteImport
+      parentRoute: typeof AppExpensesRoute
+    }
+    '/app/estimates/$id/edit': {
+      id: '/app/estimates/$id/edit'
+      path: '/$id/edit'
+      fullPath: '/app/estimates/$id/edit'
+      preLoaderRoute: typeof AppEstimatesIdEditRouteImport
+      parentRoute: typeof AppEstimatesRoute
+    }
+    '/app/delivery-challans/$id/edit': {
+      id: '/app/delivery-challans/$id/edit'
+      path: '/$id/edit'
+      fullPath: '/app/delivery-challans/$id/edit'
+      preLoaderRoute: typeof AppDeliveryChallansIdEditRouteImport
+      parentRoute: typeof AppDeliveryChallansRoute
+    }
+    '/app/debit-notes/$id/edit': {
+      id: '/app/debit-notes/$id/edit'
+      path: '/$id/edit'
+      fullPath: '/app/debit-notes/$id/edit'
+      preLoaderRoute: typeof AppDebitNotesIdEditRouteImport
+      parentRoute: typeof AppDebitNotesRoute
+    }
+    '/app/credit-notes/$id/edit': {
+      id: '/app/credit-notes/$id/edit'
+      path: '/$id/edit'
+      fullPath: '/app/credit-notes/$id/edit'
+      preLoaderRoute: typeof AppCreditNotesIdEditRouteImport
+      parentRoute: typeof AppCreditNotesRoute
+    }
+    '/app/cash/transfers/$id': {
+      id: '/app/cash/transfers/$id'
+      path: '/transfers/$id'
+      fullPath: '/app/cash/transfers/$id'
+      preLoaderRoute: typeof AppCashTransfersIdRouteImport
+      parentRoute: typeof AppCashRoute
+    }
+    '/app/cash/loan-payments/$id': {
+      id: '/app/cash/loan-payments/$id'
+      path: '/loan-payments/$id'
+      fullPath: '/app/cash/loan-payments/$id'
+      preLoaderRoute: typeof AppCashLoanPaymentsIdRouteImport
+      parentRoute: typeof AppCashRoute
+    }
+    '/app/cash/cheques/$id': {
+      id: '/app/cash/cheques/$id'
+      path: '/cheques/$id'
+      fullPath: '/app/cash/cheques/$id'
+      preLoaderRoute: typeof AppCashChequesIdRouteImport
+      parentRoute: typeof AppCashRoute
+    }
   }
 }
 
+interface AppCashRouteChildren {
+  AppCashChequesIdRoute: typeof AppCashChequesIdRoute
+  AppCashLoanPaymentsIdRoute: typeof AppCashLoanPaymentsIdRoute
+  AppCashTransfersIdRoute: typeof AppCashTransfersIdRoute
+}
+
+const AppCashRouteChildren: AppCashRouteChildren = {
+  AppCashChequesIdRoute: AppCashChequesIdRoute,
+  AppCashLoanPaymentsIdRoute: AppCashLoanPaymentsIdRoute,
+  AppCashTransfersIdRoute: AppCashTransfersIdRoute,
+}
+
+const AppCashRouteWithChildren =
+  AppCashRoute._addFileChildren(AppCashRouteChildren)
+
+interface AppCreditNotesRouteChildren {
+  AppCreditNotesNewRoute: typeof AppCreditNotesNewRoute
+  AppCreditNotesIdEditRoute: typeof AppCreditNotesIdEditRoute
+}
+
+const AppCreditNotesRouteChildren: AppCreditNotesRouteChildren = {
+  AppCreditNotesNewRoute: AppCreditNotesNewRoute,
+  AppCreditNotesIdEditRoute: AppCreditNotesIdEditRoute,
+}
+
+const AppCreditNotesRouteWithChildren = AppCreditNotesRoute._addFileChildren(
+  AppCreditNotesRouteChildren,
+)
+
+interface AppDebitNotesRouteChildren {
+  AppDebitNotesNewRoute: typeof AppDebitNotesNewRoute
+  AppDebitNotesIdEditRoute: typeof AppDebitNotesIdEditRoute
+}
+
+const AppDebitNotesRouteChildren: AppDebitNotesRouteChildren = {
+  AppDebitNotesNewRoute: AppDebitNotesNewRoute,
+  AppDebitNotesIdEditRoute: AppDebitNotesIdEditRoute,
+}
+
+const AppDebitNotesRouteWithChildren = AppDebitNotesRoute._addFileChildren(
+  AppDebitNotesRouteChildren,
+)
+
+interface AppDeliveryChallansRouteChildren {
+  AppDeliveryChallansNewRoute: typeof AppDeliveryChallansNewRoute
+  AppDeliveryChallansIdEditRoute: typeof AppDeliveryChallansIdEditRoute
+}
+
+const AppDeliveryChallansRouteChildren: AppDeliveryChallansRouteChildren = {
+  AppDeliveryChallansNewRoute: AppDeliveryChallansNewRoute,
+  AppDeliveryChallansIdEditRoute: AppDeliveryChallansIdEditRoute,
+}
+
+const AppDeliveryChallansRouteWithChildren =
+  AppDeliveryChallansRoute._addFileChildren(AppDeliveryChallansRouteChildren)
+
+interface AppEstimatesRouteChildren {
+  AppEstimatesNewRoute: typeof AppEstimatesNewRoute
+  AppEstimatesIdEditRoute: typeof AppEstimatesIdEditRoute
+}
+
+const AppEstimatesRouteChildren: AppEstimatesRouteChildren = {
+  AppEstimatesNewRoute: AppEstimatesNewRoute,
+  AppEstimatesIdEditRoute: AppEstimatesIdEditRoute,
+}
+
+const AppEstimatesRouteWithChildren = AppEstimatesRoute._addFileChildren(
+  AppEstimatesRouteChildren,
+)
+
+interface AppExpensesRouteChildren {
+  AppExpensesNewRoute: typeof AppExpensesNewRoute
+  AppExpensesIdEditRoute: typeof AppExpensesIdEditRoute
+}
+
+const AppExpensesRouteChildren: AppExpensesRouteChildren = {
+  AppExpensesNewRoute: AppExpensesNewRoute,
+  AppExpensesIdEditRoute: AppExpensesIdEditRoute,
+}
+
+const AppExpensesRouteWithChildren = AppExpensesRoute._addFileChildren(
+  AppExpensesRouteChildren,
+)
+
+interface AppItemsRouteChildren {
+  AppItemsIdEditRoute: typeof AppItemsIdEditRoute
+}
+
+const AppItemsRouteChildren: AppItemsRouteChildren = {
+  AppItemsIdEditRoute: AppItemsIdEditRoute,
+}
+
+const AppItemsRouteWithChildren = AppItemsRoute._addFileChildren(
+  AppItemsRouteChildren,
+)
+
+interface AppPartiesRouteChildren {
+  AppPartiesIdRoute: typeof AppPartiesIdRoute
+}
+
+const AppPartiesRouteChildren: AppPartiesRouteChildren = {
+  AppPartiesIdRoute: AppPartiesIdRoute,
+}
+
+const AppPartiesRouteWithChildren = AppPartiesRoute._addFileChildren(
+  AppPartiesRouteChildren,
+)
+
+interface AppPaymentOutRouteChildren {
+  AppPaymentOutNewRoute: typeof AppPaymentOutNewRoute
+  AppPaymentOutIdEditRoute: typeof AppPaymentOutIdEditRoute
+}
+
+const AppPaymentOutRouteChildren: AppPaymentOutRouteChildren = {
+  AppPaymentOutNewRoute: AppPaymentOutNewRoute,
+  AppPaymentOutIdEditRoute: AppPaymentOutIdEditRoute,
+}
+
+const AppPaymentOutRouteWithChildren = AppPaymentOutRoute._addFileChildren(
+  AppPaymentOutRouteChildren,
+)
+
+interface AppPaymentsInRouteChildren {
+  AppPaymentsInNewRoute: typeof AppPaymentsInNewRoute
+  AppPaymentsInIdEditRoute: typeof AppPaymentsInIdEditRoute
+}
+
+const AppPaymentsInRouteChildren: AppPaymentsInRouteChildren = {
+  AppPaymentsInNewRoute: AppPaymentsInNewRoute,
+  AppPaymentsInIdEditRoute: AppPaymentsInIdEditRoute,
+}
+
+const AppPaymentsInRouteWithChildren = AppPaymentsInRoute._addFileChildren(
+  AppPaymentsInRouteChildren,
+)
+
+interface AppPayrollRouteChildren {
+  AppPayrollAttendanceIdRoute: typeof AppPayrollAttendanceIdRoute
+  AppPayrollEmployeesIdRoute: typeof AppPayrollEmployeesIdRoute
+  AppPayrollSalaryPaymentsIdRoute: typeof AppPayrollSalaryPaymentsIdRoute
+  AppPayrollSalarySlipsIdRoute: typeof AppPayrollSalarySlipsIdRoute
+}
+
+const AppPayrollRouteChildren: AppPayrollRouteChildren = {
+  AppPayrollAttendanceIdRoute: AppPayrollAttendanceIdRoute,
+  AppPayrollEmployeesIdRoute: AppPayrollEmployeesIdRoute,
+  AppPayrollSalaryPaymentsIdRoute: AppPayrollSalaryPaymentsIdRoute,
+  AppPayrollSalarySlipsIdRoute: AppPayrollSalarySlipsIdRoute,
+}
+
+const AppPayrollRouteWithChildren = AppPayrollRoute._addFileChildren(
+  AppPayrollRouteChildren,
+)
+
+interface AppPurchaseOrdersRouteChildren {
+  AppPurchaseOrdersNewRoute: typeof AppPurchaseOrdersNewRoute
+  AppPurchaseOrdersIdEditRoute: typeof AppPurchaseOrdersIdEditRoute
+}
+
+const AppPurchaseOrdersRouteChildren: AppPurchaseOrdersRouteChildren = {
+  AppPurchaseOrdersNewRoute: AppPurchaseOrdersNewRoute,
+  AppPurchaseOrdersIdEditRoute: AppPurchaseOrdersIdEditRoute,
+}
+
+const AppPurchaseOrdersRouteWithChildren =
+  AppPurchaseOrdersRoute._addFileChildren(AppPurchaseOrdersRouteChildren)
+
+interface AppPurchasesRouteChildren {
+  AppPurchasesNewRoute: typeof AppPurchasesNewRoute
+  AppPurchasesIdEditRoute: typeof AppPurchasesIdEditRoute
+}
+
+const AppPurchasesRouteChildren: AppPurchasesRouteChildren = {
+  AppPurchasesNewRoute: AppPurchasesNewRoute,
+  AppPurchasesIdEditRoute: AppPurchasesIdEditRoute,
+}
+
+const AppPurchasesRouteWithChildren = AppPurchasesRoute._addFileChildren(
+  AppPurchasesRouteChildren,
+)
+
+interface AppReportsRouteChildren {
+  AppReportsInventoryRoute: typeof AppReportsInventoryRoute
+}
+
+const AppReportsRouteChildren: AppReportsRouteChildren = {
+  AppReportsInventoryRoute: AppReportsInventoryRoute,
+}
+
+const AppReportsRouteWithChildren = AppReportsRoute._addFileChildren(
+  AppReportsRouteChildren,
+)
+
+interface AppSaleOrdersRouteChildren {
+  AppSaleOrdersNewRoute: typeof AppSaleOrdersNewRoute
+  AppSaleOrdersIdEditRoute: typeof AppSaleOrdersIdEditRoute
+}
+
+const AppSaleOrdersRouteChildren: AppSaleOrdersRouteChildren = {
+  AppSaleOrdersNewRoute: AppSaleOrdersNewRoute,
+  AppSaleOrdersIdEditRoute: AppSaleOrdersIdEditRoute,
+}
+
+const AppSaleOrdersRouteWithChildren = AppSaleOrdersRoute._addFileChildren(
+  AppSaleOrdersRouteChildren,
+)
+
+interface AppSalesRouteChildren {
+  AppSalesNewRoute: typeof AppSalesNewRoute
+  AppSalesIdEditRoute: typeof AppSalesIdEditRoute
+}
+
+const AppSalesRouteChildren: AppSalesRouteChildren = {
+  AppSalesNewRoute: AppSalesNewRoute,
+  AppSalesIdEditRoute: AppSalesIdEditRoute,
+}
+
+const AppSalesRouteWithChildren = AppSalesRoute._addFileChildren(
+  AppSalesRouteChildren,
+)
+
+interface AppStockAdjustmentsRouteChildren {
+  AppStockAdjustmentsIdEditRoute: typeof AppStockAdjustmentsIdEditRoute
+}
+
+const AppStockAdjustmentsRouteChildren: AppStockAdjustmentsRouteChildren = {
+  AppStockAdjustmentsIdEditRoute: AppStockAdjustmentsIdEditRoute,
+}
+
+const AppStockAdjustmentsRouteWithChildren =
+  AppStockAdjustmentsRoute._addFileChildren(AppStockAdjustmentsRouteChildren)
+
+interface AppStockTransfersRouteChildren {
+  AppStockTransfersIdEditRoute: typeof AppStockTransfersIdEditRoute
+}
+
+const AppStockTransfersRouteChildren: AppStockTransfersRouteChildren = {
+  AppStockTransfersIdEditRoute: AppStockTransfersIdEditRoute,
+}
+
+const AppStockTransfersRouteWithChildren =
+  AppStockTransfersRoute._addFileChildren(AppStockTransfersRouteChildren)
+
+interface AppSubscriptionRouteChildren {
+  AppSubscriptionReceiptIdRoute: typeof AppSubscriptionReceiptIdRoute
+}
+
+const AppSubscriptionRouteChildren: AppSubscriptionRouteChildren = {
+  AppSubscriptionReceiptIdRoute: AppSubscriptionReceiptIdRoute,
+}
+
+const AppSubscriptionRouteWithChildren = AppSubscriptionRoute._addFileChildren(
+  AppSubscriptionRouteChildren,
+)
+
+interface AppUtilitiesRouteChildren {
+  AppUtilitiesBarcodeGeneratorRoute: typeof AppUtilitiesBarcodeGeneratorRoute
+  AppUtilitiesBulkUpdateItemsRoute: typeof AppUtilitiesBulkUpdateItemsRoute
+  AppUtilitiesCloseFinancialYearRoute: typeof AppUtilitiesCloseFinancialYearRoute
+  AppUtilitiesExportItemsRoute: typeof AppUtilitiesExportItemsRoute
+  AppUtilitiesImportExportRoute: typeof AppUtilitiesImportExportRoute
+  AppUtilitiesImportItemsRoute: typeof AppUtilitiesImportItemsRoute
+  AppUtilitiesImportPartiesRoute: typeof AppUtilitiesImportPartiesRoute
+  AppUtilitiesIndexRoute: typeof AppUtilitiesIndexRoute
+}
+
+const AppUtilitiesRouteChildren: AppUtilitiesRouteChildren = {
+  AppUtilitiesBarcodeGeneratorRoute: AppUtilitiesBarcodeGeneratorRoute,
+  AppUtilitiesBulkUpdateItemsRoute: AppUtilitiesBulkUpdateItemsRoute,
+  AppUtilitiesCloseFinancialYearRoute: AppUtilitiesCloseFinancialYearRoute,
+  AppUtilitiesExportItemsRoute: AppUtilitiesExportItemsRoute,
+  AppUtilitiesImportExportRoute: AppUtilitiesImportExportRoute,
+  AppUtilitiesImportItemsRoute: AppUtilitiesImportItemsRoute,
+  AppUtilitiesImportPartiesRoute: AppUtilitiesImportPartiesRoute,
+  AppUtilitiesIndexRoute: AppUtilitiesIndexRoute,
+}
+
+const AppUtilitiesRouteWithChildren = AppUtilitiesRoute._addFileChildren(
+  AppUtilitiesRouteChildren,
+)
+
+interface AppRouteChildren {
+  AppAttendanceRoute: typeof AppAttendanceRoute
+  AppAuditRoute: typeof AppAuditRoute
+  AppCashRoute: typeof AppCashRouteWithChildren
+  AppCreditNotesRoute: typeof AppCreditNotesRouteWithChildren
+  AppDebitNotesRoute: typeof AppDebitNotesRouteWithChildren
+  AppDeliveryChallansRoute: typeof AppDeliveryChallansRouteWithChildren
+  AppDeviceLimitRoute: typeof AppDeviceLimitRoute
+  AppEmployeesRoute: typeof AppEmployeesRoute
+  AppEstimatesRoute: typeof AppEstimatesRouteWithChildren
+  AppExpenseCategoriesRoute: typeof AppExpenseCategoriesRoute
+  AppExpensesRoute: typeof AppExpensesRouteWithChildren
+  AppItemCategoriesRoute: typeof AppItemCategoriesRoute
+  AppItemsRoute: typeof AppItemsRouteWithChildren
+  AppMarketingToolsRoute: typeof AppMarketingToolsRoute
+  AppOnlineStoreRoute: typeof AppOnlineStoreRoute
+  AppOtherIncomeRoute: typeof AppOtherIncomeRoute
+  AppPartiesRoute: typeof AppPartiesRouteWithChildren
+  AppPartyGroupsRoute: typeof AppPartyGroupsRoute
+  AppPaymentOutRoute: typeof AppPaymentOutRouteWithChildren
+  AppPaymentsInRoute: typeof AppPaymentsInRouteWithChildren
+  AppPayrollRoute: typeof AppPayrollRouteWithChildren
+  AppPayrollReportsRoute: typeof AppPayrollReportsRoute
+  AppPlansRoute: typeof AppPlansRoute
+  AppPosRoute: typeof AppPosRoute
+  AppPrintTransactionsRoute: typeof AppPrintTransactionsRoute
+  AppPurchaseBillSettingsRoute: typeof AppPurchaseBillSettingsRoute
+  AppPurchaseOrdersRoute: typeof AppPurchaseOrdersRouteWithChildren
+  AppPurchaseReportsRoute: typeof AppPurchaseReportsRoute
+  AppPurchasesRoute: typeof AppPurchasesRouteWithChildren
+  AppRecycleBinRoute: typeof AppRecycleBinRoute
+  AppReportsRoute: typeof AppReportsRouteWithChildren
+  AppSalaryPaymentsRoute: typeof AppSalaryPaymentsRoute
+  AppSalarySetupRoute: typeof AppSalarySetupRoute
+  AppSaleInvoiceSettingsRoute: typeof AppSaleInvoiceSettingsRoute
+  AppSaleOrdersRoute: typeof AppSaleOrdersRouteWithChildren
+  AppSalesRoute: typeof AppSalesRouteWithChildren
+  AppSalesReportsRoute: typeof AppSalesReportsRoute
+  AppSettingsRoute: typeof AppSettingsRoute
+  AppStockAdjustmentsRoute: typeof AppStockAdjustmentsRouteWithChildren
+  AppStockMovementsRoute: typeof AppStockMovementsRoute
+  AppStockTransfersRoute: typeof AppStockTransfersRouteWithChildren
+  AppSubscriptionRoute: typeof AppSubscriptionRouteWithChildren
+  AppSupportRoute: typeof AppSupportRoute
+  AppSyncRoute: typeof AppSyncRoute
+  AppUtilitiesRoute: typeof AppUtilitiesRouteWithChildren
+  AppWarehousesRoute: typeof AppWarehousesRoute
+  AppIndexRoute: typeof AppIndexRoute
+  AppAdminAccessMatrixRoute: typeof AppAdminAccessMatrixRoute
+  AppAdminPaymentSettingsRoute: typeof AppAdminPaymentSettingsRoute
+  AppAdminPaymentsRoute: typeof AppAdminPaymentsRoute
+  AppAdminSecurityTestsRoute: typeof AppAdminSecurityTestsRoute
+  AppUpgradePlanRoute: typeof AppUpgradePlanRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppAttendanceRoute: AppAttendanceRoute,
+  AppAuditRoute: AppAuditRoute,
+  AppCashRoute: AppCashRouteWithChildren,
+  AppCreditNotesRoute: AppCreditNotesRouteWithChildren,
+  AppDebitNotesRoute: AppDebitNotesRouteWithChildren,
+  AppDeliveryChallansRoute: AppDeliveryChallansRouteWithChildren,
+  AppDeviceLimitRoute: AppDeviceLimitRoute,
+  AppEmployeesRoute: AppEmployeesRoute,
+  AppEstimatesRoute: AppEstimatesRouteWithChildren,
+  AppExpenseCategoriesRoute: AppExpenseCategoriesRoute,
+  AppExpensesRoute: AppExpensesRouteWithChildren,
+  AppItemCategoriesRoute: AppItemCategoriesRoute,
+  AppItemsRoute: AppItemsRouteWithChildren,
+  AppMarketingToolsRoute: AppMarketingToolsRoute,
+  AppOnlineStoreRoute: AppOnlineStoreRoute,
+  AppOtherIncomeRoute: AppOtherIncomeRoute,
+  AppPartiesRoute: AppPartiesRouteWithChildren,
+  AppPartyGroupsRoute: AppPartyGroupsRoute,
+  AppPaymentOutRoute: AppPaymentOutRouteWithChildren,
+  AppPaymentsInRoute: AppPaymentsInRouteWithChildren,
+  AppPayrollRoute: AppPayrollRouteWithChildren,
+  AppPayrollReportsRoute: AppPayrollReportsRoute,
+  AppPlansRoute: AppPlansRoute,
+  AppPosRoute: AppPosRoute,
+  AppPrintTransactionsRoute: AppPrintTransactionsRoute,
+  AppPurchaseBillSettingsRoute: AppPurchaseBillSettingsRoute,
+  AppPurchaseOrdersRoute: AppPurchaseOrdersRouteWithChildren,
+  AppPurchaseReportsRoute: AppPurchaseReportsRoute,
+  AppPurchasesRoute: AppPurchasesRouteWithChildren,
+  AppRecycleBinRoute: AppRecycleBinRoute,
+  AppReportsRoute: AppReportsRouteWithChildren,
+  AppSalaryPaymentsRoute: AppSalaryPaymentsRoute,
+  AppSalarySetupRoute: AppSalarySetupRoute,
+  AppSaleInvoiceSettingsRoute: AppSaleInvoiceSettingsRoute,
+  AppSaleOrdersRoute: AppSaleOrdersRouteWithChildren,
+  AppSalesRoute: AppSalesRouteWithChildren,
+  AppSalesReportsRoute: AppSalesReportsRoute,
+  AppSettingsRoute: AppSettingsRoute,
+  AppStockAdjustmentsRoute: AppStockAdjustmentsRouteWithChildren,
+  AppStockMovementsRoute: AppStockMovementsRoute,
+  AppStockTransfersRoute: AppStockTransfersRouteWithChildren,
+  AppSubscriptionRoute: AppSubscriptionRouteWithChildren,
+  AppSupportRoute: AppSupportRoute,
+  AppSyncRoute: AppSyncRoute,
+  AppUtilitiesRoute: AppUtilitiesRouteWithChildren,
+  AppWarehousesRoute: AppWarehousesRoute,
+  AppIndexRoute: AppIndexRoute,
+  AppAdminAccessMatrixRoute: AppAdminAccessMatrixRoute,
+  AppAdminPaymentSettingsRoute: AppAdminPaymentSettingsRoute,
+  AppAdminPaymentsRoute: AppAdminPaymentsRoute,
+  AppAdminSecurityTestsRoute: AppAdminSecurityTestsRoute,
+  AppUpgradePlanRoute: AppUpgradePlanRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
+interface SuperAdminCompaniesRouteChildren {
+  SuperAdminCompaniesCompanyIdRoute: typeof SuperAdminCompaniesCompanyIdRoute
+}
+
+const SuperAdminCompaniesRouteChildren: SuperAdminCompaniesRouteChildren = {
+  SuperAdminCompaniesCompanyIdRoute: SuperAdminCompaniesCompanyIdRoute,
+}
+
+const SuperAdminCompaniesRouteWithChildren =
+  SuperAdminCompaniesRoute._addFileChildren(SuperAdminCompaniesRouteChildren)
+
+interface SuperAdminCouponsRouteChildren {
+  SuperAdminCouponsIdRoute: typeof SuperAdminCouponsIdRoute
+}
+
+const SuperAdminCouponsRouteChildren: SuperAdminCouponsRouteChildren = {
+  SuperAdminCouponsIdRoute: SuperAdminCouponsIdRoute,
+}
+
+const SuperAdminCouponsRouteWithChildren =
+  SuperAdminCouponsRoute._addFileChildren(SuperAdminCouponsRouteChildren)
+
+interface SuperAdminCustomersRouteChildren {
+  SuperAdminCustomersUserIdRoute: typeof SuperAdminCustomersUserIdRoute
+}
+
+const SuperAdminCustomersRouteChildren: SuperAdminCustomersRouteChildren = {
+  SuperAdminCustomersUserIdRoute: SuperAdminCustomersUserIdRoute,
+}
+
+const SuperAdminCustomersRouteWithChildren =
+  SuperAdminCustomersRoute._addFileChildren(SuperAdminCustomersRouteChildren)
+
+interface SuperAdminDevicesRouteChildren {
+  SuperAdminDevicesIdRoute: typeof SuperAdminDevicesIdRoute
+}
+
+const SuperAdminDevicesRouteChildren: SuperAdminDevicesRouteChildren = {
+  SuperAdminDevicesIdRoute: SuperAdminDevicesIdRoute,
+}
+
+const SuperAdminDevicesRouteWithChildren =
+  SuperAdminDevicesRoute._addFileChildren(SuperAdminDevicesRouteChildren)
+
+interface SuperAdminPaymentsRouteChildren {
+  SuperAdminPaymentsIdRoute: typeof SuperAdminPaymentsIdRoute
+}
+
+const SuperAdminPaymentsRouteChildren: SuperAdminPaymentsRouteChildren = {
+  SuperAdminPaymentsIdRoute: SuperAdminPaymentsIdRoute,
+}
+
+const SuperAdminPaymentsRouteWithChildren =
+  SuperAdminPaymentsRoute._addFileChildren(SuperAdminPaymentsRouteChildren)
+
+interface SuperAdminRouteChildren {
+  SuperAdminAnnouncementsRoute: typeof SuperAdminAnnouncementsRoute
+  SuperAdminAuditLogsRoute: typeof SuperAdminAuditLogsRoute
+  SuperAdminCompaniesRoute: typeof SuperAdminCompaniesRouteWithChildren
+  SuperAdminCouponsRoute: typeof SuperAdminCouponsRouteWithChildren
+  SuperAdminCustomersRoute: typeof SuperAdminCustomersRouteWithChildren
+  SuperAdminDevicesRoute: typeof SuperAdminDevicesRouteWithChildren
+  SuperAdminFeatureControlRoute: typeof SuperAdminFeatureControlRoute
+  SuperAdminPaymentGatewaysRoute: typeof SuperAdminPaymentGatewaysRoute
+  SuperAdminPaymentsRoute: typeof SuperAdminPaymentsRouteWithChildren
+  SuperAdminPlansRoute: typeof SuperAdminPlansRoute
+  SuperAdminPlatformAdminsRoute: typeof SuperAdminPlatformAdminsRoute
+  SuperAdminReportsRoute: typeof SuperAdminReportsRoute
+  SuperAdminSettingsRoute: typeof SuperAdminSettingsRoute
+  SuperAdminSubscriptionsRoute: typeof SuperAdminSubscriptionsRoute
+  SuperAdminSupportRoute: typeof SuperAdminSupportRoute
+  SuperAdminIndexRoute: typeof SuperAdminIndexRoute
+}
+
+const SuperAdminRouteChildren: SuperAdminRouteChildren = {
+  SuperAdminAnnouncementsRoute: SuperAdminAnnouncementsRoute,
+  SuperAdminAuditLogsRoute: SuperAdminAuditLogsRoute,
+  SuperAdminCompaniesRoute: SuperAdminCompaniesRouteWithChildren,
+  SuperAdminCouponsRoute: SuperAdminCouponsRouteWithChildren,
+  SuperAdminCustomersRoute: SuperAdminCustomersRouteWithChildren,
+  SuperAdminDevicesRoute: SuperAdminDevicesRouteWithChildren,
+  SuperAdminFeatureControlRoute: SuperAdminFeatureControlRoute,
+  SuperAdminPaymentGatewaysRoute: SuperAdminPaymentGatewaysRoute,
+  SuperAdminPaymentsRoute: SuperAdminPaymentsRouteWithChildren,
+  SuperAdminPlansRoute: SuperAdminPlansRoute,
+  SuperAdminPlatformAdminsRoute: SuperAdminPlatformAdminsRoute,
+  SuperAdminReportsRoute: SuperAdminReportsRoute,
+  SuperAdminSettingsRoute: SuperAdminSettingsRoute,
+  SuperAdminSubscriptionsRoute: SuperAdminSubscriptionsRoute,
+  SuperAdminSupportRoute: SuperAdminSupportRoute,
+  SuperAdminIndexRoute: SuperAdminIndexRoute,
+}
+
+const SuperAdminRouteWithChildren = SuperAdminRoute._addFileChildren(
+  SuperAdminRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AppRoute: AppRouteWithChildren,
+  CompaniesRoute: CompaniesRoute,
+  ContactRoute: ContactRoute,
+  LoginRoute: LoginRoute,
+  PricingRoute: PricingRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
+  SignupRoute: SignupRoute,
+  SuperAdminRoute: SuperAdminRouteWithChildren,
+  StoreSlugRoute: StoreSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
