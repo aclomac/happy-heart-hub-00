@@ -201,12 +201,20 @@ export function CompanySwitcher({
 
   const createCompany = useMutation({
     mutationFn: async (data: any) => {
+      // Demo mode: write to localStorage only.
+      if (isDemoMode()) {
+        const created = addDemoCompany({
+          name: data.name,
+          business_type: data.business_type ?? null,
+          phone: data.phone ?? null,
+        });
+        return created;
+      }
       const {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      // Check limit
       const currentCount = companies?.filter((c) => c.role === "owner").length || 0;
       const limit = sub?.features.maxCompanies ?? 1;
       if (currentCount >= limit) {
