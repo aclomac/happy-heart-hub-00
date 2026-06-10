@@ -145,10 +145,16 @@ export function CompanySwitcher({
     setSwitchTarget(company);
 
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      setCurrentCompanyId(company.id, user?.id);
+      let userId: string | undefined;
+      if (isDemoMode()) {
+        userId = DEMO_USER_ID;
+      } else {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        userId = user?.id;
+      }
+      setCurrentCompanyId(company.id, userId);
 
       await logAudit({
         companyId: currentCompanyId,
