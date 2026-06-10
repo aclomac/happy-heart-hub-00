@@ -9,6 +9,14 @@ import {
   useCurrentCompanyId,
   getLastSelectedCompanyId,
 } from "@/lib/use-company";
+import {
+  isDemoMode,
+  getDemoSession,
+  getDemoCompanies,
+  DEMO_USER_ID,
+  DEMO_USER_EMAIL,
+  DEMO_COMPANY_ID,
+} from "@/lib/demo/localStore";
 
 export type RouteDecision =
   | { status: "loading"; debug: DecisionDebug }
@@ -50,6 +58,18 @@ function useAuthUser() {
 
   useEffect(() => {
     let active = true;
+    // Demo session short-circuits Supabase auth entirely.
+    if (isDemoMode()) {
+      const s = getDemoSession();
+      setState({
+        loading: false,
+        userId: s?.userId ?? DEMO_USER_ID,
+        email: s?.email ?? DEMO_USER_EMAIL,
+      });
+      return () => {
+        active = false;
+      };
+    }
     const timeout = new Promise<"timeout">((resolve) =>
       window.setTimeout(() => resolve("timeout"), AUTH_RESOLVE_TIMEOUT_MS),
     );
@@ -101,17 +121,28 @@ function useAuthUser() {
 
 function useCompaniesCount(userId: string | null) {
   return useQuery({
-    queryKey: ["companies-count", userId],
+    queryKey: ["companies-count", userId, isDemoMode() ? "demo" : "live"],
     enabled: !!userId,
     staleTime: 30_000,
     queryFn: async () => {
-      const { data, count, error } = await supabase
-        .from("companies")
-        .select("id", { count: "exact" })
-        .order("created_at", { ascending: false })
-        .limit(1);
-      if (error) throw error;
-      return { count: count ?? 0, firstId: data?.[0]?.id ?? null };
+      // Demo mode: read entirely from localStorage.
+      if (isDemoMode()) {
+        const list = getDemoCompanies();
+        return { count: list.length, firstId: list[0]?.id ?? null };
+      }
+      try {
+        const { data, count, error } = await supabase
+          .from("companies")
+          .select("id", { count: "exact" })
+          .order("created_at", { ascending: false })
+          .limit(1);
+        if (error) throw error;
+        return { count: count ?? 0, firstId: data?.[0]?.id ?? null };
+      } catch {
+        // Backend unreachable — surface 0 instead of throwing so the app
+        // can still render (orchestrator will route to /companies).
+        return { count: 0, firstId: null };
+      }
     },
   });
 }
@@ -138,13 +169,15 @@ export function useRouteDecision(): RouteDecision {
   useEffect(() => {
     const companies = companiesQ.data;
     if (auth.userId && !companyId && companies?.count && companies.count > 0) {
+      // Demo mode: pick Chair King (or first local company) without hitting Supabase.
+      if (isDemoMode()) {
+        const list = getDemoCompanies();
+        const pick = list.find((c) => c.id === DEMO_COMPANY_ID) ?? list[0];
+        if (pick) setCurrentCompanyId(pick.id, auth.userId);
+        return;
+      }
       const lastId = getLastSelectedCompanyId(auth.userId);
-      // If we have a last selected company, but it's not the first one, or if we have multiple,
-      // the CompaniesCount query only returns the first.
-      // Actually CompaniesCount query is used here just to check if we should auto-select.
-
       if (lastId) {
-        // Verify last company access
         supabase
           .from("company_members")
           .select("company_id")
@@ -155,12 +188,10 @@ export function useRouteDecision(): RouteDecision {
             if (data) {
               setCurrentCompanyId(data.company_id, auth.userId);
             } else if (companies.firstId) {
-              // Last company unavailable, fallback to first available
               setCurrentCompanyId(companies.firstId, auth.userId);
             }
           });
       } else if (companies.firstId) {
-        // No last selection, pick first
         setCurrentCompanyId(companies.firstId, auth.userId);
       }
     }

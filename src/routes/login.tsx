@@ -9,6 +9,13 @@ import { toast } from "sonner";
 import { seedDemoData } from "@/lib/demo/seedDemo";
 import { DEMO_EMAIL, DEMO_PASSWORD } from "@/lib/demo/constants";
 import { setCurrentCompanyId } from "@/lib/use-company";
+import {
+  startDemoSession,
+  ensureDemoSeed,
+  DEMO_COMPANY_ID,
+  DEMO_USER_ID,
+  DEMO_USER_EMAIL,
+} from "@/lib/demo/localStore";
 import { PWAInstallButton } from "@/components/erp/PWAInstallButton";
 
 export const Route = createFileRoute("/login")({
@@ -26,44 +33,47 @@ function Login() {
     const usePass = overridePass ?? pass;
     setLoading(true);
 
-    // DEMO-SAFE bypass: if demo credentials, try Supabase first, then fall back
-    // to a local-only "session" stored in localStorage so the app works without
-    // a real Supabase account.
-    const isDemo = useEmail === DEMO_EMAIL && usePass === DEMO_PASSWORD;
+    const isDemo =
+      (useEmail === DEMO_EMAIL || useEmail === DEMO_USER_EMAIL) && usePass === DEMO_PASSWORD;
+
+    // Demo login is fully local — skip Supabase, seed Chair King, pre-select it
+    // so the orchestrator doesn't bounce through /companies.
+    if (isDemo) {
+      try {
+        ensureDemoSeed();
+        startDemoSession();
+        setCurrentCompanyId(DEMO_COMPANY_ID, DEMO_USER_ID);
+        try {
+          await seedDemoData();
+        } catch {
+          /* best-effort */
+        }
+        toast.success("Signed in as Demo (local mode)");
+      } catch {
+        toast.error("Could not start demo mode");
+        setLoading(false);
+        return;
+      }
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("erpovo:cameFromLogin", "1");
+        sessionStorage.removeItem("erpovo:adminLandedOnce");
+      }
+      setLoading(false);
+      nav({ to: "/app", replace: true });
+      return;
+    }
 
     const { error } = await supabase.auth.signInWithPassword({
       email: useEmail,
       password: usePass,
     });
 
-    if (error && !isDemo) {
+    if (error) {
       setLoading(false);
       toast.error(error.message);
       return;
     }
 
-    if (error && isDemo) {
-      // Local demo session marker — UI guards can read this when supabase auth fails.
-      try {
-        localStorage.setItem(
-          "erpovo:demoSession",
-          JSON.stringify({ email: DEMO_EMAIL, userId: "00000000-0000-0000-0000-000000000001" }),
-        );
-      } catch {}
-      toast.success("Signed in as Demo (local mode)");
-    }
-
-    if (useEmail === DEMO_EMAIL) {
-      try {
-        const report = await seedDemoData();
-        if (report.companyId) setCurrentCompanyId(report.companyId);
-        if (report.ok && !report.alreadySeeded) {
-          toast.success("Demo data ready");
-        }
-      } catch {
-        // seeding is best-effort
-      }
-    }
     setLoading(false);
     if (typeof window !== "undefined") {
       sessionStorage.setItem("erpovo:cameFromLogin", "1");

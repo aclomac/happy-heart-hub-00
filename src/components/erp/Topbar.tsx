@@ -42,6 +42,12 @@ import { PaymentReminderPanel } from "@/components/erp/PaymentReminderPanel";
 import { PWAInstallButton } from "@/components/erp/PWAInstallButton";
 import { useQuery } from "@tanstack/react-query";
 import { CompanySwitcher } from "@/components/erp/CompanySwitcher";
+import {
+  isDemoMode,
+  getDemoCompany,
+  clearDemoStorage,
+  endDemoSession,
+} from "@/lib/demo/localStore";
 
 export function ERPTopbar() {
   const { lang, setLang, t } = useI18n();
@@ -56,30 +62,47 @@ export function ERPTopbar() {
   const [switcherOpen, setSwitcherOpen] = useState(false);
 
   const { data: currentCompany } = useQuery({
-    queryKey: ["current-company", companyId],
+    queryKey: ["current-company", companyId, isDemoMode() ? "demo" : "live"],
     enabled: !!companyId,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("companies")
-        .select("name")
-        .eq("id", companyId!)
-        .maybeSingle();
-      if (error) throw error;
-      return data;
+      if (isDemoMode()) {
+        const c = getDemoCompany(companyId);
+        return c ? { name: c.name } : null;
+      }
+      try {
+        const { data, error } = await supabase
+          .from("companies")
+          .select("name")
+          .eq("id", companyId!)
+          .maybeSingle();
+        if (error) throw error;
+        return data;
+      } catch {
+        return null;
+      }
     },
   });
 
   const logout = async () => {
-    await supabase.auth.signOut();
+    try {
+      if (!isDemoMode()) await supabase.auth.signOut();
+    } catch {
+      /* ignore */
+    }
+    endDemoSession();
+    clearDemoStorage();
     if (typeof window !== "undefined") {
-      // Clear all ERPOVO related local storage
       Object.keys(localStorage).forEach((key) => {
-        if (key.startsWith("erpovo:") || key === "erpovo.lang" || key.includes("announcements")) {
+        if (
+          key.startsWith("erpovo:") ||
+          key.startsWith("erpovo_demo_") ||
+          key === "erpovo.lang" ||
+          key.includes("announcements")
+        ) {
           localStorage.removeItem(key);
         }
       });
       sessionStorage.clear();
-      // Use window.location for a clean state wipe
       window.location.href = "/login";
     }
   };
