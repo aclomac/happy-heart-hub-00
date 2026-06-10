@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+# Fast pre-commit gate: format + lint only the staged files.
+# Full typecheck/tests run on pre-push and in CI.
+bunx lint-staged

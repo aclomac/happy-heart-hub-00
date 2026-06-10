@@ -11,6 +11,8 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { GlobalRouteOrchestrator } from "@/components/erp/GlobalRouteOrchestrator";
+import { PWAProvider } from "@/components/erp/PWAProvider";
 
 function NotFoundComponent() {
   return (
@@ -77,14 +79,38 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
+      { title: "ERPOVO" },
+      {
+        name: "description",
+        content:
+          "ERPOVO is a comprehensive business management ERP for retail, wholesale, manufacturing, and service businesses.",
+      },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { property: "og:title", content: "ERPOVO" },
+      {
+        property: "og:description",
+        content:
+          "ERPOVO is a comprehensive business management ERP for retail, wholesale, manufacturing, and service businesses.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "ERPOVO" },
+      {
+        name: "twitter:description",
+        content:
+          "ERPOVO is a comprehensive business management ERP for retail, wholesale, manufacturing, and service businesses.",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/e823af4b-c945-4d87-bce7-56cd69d0020c/id-preview-8543a3a4--ef93fa9a-952a-47ce-99d4-129057413352.lovable.app-1780472431113.png",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/e823af4b-c945-4d87-bce7-56cd69d0020c/id-preview-8543a3a4--ef93fa9a-952a-47ce-99d4-129057413352.lovable.app-1780472431113.png",
+      },
     ],
     links: [
       {
@@ -116,10 +142,118 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
+  useEffect(() => {
+    let mounted = true;
+    let lastUserId: string | null | undefined = undefined;
+    import("@/integrations/supabase/client").then(({ supabase }) => {
+      if (!mounted) return;
+      import("@/lib/device-fingerprint").then(({ registerDevice }) => {
+        supabase.auth.getUser().then(({ data }) => {
+          lastUserId = data.user?.id ?? null;
+          if (data.user) registerDevice(data.user.id).catch(() => {});
+        });
+      });
+
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange((event, session) => {
+        const nextId = session?.user?.id ?? null;
+        const identityChanged = lastUserId !== undefined && nextId !== lastUserId;
+        const isAuthEdge =
+          event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED";
+
+        if (identityChanged && isAuthEdge) {
+          queryClient.invalidateQueries({ queryKey: ["companies"] });
+          queryClient.invalidateQueries({ queryKey: ["companies-count"] });
+          queryClient.invalidateQueries({ queryKey: ["current-role"] });
+          queryClient.invalidateQueries({ queryKey: ["subscription"] });
+          queryClient.invalidateQueries({ queryKey: ["device-guard"] });
+
+          if (event === "SIGNED_OUT") {
+            // Clear current company on logout but keep last preference
+            import("@/lib/use-company").then(({ setCurrentCompanyId }) => {
+              setCurrentCompanyId(null);
+            });
+            // Clear sensitive app cache
+            queryClient.clear();
+          }
+        }
+
+        lastUserId = nextId;
+
+        if (event === "SIGNED_IN" && session?.user) {
+          import("@/lib/device-fingerprint").then(({ registerDevice }) => {
+            registerDevice(session.user.id).catch(() => {});
+          });
+
+          // Re-verify and restore last company
+          import("@/lib/use-company").then(({ getLastSelectedCompanyId, setCurrentCompanyId }) => {
+            const lastId = getLastSelectedCompanyId(session.user.id);
+            if (lastId) {
+              supabase
+                .from("company_members")
+                .select("company_id")
+                .eq("user_id", session.user.id)
+                .eq("company_id", lastId)
+                .single()
+                .then(({ data }) => {
+                  if (data) {
+                    setCurrentCompanyId(data.company_id, session.user.id);
+                  } else {
+                    // Falls back to global decision logic in GlobalRouteOrchestrator
+                    // But we could show a toast here if we want immediate feedback
+                  }
+                });
+            }
+          });
+
+          import("@/lib/audit").then(({ logAudit }) => {
+            const cid =
+              typeof window !== "undefined" ? localStorage.getItem("erpovo:companyId") : null;
+            if (cid)
+              logAudit({
+                companyId: cid,
+                module: "Auth",
+                action: "login",
+                entityType: "session",
+                status: "ok",
+              });
+          });
+        }
+
+        if (event === "SIGNED_OUT") {
+          import("@/lib/audit").then(({ logAudit }) => {
+            const cid =
+              typeof window !== "undefined" ? localStorage.getItem("erpovo:companyId") : null;
+            if (cid)
+              logAudit({
+                companyId: cid,
+                module: "Auth",
+                action: "logout",
+                entityType: "session",
+                status: "ok",
+              });
+          });
+        }
+      });
+      (window as unknown as { __erpovoSub?: { unsubscribe: () => void } }).__erpovoSub =
+        subscription;
+    });
+    return () => {
+      mounted = false;
+      const sub = (window as unknown as { __erpovoSub?: { unsubscribe: () => void } }).__erpovoSub;
+      sub?.unsubscribe();
+    };
+  }, [queryClient]);
+
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <GlobalRouteOrchestrator>
+        <PWAProvider>
+          {/* Required: nested routes render here. */}
+          <Outlet />
+        </PWAProvider>
+      </GlobalRouteOrchestrator>
     </QueryClientProvider>
   );
 }

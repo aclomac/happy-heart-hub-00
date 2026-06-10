@@ -1,0 +1,3 @@
+CREATE POLICY "payment_screenshots_admin_update" ON storage.objects FOR UPDATE TO authenticated USING (bucket_id = 'payment-screenshots' AND public.is_platform_admin(auth.uid())) WITH CHECK (bucket_id = 'payment-screenshots' AND public.is_platform_admin(auth.uid()));
+
+CREATE POLICY "payment_screenshots_admin_delete" ON storage.objects FOR DELETE TO authenticated USING (bucket_id = 'payment-screenshots' AND public.is_platform_admin(auth.uid()));

@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+# Stronger pre-push gate. Mirrors the CI `verify` job (minus build) and runs
+# the safe E2E wrapper, which skips cleanly when E2E env vars are missing.
+set -e
+
+bun run typecheck
+bun run lint
+bun run format:check
+bun run test:unit
+bun run test:static
+bash scripts/run-e2e.sh --skip-if-unconfigured
