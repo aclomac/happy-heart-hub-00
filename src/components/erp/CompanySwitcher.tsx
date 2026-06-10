@@ -45,6 +45,13 @@ import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/erp/ConfirmDialog";
 import { useNavigate } from "@tanstack/react-router";
 import { logAudit } from "@/lib/audit";
+import {
+  isDemoMode,
+  getDemoCompanies,
+  addDemoCompany,
+  renameDemoCompany,
+  DEMO_USER_ID,
+} from "@/lib/demo/localStore";
 
 type CompanyInfo = {
   id: string;
