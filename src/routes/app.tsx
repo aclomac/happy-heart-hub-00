@@ -24,6 +24,7 @@ function AppLayout() {
           <ERPSidebar />
           <div className="flex-1 flex flex-col min-w-0">
             <ERPTopbar />
+            <DemoModeBanner />
             <AnnouncementBanner />
             <main className="flex-1 p-4 overflow-x-auto">
               <RouteOrchestrator>
