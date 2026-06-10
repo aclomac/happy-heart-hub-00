@@ -3,7 +3,10 @@
 // app usable in offline/demo mode without exposing real protected data.
 import { createMiddleware } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { JwtPayload } from "@supabase/auth-js";
+import type { Database } from "./types";
+
 
 const DEMO_USER_ID = "00000000-0000-0000-0000-000000000001";
 
