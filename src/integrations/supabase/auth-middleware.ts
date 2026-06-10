@@ -3,10 +3,15 @@
 // app usable in offline/demo mode without exposing real protected data.
 import { createMiddleware } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "./types";
+import type { JwtPayload } from "@supabase/auth-js";
 
 const DEMO_USER_ID = "00000000-0000-0000-0000-000000000001";
+
+type DemoCtx = {
+  supabase: SupabaseClient<Database>;
+  userId: string;
+  claims: JwtPayload;
+};
 
 function buildDemoSupabaseClient(): SupabaseClient<Database> {
   const url = process.env.SUPABASE_URL || "https://demo.invalid.supabase.co";
@@ -16,7 +21,7 @@ function buildDemoSupabaseClient(): SupabaseClient<Database> {
   });
 }
 
-function buildDemoContext() {
+function buildDemoContext(): DemoCtx {
   const now = Math.floor(Date.now() / 1000);
   return {
     supabase: buildDemoSupabaseClient(),
@@ -30,9 +35,10 @@ function buildDemoContext() {
       email: "demo@erpovo.com",
       phone: "",
       role: "authenticated",
-    },
+    } as unknown as JwtPayload,
   };
 }
+
 
 export const requireSupabaseAuth = createMiddleware({ type: "function" }).server(
   async ({ next }) => {
