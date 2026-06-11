@@ -305,6 +305,10 @@ export function POS() {
   const [quickAddPrefill, setQuickAddPrefill] = useState<{ name?: string; phone?: string }>({});
 
   useEffect(() => {
+    migrateLegacyPosSalesOnce();
+  }, []);
+
+  useEffect(() => {
     if (typeof window === "undefined") return;
     try {
       localStorage.setItem(
