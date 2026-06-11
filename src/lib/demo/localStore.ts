@@ -359,6 +359,7 @@ export type DemoDashboardData = {
   monthOtherIncome: number;
   itemCount: number;
   partyCount: number;
+  topReceivables: { id: string; name: string; balance: number }[];
   inventory: {
     stockValue: number;
     totalItems: number;
