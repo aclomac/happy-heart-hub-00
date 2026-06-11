@@ -23,6 +23,7 @@ import {
 } from "./purchases";
 import { ensureExpensesSeed, getDemoMonthExpenses } from "./expenses";
 import { ensureCashSeed } from "./cash";
+import { ensurePayrollSeed } from "./payroll";
 import { DEMO_COMPANY_ID, DEMO_USER_EMAIL, DEMO_USER_ID } from "./constants";
 
 export { DEMO_COMPANY_ID, DEMO_USER_EMAIL, DEMO_USER_ID } from "./constants";
