@@ -54,7 +54,20 @@ function useAuthUser() {
     loading: boolean;
     userId: string | null;
     email: string | null;
-  }>({ loading: true, userId: null, email: null });
+  }>(() => {
+    // Synchronously honor a demo session so the very first render is
+    // already authenticated — prevents a brief "no user → /login" flicker
+    // after refresh.
+    if (typeof window !== "undefined" && isDemoMode()) {
+      const s = getDemoSession();
+      return {
+        loading: false,
+        userId: s?.userId ?? DEMO_USER_ID,
+        email: s?.email ?? DEMO_USER_EMAIL,
+      };
+    }
+    return { loading: true, userId: null, email: null };
+  });
 
   useEffect(() => {
     let active = true;
