@@ -15,23 +15,11 @@ export function useApiErrorToast() {
 
     switch (mapped.code) {
       case "SUBSCRIPTION_EXPIRED":
-        toast.error(authzMessage(mapped.code), {
-          description: "Renew your subscription to continue.",
-          action: { label: "Renew", onClick: () => navigate({ to: "/app/subscription" }) },
-        });
-        break;
       case "UPGRADE_REQUIRED":
       case "COMPANY_LIMIT":
-        toast.error(authzMessage(mapped.code), {
-          description: mapped.message,
-          action: { label: "Upgrade", onClick: () => navigate({ to: "/app/subscription" }) },
-        });
-        break;
       case "DEVICE_LIMIT":
-        toast.error(authzMessage(mapped.code), {
-          description: "Remove an old device or upgrade your plan.",
-          action: { label: "Manage", onClick: () => navigate({ to: "/app/settings" }) },
-        });
+        // Personal Mode: all plan/device gates are disabled.
+        toast.error(mapped.message || "Action unavailable");
         break;
       case "PERMISSION_DENIED":
       case "NO_COMPANY_ACCESS":
