@@ -482,6 +482,23 @@ function defaults(name: string): Row {
       reference_no: null, debit: 0, credit: 0, balance: 0, note: null,
       created_at: nowIso, company_id: DEMO_COMPANY_ID,
     };
+    case "sales": return {
+      doc_type: "invoice", invoice_no: "", invoice_date: nowIso.slice(0, 10), due_date: null,
+      party_id: null, subtotal: 0, discount: 0, tax: 0, delivery_charge: 0, labor_charge: 0,
+      total: 0, paid: 0, balance: 0, status: "unpaid", payment_method: null, notes: null,
+      reference_sale_id: null, po_no: null, po_date: null, billing_name: null,
+      deleted_at: null, created_at: nowIso, company_id: DEMO_COMPANY_ID,
+    };
+    case "sale_items": return {
+      variant_id: null, description: null, qty: 0, unit: "PCS",
+      price: 0, discount_pct: 0, tax_pct: 0, amount: 0,
+    };
+    case "payments": return {
+      direction: "in", amount: 0, method: "cash", reference_no: null,
+      payment_date: nowIso.slice(0, 10), notes: null, status: "posted",
+      posted_txn_id: null, deleted_at: null, created_at: nowIso,
+      company_id: DEMO_COMPANY_ID,
+    };
     case "purchases":
     case "purchase_orders":
     case "debit_notes": return {
