@@ -585,7 +585,34 @@ function defaults(name: string): Row {
       notes: null, posted_txn_id: null, status: "posted",
       deleted_at: null, created_at: nowIso, company_id: DEMO_COMPANY_ID,
     };
-
+    case "settings_kv": return {
+      company_id: DEMO_COMPANY_ID, key: "", value: {}, updated_at: nowIso,
+    };
+    case "support_tickets": return {
+      user_id: null, subject: "", module: null, priority: "normal",
+      status: "open", proof_url: null,
+      deleted_at: null, created_at: nowIso,
+    };
+    case "support_ticket_messages": return {
+      ticket_id: null, author_id: null, body: "", is_internal: false,
+      created_at: nowIso,
+    };
+    case "devices": return {
+      user_id: null, device_fingerprint: "", device_name: "Demo Device",
+      last_seen_at: nowIso, created_at: nowIso,
+    };
+    case "message_templates": return {
+      company_id: DEMO_COMPANY_ID, name: "", channel: "sms", body: "",
+      created_at: nowIso,
+    };
+    case "payment_methods": return {
+      company_id: DEMO_COMPANY_ID, name: "", type: "cash", is_active: true,
+    };
+    case "user_roles": return { user_id: null, role: "user" };
+    case "import_history": return {
+      company_id: DEMO_COMPANY_ID, file_name: "", status: "imported",
+      created_at: nowIso,
+    };
 
     default: return {};
   }
