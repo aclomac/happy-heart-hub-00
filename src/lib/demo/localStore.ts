@@ -396,6 +396,7 @@ export function getDemoDashboardData(): DemoDashboardData {
     ensurePurchasesSeed();
     ensureExpensesSeed();
     ensureCashSeed();
+    ensurePayrollSeed();
     receivables = getDemoReceivables();
     payables = getDemoBillPayables();
     partyCount = getDemoPartyCount();
