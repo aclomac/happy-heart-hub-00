@@ -53,7 +53,8 @@ function Login() {
         startDemoSession();
         setCurrentCompanyId(DEMO_COMPANY_ID, DEMO_USER_ID);
         try {
-          await seedDemoData();
+          const report = await seedDemoData();
+          if (report.companyId) setCurrentCompanyId(report.companyId);
         } catch {
           /* best-effort */
         }
