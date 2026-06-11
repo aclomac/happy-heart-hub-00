@@ -40,6 +40,19 @@ import {
   getPartyLedger,
   setPartyLedger,
 } from "./parties";
+import {
+  ensureSalesSeed,
+  getSales,
+  setSales,
+  getSaleItems,
+  setSaleItems,
+  getPayments,
+  setPayments,
+  getCashTxns,
+  setCashTxns,
+  getOtherIncome,
+  setOtherIncome,
+} from "./sales";
 import { getDemoCompanies, setDemoCompanies, DEMO_COMPANY_ID } from "./localStore";
 
 /**
