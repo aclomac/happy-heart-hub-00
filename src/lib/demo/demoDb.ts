@@ -118,8 +118,32 @@ function table(name: string): { read: Reader; write: Writer } {
   ensureInventorySeed();
   ensurePartiesSeed();
   ensureSalesSeed();
+  ensurePurchasesSeed();
+  ensureExpensesSeed();
   switch (name) {
     case "items": return { read: getItems as Reader, write: setItems as unknown as Writer };
+    case "item_categories": return { read: getCategories as Reader, write: setCategories as unknown as Writer };
+    case "warehouses": return { read: getWarehouses as Reader, write: setWarehouses as unknown as Writer };
+    case "item_store_stock": return { read: getStoreStock as Reader, write: setStoreStock as unknown as Writer };
+    case "stock_movements": return { read: getMovements as Reader, write: setMovements as unknown as Writer };
+    case "stock_adjustments": return { read: getAdjustments as Reader, write: setAdjustments as unknown as Writer };
+    case "stock_transfers": return { read: getTransfers as Reader, write: setTransfers as unknown as Writer };
+    case "stock_transfer_items": return { read: getTransferItems as Reader, write: setTransferItems as unknown as Writer };
+    case "parties": return { read: getParties as Reader, write: setParties as unknown as Writer };
+    case "party_groups": return { read: getPartyGroups as Reader, write: setPartyGroups as unknown as Writer };
+    case "party_ledger": return { read: getPartyLedger as Reader, write: setPartyLedger as unknown as Writer };
+    case "sales": return { read: getSales as Reader, write: setSales as unknown as Writer };
+    case "sale_items": return { read: getSaleItems as Reader, write: setSaleItems as unknown as Writer };
+    case "payments": return { read: getPayments as Reader, write: setPayments as unknown as Writer };
+    case "cash_transactions": return { read: getCashTxns as Reader, write: setCashTxns as unknown as Writer };
+    case "other_income": return { read: getOtherIncome as Reader, write: setOtherIncome as unknown as Writer };
+    case "other_incomes": return { read: getOtherIncome as Reader, write: setOtherIncome as unknown as Writer };
+    case "purchases": return { read: getPurchases as Reader, write: setPurchases as unknown as Writer };
+    case "purchase_items": return { read: getPurchaseItems as Reader, write: setPurchaseItems as unknown as Writer };
+    case "bank_accounts": return { read: getBankAccounts as Reader, write: setBankAccounts as unknown as Writer };
+    case "expenses": return { read: getExpenses as Reader, write: setExpenses as unknown as Writer };
+    case "expense_categories": return { read: getExpenseCategories as Reader, write: setExpenseCategories as unknown as Writer };
+    case "companies": return {
     case "item_categories": return { read: getCategories as Reader, write: setCategories as unknown as Writer };
     case "warehouses": return { read: getWarehouses as Reader, write: setWarehouses as unknown as Writer };
     case "item_store_stock": return { read: getStoreStock as Reader, write: setStoreStock as unknown as Writer };
