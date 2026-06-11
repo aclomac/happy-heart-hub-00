@@ -65,7 +65,9 @@ function CustomerSupportPage() {
 
   const create = useMutation({
     mutationFn: async () => {
-      const user = (await supabase.auth.getUser()).data.user;
+      const user = isDemoMode()
+        ? { id: DEMO_USER_ID }
+        : (await supabase.auth.getUser()).data.user;
       if (!user) throw new Error("Not authenticated");
       if (!form.subject.trim() || !form.message.trim())
         throw new Error("Subject and message required");
