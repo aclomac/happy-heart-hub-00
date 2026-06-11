@@ -501,36 +501,31 @@ export function POS() {
                 </SelectContent>
               </Select>
             </div>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-9 shrink-0"
-                    data-testid="pos-add-customer-btn"
-                    disabled={!canAddCustomer}
-                    onClick={() => setShowQuickAdd(true)}
-                  >
-                    <Plus className="w-4 h-4 mr-1" />
-                    {t("New Customer")}
-                  </Button>
-                </TooltipTrigger>
-                {!canAddCustomer && (
-                  <TooltipContent>
-                    <p>{t("You do not have permission to add customers")}</p>
-                  </TooltipContent>
-                )}
-              </Tooltip>
-            </TooltipProvider>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-9 shrink-0"
+              data-testid="pos-add-customer-btn"
+              title={!canAddCustomer ? t("You do not have permission to add customers") : undefined}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setShowQuickAdd(true);
+              }}
+            >
+              <Plus className="w-4 h-4 mr-1" />
+              {t("New Customer")}
+            </Button>
 
             <QuickAddCustomerDialog
               open={showQuickAdd}
               onOpenChange={setShowQuickAdd}
-              companyId={companyId!}
+              companyId={companyId ?? ""}
               onCreated={(p) => {
                 qc.invalidateQueries({ queryKey: ["pos-parties", companyId] });
                 setPartyId(p.id);
+                toast.success(t("Customer added and selected"));
               }}
             />
           </div>
