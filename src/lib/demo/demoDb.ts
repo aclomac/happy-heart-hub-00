@@ -190,7 +190,15 @@ function table(name: string): { read: Reader; write: Writer } {
     case "bank_accounts": return { read: getBankAccounts as Reader, write: setBankAccounts as unknown as Writer };
     case "expenses": return { read: getExpenses as Reader, write: setExpenses as unknown as Writer };
     case "expense_categories": return { read: getExpenseCategories as Reader, write: setExpenseCategories as unknown as Writer };
-    case "settings_kv": return empty;
+    case "settings_kv": return { read: getSettingsKv as Reader, write: setSettingsKv as unknown as Writer };
+    case "support_tickets": return { read: getSupportTickets as Reader, write: setSupportTickets as unknown as Writer };
+    case "support_ticket_messages": return { read: getSupportMessages as Reader, write: setSupportMessages as unknown as Writer };
+    case "devices": return { read: getDevices as Reader, write: setDevices as unknown as Writer };
+    case "message_templates": return { read: getMessageTemplates as Reader, write: setMessageTemplates as unknown as Writer };
+    case "payment_methods": return { read: getPaymentMethods as Reader, write: setPaymentMethods as unknown as Writer };
+    case "user_roles": return { read: getRoles as Reader, write: setRoles as unknown as Writer };
+    case "import_history": return { read: getImportHistory as Reader, write: setImportHistory as unknown as Writer };
+    case "print_settings": return { read: getPrintSettings as Reader, write: setPrintSettings as unknown as Writer };
     case "audit_logs": return empty;
     case "company_members": return empty;
     case "cheques": return { read: getCheques as Reader, write: setCheques as unknown as Writer };
