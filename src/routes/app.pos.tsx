@@ -232,6 +232,28 @@ export function POS() {
       toast.error("Cart is empty");
       return;
     }
+    if (discount < 0) {
+      toast.error("Discount cannot be negative");
+      return;
+    }
+    if (received < 0) {
+      toast.error("Received amount cannot be negative");
+      return;
+    }
+    if (vatPct < 0) {
+      toast.error("VAT cannot be negative");
+      return;
+    }
+    for (const l of cart) {
+      if (!l.item.is_service && l.qty > Number(l.item.stock)) {
+        toast.error(`${l.item.name}: only ${l.item.stock} ${l.item.unit} in stock`);
+        return;
+      }
+      if (!l.item.is_service && Number(l.item.stock) <= 0) {
+        toast.error(`${l.item.name} is out of stock`);
+        return;
+      }
+    }
     setSaving(true);
     try {
       const invoiceNo = await nextDocNumber(companyId, "sales", "POS");
@@ -240,13 +262,20 @@ export function POS() {
       const effBalance = total - effReceived;
       const status = effBalance <= 0 ? "paid" : effReceived > 0 ? "partial" : "unpaid";
       const paidAmt = Math.min(effReceived, total);
-      const method = (isCredit ? "cash" : paymentMethod) as
-        | "cash"
-        | "bank"
-        | "mobile"
-        | "card"
-        | "cheque"
-        | "upi";
+      // Map UI methods (bkash/nagad) onto the saveSaleInvoice enum.
+      const methodMap: Record<string, "cash" | "bank" | "mobile" | "card" | "cheque" | "upi"> = {
+        cash: "cash",
+        bank: "bank",
+        card: "card",
+        bkash: "mobile",
+        nagad: "mobile",
+        credit: "cash",
+      };
+      const method = methodMap[paymentMethod] ?? "cash";
+      const noteParts = ["POS Sale"];
+      if (paymentMethod === "bkash") noteParts.push("Paid via bKash");
+      if (paymentMethod === "nagad") noteParts.push("Paid via Nagad");
+      if (notes.trim()) noteParts.push(notes.trim());
       const saleId = await saveSaleInvoice({
         company_id: companyId,
         invoice_no: invoiceNo,
@@ -254,14 +283,14 @@ export function POS() {
         due_date: null,
         party_id: partyId && partyId !== WALK_IN ? partyId : null,
         subtotal,
-        discount,
+        discount: Math.max(0, discount),
         tax,
         delivery_charge: 0,
         total,
         paid: paidAmt,
         balance: Math.max(0, effBalance),
         status,
-        notes: "POS Sale",
+        notes: noteParts.join(" · "),
         payment_method: method,
         bank_account_id: null,
         doc_type: "invoice",
@@ -284,15 +313,19 @@ export function POS() {
 
       toast.success(`Sale ${invoiceNo} completed`);
       setLastSaleId(saleId);
+      setLastInvoiceNo(invoiceNo);
       qc.invalidateQueries({ queryKey: ["pos-items"] });
-      // Auto-print thermal receipt
-      printSaleReceiptNow(saleId, companyId).catch(() => {});
+      // Auto-print thermal receipt (safe; never throws to UI)
+      printSaleReceiptNow(saleId, companyId).catch(() => {
+        toast.message("Receipt preview unavailable in demo mode");
+      });
       clearCart();
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
       setSaving(false);
     }
+
   };
 
   return (
