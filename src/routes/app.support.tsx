@@ -231,7 +231,9 @@ function TicketThread({ ticketId }: { ticketId: string }) {
     mutationFn: async () => {
       const body = reply.trim();
       if (!body) throw new Error("Empty");
-      const user = (await supabase.auth.getUser()).data.user;
+      const user = isDemoMode()
+        ? { id: DEMO_USER_ID }
+        : (await supabase.auth.getUser()).data.user;
       if (!user) throw new Error("Not authenticated");
       const { error } = await supabase.from("support_ticket_messages").insert({
         ticket_id: ticketId,
