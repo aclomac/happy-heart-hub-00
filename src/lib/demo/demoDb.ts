@@ -189,6 +189,7 @@ class Builder<T extends Row = Row> implements PromiseLike<{ data: any; error: an
         const inserted = rows.map((r) => ({ ...defaults(this.name), ...r, id: r.id ?? genId() }));
         const next = [...all, ...inserted];
         t.write(next);
+        applyInsertSideEffects(this.name, inserted);
         if (this.singleMode === "maybe") return { data: inserted[0] ?? null, error: null };
         if (this.singleMode === "single") return { data: inserted[0] ?? null, error: null };
         return { data: inserted, error: null };
