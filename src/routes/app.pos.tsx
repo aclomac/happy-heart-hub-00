@@ -23,6 +23,8 @@ type PersistedCart = {
   paymentMethod: string;
   discount: number;
   received: number;
+  vatPct?: number;
+  notes?: string;
 };
 function loadPersistedCart(): PersistedCart | null {
   if (typeof window === "undefined") return null;
