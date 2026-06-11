@@ -39,6 +39,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCurrentCompanyId } from "@/lib/use-company";
 import { useQuery } from "@tanstack/react-query";
 import { useI18n } from "@/lib/i18n";
+import { isDemoMode, getDemoDashboardData } from "@/lib/demo/localStore";
 
 
 import { useSubscription, planAllowsModule } from "@/lib/use-subscription";
