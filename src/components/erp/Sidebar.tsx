@@ -250,7 +250,7 @@ const nav: NavNode[] = [
     ],
   },
 
-  { kind: "link", to: "/app/subscription", key: "subscription", icon: Crown, module: null },
+  
   { kind: "link", to: "/app/support", key: "support", icon: LifeBuoy, module: null },
   { kind: "link", to: "/app/settings", key: "settings", icon: Settings, module: null },
 ];
@@ -305,13 +305,10 @@ export function ERPSidebar() {
     queryFn: () => isAdminFn(),
     staleTime: 5 * 60_000,
   });
-  const subQ = useSubscription();
-  const sub = subQ.data;
-  const expired = !!sub?.isExpired;
-  const allowExpired = (to: string) =>
-    to.startsWith("/app/subscription") ||
-    to.startsWith("/app/settings") ||
-    to.startsWith("/app/admin");
+  // Personal mode: subscription/plan gating disabled — everything unlocked.
+  const sub = null as null | { plan: "pro"; isExpired: false };
+  const expired = false;
+  const allowExpired = (_to: string) => true;
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     if (typeof window === "undefined") return {};
@@ -367,25 +364,12 @@ export function ERPSidebar() {
         ? pathname === linkPath && normHash === hash
         : pathMatch && (opts.nested ? normHash === "" : true);
     const Icon = n.icon;
-    const planLocked = !!sub && !!n.module && !planAllowsModule(sub.plan, n.module);
-    const expiredLocked = expired && !allowExpired(linkPath);
-    const locked = planLocked || expiredLocked;
+    const locked = false;
     return (
       <Link
         key={n.to + n.key}
         to={linkPath as never}
         hash={hash as never}
-        onClick={(e) => {
-          if (planLocked) {
-            e.preventDefault();
-            toast.error(t("Upgrade Required — this feature is not in your current plan."));
-            navigate({ to: "/app/upgrade/$plan", params: { plan: "gold" } });
-          } else if (expiredLocked) {
-            e.preventDefault();
-            toast.error(t("Subscription expired — renew to continue."));
-            navigate({ to: "/app/subscription" });
-          }
-        }}
         className="flex items-center gap-3 py-2 transition-colors"
         style={{
           background: active ? "var(--color-sidebar-active)" : "transparent",
