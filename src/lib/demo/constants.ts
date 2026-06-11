@@ -14,5 +14,5 @@ export const DEMO_COMPANY_NAME_BN = "রহমান ফার্নিচার
 // (Stock Value) and Inventory Report read the same per-warehouse stock that
 // drives Items / Stock Summary, instead of falling back to 0 when storeStock
 // is queried but empty.
-export const SEED_VERSION = 5;
+export const SEED_VERSION = 6;
 export const SEED_SOURCE = "demo_seed";

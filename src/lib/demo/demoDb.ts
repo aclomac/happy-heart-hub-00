@@ -82,6 +82,17 @@ import {
   getReconciliations,
   setReconciliations,
 } from "./cash";
+import {
+  ensurePayrollSeed,
+  getEmployees,
+  setEmployees,
+  getAttendance,
+  setAttendance,
+  getSalarySlips,
+  setSalarySlips,
+  getEmployeePayments,
+  setEmployeePayments,
+} from "./payroll";
 
 import { DEMO_COMPANY_ID } from "./constants";
 import { getDemoCompanies, setDemoCompanies } from "./localStore";
@@ -136,6 +147,7 @@ function table(name: string): { read: Reader; write: Writer } {
   ensurePurchasesSeed();
   ensureExpensesSeed();
   ensureCashSeed();
+  ensurePayrollSeed();
 
   const empty = { read: () => [], write: () => {} };
   switch (name) {
@@ -173,6 +185,11 @@ function table(name: string): { read: Reader; write: Writer } {
     case "loans": return { read: getLoans as Reader, write: setLoans as unknown as Writer };
     case "loan_payments": return { read: getLoanPayments as Reader, write: setLoanPayments as unknown as Writer };
     case "cash_reconciliations": return { read: getReconciliations as Reader, write: setReconciliations as unknown as Writer };
+    case "employees": return { read: getEmployees as Reader, write: setEmployees as unknown as Writer };
+    case "attendance": return { read: getAttendance as Reader, write: setAttendance as unknown as Writer };
+    case "salary_slips": return { read: getSalarySlips as Reader, write: setSalarySlips as unknown as Writer };
+    case "employee_payments": return { read: getEmployeePayments as Reader, write: setEmployeePayments as unknown as Writer };
+
 
     case "companies": return {
       read: () => getDemoCompanies() as unknown as Row[],
@@ -521,6 +538,33 @@ function defaults(name: string): Row {
       reversed_at: null, reversed_by: null,
       created_at: nowIso, company_id: DEMO_COMPANY_ID,
     };
+    case "employees": return {
+      code: null, name: "", designation: null, department: null,
+      pay_type: "fixed", base_salary: 0, daily_wage: 0,
+      phone: null, email: null, address: null, joining_date: null,
+      notes: null, is_active: true,
+      deleted_at: null, created_at: nowIso, company_id: DEMO_COMPANY_ID,
+    };
+    case "attendance": return {
+      employee_id: null, date: nowIso.slice(0, 10), status: "present",
+      note: null, deleted_at: null, created_at: nowIso,
+      company_id: DEMO_COMPANY_ID,
+    };
+    case "salary_slips": return {
+      employee_id: null, period_month: nowIso.slice(0, 7),
+      days_present: 0, days_total: 0,
+      gross: 0, bonus: 0, deductions: 0, advance: 0, net: 0, due: 0,
+      status: "pending", paid_on: null, posted_txn_id: null,
+      posted_at: null, notes: null,
+      deleted_at: null, created_at: nowIso, company_id: DEMO_COMPANY_ID,
+    };
+    case "employee_payments": return {
+      employee_id: null, slip_id: null, amount: 0, method: "cash",
+      bank_account_id: null, payment_date: nowIso.slice(0, 10),
+      notes: null, posted_txn_id: null, status: "posted",
+      deleted_at: null, created_at: nowIso, company_id: DEMO_COMPANY_ID,
+    };
+
 
     default: return {};
   }
