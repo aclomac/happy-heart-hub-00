@@ -13,7 +13,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Plus, Minus, Trash2, ShoppingCart, X, UserPlus } from "lucide-react";
+import { Search, Plus, Minus, Trash2, ShoppingCart, X, UserPlus, ChevronsUpDown, Check } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { cn } from "@/lib/utils";
 import { useEffect, useMemo, useState } from "react";
 
 const POS_CART_KEY = "erpovo_demo_pos_cart";
