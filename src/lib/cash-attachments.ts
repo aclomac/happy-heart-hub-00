@@ -1,4 +1,11 @@
 import { supabase } from "@/integrations/supabase/client";
+import { isDemoMode } from "@/lib/demo/localStore";
+import {
+  demoUploadFile,
+  demoGetFileUrl,
+  demoRemoveFile,
+  isDemoStoragePath,
+} from "@/lib/demo/demoStorage";
 
 const BUCKET = "reconciliation-attachments";
 export const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024; // 10 MB
@@ -54,6 +61,9 @@ export async function uploadReconciliationAttachment(
   const v = validateReconciliationFile(file);
   if (!v.ok) throw new Error(v.error);
   if (!companyId) throw new Error("Missing company");
+  if (isDemoMode()) {
+    return await demoUploadFile(`recon/${companyId}`, file);
+  }
   const ext = (file.name.split(".").pop() || "bin").toLowerCase();
   const path = `${companyId}/${crypto.randomUUID()}.${ext}`;
   const { error } = await supabase.storage.from(BUCKET).upload(path, file, {
@@ -67,6 +77,11 @@ export async function uploadReconciliationAttachment(
 
 export async function removeReconciliationAttachment(path: string): Promise<void> {
   if (!path) return;
+  if (isDemoStoragePath(path)) {
+    demoRemoveFile(path);
+    return;
+  }
+  if (isDemoMode()) return;
   // Only remove from the dedicated bucket; ignore legacy paths from other buckets
   await supabase.storage.from(BUCKET).remove([path]);
 }
@@ -86,6 +101,8 @@ export async function resolveAttachmentUrl(
   opts: { download?: boolean; expiresIn?: number } = {},
 ): Promise<string | null> {
   if (!path) return null;
+  if (isDemoStoragePath(path)) return demoGetFileUrl(path);
+  if (isDemoMode()) return null;
   const tryBuckets = [BUCKET, "expense-attachments"];
   for (const b of tryBuckets) {
     const { data, error } = await supabase.storage

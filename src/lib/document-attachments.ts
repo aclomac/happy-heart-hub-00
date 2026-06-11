@@ -197,13 +197,19 @@ export async function uploadAttachment(args: {
   }
 
   const ext = getExt(file.name) || "bin";
-  const path = `${companyId}/${documentType}/${documentId}/${crypto.randomUUID()}.${ext}`;
-  const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, file, {
-    cacheControl: "3600",
-    upsert: false,
-    contentType: file.type || undefined,
-  });
-  if (upErr) throw upErr;
+  let path = `${companyId}/${documentType}/${documentId}/${crypto.randomUUID()}.${ext}`;
+  const { isDemoMode } = await import("@/lib/demo/localStore");
+  if (isDemoMode()) {
+    const { demoUploadFile } = await import("@/lib/demo/demoStorage");
+    path = await demoUploadFile(`doc/${companyId}/${documentType}/${documentId}`, file);
+  } else {
+    const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, file, {
+      cacheControl: "3600",
+      upsert: false,
+      contentType: file.type || undefined,
+    });
+    if (upErr) throw upErr;
+  }
 
   const { data: auth } = await supabase.auth.getUser();
   const userId = auth?.user?.id ?? null;
@@ -254,10 +260,15 @@ export async function uploadAttachment(args: {
 }
 
 export async function removeAttachment(att: DocumentAttachment): Promise<void> {
-  await supabase.storage
-    .from(BUCKET)
-    .remove([att.storage_path])
-    .catch(() => undefined);
+  const { isDemoStoragePath, demoRemoveFile } = await import("@/lib/demo/demoStorage");
+  if (isDemoStoragePath(att.storage_path)) {
+    demoRemoveFile(att.storage_path);
+  } else {
+    await supabase.storage
+      .from(BUCKET)
+      .remove([att.storage_path])
+      .catch(() => undefined);
+  }
   const { error } = await supabase
     .from("document_attachments")
     .update({ deleted_at: new Date().toISOString() })
@@ -282,6 +293,8 @@ export async function getAttachmentUrl(
   att: DocumentAttachment,
   opts: { download?: boolean; expiresIn?: number } = {},
 ): Promise<string | null> {
+  const { isDemoStoragePath, demoGetFileUrl } = await import("@/lib/demo/demoStorage");
+  if (isDemoStoragePath(att.storage_path)) return demoGetFileUrl(att.storage_path);
   const { data, error } = await supabase.storage
     .from(BUCKET)
     .createSignedUrl(

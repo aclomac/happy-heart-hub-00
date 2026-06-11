@@ -274,6 +274,11 @@ export async function applyExpenseBalanceImpact(opts: {
 }
 
 export async function uploadExpenseAttachment(companyId: string, file: File): Promise<string> {
+  const { isDemoMode } = await import("@/lib/demo/localStore");
+  const { demoUploadFile } = await import("@/lib/demo/demoStorage");
+  if (isDemoMode()) {
+    return await demoUploadFile(`expense/${companyId}`, file);
+  }
   const ext = file.name.split(".").pop() || "bin";
   const path = `${companyId}/${crypto.randomUUID()}.${ext}`;
   const { error } = await supabase.storage.from("expense-attachments").upload(path, file, {
@@ -285,6 +290,10 @@ export async function uploadExpenseAttachment(companyId: string, file: File): Pr
 }
 
 export async function getExpenseAttachmentUrl(path: string): Promise<string | null> {
+  const { isDemoStoragePath, demoGetFileUrl } = await import("@/lib/demo/demoStorage");
+  if (isDemoStoragePath(path)) return demoGetFileUrl(path);
+  const { isDemoMode } = await import("@/lib/demo/localStore");
+  if (isDemoMode()) return null;
   const { data, error } = await supabase.storage
     .from("expense-attachments")
     .createSignedUrl(path, 3600);
