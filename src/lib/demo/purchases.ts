@@ -309,7 +309,7 @@ export function getDemoMonthPurchases(): number {
     .reduce((sum, p) => sum + Number(p.total), 0);
 }
 
-export function getDemoPayables(): number {
+export function getDemoBillPayables(): number {
   return getPurchases()
     .filter((p) => !p.deleted_at && p.doc_type === "bill")
     .reduce((sum, p) => sum + Number(p.balance), 0);
