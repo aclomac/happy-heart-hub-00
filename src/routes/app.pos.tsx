@@ -202,18 +202,22 @@ export function POS() {
     setDiscount(0);
     setReceived(0);
     setPartyId(WALK_IN);
+    setVatPct(0);
+    setNotes("");
     if (typeof window !== "undefined") {
       try { localStorage.removeItem(POS_CART_KEY); } catch { /* ignore */ }
     }
   };
 
   const subtotal = cart.reduce((s, l) => s + l.qty * Number(l.item.sale_price), 0);
-  const tax = cart.reduce(
+  const itemTax = cart.reduce(
     (s, l) => s + (l.qty * Number(l.item.sale_price) * Number(l.item.tax_rate)) / 100,
     0,
   );
-  const total = Math.max(0, subtotal + tax - discount);
-  const balance = total - received;
+  const extraVat = Math.max(0, subtotal) * (Math.max(0, vatPct) / 100);
+  const tax = itemTax + extraVat;
+  const total = Math.max(0, subtotal + tax - Math.max(0, discount));
+  const balance = total - Math.max(0, received);
 
   if (!companyId)
     return (
