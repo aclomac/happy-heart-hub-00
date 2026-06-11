@@ -129,6 +129,24 @@ function CompanyProfile({ companyId }: { companyId: string }) {
   };
   const uploadLogo = async (file: File) => {
     setUploading(true);
+    // Demo mode: store as data URL in localStorage-backed company row.
+    if (isDemoMode()) {
+      try {
+        const dataUrl: string = await new Promise((resolve, reject) => {
+          const r = new FileReader();
+          r.onload = () => resolve(String(r.result || ""));
+          r.onerror = () => reject(new Error("Could not read file"));
+          r.readAsDataURL(file);
+        });
+        setForm({ ...form, logo_url: dataUrl });
+        toast.success("Logo loaded — click Save to apply");
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Upload failed");
+      } finally {
+        setUploading(false);
+      }
+      return;
+    }
     const path = `${companyId}/${Date.now()}-${file.name}`;
     const { error } = await supabase.storage
       .from("company-logos")
