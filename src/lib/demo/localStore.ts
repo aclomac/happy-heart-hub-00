@@ -8,7 +8,6 @@
 import {
   ensurePartiesSeed,
   getDemoReceivables,
-  getDemoPayables,
   getDemoPartyCount,
   getDemoTopReceivables,
 } from "./parties";
