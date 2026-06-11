@@ -3,6 +3,7 @@
   "private": true,
   "sideEffects": false,
   "type": "module",
+  "main": "electron/main.cjs",
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
@@ -22,7 +23,12 @@
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
     "test:all": "tsc --noEmit && vitest run && bash scripts/run-e2e.sh --skip-if-unconfigured",
-    "prepare": "husky"
+    "prepare": "husky",
+    "dev:web": "vite dev",
+    "build:web": "vite build",
+    "dev:desktop": "concurrently -k -n vite,electron -c blue,magenta \"vite dev\" \"wait-on http://localhost:3000 && cross-env NODE_ENV=development electron .\"",
+    "build:desktop": "vite build && electron .",
+    "package:windows": "vite build && electron-builder --win --x64 --config electron-builder.yml"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [
