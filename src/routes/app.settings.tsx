@@ -4,6 +4,7 @@ import { PlanStatusBadge } from "@/components/erp/PlanStatusBadge";
 import { useCurrentCompanyId } from "@/lib/use-company";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { isDemoMode } from "@/lib/demo/localStore";
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -129,6 +130,24 @@ function CompanyProfile({ companyId }: { companyId: string }) {
   };
   const uploadLogo = async (file: File) => {
     setUploading(true);
+    // Demo mode: store as data URL in localStorage-backed company row.
+    if (isDemoMode()) {
+      try {
+        const dataUrl: string = await new Promise((resolve, reject) => {
+          const r = new FileReader();
+          r.onload = () => resolve(String(r.result || ""));
+          r.onerror = () => reject(new Error("Could not read file"));
+          r.readAsDataURL(file);
+        });
+        setForm({ ...form, logo_url: dataUrl });
+        toast.success("Logo loaded — click Save to apply");
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Upload failed");
+      } finally {
+        setUploading(false);
+      }
+      return;
+    }
     const path = `${companyId}/${Date.now()}-${file.name}`;
     const { error } = await supabase.storage
       .from("company-logos")

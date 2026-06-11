@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/erp/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
+import { isDemoMode, endDemoSession, clearDemoStorage, DEMO_USER_ID } from "@/lib/demo/localStore";
 import { useCurrentCompanyId } from "@/lib/use-company";
 import { useCurrentRole } from "@/lib/use-current-role";
 import { useI18n } from "@/lib/i18n";
@@ -159,6 +160,14 @@ function Sync() {
   const { data: devices = [] } = useQuery({
     queryKey: ["my-devices"],
     queryFn: async () => {
+      if (isDemoMode()) {
+        const { data } = await supabase
+          .from("devices")
+          .select("id,device_name,device_fingerprint,last_seen_at")
+          .eq("user_id", DEMO_USER_ID)
+          .order("last_seen_at", { ascending: false });
+        return data ?? [];
+      }
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return [];
       const { data } = await supabase
@@ -194,7 +203,12 @@ function Sync() {
           action: "device.logged_out",
           metadata: { device_id: id },
         });
-        await supabase.auth.signOut();
+        if (isDemoMode()) {
+          endDemoSession();
+          clearDemoStorage();
+        } else {
+          await supabase.auth.signOut();
+        }
         void navigate({ to: "/login" });
       }
     } catch (e) {

@@ -93,6 +93,18 @@ import {
   getEmployeePayments,
   setEmployeePayments,
 } from "./payroll";
+import {
+  ensureSystemSeed,
+  getSettingsKv, setSettingsKv,
+  getSupportTickets, setSupportTickets,
+  getSupportMessages, setSupportMessages,
+  getDevices, setDevices,
+  getMessageTemplates, setMessageTemplates,
+  getPaymentMethods, setPaymentMethods,
+  getRoles, setRoles,
+  getImportHistory, setImportHistory,
+  getPrintSettings, setPrintSettings,
+} from "./system";
 
 import { DEMO_COMPANY_ID } from "./constants";
 import { getDemoCompanies, setDemoCompanies } from "./localStore";
@@ -148,6 +160,7 @@ function table(name: string): { read: Reader; write: Writer } {
   ensureExpensesSeed();
   ensureCashSeed();
   ensurePayrollSeed();
+  ensureSystemSeed();
 
   const empty = { read: () => [], write: () => {} };
   switch (name) {
@@ -177,7 +190,15 @@ function table(name: string): { read: Reader; write: Writer } {
     case "bank_accounts": return { read: getBankAccounts as Reader, write: setBankAccounts as unknown as Writer };
     case "expenses": return { read: getExpenses as Reader, write: setExpenses as unknown as Writer };
     case "expense_categories": return { read: getExpenseCategories as Reader, write: setExpenseCategories as unknown as Writer };
-    case "settings_kv": return empty;
+    case "settings_kv": return { read: getSettingsKv as Reader, write: setSettingsKv as unknown as Writer };
+    case "support_tickets": return { read: getSupportTickets as Reader, write: setSupportTickets as unknown as Writer };
+    case "support_ticket_messages": return { read: getSupportMessages as Reader, write: setSupportMessages as unknown as Writer };
+    case "devices": return { read: getDevices as Reader, write: setDevices as unknown as Writer };
+    case "message_templates": return { read: getMessageTemplates as Reader, write: setMessageTemplates as unknown as Writer };
+    case "payment_methods": return { read: getPaymentMethods as Reader, write: setPaymentMethods as unknown as Writer };
+    case "user_roles": return { read: getRoles as Reader, write: setRoles as unknown as Writer };
+    case "import_history": return { read: getImportHistory as Reader, write: setImportHistory as unknown as Writer };
+    case "print_settings": return { read: getPrintSettings as Reader, write: setPrintSettings as unknown as Writer };
     case "audit_logs": return empty;
     case "company_members": return empty;
     case "cheques": return { read: getCheques as Reader, write: setCheques as unknown as Writer };
@@ -564,7 +585,34 @@ function defaults(name: string): Row {
       notes: null, posted_txn_id: null, status: "posted",
       deleted_at: null, created_at: nowIso, company_id: DEMO_COMPANY_ID,
     };
-
+    case "settings_kv": return {
+      company_id: DEMO_COMPANY_ID, key: "", value: {}, updated_at: nowIso,
+    };
+    case "support_tickets": return {
+      user_id: null, subject: "", module: null, priority: "normal",
+      status: "open", proof_url: null,
+      deleted_at: null, created_at: nowIso,
+    };
+    case "support_ticket_messages": return {
+      ticket_id: null, author_id: null, body: "", is_internal: false,
+      created_at: nowIso,
+    };
+    case "devices": return {
+      user_id: null, device_fingerprint: "", device_name: "Demo Device",
+      last_seen_at: nowIso, created_at: nowIso,
+    };
+    case "message_templates": return {
+      company_id: DEMO_COMPANY_ID, name: "", channel: "sms", body: "",
+      created_at: nowIso,
+    };
+    case "payment_methods": return {
+      company_id: DEMO_COMPANY_ID, name: "", type: "cash", is_active: true,
+    };
+    case "user_roles": return { user_id: null, role: "user" };
+    case "import_history": return {
+      company_id: DEMO_COMPANY_ID, file_name: "", status: "imported",
+      created_at: nowIso,
+    };
 
     default: return {};
   }

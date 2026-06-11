@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Plus, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { isDemoMode, DEMO_USER_ID } from "@/lib/demo/localStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -64,7 +65,9 @@ function CustomerSupportPage() {
 
   const create = useMutation({
     mutationFn: async () => {
-      const user = (await supabase.auth.getUser()).data.user;
+      const user = isDemoMode()
+        ? { id: DEMO_USER_ID }
+        : (await supabase.auth.getUser()).data.user;
       if (!user) throw new Error("Not authenticated");
       if (!form.subject.trim() || !form.message.trim())
         throw new Error("Subject and message required");
@@ -228,7 +231,9 @@ function TicketThread({ ticketId }: { ticketId: string }) {
     mutationFn: async () => {
       const body = reply.trim();
       if (!body) throw new Error("Empty");
-      const user = (await supabase.auth.getUser()).data.user;
+      const user = isDemoMode()
+        ? { id: DEMO_USER_ID }
+        : (await supabase.auth.getUser()).data.user;
       if (!user) throw new Error("Not authenticated");
       const { error } = await supabase.from("support_ticket_messages").insert({
         ticket_id: ticketId,
