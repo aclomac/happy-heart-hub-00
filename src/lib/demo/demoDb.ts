@@ -175,6 +175,18 @@ function applyOrders(rows: Row[], orders: Order[]): Row[] {
   return out;
 }
 
+/**
+ * Hydrate Postgres-style embedded selects. We only support the trivial
+ * `parties(name)` shape used by Sales / Payments lists so the rendered list
+ * gets `row.parties = { name }`.
+ */
+function attachJoins(cols: string, rows: Row[]): Row[] {
+  if (!cols || !/parties\s*\(/i.test(cols)) return rows;
+  const parties = getParties();
+  const map = new Map(parties.map((p) => [p.id, { name: p.name }]));
+  return rows.map((r) => ({ ...r, parties: r.party_id ? (map.get(r.party_id) ?? null) : null }));
+}
+
 class Builder<T extends Row = Row> implements PromiseLike<{ data: any; error: any; count?: number }> {
   private filters: Filter[] = [];
   private orders: Order[] = [];
