@@ -32,7 +32,10 @@ import {
   ArrowRightLeft,
   Activity,
   LifeBuoy,
+  LogOut,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { endDemoSession, clearDemoStorage } from "@/lib/demo/localStore";
 import { useI18n } from "@/lib/i18n";
 import { companies } from "@/lib/mock-data";
 import { useQuery } from "@tanstack/react-query";
