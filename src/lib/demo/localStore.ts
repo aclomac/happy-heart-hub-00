@@ -363,17 +363,18 @@ export type DemoDashboardData = {
 };
 
 export function getDemoDashboardData(): DemoDashboardData {
-  // Lazy-import to avoid circular dependency with parties → localStore.
+  // Dynamic-style access via require would break in Vite; use a top-level
+  // import (parties.ts only imports a constant so no cycle).
   let receivables = 72200;
   let payables = 65000;
   let partyCount = 10;
+  let topReceivables: { id: string; name: string; balance: number }[] = [];
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const p = require("./parties") as typeof import("./parties");
-    p.ensurePartiesSeed();
-    receivables = p.getDemoReceivables();
-    payables = p.getDemoPayables();
-    partyCount = p.getDemoPartyCount();
+    ensurePartiesSeed();
+    receivables = getDemoReceivables();
+    payables = getDemoPayables();
+    partyCount = getDemoPartyCount();
+    topReceivables = getDemoTopReceivables();
   } catch {
     /* ignore — fall back to canned values */
   }
@@ -387,6 +388,7 @@ export function getDemoDashboardData(): DemoDashboardData {
     monthOtherIncome: 8500,
     itemCount: 12,
     partyCount,
+    topReceivables,
     inventory: {
       stockValue: 685000,
       totalItems: 12,
