@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import heroImage from "@/assets/landing-hero.jpg";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,8 +32,15 @@ import {
 } from "@/components/ui/accordion";
 import { HeroMockup } from "@/components/landing/HeroMockup";
 import { PWAInstallButton } from "@/components/erp/PWAInstallButton";
+import { isDemoMode } from "@/lib/demo/localStore";
 
 export const Route = createFileRoute("/")({
+  beforeLoad: (ctx: any) => {
+    if (ctx.serverContext?.demoAuth || isDemoMode()) {
+      if (import.meta.env.DEV) console.log("[demo-auth] / route redirected demo user to /app");
+      throw redirect({ to: "/app" });
+    }
+  },
   head: () => ({
     meta: [
       { title: "ERPOVO - Business ERP for Sales, Stock, POS & Online Orders" },

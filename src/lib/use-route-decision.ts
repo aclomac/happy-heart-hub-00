@@ -13,6 +13,9 @@ import {
   isDemoMode,
   getDemoSession,
   getDemoCompanies,
+  DEMO_SESSION_KEY,
+  hasDemoAuthCookie,
+  startDemoSession,
   DEMO_USER_ID,
   DEMO_USER_EMAIL,
   DEMO_COMPANY_ID,
@@ -59,7 +62,13 @@ function useAuthUser() {
     // already authenticated — prevents a brief "no user → /login" flicker
     // after refresh.
     if (typeof window !== "undefined" && isDemoMode()) {
+      if (hasDemoAuthCookie() && !window.localStorage.getItem(DEMO_SESSION_KEY)) {
+        startDemoSession();
+      }
       const s = getDemoSession();
+      if (import.meta.env.DEV) {
+        console.log("[demo-auth] demo localStorage detected");
+      }
       return {
         loading: false,
         userId: s?.userId ?? DEMO_USER_ID,
@@ -73,7 +82,13 @@ function useAuthUser() {
     let active = true;
     // Demo session short-circuits Supabase auth entirely.
     if (isDemoMode()) {
+      if (hasDemoAuthCookie() && !window.localStorage.getItem(DEMO_SESSION_KEY)) {
+        startDemoSession();
+      }
       const s = getDemoSession();
+      if (import.meta.env.DEV) {
+        console.log("[demo-auth] route guard allowed demo user");
+      }
       setState({
         loading: false,
         userId: s?.userId ?? DEMO_USER_ID,
@@ -222,7 +237,12 @@ export function useRouteDecision(): RouteDecision {
     redirectTarget: null,
   };
 
-  // Public pass-through pages: never redirect, never splash.
+  if (!auth.loading && auth.userId && (pathname === "/" || isLoginRoute)) {
+    const target = "/app";
+    return { status: "ready", target, debug: { ...debug, redirectTarget: target } };
+  }
+
+  // Public pass-through pages: never redirect, never splash unless already authed above.
   if (PUBLIC_PASSTHROUGH.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
     return { status: "ready", target: null, debug };
   }
@@ -241,10 +261,9 @@ export function useRouteDecision(): RouteDecision {
     return { status: "ready", target: null, debug };
   }
 
-  // 3) Authed and sitting on /login → /companies. (Orchestrator decides
-  // admin one-shot once we land inside /app.)
+  // 3) Authed and sitting on /login → /app.
   if (isLoginRoute) {
-    const target = "/companies";
+    const target = "/app";
     return { status: "ready", target, debug: { ...debug, redirectTarget: target } };
   }
 

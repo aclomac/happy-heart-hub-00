@@ -7,8 +7,8 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { JwtPayload } from "@supabase/auth-js";
 import type { Database } from "./types";
 
-
-const DEMO_USER_ID = "00000000-0000-0000-0000-000000000001";
+const DEMO_USER_ID = "demo-user-001";
+const DEMO_USER_EMAIL = "demo@erpovo.com";
 
 type DemoCtx = {
   supabase: SupabaseClient<Database>;
@@ -35,25 +35,31 @@ function buildDemoContext(): DemoCtx {
       aud: "authenticated",
       exp: now + 60 * 60,
       iat: now,
-      email: "demo@erpovo.com",
+      email: DEMO_USER_EMAIL,
       phone: "",
       role: "authenticated",
     } as unknown as JwtPayload,
   };
 }
 
-
 export const requireSupabaseAuth = createMiddleware({ type: "function" }).server(
   async ({ next }) => {
     const SUPABASE_URL = process.env.SUPABASE_URL;
     const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY;
+    const request = getRequest();
+    const cookie = request?.headers?.get("cookie") ?? "";
+    const demoAuth = /(?:^|;\s*)erpovo_demo_auth=1(?:;|$)/.test(cookie);
+
+    if (demoAuth) {
+      console.log("[demo-auth] server function allowed demo user from cookie");
+      return next({ context: buildDemoContext() });
+    }
 
     if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
       console.warn("[Supabase] Auth env missing — using DEMO user");
       return next({ context: buildDemoContext() });
     }
 
-    const request = getRequest();
     const authHeader = request?.headers?.get("authorization");
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {

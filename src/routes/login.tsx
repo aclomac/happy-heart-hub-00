@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,10 +15,19 @@ import {
   DEMO_COMPANY_ID,
   DEMO_USER_ID,
   DEMO_USER_EMAIL,
+  isDemoMode,
 } from "@/lib/demo/localStore";
 import { PWAInstallButton } from "@/components/erp/PWAInstallButton";
 
 export const Route = createFileRoute("/login")({
+  beforeLoad: (ctx: any) => {
+    if (ctx.serverContext?.demoAuth || isDemoMode()) {
+      if (import.meta.env.DEV) {
+        console.log("[demo-auth] /login route redirected demo user to /app");
+      }
+      throw redirect({ to: "/app" });
+    }
+  },
   component: Login,
 });
 

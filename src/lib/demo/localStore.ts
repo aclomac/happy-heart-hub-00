@@ -11,11 +11,14 @@ export const DEMO_USER_KEY = "erpovo_demo_user";
 export const DEMO_COMPANIES_KEY = "erpovo_demo_companies";
 export const DEMO_CURRENT_COMPANY_KEY = "erpovo_demo_current_company";
 export const DEMO_SETTINGS_KEY = "erpovo_demo_settings";
+export const DEMO_AUTH_COOKIE = "erpovo_demo_auth";
+export const DEMO_EMAIL_COOKIE = "erpovo_demo_email";
+const DEMO_COOKIE_MAX_AGE_SECONDS = 31_536_000;
 
 // Legacy marker written by earlier demo bypass. Still honored for compatibility.
 const LEGACY_SESSION_KEY = "erpovo:demoSession";
 
-export const DEMO_USER_ID = "00000000-0000-0000-0000-000000000001";
+export const DEMO_USER_ID = "demo-user-001";
 export const DEMO_USER_EMAIL = "demo@erpovo.com";
 export const DEMO_COMPANY_ID = "00000000-0000-0000-0000-0000000000c1";
 
@@ -61,6 +64,45 @@ function isBrowser() {
   return typeof window !== "undefined" && typeof localStorage !== "undefined";
 }
 
+function writeCookie(name: string, value: string, maxAge = DEMO_COOKIE_MAX_AGE_SECONDS): void {
+  if (typeof document === "undefined") return;
+  try {
+    document.cookie = `${name}=${encodeURIComponent(
+      value,
+    )}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
+  } catch {
+    /* ignore */
+  }
+}
+
+function removeCookie(name: string): void {
+  if (typeof document === "undefined") return;
+  try {
+    document.cookie = `${name}=; Path=/; Max-Age=0; SameSite=Lax`;
+  } catch {
+    /* ignore */
+  }
+}
+
+export function hasDemoAuthCookie(): boolean {
+  if (typeof document === "undefined") return false;
+  try {
+    return document.cookie.split(";").some((part) => part.trim() === `${DEMO_AUTH_COOKIE}=1`);
+  } catch {
+    return false;
+  }
+}
+
+export function setDemoAuthCookies(email = DEMO_USER_EMAIL): void {
+  writeCookie(DEMO_AUTH_COOKIE, "1");
+  writeCookie(DEMO_EMAIL_COOKIE, email);
+}
+
+export function clearDemoAuthCookies(): void {
+  removeCookie(DEMO_AUTH_COOKIE);
+  removeCookie(DEMO_EMAIL_COOKIE);
+}
+
 function safeRead<T>(key: string): T | null {
   if (!isBrowser()) return null;
   try {
@@ -95,7 +137,9 @@ export function isDemoMode(): boolean {
   if (!isBrowser()) return false;
   try {
     return (
-      !!localStorage.getItem(DEMO_SESSION_KEY) || !!localStorage.getItem(LEGACY_SESSION_KEY)
+      !!localStorage.getItem(DEMO_SESSION_KEY) ||
+      !!localStorage.getItem(LEGACY_SESSION_KEY) ||
+      hasDemoAuthCookie()
     );
   } catch {
     return false;
@@ -104,7 +148,25 @@ export function isDemoMode(): boolean {
 
 export function getDemoSession(): DemoSession | null {
   return (
-    safeRead<DemoSession>(DEMO_SESSION_KEY) ?? safeRead<DemoSession>(LEGACY_SESSION_KEY)
+    safeRead<DemoSession>(DEMO_SESSION_KEY) ??
+    safeRead<DemoSession>(LEGACY_SESSION_KEY) ??
+    (hasDemoAuthCookie()
+      ? {
+          isDemo: true,
+          access_token: "demo-token",
+          user: {
+            id: DEMO_USER_ID,
+            email: DEMO_USER_EMAIL,
+            role: "owner",
+            name: "Demo User",
+          },
+          email: DEMO_USER_EMAIL,
+          userId: DEMO_USER_ID,
+          startedAt: Date.now(),
+          created_at: new Date().toISOString(),
+          expires_at: "2099-12-31T23:59:59.000Z",
+        }
+      : null)
   );
 }
 
@@ -128,7 +190,11 @@ export function startDemoSession(): DemoSession {
   };
   safeWrite(DEMO_SESSION_KEY, session);
   safeWrite(DEMO_USER_KEY, user);
+  setDemoAuthCookies(user.email);
   ensureDemoSeed();
+  if (import.meta.env.DEV) {
+    console.log("[demo-auth] demo localStorage + cookie session created");
+  }
   return session;
 }
 
@@ -149,6 +215,7 @@ export function endDemoSession(): void {
   safeRemove(DEMO_SESSION_KEY);
   safeRemove(DEMO_USER_KEY);
   safeRemove(LEGACY_SESSION_KEY);
+  clearDemoAuthCookies();
 }
 
 /** Returns the seeded demo company list. Auto-seeds Chair King on first call. */
@@ -272,6 +339,7 @@ export function clearDemoStorage(): void {
       DEMO_SETTINGS_KEY,
       LEGACY_SESSION_KEY,
     ].forEach((k) => localStorage.removeItem(k));
+    clearDemoAuthCookies();
   } catch {
     /* ignore */
   }
