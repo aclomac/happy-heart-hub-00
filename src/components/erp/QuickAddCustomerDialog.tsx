@@ -104,7 +104,7 @@ export function QuickAddCustomerDialog({
           p.name.toLowerCase() === trimmedName.toLowerCase(),
       );
       if (byName && !trimmedPhone) {
-        toast.info(t("Customer already exists"));
+        toast.info(t("Customer already exists. Existing customer selected."));
         onCreated({
           id: byName.id,
           name: byName.name,
