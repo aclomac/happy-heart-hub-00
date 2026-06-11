@@ -258,7 +258,9 @@ export function POS() {
   const WALK_IN = "__walkin__";
   const persisted = useMemo(() => loadPersistedCart(), []);
   const [cart, setCart] = useState<Line[]>(persisted?.cart ?? []);
-  const [partyId, setPartyId] = useState<string>(persisted?.partyId ?? WALK_IN);
+  const [partyId, setPartyIdState] = useState<string>(persisted?.partyId ?? WALK_IN);
+  const [partyFallbackChecked, setPartyFallbackChecked] = useState(false);
+  const setPartyId = setPartyIdState;
   const [paymentMethod, setPaymentMethod] = useState(persisted?.paymentMethod ?? "cash");
   const [discount, setDiscount] = useState(persisted?.discount ?? 0);
   const [received, setReceived] = useState(persisted?.received ?? 0);
