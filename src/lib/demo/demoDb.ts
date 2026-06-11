@@ -480,6 +480,48 @@ function defaults(name: string): Row {
       is_active: true, deleted_at: null, created_at: nowIso,
       company_id: DEMO_COMPANY_ID,
     };
+    case "cheques": return {
+      cheque_no: "", cheque_date: nowIso.slice(0, 10), amount: 0,
+      direction: "received", party_id: null, bank_account_id: null,
+      status: "pending", notes: null, deleted_at: null,
+      created_at: nowIso, company_id: DEMO_COMPANY_ID,
+    };
+    case "bank_transfers": return {
+      from_bank_id: null, to_bank_id: null, amount: 0,
+      transfer_date: nowIso.slice(0, 10), notes: null,
+      deleted_at: null, created_at: nowIso, company_id: DEMO_COMPANY_ID,
+    };
+    case "loans": return {
+      loan_name: "", lender: null, loan_type: "term_loan",
+      principal: 0, interest_rate: 0, outstanding: 0,
+      start_date: nowIso.slice(0, 10), end_date: null,
+      bank_account_id: null, notes: null, is_active: true,
+      deleted_at: null, created_at: nowIso, company_id: DEMO_COMPANY_ID,
+    };
+    case "loan_payments": return {
+      loan_id: null, payment_date: nowIso.slice(0, 10),
+      principal_amount: 0, interest_amount: 0, total_amount: 0,
+      bank_account_id: null, notes: null, status: "posted",
+      deleted_at: null, created_at: nowIso, company_id: DEMO_COMPANY_ID,
+    };
+    case "cash_reconciliations": return {
+      recon_date: nowIso.slice(0, 10), store: null,
+      opening_balance: 0, system_balance: 0, physical_balance: 0,
+      difference: 0, status: "draft", note: null, attachment_url: null,
+      responsible_user_id: null, created_by: null, posted_by: null,
+      adjustment_txn_id: null, is_cancelled: false,
+      cancelled_at: null, cancelled_by: null,
+      reversed_at: null, reversed_by: null,
+      created_at: nowIso, company_id: DEMO_COMPANY_ID,
+    };
+    case "cash_transactions": return {
+      bank_account_id: null, direction: "in", amount: 0,
+      txn_date: nowIso.slice(0, 10), category: null, notes: null,
+      reference_type: "manual", reference_id: null, status: "posted",
+      reversed_at: null, reversed_by: null,
+      created_at: nowIso, company_id: DEMO_COMPANY_ID,
+    };
+
     default: return {};
   }
 }
