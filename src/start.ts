@@ -3,6 +3,20 @@ import { createStart, createMiddleware } from "@tanstack/react-start";
 import { renderErrorPage } from "./lib/error-page";
 import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
 
+const demoCookieMiddleware = createMiddleware().server(async ({ next, request }) => {
+  const cookie = request.headers.get("cookie") ?? "";
+  const demoAuth = /(?:^|;\s*)erpovo_demo_auth=1(?:;|$)/.test(cookie);
+  if (demoAuth) console.log("[demo-auth] demo cookie detected on server request");
+  return next({
+    context: {
+      demoAuth,
+      demoUser: demoAuth
+        ? { id: "demo-user-001", email: "demo@erpovo.com", role: "owner", name: "Demo User" }
+        : null,
+    },
+  });
+});
+
 const errorMiddleware = createMiddleware().server(async ({ next }) => {
   try {
     return await next();
@@ -19,6 +33,6 @@ const errorMiddleware = createMiddleware().server(async ({ next }) => {
 });
 
 export const startInstance = createStart(() => ({
-  requestMiddleware: [errorMiddleware],
+  requestMiddleware: [demoCookieMiddleware, errorMiddleware],
   functionMiddleware: [attachSupabaseAuth],
 }));
