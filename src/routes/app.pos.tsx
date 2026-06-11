@@ -45,7 +45,41 @@ function loadPersistedCart(): PersistedCart | null {
     return null;
   }
 }
-import { getSales } from "@/lib/demo/sales";
+import { getSales, getSaleItems, setSales, setSaleItems } from "@/lib/demo/sales";
+
+/**
+ * One-time migration: if any older POS-only localStorage keys exist
+ * (`erpovo_demo_pos_sales` / `erpovo_demo_pos_sale_items`), merge their
+ * rows into the canonical sales / sale_items keys so the Sales module
+ * picks them up. Safe to call on every POS mount — runs at most once
+ * thanks to the `__migrated` flag.
+ */
+const POS_LEGACY_FLAG = "erpovo_demo_pos_legacy_migrated";
+function migrateLegacyPosSalesOnce() {
+  if (typeof window === "undefined") return;
+  try {
+    if (localStorage.getItem(POS_LEGACY_FLAG) === "1") return;
+    const legacySalesRaw = localStorage.getItem("erpovo_demo_pos_sales");
+    const legacyItemsRaw = localStorage.getItem("erpovo_demo_pos_sale_items");
+    if (legacySalesRaw) {
+      const legacy = JSON.parse(legacySalesRaw) as Array<Record<string, unknown>>;
+      const current = getSales();
+      const ids = new Set(current.map((s) => s.id));
+      const merged = [...current, ...legacy.filter((s) => !ids.has(s.id as string))] as ReturnType<typeof getSales>;
+      setSales(merged);
+    }
+    if (legacyItemsRaw) {
+      const legacyItems = JSON.parse(legacyItemsRaw) as Array<Record<string, unknown>>;
+      const current = getSaleItems();
+      const ids = new Set(current.map((i) => i.id));
+      const merged = [...current, ...legacyItems.filter((i) => !ids.has(i.id as string))] as ReturnType<typeof getSaleItems>;
+      setSaleItems(merged);
+    }
+    localStorage.setItem(POS_LEGACY_FLAG, "1");
+  } catch {
+    /* ignore */
+  }
+}
 
 /**
  * Generate next POS invoice number in format POS-YYYY-####.
