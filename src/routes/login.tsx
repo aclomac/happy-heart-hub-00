@@ -22,7 +22,9 @@ import { PWAInstallButton } from "@/components/erp/PWAInstallButton";
 export const Route = createFileRoute("/login")({
   beforeLoad: (ctx: any) => {
     if (ctx.serverContext?.demoAuth || isDemoMode()) {
-      if (import.meta.env.DEV) console.log("[demo-auth] /login route redirected demo user to /app");
+      if (import.meta.env.DEV) {
+        console.log("[demo-auth] /login route redirected demo user to /app");
+      }
       throw redirect({ to: "/app" });
     }
   },
