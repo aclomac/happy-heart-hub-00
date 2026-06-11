@@ -1,0 +1,36 @@
+appId: com.erpovo.desktop
+productName: ERPOVO
+copyright: Copyright © 2026 ERPOVO
+
+directories:
+  output: release
+  buildResources: electron/build
+
+files:
+  - electron/**/*
+  - .output/**/*
+  - package.json
+
+asar: true
+asarUnpack:
+  - .output/**/*
+
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+    - target: portable
+      arch: [x64]
+  icon: public/icon.svg
+  artifactName: "ERPOVO-${version}-${arch}.${ext}"
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: ERPOVO
+
+portable:
+  artifactName: "ERPOVO-${version}-portable.exe"
