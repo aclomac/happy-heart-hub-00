@@ -186,14 +186,16 @@ function Dashboard() {
             { id: "demo-1", name: "Office Chair", stock: 3, low_stock_alert: 5, is_service: false },
             { id: "demo-2", name: "Visitor Chair", stock: 8, low_stock_alert: 10, is_service: false },
           ],
-          topReceivables: [
-            { id: "p1", name: "Dhaka Office Solutions", balance: 32000 },
-            { id: "p2", name: "Chittagong Corporate Ltd", balance: 15000 },
-            { id: "p3", name: "Star Furnishing Co", balance: 9000 },
-            { id: "p4", name: "Karim Traders", balance: 8500 },
-            { id: "p5", name: "Rashid Enterprises", balance: 4200 },
-            { id: "p6", name: "Ahmed Hardware", balance: 1500 },
-          ],
+          topReceivables: d.topReceivables.length
+            ? d.topReceivables
+            : [
+                { id: "p1", name: "Dhaka Office Solutions", balance: 32000 },
+                { id: "p2", name: "Chittagong Corporate Ltd", balance: 15000 },
+                { id: "p3", name: "Star Furnishing Co", balance: 9000 },
+                { id: "p4", name: "Karim Traders", balance: 8500 },
+                { id: "p5", name: "Rashid Enterprises", balance: 4200 },
+                { id: "p6", name: "Ahmed Hardware", balance: 1500 },
+              ],
           chart: Object.values(months),
           recent: [],
         };

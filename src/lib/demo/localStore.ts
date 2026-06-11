@@ -5,6 +5,13 @@
  * Supabase. Keys are namespaced `erpovo_demo_*` and every read/write is
  * wrapped in try/catch so a corrupted entry never crashes the app.
  */
+import {
+  ensurePartiesSeed,
+  getDemoReceivables,
+  getDemoPayables,
+  getDemoPartyCount,
+  getDemoTopReceivables,
+} from "./parties";
 
 export const DEMO_SESSION_KEY = "erpovo_demo_session";
 export const DEMO_USER_KEY = "erpovo_demo_user";
@@ -352,6 +359,7 @@ export type DemoDashboardData = {
   monthOtherIncome: number;
   itemCount: number;
   partyCount: number;
+  topReceivables: { id: string; name: string; balance: number }[];
   inventory: {
     stockValue: number;
     totalItems: number;
@@ -363,16 +371,32 @@ export type DemoDashboardData = {
 };
 
 export function getDemoDashboardData(): DemoDashboardData {
+  // Dynamic-style access via require would break in Vite; use a top-level
+  // import (parties.ts only imports a constant so no cycle).
+  let receivables = 72200;
+  let payables = 65000;
+  let partyCount = 10;
+  let topReceivables: { id: string; name: string; balance: number }[] = [];
+  try {
+    ensurePartiesSeed();
+    receivables = getDemoReceivables();
+    payables = getDemoPayables();
+    partyCount = getDemoPartyCount();
+    topReceivables = getDemoTopReceivables();
+  } catch {
+    /* ignore — fall back to canned values */
+  }
   return {
     todaySales: 18500,
     monthSales: 425000,
     monthPurchases: 280000,
-    receivables: 72200,
-    payables: 65000,
+    receivables,
+    payables,
     monthExpenses: 42500,
     monthOtherIncome: 8500,
     itemCount: 12,
-    partyCount: 10,
+    partyCount,
+    topReceivables,
     inventory: {
       stockValue: 685000,
       totalItems: 12,

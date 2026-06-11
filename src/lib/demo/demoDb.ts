@@ -31,6 +31,15 @@ import {
   genId,
   adjustStoreStock,
 } from "./inventory";
+import {
+  ensurePartiesSeed,
+  getParties,
+  setParties,
+  getPartyGroups,
+  setPartyGroups,
+  getPartyLedger,
+  setPartyLedger,
+} from "./parties";
 import { getDemoCompanies, setDemoCompanies, DEMO_COMPANY_ID } from "./localStore";
 
 /**
@@ -39,13 +48,36 @@ import { getDemoCompanies, setDemoCompanies, DEMO_COMPANY_ID } from "./localStor
  * the app sees consistent numbers without a real backend.
  */
 function applyInsertSideEffects(name: string, rows: Row[]) {
-  if (name !== "stock_movements") return;
-  for (const r of rows) {
-    const qty = Number(r.qty || 0);
-    if (!qty) continue;
-    const delta = r.direction === "out" ? -qty : qty;
-    if (!r.item_id || !r.warehouse_id) continue;
-    adjustStoreStock(r.company_id ?? DEMO_COMPANY_ID, r.item_id, r.warehouse_id, delta);
+  if (name === "stock_movements") {
+    for (const r of rows) {
+      const qty = Number(r.qty || 0);
+      if (!qty) continue;
+      const delta = r.direction === "out" ? -qty : qty;
+      if (!r.item_id || !r.warehouse_id) continue;
+      adjustStoreStock(r.company_id ?? DEMO_COMPANY_ID, r.item_id, r.warehouse_id, delta);
+    }
+    return;
+  }
+  if (name === "parties") {
+    const ledger = getPartyLedger();
+    for (const r of rows) {
+      const ob = Number(r.opening_balance || 0);
+      if (!ob) continue;
+      ledger.push({
+        id: `ob-${r.id}`,
+        company_id: r.company_id ?? DEMO_COMPANY_ID,
+        party_id: r.id,
+        entry_date: new Date().toISOString().slice(0, 10),
+        entry_type: "opening_balance",
+        reference_no: "OPENING",
+        debit: ob > 0 ? ob : 0,
+        credit: ob < 0 ? -ob : 0,
+        balance: ob,
+        note: "Opening balance",
+        created_at: new Date().toISOString(),
+      });
+    }
+    setPartyLedger(ledger);
   }
 }
 
@@ -55,6 +87,7 @@ type Writer = (rows: Row[]) => void;
 
 function table(name: string): { read: Reader; write: Writer } {
   ensureInventorySeed();
+  ensurePartiesSeed();
   switch (name) {
     case "items": return { read: getItems as Reader, write: setItems as unknown as Writer };
     case "item_categories": return { read: getCategories as Reader, write: setCategories as unknown as Writer };
@@ -64,6 +97,9 @@ function table(name: string): { read: Reader; write: Writer } {
     case "stock_adjustments": return { read: getAdjustments as Reader, write: setAdjustments as unknown as Writer };
     case "stock_transfers": return { read: getTransfers as Reader, write: setTransfers as unknown as Writer };
     case "stock_transfer_items": return { read: getTransferItems as Reader, write: setTransferItems as unknown as Writer };
+    case "parties": return { read: getParties as Reader, write: setParties as unknown as Writer };
+    case "party_groups": return { read: getPartyGroups as Reader, write: setPartyGroups as unknown as Writer };
+    case "party_ledger": return { read: getPartyLedger as Reader, write: setPartyLedger as unknown as Writer };
     case "companies": return {
       read: () => getDemoCompanies() as unknown as Row[],
       write: (rows) => setDemoCompanies(rows as any),
@@ -305,6 +341,20 @@ function defaults(name: string): Row {
       created_at: nowIso, deleted_at: null, company_id: DEMO_COMPANY_ID,
     };
     case "stock_transfer_items": return { variant_id: null, qty: 0, unit: "PCS" };
+    case "parties": return {
+      type: "customer", phone: null, email: null, address: null, shipping_address: null,
+      group_id: null, opening_balance: 0, balance: 0, credit_limit: null,
+      loyalty_points: 0, gst_number: null, is_active: true,
+      deleted_at: null, created_at: nowIso, company_id: DEMO_COMPANY_ID,
+    };
+    case "party_groups": return {
+      description: null, deleted_at: null, created_at: nowIso, company_id: DEMO_COMPANY_ID,
+    };
+    case "party_ledger": return {
+      entry_date: nowIso.slice(0, 10), entry_type: "manual",
+      reference_no: null, debit: 0, credit: 0, balance: 0, note: null,
+      created_at: nowIso, company_id: DEMO_COMPANY_ID,
+    };
     default: return {};
   }
 }
