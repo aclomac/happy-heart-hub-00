@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { checkDeviceAllowed, type DeviceRow } from "@/lib/device-fingerprint";
+import { isDemoMode } from "@/lib/demo/localStore";
 
 export type PlanKey = "basic" | "gold" | "pro";
 export type RawSubStatus = "trial" | "active" | "expired" | "cancelled";
