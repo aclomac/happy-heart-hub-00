@@ -82,6 +82,17 @@ import {
   getReconciliations,
   setReconciliations,
 } from "./cash";
+import {
+  ensurePayrollSeed,
+  getEmployees,
+  setEmployees,
+  getAttendance,
+  setAttendance,
+  getSalarySlips,
+  setSalarySlips,
+  getEmployeePayments,
+  setEmployeePayments,
+} from "./payroll";
 
 import { DEMO_COMPANY_ID } from "./constants";
 import { getDemoCompanies, setDemoCompanies } from "./localStore";
