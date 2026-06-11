@@ -146,7 +146,25 @@ export function isDemoMode(): boolean {
 
 export function getDemoSession(): DemoSession | null {
   return (
-    safeRead<DemoSession>(DEMO_SESSION_KEY) ?? safeRead<DemoSession>(LEGACY_SESSION_KEY)
+    safeRead<DemoSession>(DEMO_SESSION_KEY) ??
+    safeRead<DemoSession>(LEGACY_SESSION_KEY) ??
+    (hasDemoAuthCookie()
+      ? {
+          isDemo: true,
+          access_token: "demo-token",
+          user: {
+            id: DEMO_USER_ID,
+            email: DEMO_USER_EMAIL,
+            role: "owner",
+            name: "Demo User",
+          },
+          email: DEMO_USER_EMAIL,
+          userId: DEMO_USER_ID,
+          startedAt: Date.now(),
+          created_at: new Date().toISOString(),
+          expires_at: "2099-12-31T23:59:59.000Z",
+        }
+      : null)
   );
 }
 
@@ -170,7 +188,9 @@ export function startDemoSession(): DemoSession {
   };
   safeWrite(DEMO_SESSION_KEY, session);
   safeWrite(DEMO_USER_KEY, user);
+  setDemoAuthCookies(user.email);
   ensureDemoSeed();
+  if (import.meta.env.DEV) console.log("[demo-auth] demo localStorage + cookie session created");
   return session;
 }
 
@@ -191,6 +211,7 @@ export function endDemoSession(): void {
   safeRemove(DEMO_SESSION_KEY);
   safeRemove(DEMO_USER_KEY);
   safeRemove(LEGACY_SESSION_KEY);
+  clearDemoAuthCookies();
 }
 
 /** Returns the seeded demo company list. Auto-seeds Chair King on first call. */
@@ -314,6 +335,7 @@ export function clearDemoStorage(): void {
       DEMO_SETTINGS_KEY,
       LEGACY_SESSION_KEY,
     ].forEach((k) => localStorage.removeItem(k));
+    clearDemoAuthCookies();
   } catch {
     /* ignore */
   }
