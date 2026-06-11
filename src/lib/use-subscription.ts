@@ -302,31 +302,6 @@ export function useDeviceGuard(): DeviceGuardState {
   const ownerId = sub?.subscription?.owner_id;
 
   const guard = useQuery({
-    queryKey: ["device-guard", ownerId, maxDevices],
-    enabled: !!sub,
-    queryFn: async () => {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) {
-        return {
-          allowed: true,
-          deviceCount: 0,
-          currentFingerprint: "",
-          devices: [] as DeviceRow[],
-        };
-      }
-      return checkDeviceAllowed(u.user.id, maxDevices);
-    },
-    staleTime: 30_000,
-  });
-
-  return {
-    loading: subQ.isLoading || (!!sub && guard.isLoading),
-    allowed: guard.data?.allowed ?? true,
-    deviceCount: guard.data?.deviceCount ?? 0,
-    maxDevices,
-    currentFingerprint: guard.data?.currentFingerprint ?? "",
-    devices: guard.data?.devices ?? [],
-  const guard = useQuery({
     queryKey: ["device-guard", ownerId, maxDevices, isDemoMode() ? "demo" : "live"],
     enabled: !!sub && !isDemoMode(),
     queryFn: async () => {
@@ -343,6 +318,7 @@ export function useDeviceGuard(): DeviceGuardState {
     },
     staleTime: 30_000,
   });
+
 
   if (isDemoMode()) {
     return {
