@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from "react";
 import {
-  Search,
+  
   Headphones,
   Plus,
   Printer,
@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { GlobalSearch } from "@/components/erp/GlobalSearch";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+
 import { Badge } from "@/components/ui/badge";
 import { useI18n } from "@/lib/i18n";
 
