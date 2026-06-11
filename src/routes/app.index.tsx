@@ -98,6 +98,7 @@ function Dashboard() {
   const { data, isLoading } = useQuery({
     queryKey: ["dashboard", companyId],
     enabled: !!companyId,
+    retry: false,
     queryFn: async () => {
       const cid = companyId!;
       const now = new Date();
@@ -106,141 +107,145 @@ function Dashboard() {
         .toISOString()
         .slice(0, 10);
 
-      const [salesRes, purchasesRes, itemsRes, partiesRes, expRes, recentRes, oiRes] = await Promise.all([
-        supabase
-          .from("sales")
-          .select("invoice_date,total,paid,balance")
-          .is("deleted_at", null)
-          .eq("company_id", cid)
-          .gte("invoice_date", ninthMonthAgo),
-        supabase
-          .from("purchases")
-          .select("bill_date,total,paid,balance")
-          .is("deleted_at", null)
-          .eq("company_id", cid)
-          .eq("doc_type", "bill")
-          .gte("bill_date", ninthMonthAgo),
-        supabase
-          .from("items")
-          .select("id,name,stock,low_stock_alert,is_service")
-          .is("deleted_at", null)
-          .eq("company_id", cid),
-        supabase
-          .from("parties")
-          .select("id,name,balance")
-          .is("deleted_at", null)
-          .eq("company_id", cid),
-        supabase
-          .from("expenses")
-          .select("amount,tax")
-          .is("deleted_at", null)
-          .eq("company_id", cid)
-          .gte("expense_date", monthStart),
-        supabase
-          .from("sales")
-          .select("id,invoice_no,invoice_date,total,balance,status,parties(name)")
-          .is("deleted_at", null)
-          .eq("company_id", cid)
-          .order("invoice_date", { ascending: false })
-          .limit(6),
-        supabase
-          .from("other_incomes")
-          .select("income_date,total:amount")
-          .is("deleted_at", null)
-          .eq("company_id", cid)
-          .gte("income_date", ninthMonthAgo),
-      ]);
-
-
-      if (salesRes.error) throw salesRes.error;
-      const sales = (salesRes.data || []) as {
-        invoice_date: string;
-        total: number;
-        paid: number;
-        balance: number;
-      }[];
-      const purchases = (purchasesRes.data || []) as {
-        bill_date: string;
-        total: number;
-        paid: number;
-        balance: number;
-      }[];
-      const items = (itemsRes.data || []) as {
-        id: string;
-        name: string;
-        stock: number;
-        low_stock_alert: number | null;
-        is_service: boolean;
-      }[];
-      const parties = (partiesRes.data || []) as { id: string; name: string; balance: number }[];
-      const expenses = (expRes.data || []) as { amount: number; tax: number | null }[];
-      const otherIncomes = (oiRes?.data || []) as { income_date: string; total: number }[];
-      const recent = (recentRes.data || []) as {
-        id: string;
-        invoice_no: string;
-        invoice_date: string;
-        total: number;
-        balance: number;
-        status: string;
-        parties: { name: string } | null;
-      }[];
-
-
-      // Monthly chart
-
-      const months: Record<string, { m: string; sale: number; purchase: number; otherIncome: number }> = {};
-      for (let i = 8; i >= 0; i--) {
-        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-        months[key] = { m: d.toLocaleString("en", { month: "short" }), sale: 0, purchase: 0, otherIncome: 0 };
-      }
-      sales.forEach((s) => {
-        const k = s.invoice_date.slice(0, 7);
-        if (months[k]) months[k].sale += Number(s.total);
-      });
-      purchases.forEach((p) => {
-        const k = p.bill_date.slice(0, 7);
-        if (months[k]) months[k].purchase += Number(p.total);
-      });
-      otherIncomes.forEach((oi) => {
-        const k = oi.income_date.slice(0, 7);
-        if (months[k]) months[k].otherIncome += Number(oi.total);
-      });
-
-      const todayStr = now.toISOString().slice(0, 10);
-      const monthKey = todayStr.slice(0, 7);
-
-      return {
-        todaySales: sales
-          .filter((s) => s.invoice_date === todayStr)
-          .reduce((a, s) => a + Number(s.total), 0),
-        monthSales: sales
-          .filter((s) => s.invoice_date.slice(0, 7) === monthKey)
-          .reduce((a, s) => a + Number(s.total), 0),
-        monthPurchases: purchases
-          .filter((p) => p.bill_date.slice(0, 7) === monthKey)
-          .reduce((a, p) => a + Number(p.total), 0),
-        receivables: sales.reduce((a, s) => a + Number(s.balance), 0),
-        payables: purchases.reduce((a, p) => a + Number(p.balance), 0),
-        monthExpenses: expenses.reduce((a, e) => a + Number(e.amount) + Number(e.tax || 0), 0),
-        monthOtherIncome: otherIncomes
-          .filter((oi) => oi.income_date.slice(0, 7) === monthKey)
-          .reduce((a, oi) => a + Number(oi.total), 0),
-        itemCount: items.length,
-        partyCount: parties.length,
-        lowStock: items.filter(
-          (i) =>
-            !i.is_service &&
-            i.low_stock_alert != null &&
-            Number(i.stock) <= Number(i.low_stock_alert),
-        ),
-        topReceivables: parties
-          .filter((p) => Number(p.balance) > 0)
-          .sort((a, b) => Number(b.balance) - Number(a.balance))
-          .slice(0, 6),
-        chart: Object.values(months),
-        recent,
+      // Empty-safe shape returned whenever the backend is unreachable
+      // (demo mode / Supabase down). Dashboard renders cleanly with zeros.
+      const emptyMonths = (() => {
+        const months: Record<string, { m: string; sale: number; purchase: number; otherIncome: number }> = {};
+        for (let i = 8; i >= 0; i--) {
+          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+          months[key] = { m: d.toLocaleString("en", { month: "short" }), sale: 0, purchase: 0, otherIncome: 0 };
+        }
+        return months;
+      })();
+      const emptyResult = {
+        todaySales: 0,
+        monthSales: 0,
+        monthPurchases: 0,
+        receivables: 0,
+        payables: 0,
+        monthExpenses: 0,
+        monthOtherIncome: 0,
+        itemCount: 0,
+        partyCount: 0,
+        lowStock: [] as { id: string; name: string; stock: number; low_stock_alert: number | null; is_service: boolean }[],
+        topReceivables: [] as { id: string; name: string; balance: number }[],
+        chart: Object.values(emptyMonths),
+        recent: [] as {
+          id: string;
+          invoice_no: string;
+          invoice_date: string;
+          total: number;
+          balance: number;
+          status: string;
+          parties: { name: string } | null;
+        }[],
       };
+
+      try {
+        const [salesRes, purchasesRes, itemsRes, partiesRes, expRes, recentRes, oiRes] = await Promise.all([
+          supabase
+            .from("sales")
+            .select("invoice_date,total,paid,balance")
+            .is("deleted_at", null)
+            .eq("company_id", cid)
+            .gte("invoice_date", ninthMonthAgo),
+          supabase
+            .from("purchases")
+            .select("bill_date,total,paid,balance")
+            .is("deleted_at", null)
+            .eq("company_id", cid)
+            .eq("doc_type", "bill")
+            .gte("bill_date", ninthMonthAgo),
+          supabase
+            .from("items")
+            .select("id,name,stock,low_stock_alert,is_service")
+            .is("deleted_at", null)
+            .eq("company_id", cid),
+          supabase
+            .from("parties")
+            .select("id,name,balance")
+            .is("deleted_at", null)
+            .eq("company_id", cid),
+          supabase
+            .from("expenses")
+            .select("amount,tax")
+            .is("deleted_at", null)
+            .eq("company_id", cid)
+            .gte("expense_date", monthStart),
+          supabase
+            .from("sales")
+            .select("id,invoice_no,invoice_date,total,balance,status,parties(name)")
+            .is("deleted_at", null)
+            .eq("company_id", cid)
+            .order("invoice_date", { ascending: false })
+            .limit(6),
+          supabase
+            .from("other_incomes")
+            .select("income_date,total:amount")
+            .is("deleted_at", null)
+            .eq("company_id", cid)
+            .gte("income_date", ninthMonthAgo),
+        ]);
+
+        // Soft-fail: ignore per-query errors and treat as empty arrays.
+        const sales = (salesRes.data || []) as {
+          invoice_date: string; total: number; paid: number; balance: number;
+        }[];
+        const purchases = (purchasesRes.data || []) as {
+          bill_date: string; total: number; paid: number; balance: number;
+        }[];
+        const items = (itemsRes.data || []) as {
+          id: string; name: string; stock: number; low_stock_alert: number | null; is_service: boolean;
+        }[];
+        const parties = (partiesRes.data || []) as { id: string; name: string; balance: number }[];
+        const expenses = (expRes.data || []) as { amount: number; tax: number | null }[];
+        const otherIncomes = (oiRes?.data || []) as { income_date: string; total: number }[];
+        const recent = (recentRes.data || []) as typeof emptyResult.recent;
+
+        const months = { ...emptyMonths };
+        sales.forEach((s) => {
+          const k = s.invoice_date.slice(0, 7);
+          if (months[k]) months[k].sale += Number(s.total);
+        });
+        purchases.forEach((p) => {
+          const k = p.bill_date.slice(0, 7);
+          if (months[k]) months[k].purchase += Number(p.total);
+        });
+        otherIncomes.forEach((oi) => {
+          const k = oi.income_date.slice(0, 7);
+          if (months[k]) months[k].otherIncome += Number(oi.total);
+        });
+
+        const todayStr = now.toISOString().slice(0, 10);
+        const monthKey = todayStr.slice(0, 7);
+
+        return {
+          todaySales: sales.filter((s) => s.invoice_date === todayStr).reduce((a, s) => a + Number(s.total), 0),
+          monthSales: sales.filter((s) => s.invoice_date.slice(0, 7) === monthKey).reduce((a, s) => a + Number(s.total), 0),
+          monthPurchases: purchases.filter((p) => p.bill_date.slice(0, 7) === monthKey).reduce((a, p) => a + Number(p.total), 0),
+          receivables: sales.reduce((a, s) => a + Number(s.balance), 0),
+          payables: purchases.reduce((a, p) => a + Number(p.balance), 0),
+          monthExpenses: expenses.reduce((a, e) => a + Number(e.amount) + Number(e.tax || 0), 0),
+          monthOtherIncome: otherIncomes.filter((oi) => oi.income_date.slice(0, 7) === monthKey).reduce((a, oi) => a + Number(oi.total), 0),
+          itemCount: items.length,
+          partyCount: parties.length,
+          lowStock: items.filter(
+            (i) => !i.is_service && i.low_stock_alert != null && Number(i.stock) <= Number(i.low_stock_alert),
+          ),
+          topReceivables: parties
+            .filter((p) => Number(p.balance) > 0)
+            .sort((a, b) => Number(b.balance) - Number(a.balance))
+            .slice(0, 6),
+          chart: Object.values(months),
+          recent,
+        };
+      } catch (err) {
+        // Backend unreachable (demo mode, network, RLS) — render empty dashboard
+        // instead of surfacing a destructive error toast.
+        if (import.meta.env.DEV) console.warn("[dashboard] using empty fallback:", err);
+        return emptyResult;
+      }
     },
   });
 
