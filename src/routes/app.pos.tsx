@@ -588,8 +588,20 @@ export function POS() {
                 <MoneyText value={`৳ ${subtotal.toLocaleString()}`} />
               </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Tax</span>
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">VAT %</span>
+              <Input
+                type="number"
+                min={0}
+                step="0.01"
+                className="h-7 w-24 text-right"
+                value={vatPct || ""}
+                placeholder="0"
+                onChange={(e) => setVatPct(Math.max(0, Number(e.target.value) || 0))}
+              />
+            </div>
+            <div className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Tax (items + VAT)</span>
               <span>
                 <MoneyText
                   value={`৳ ${tax.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
@@ -600,9 +612,11 @@ export function POS() {
               <span className="text-muted-foreground">Discount</span>
               <Input
                 type="number"
+                min={0}
                 className="h-7 w-24 text-right"
-                value={discount}
-                onChange={(e) => setDiscount(Number(e.target.value) || 0)}
+                value={discount || ""}
+                placeholder="0"
+                onChange={(e) => setDiscount(Math.max(0, Number(e.target.value) || 0))}
               />
             </div>
             <div className="flex justify-between border-t pt-2 text-lg">
@@ -620,23 +634,43 @@ export function POS() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="cash">Cash</SelectItem>
+                  <SelectItem value="bank">Bank</SelectItem>
+                  <SelectItem value="bkash">bKash</SelectItem>
+                  <SelectItem value="nagad">Nagad</SelectItem>
                   <SelectItem value="card">Card</SelectItem>
-                  <SelectItem value="bank">Bank/UPI</SelectItem>
-                  <SelectItem value="credit">Credit</SelectItem>
+                  <SelectItem value="credit">Credit / Due</SelectItem>
                 </SelectContent>
               </Select>
               <Input
                 type="number"
+                min={0}
                 className="h-9"
                 placeholder={paymentMethod === "credit" ? "Credit (no payment)" : "Received"}
                 value={paymentMethod === "credit" ? "" : received || ""}
                 disabled={paymentMethod === "credit"}
-                onChange={(e) => setReceived(Number(e.target.value) || 0)}
+                onChange={(e) => setReceived(Math.max(0, Number(e.target.value) || 0))}
               />
             </div>
-            {received > 0 && (
+            <Input
+              className="h-9"
+              placeholder="Payment notes (optional)"
+              value={notes}
+              maxLength={200}
+              onChange={(e) => setNotes(e.target.value)}
+            />
+            <div className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Status</span>
+              <span className="font-semibold">
+                {paymentMethod === "credit" || received <= 0
+                  ? "Due"
+                  : balance <= 0
+                    ? "Paid"
+                    : "Partial"}
+              </span>
+            </div>
+            {received > 0 && paymentMethod !== "credit" && (
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">{balance > 0 ? "Balance" : "Change"}</span>
+                <span className="text-muted-foreground">{balance > 0 ? "Balance Due" : "Change"}</span>
                 <span className={`font-bold ${balance > 0 ? "num-neg" : "num-pos"}`}>
                   <MoneyText
                     value={`৳ ${Math.abs(balance).toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
@@ -654,6 +688,45 @@ export function POS() {
                 ? "Processing…"
                 : `Charge ৳ ${total.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
             </Button>
+            {lastSaleId && lastInvoiceNo && cart.length === 0 && (
+              <div className="border rounded-md p-3 mt-2 bg-success/5 space-y-2">
+                <div className="text-xs font-semibold text-success">
+                  Last sale: {lastInvoiceNo}
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      printSaleReceiptNow(lastSaleId, companyId!).catch(() =>
+                        toast.message("Receipt preview unavailable in demo mode"),
+                      )
+                    }
+                  >
+                    <Printer className="w-3.5 h-3.5" />
+                    Print
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.open(`/app/sales/${lastSaleId}/edit`, "_blank")}
+                  >
+                    View
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setLastSaleId(null);
+                      setLastInvoiceNo(null);
+                    }}
+                  >
+                    New
+                  </Button>
+                </div>
+              </div>
+            )}
+
           </div>
         </div>
       </div>
