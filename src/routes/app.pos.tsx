@@ -82,6 +82,103 @@ import { usePWAStatus } from "@/components/erp/PWAProvider";
 
 export const Route = createFileRoute("/app/pos")({ component: POS });
 
+const WALK_IN_VALUE = "__walkin__";
+
+function CustomerCombobox({
+  value,
+  onChange,
+  parties,
+  walkInLabel,
+  searchPlaceholder,
+  emptyLabel,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  parties: { id: string; name: string; phone: string | null }[];
+  walkInLabel: string;
+  searchPlaceholder: string;
+  emptyLabel: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const selected = parties.find((p) => p.id === value);
+  const label =
+    value === WALK_IN_VALUE || !selected
+      ? walkInLabel
+      : selected.phone
+        ? `${selected.name} · ${selected.phone}`
+        : selected.name;
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="h-9 w-full justify-between font-normal"
+          data-testid="pos-customer-combobox"
+        >
+          <span className="truncate">{label}</span>
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="p-0 w-[--radix-popover-trigger-width]" align="start">
+        <Command
+          filter={(itemValue, search) => {
+            if (!search) return 1;
+            return itemValue.toLowerCase().includes(search.toLowerCase()) ? 1 : 0;
+          }}
+        >
+          <CommandInput placeholder={searchPlaceholder} autoFocus />
+          <CommandList>
+            <CommandEmpty>{emptyLabel}</CommandEmpty>
+            <CommandGroup>
+              <CommandItem
+                value={`${walkInLabel} walkin`}
+                onSelect={() => {
+                  onChange(WALK_IN_VALUE);
+                  setOpen(false);
+                }}
+              >
+                <Check
+                  className={cn(
+                    "mr-2 h-4 w-4",
+                    value === WALK_IN_VALUE ? "opacity-100" : "opacity-0",
+                  )}
+                />
+                {walkInLabel}
+              </CommandItem>
+              {parties.map((p) => (
+                <CommandItem
+                  key={p.id}
+                  value={`${p.name} ${p.phone ?? ""} ${p.id}`}
+                  onSelect={() => {
+                    onChange(p.id);
+                    setOpen(false);
+                  }}
+                >
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      value === p.id ? "opacity-100" : "opacity-0",
+                    )}
+                  />
+                  <span className="truncate">{p.name}</span>
+                  {p.phone && (
+                    <span className="ml-2 text-xs text-muted-foreground truncate">
+                      {p.phone}
+                    </span>
+                  )}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 type Item = {
   id: string;
   name: string;
