@@ -195,7 +195,9 @@ export function SalesDocForm({
   const { t } = useI18n();
   const canAddParty = usePermission("parties", "add");
   const canEditSales = usePermission("sales", "edit");
-  const { isOffline } = usePWAStatus();
+  const { isOffline: isOfflineRaw } = usePWAStatus();
+  // In personal/local demo mode all data is on-device, so offline never blocks save.
+  const isOffline = isOfflineRaw && typeof window !== "undefined" && !(window.localStorage?.getItem("erpovo_demo_mode") === "1");
   const [addCustomerOpen, setAddCustomerOpen] = useState(false);
   const attachmentsRef = useRef<AttachmentsSectionHandle | null>(null);
   const today = new Date().toISOString().slice(0, 10);
