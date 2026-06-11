@@ -23,6 +23,8 @@ type PersistedCart = {
   paymentMethod: string;
   discount: number;
   received: number;
+  vatPct?: number;
+  notes?: string;
 };
 function loadPersistedCart(): PersistedCart | null {
   if (typeof window === "undefined") return null;
@@ -77,8 +79,11 @@ export function POS() {
   const [paymentMethod, setPaymentMethod] = useState(persisted?.paymentMethod ?? "cash");
   const [discount, setDiscount] = useState(persisted?.discount ?? 0);
   const [received, setReceived] = useState(persisted?.received ?? 0);
+  const [vatPct, setVatPct] = useState(persisted?.vatPct ?? 0);
+  const [notes, setNotes] = useState(persisted?.notes ?? "");
   const [saving, setSaving] = useState(false);
   const [lastSaleId, setLastSaleId] = useState<string | null>(null);
+  const [lastInvoiceNo, setLastInvoiceNo] = useState<string | null>(null);
   const [showQuickAdd, setShowQuickAdd] = useState(false);
 
   useEffect(() => {
@@ -86,12 +91,13 @@ export function POS() {
     try {
       localStorage.setItem(
         POS_CART_KEY,
-        JSON.stringify({ cart, partyId, paymentMethod, discount, received }),
+        JSON.stringify({ cart, partyId, paymentMethod, discount, received, vatPct, notes }),
       );
     } catch {
       /* ignore */
     }
-  }, [cart, partyId, paymentMethod, discount, received]);
+  }, [cart, partyId, paymentMethod, discount, received, vatPct, notes]);
+
 
   const { data: items = [] } = useQuery({
     queryKey: ["pos-items", companyId],
@@ -196,18 +202,22 @@ export function POS() {
     setDiscount(0);
     setReceived(0);
     setPartyId(WALK_IN);
+    setVatPct(0);
+    setNotes("");
     if (typeof window !== "undefined") {
       try { localStorage.removeItem(POS_CART_KEY); } catch { /* ignore */ }
     }
   };
 
   const subtotal = cart.reduce((s, l) => s + l.qty * Number(l.item.sale_price), 0);
-  const tax = cart.reduce(
+  const itemTax = cart.reduce(
     (s, l) => s + (l.qty * Number(l.item.sale_price) * Number(l.item.tax_rate)) / 100,
     0,
   );
-  const total = Math.max(0, subtotal + tax - discount);
-  const balance = total - received;
+  const extraVat = Math.max(0, subtotal) * (Math.max(0, vatPct) / 100);
+  const tax = itemTax + extraVat;
+  const total = Math.max(0, subtotal + tax - Math.max(0, discount));
+  const balance = total - Math.max(0, received);
 
   if (!companyId)
     return (
@@ -222,6 +232,28 @@ export function POS() {
       toast.error("Cart is empty");
       return;
     }
+    if (discount < 0) {
+      toast.error("Discount cannot be negative");
+      return;
+    }
+    if (received < 0) {
+      toast.error("Received amount cannot be negative");
+      return;
+    }
+    if (vatPct < 0) {
+      toast.error("VAT cannot be negative");
+      return;
+    }
+    for (const l of cart) {
+      if (!l.item.is_service && l.qty > Number(l.item.stock)) {
+        toast.error(`${l.item.name}: only ${l.item.stock} ${l.item.unit} in stock`);
+        return;
+      }
+      if (!l.item.is_service && Number(l.item.stock) <= 0) {
+        toast.error(`${l.item.name} is out of stock`);
+        return;
+      }
+    }
     setSaving(true);
     try {
       const invoiceNo = await nextDocNumber(companyId, "sales", "POS");
@@ -230,13 +262,20 @@ export function POS() {
       const effBalance = total - effReceived;
       const status = effBalance <= 0 ? "paid" : effReceived > 0 ? "partial" : "unpaid";
       const paidAmt = Math.min(effReceived, total);
-      const method = (isCredit ? "cash" : paymentMethod) as
-        | "cash"
-        | "bank"
-        | "mobile"
-        | "card"
-        | "cheque"
-        | "upi";
+      // Map UI methods (bkash/nagad) onto the saveSaleInvoice enum.
+      const methodMap: Record<string, "cash" | "bank" | "mobile" | "card" | "cheque" | "upi"> = {
+        cash: "cash",
+        bank: "bank",
+        card: "card",
+        bkash: "mobile",
+        nagad: "mobile",
+        credit: "cash",
+      };
+      const method = methodMap[paymentMethod] ?? "cash";
+      const noteParts = ["POS Sale"];
+      if (paymentMethod === "bkash") noteParts.push("Paid via bKash");
+      if (paymentMethod === "nagad") noteParts.push("Paid via Nagad");
+      if (notes.trim()) noteParts.push(notes.trim());
       const saleId = await saveSaleInvoice({
         company_id: companyId,
         invoice_no: invoiceNo,
@@ -244,14 +283,14 @@ export function POS() {
         due_date: null,
         party_id: partyId && partyId !== WALK_IN ? partyId : null,
         subtotal,
-        discount,
+        discount: Math.max(0, discount),
         tax,
         delivery_charge: 0,
         total,
         paid: paidAmt,
         balance: Math.max(0, effBalance),
         status,
-        notes: "POS Sale",
+        notes: noteParts.join(" · "),
         payment_method: method,
         bank_account_id: null,
         doc_type: "invoice",
@@ -274,15 +313,19 @@ export function POS() {
 
       toast.success(`Sale ${invoiceNo} completed`);
       setLastSaleId(saleId);
+      setLastInvoiceNo(invoiceNo);
       qc.invalidateQueries({ queryKey: ["pos-items"] });
-      // Auto-print thermal receipt
-      printSaleReceiptNow(saleId, companyId).catch(() => {});
+      // Auto-print thermal receipt (safe; never throws to UI)
+      printSaleReceiptNow(saleId, companyId).catch(() => {
+        toast.message("Receipt preview unavailable in demo mode");
+      });
       clearCart();
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
       setSaving(false);
     }
+
   };
 
   return (
@@ -545,8 +588,20 @@ export function POS() {
                 <MoneyText value={`৳ ${subtotal.toLocaleString()}`} />
               </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Tax</span>
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">VAT %</span>
+              <Input
+                type="number"
+                min={0}
+                step="0.01"
+                className="h-7 w-24 text-right"
+                value={vatPct || ""}
+                placeholder="0"
+                onChange={(e) => setVatPct(Math.max(0, Number(e.target.value) || 0))}
+              />
+            </div>
+            <div className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Tax (items + VAT)</span>
               <span>
                 <MoneyText
                   value={`৳ ${tax.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
@@ -557,9 +612,11 @@ export function POS() {
               <span className="text-muted-foreground">Discount</span>
               <Input
                 type="number"
+                min={0}
                 className="h-7 w-24 text-right"
-                value={discount}
-                onChange={(e) => setDiscount(Number(e.target.value) || 0)}
+                value={discount || ""}
+                placeholder="0"
+                onChange={(e) => setDiscount(Math.max(0, Number(e.target.value) || 0))}
               />
             </div>
             <div className="flex justify-between border-t pt-2 text-lg">
@@ -577,23 +634,43 @@ export function POS() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="cash">Cash</SelectItem>
+                  <SelectItem value="bank">Bank</SelectItem>
+                  <SelectItem value="bkash">bKash</SelectItem>
+                  <SelectItem value="nagad">Nagad</SelectItem>
                   <SelectItem value="card">Card</SelectItem>
-                  <SelectItem value="bank">Bank/UPI</SelectItem>
-                  <SelectItem value="credit">Credit</SelectItem>
+                  <SelectItem value="credit">Credit / Due</SelectItem>
                 </SelectContent>
               </Select>
               <Input
                 type="number"
+                min={0}
                 className="h-9"
                 placeholder={paymentMethod === "credit" ? "Credit (no payment)" : "Received"}
                 value={paymentMethod === "credit" ? "" : received || ""}
                 disabled={paymentMethod === "credit"}
-                onChange={(e) => setReceived(Number(e.target.value) || 0)}
+                onChange={(e) => setReceived(Math.max(0, Number(e.target.value) || 0))}
               />
             </div>
-            {received > 0 && (
+            <Input
+              className="h-9"
+              placeholder="Payment notes (optional)"
+              value={notes}
+              maxLength={200}
+              onChange={(e) => setNotes(e.target.value)}
+            />
+            <div className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Status</span>
+              <span className="font-semibold">
+                {paymentMethod === "credit" || received <= 0
+                  ? "Due"
+                  : balance <= 0
+                    ? "Paid"
+                    : "Partial"}
+              </span>
+            </div>
+            {received > 0 && paymentMethod !== "credit" && (
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">{balance > 0 ? "Balance" : "Change"}</span>
+                <span className="text-muted-foreground">{balance > 0 ? "Balance Due" : "Change"}</span>
                 <span className={`font-bold ${balance > 0 ? "num-neg" : "num-pos"}`}>
                   <MoneyText
                     value={`৳ ${Math.abs(balance).toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
@@ -611,6 +688,45 @@ export function POS() {
                 ? "Processing…"
                 : `Charge ৳ ${total.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
             </Button>
+            {lastSaleId && lastInvoiceNo && cart.length === 0 && (
+              <div className="border rounded-md p-3 mt-2 bg-success/5 space-y-2">
+                <div className="text-xs font-semibold text-success">
+                  Last sale: {lastInvoiceNo}
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      printSaleReceiptNow(lastSaleId, companyId!).catch(() =>
+                        toast.message("Receipt preview unavailable in demo mode"),
+                      )
+                    }
+                  >
+                    <Printer className="w-3.5 h-3.5" />
+                    Print
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.open(`/app/sales/${lastSaleId}/edit`, "_blank")}
+                  >
+                    View
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setLastSaleId(null);
+                      setLastInvoiceNo(null);
+                    }}
+                  >
+                    New
+                  </Button>
+                </div>
+              </div>
+            )}
+
           </div>
         </div>
       </div>
