@@ -442,7 +442,7 @@ export function ERPSidebar() {
           </div>
         </div>
       </div>
-      <nav className="flex-1 overflow-y-auto py-2">
+      <nav className="sidebar-scroll sidebar-scroll-fade flex-1 overflow-y-auto py-2">
         {nav.map((n) => (n.kind === "group" ? renderGroup(n) : renderLink(n)))}
 
         {adminQ.data?.isAdmin && (
