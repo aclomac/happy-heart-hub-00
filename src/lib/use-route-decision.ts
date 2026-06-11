@@ -62,9 +62,13 @@ function useAuthUser() {
     // already authenticated — prevents a brief "no user → /login" flicker
     // after refresh.
     if (typeof window !== "undefined" && isDemoMode()) {
-      if (hasDemoAuthCookie() && !window.localStorage.getItem(DEMO_SESSION_KEY)) startDemoSession();
+      if (hasDemoAuthCookie() && !window.localStorage.getItem(DEMO_SESSION_KEY)) {
+        startDemoSession();
+      }
       const s = getDemoSession();
-      if (import.meta.env.DEV) console.log("[demo-auth] demo localStorage detected");
+      if (import.meta.env.DEV) {
+        console.log("[demo-auth] demo localStorage detected");
+      }
       return {
         loading: false,
         userId: s?.userId ?? DEMO_USER_ID,
@@ -78,9 +82,13 @@ function useAuthUser() {
     let active = true;
     // Demo session short-circuits Supabase auth entirely.
     if (isDemoMode()) {
-      if (hasDemoAuthCookie() && !window.localStorage.getItem(DEMO_SESSION_KEY)) startDemoSession();
+      if (hasDemoAuthCookie() && !window.localStorage.getItem(DEMO_SESSION_KEY)) {
+        startDemoSession();
+      }
       const s = getDemoSession();
-      if (import.meta.env.DEV) console.log("[demo-auth] route guard allowed demo user");
+      if (import.meta.env.DEV) {
+        console.log("[demo-auth] route guard allowed demo user");
+      }
       setState({
         loading: false,
         userId: s?.userId ?? DEMO_USER_ID,
