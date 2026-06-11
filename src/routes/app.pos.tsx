@@ -700,7 +700,6 @@ export function POS() {
               onCreated={(p) => {
                 qc.invalidateQueries({ queryKey: ["pos-parties", companyId] });
                 setPartyId(p.id);
-                toast.success(t("Customer added and selected"));
               }}
             />
           </div>

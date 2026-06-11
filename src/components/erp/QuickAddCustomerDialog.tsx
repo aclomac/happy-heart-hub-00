@@ -82,7 +82,7 @@ export function QuickAddCustomerDialog({
             (p.phone || "") === trimmedPhone,
         );
         if (byPhone) {
-          toast.info(t("Customer already exists"));
+          toast.info(t("Customer already exists. Existing customer selected."));
           onCreated({
             id: byPhone.id,
             name: byPhone.name,
@@ -104,7 +104,7 @@ export function QuickAddCustomerDialog({
           p.name.toLowerCase() === trimmedName.toLowerCase(),
       );
       if (byName && !trimmedPhone) {
-        toast.info(t("Customer already exists"));
+        toast.info(t("Customer already exists. Existing customer selected."));
         onCreated({
           id: byName.id,
           name: byName.name,
@@ -140,7 +140,7 @@ export function QuickAddCustomerDialog({
         created_at: new Date().toISOString(),
       };
       setParties([newParty, ...all]);
-      toast.success(t("Customer added"));
+      toast.success(t("Customer added and selected"));
       onCreated({
         id: newParty.id,
         name: newParty.name,
@@ -149,8 +149,8 @@ export function QuickAddCustomerDialog({
         type: newParty.type,
       });
       onOpenChange(false);
-    } catch (e) {
-      toast.error((e as Error).message);
+    } catch {
+      toast.error(t("Could not add customer. Please try again."));
     } finally {
       setSaving(false);
     }
