@@ -32,11 +32,15 @@ export function QuickAddCustomerDialog({
   onOpenChange,
   companyId,
   onCreated,
+  initialName,
+  initialPhone,
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   companyId: string;
   onCreated: (p: Party) => void;
+  initialName?: string;
+  initialPhone?: string;
 }) {
   const { t } = useI18n();
   const [name, setName] = useState("");
@@ -49,13 +53,13 @@ export function QuickAddCustomerDialog({
   useEffect(() => {
     if (open) {
       ensurePartiesSeed();
-      setName("");
-      setPhone("");
+      setName(initialName ?? "");
+      setPhone(initialPhone ?? "");
       setEmail("");
       setAddress("");
       setOpening("");
     }
-  }, [open]);
+  }, [open, initialName, initialPhone]);
 
   const save = () => {
     const trimmedName = name.trim();
