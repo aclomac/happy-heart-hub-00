@@ -59,6 +59,12 @@ function Login() {
         sessionStorage.removeItem("erpovo:adminLandedOnce");
       }
       setLoading(false);
+      // Hard reload so the route orchestrator re-evaluates auth state
+      // freshly with the new demo session active in localStorage.
+      if (typeof window !== "undefined") {
+        window.location.replace("/app");
+        return;
+      }
       nav({ to: "/app", replace: true });
       return;
     }
