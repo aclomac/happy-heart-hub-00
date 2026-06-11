@@ -1717,12 +1717,32 @@ function TaxReport({ companyId, from, to }: { companyId: string; from: string; t
   );
 }
 
+const HASH_TO_TAB: Record<string, string> = {
+  transactions: "sales",
+  sales: "sales",
+  purchases: "purchases",
+  daybook: "daybook",
+  pnl: "pnl",
+  business: "pnl",
+  balance: "balance",
+  stock: "stock",
+  party: "party",
+  tax: "tax",
+  expense: "expense",
+  other_income: "other_income",
+};
+
 function Reports() {
   const companyId = useCurrentCompanyId();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [period, setPeriod] = useState<Period>("month");
   const [fromD, setFromD] = useState("");
   const [toD, setToD] = useState("");
   const { from, to } = useMemo(() => periodRange(period, fromD, toD), [period, fromD, toD]);
+
+  const rawHash = (location.hash || "").replace(/^#/, "");
+  const tab = HASH_TO_TAB[rawHash] || "sales";
 
   if (!companyId)
     return (
@@ -1743,7 +1763,12 @@ function Reports() {
         to={toD}
         setTo={setToD}
       />
-      <Tabs defaultValue="sales">
+      <Tabs
+        value={tab}
+        onValueChange={(v) =>
+          navigate({ to: "/app/reports", hash: v, replace: false } as never)
+        }
+      >
         <TabsList className="flex-wrap h-auto mb-3">
           <TabsTrigger value="sales">
             <FileSpreadsheet className="w-3.5 h-3.5 mr-1" />
@@ -1793,3 +1818,4 @@ function Reports() {
     </div>
   );
 }
+
