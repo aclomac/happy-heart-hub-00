@@ -91,10 +91,27 @@ function Dashboard() {
 
 
   const invQ = useQuery({
-    queryKey: ["dashboard-inventory", companyId],
+    queryKey: ["dashboard-inventory", companyId, isDemoMode() ? "demo" : "live"],
     enabled: !!companyId,
     retry: false,
     queryFn: async () => {
+      if (isDemoMode()) {
+        const d = getDemoDashboardData();
+        return {
+          items: [],
+          warehouses: [],
+          storeStock: [],
+          adjustments: [],
+          transfers: Array.from({ length: d.inventory.transfers }, (_, i) => ({ id: String(i) })),
+          totals: {
+            stockValue: d.inventory.stockValue,
+            totalItems: d.inventory.totalItems,
+            lowStock: d.inventory.lowStock,
+            outOfStock: d.inventory.outOfStock,
+            warehouses: d.inventory.warehouses,
+          },
+        };
+      }
       try {
         return await loadInventoryDashboard(companyId!);
       } catch (err) {
@@ -112,7 +129,7 @@ function Dashboard() {
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ["dashboard", companyId],
+    queryKey: ["dashboard", companyId, isDemoMode() ? "demo" : "live"],
     enabled: !!companyId,
     retry: false,
     queryFn: async () => {
