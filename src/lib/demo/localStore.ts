@@ -17,6 +17,12 @@ import {
   getDemoTodaySales,
   getDemoMonthSales,
 } from "./sales";
+import {
+  ensurePurchasesSeed,
+  getDemoMonthPurchases,
+  getDemoBillPayables,
+} from "./purchases";
+import { ensureExpensesSeed, getDemoMonthExpenses } from "./expenses";
 
 export const DEMO_SESSION_KEY = "erpovo_demo_session";
 export const DEMO_USER_KEY = "erpovo_demo_user";
