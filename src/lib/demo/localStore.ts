@@ -24,6 +24,7 @@ import {
 import { ensureExpensesSeed, getDemoMonthExpenses } from "./expenses";
 import { ensureCashSeed } from "./cash";
 import { ensurePayrollSeed } from "./payroll";
+import { ensureOnlineStoreSeed } from "./online-store";
 import { DEMO_COMPANY_ID, DEMO_USER_EMAIL, DEMO_USER_ID } from "./constants";
 
 export { DEMO_COMPANY_ID, DEMO_USER_EMAIL, DEMO_USER_ID } from "./constants";
