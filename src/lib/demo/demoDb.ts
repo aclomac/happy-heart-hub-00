@@ -53,6 +53,22 @@ import {
   getOtherIncome,
   setOtherIncome,
 } from "./sales";
+import {
+  ensurePurchasesSeed,
+  getPurchases,
+  setPurchases,
+  getPurchaseItems,
+  setPurchaseItems,
+  getBankAccounts,
+  setBankAccounts,
+} from "./purchases";
+import {
+  ensureExpensesSeed,
+  getExpenses,
+  setExpenses,
+  getExpenseCategories,
+  setExpenseCategories,
+} from "./expenses";
 import { getDemoCompanies, setDemoCompanies, DEMO_COMPANY_ID } from "./localStore";
 
 /**
