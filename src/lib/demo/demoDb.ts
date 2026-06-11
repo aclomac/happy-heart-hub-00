@@ -40,6 +40,19 @@ import {
   getPartyLedger,
   setPartyLedger,
 } from "./parties";
+import {
+  ensureSalesSeed,
+  getSales,
+  setSales,
+  getSaleItems,
+  setSaleItems,
+  getPayments,
+  setPayments,
+  getCashTxns,
+  setCashTxns,
+  getOtherIncome,
+  setOtherIncome,
+} from "./sales";
 import { getDemoCompanies, setDemoCompanies, DEMO_COMPANY_ID } from "./localStore";
 
 /**
@@ -88,6 +101,7 @@ type Writer = (rows: Row[]) => void;
 function table(name: string): { read: Reader; write: Writer } {
   ensureInventorySeed();
   ensurePartiesSeed();
+  ensureSalesSeed();
   switch (name) {
     case "items": return { read: getItems as Reader, write: setItems as unknown as Writer };
     case "item_categories": return { read: getCategories as Reader, write: setCategories as unknown as Writer };
@@ -100,6 +114,11 @@ function table(name: string): { read: Reader; write: Writer } {
     case "parties": return { read: getParties as Reader, write: setParties as unknown as Writer };
     case "party_groups": return { read: getPartyGroups as Reader, write: setPartyGroups as unknown as Writer };
     case "party_ledger": return { read: getPartyLedger as Reader, write: setPartyLedger as unknown as Writer };
+    case "sales": return { read: getSales as Reader, write: setSales as unknown as Writer };
+    case "sale_items": return { read: getSaleItems as Reader, write: setSaleItems as unknown as Writer };
+    case "payments": return { read: getPayments as Reader, write: setPayments as unknown as Writer };
+    case "cash_transactions": return { read: getCashTxns as Reader, write: setCashTxns as unknown as Writer };
+    case "other_income": return { read: getOtherIncome as Reader, write: setOtherIncome as unknown as Writer };
     case "companies": return {
       read: () => getDemoCompanies() as unknown as Row[],
       write: (rows) => setDemoCompanies(rows as any),
@@ -156,6 +175,18 @@ function applyOrders(rows: Row[], orders: Order[]): Row[] {
   return out;
 }
 
+/**
+ * Hydrate Postgres-style embedded selects. We only support the trivial
+ * `parties(name)` shape used by Sales / Payments lists so the rendered list
+ * gets `row.parties = { name }`.
+ */
+function attachJoins(cols: string, rows: Row[]): Row[] {
+  if (!cols || !/parties\s*\(/i.test(cols)) return rows;
+  const parties = getParties();
+  const map = new Map(parties.map((p) => [p.id, { name: p.name }]));
+  return rows.map((r) => ({ ...r, parties: r.party_id ? (map.get(r.party_id) ?? null) : null }));
+}
+
 class Builder<T extends Row = Row> implements PromiseLike<{ data: any; error: any; count?: number }> {
   private filters: Filter[] = [];
   private orders: Order[] = [];
@@ -166,14 +197,16 @@ class Builder<T extends Row = Row> implements PromiseLike<{ data: any; error: an
   private payload: Row | Row[] | null = null;
   private upsertConflict: string[] | null = null;
   private singleMode: "none" | "maybe" | "single" = "none";
+  private cols = "";
 
   constructor(private name: string) {}
 
   // ----- query verbs -----
-  select(_cols?: string, opts?: { count?: string; head?: boolean }) {
+  select(cols?: string, opts?: { count?: string; head?: boolean }) {
     if (this.mode !== "insert" && this.mode !== "update" && this.mode !== "upsert") {
       this.mode = "select";
     }
+    if (cols) this.cols = cols;
     if (opts?.count) this.wantCount = true;
     if (opts?.head) this.headOnly = true;
     return this;
@@ -228,13 +261,14 @@ class Builder<T extends Row = Row> implements PromiseLike<{ data: any; error: an
         const filtered = applyFilters(all, this.filters);
         const ordered = applyOrders(filtered, this.orders);
         const limited = this.limitN != null ? ordered.slice(0, this.limitN) : ordered;
+        const joined = attachJoins(this.cols, limited);
         const count = this.wantCount ? filtered.length : undefined;
-        if (this.singleMode === "maybe") return { data: limited[0] ?? null, error: null, count };
+        if (this.singleMode === "maybe") return { data: joined[0] ?? null, error: null, count };
         if (this.singleMode === "single") {
-          if (!limited[0]) return { data: null, error: { message: "No rows found" }, count };
-          return { data: limited[0], error: null, count };
+          if (!joined[0]) return { data: null, error: { message: "No rows found" }, count };
+          return { data: joined[0], error: null, count };
         }
-        return { data: this.headOnly ? null : limited, error: null, count };
+        return { data: this.headOnly ? null : joined, error: null, count };
       }
 
       if (this.mode === "insert") {
