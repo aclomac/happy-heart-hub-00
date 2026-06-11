@@ -166,35 +166,18 @@ function Login() {
               >
                 {loading ? "Signing in..." : "Sign In"}
               </Button>
-              {import.meta.env.DEV && (
-                <div className="rounded-md border border-dashed bg-muted/40 p-3 text-xs">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-semibold text-foreground">Demo Login (dev only)</span>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 px-2 text-xs"
-                      onClick={() => {
-                        setEmail(DEMO_EMAIL);
-                        setPass(DEMO_PASSWORD);
-                      }}
-                    >
-                      Fill credentials
-                    </Button>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    className="w-full mt-2 h-7 text-xs"
-                    onClick={handleDemoLogin}
-                    disabled={loading}
-                  >
-                    {loading ? "Loading demo..." : "Login as Demo Admin"}
-                  </Button>
-                </div>
-              )}
+              <Button
+                type="button"
+                variant="secondary"
+                className="w-full"
+                onClick={handleDemoLogin}
+                disabled={loading}
+              >
+                {loading ? "Loading demo..." : "Use Demo Login"}
+              </Button>
+              <p className="text-[11px] text-muted-foreground text-center -mt-1">
+                Demo: demo@erpovo.com / 123456 (local mode, no backend)
+              </p>
               <Link to="/signup">
                 <Button variant="outline" className="w-full" type="button">
                   Create new account
