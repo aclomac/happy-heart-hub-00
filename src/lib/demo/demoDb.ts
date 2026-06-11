@@ -318,6 +318,20 @@ function defaults(name: string): Row {
       created_at: nowIso, deleted_at: null, company_id: DEMO_COMPANY_ID,
     };
     case "stock_transfer_items": return { variant_id: null, qty: 0, unit: "PCS" };
+    case "parties": return {
+      type: "customer", phone: null, email: null, address: null, shipping_address: null,
+      group_id: null, opening_balance: 0, balance: 0, credit_limit: null,
+      loyalty_points: 0, gst_number: null, is_active: true,
+      deleted_at: null, created_at: nowIso, company_id: DEMO_COMPANY_ID,
+    };
+    case "party_groups": return {
+      description: null, deleted_at: null, created_at: nowIso, company_id: DEMO_COMPANY_ID,
+    };
+    case "party_ledger": return {
+      entry_date: nowIso.slice(0, 10), entry_type: "manual",
+      reference_no: null, debit: 0, credit: 0, balance: 0, note: null,
+      created_at: nowIso, company_id: DEMO_COMPANY_ID,
+    };
     default: return {};
   }
 }
