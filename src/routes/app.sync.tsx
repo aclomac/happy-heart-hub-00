@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/erp/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
+import { isDemoMode, endDemoSession, clearDemoStorage, DEMO_USER_ID } from "@/lib/demo/localStore";
 import { useCurrentCompanyId } from "@/lib/use-company";
 import { useCurrentRole } from "@/lib/use-current-role";
 import { useI18n } from "@/lib/i18n";
