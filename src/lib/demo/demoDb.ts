@@ -147,6 +147,7 @@ function table(name: string): { read: Reader; write: Writer } {
   ensurePurchasesSeed();
   ensureExpensesSeed();
   ensureCashSeed();
+  ensurePayrollSeed();
 
   const empty = { read: () => [], write: () => {} };
   switch (name) {
