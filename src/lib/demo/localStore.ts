@@ -7,6 +7,7 @@
  */
 
 export const DEMO_SESSION_KEY = "erpovo_demo_session";
+export const DEMO_USER_KEY = "erpovo_demo_user";
 export const DEMO_COMPANIES_KEY = "erpovo_demo_companies";
 export const DEMO_CURRENT_COMPANY_KEY = "erpovo_demo_current_company";
 export const DEMO_SETTINGS_KEY = "erpovo_demo_settings";
@@ -31,10 +32,22 @@ export type DemoCompany = {
   created_at: string;
 };
 
+export type DemoUser = {
+  id: string;
+  email: string;
+  role: "owner" | "admin" | "user";
+  name: string;
+};
+
 export type DemoSession = {
+  isDemo: true;
+  access_token: string;
+  user: DemoUser;
   email: string;
   userId: string;
   startedAt: number;
+  created_at: string;
+  expires_at: string;
 };
 
 export type DemoSettings = {
@@ -96,18 +109,45 @@ export function getDemoSession(): DemoSession | null {
 }
 
 export function startDemoSession(): DemoSession {
+  const now = new Date();
+  const user: DemoUser = {
+    id: DEMO_USER_ID,
+    email: DEMO_USER_EMAIL,
+    role: "owner",
+    name: "Demo User",
+  };
   const session: DemoSession = {
+    isDemo: true,
+    access_token: "demo-token",
+    user,
     email: DEMO_USER_EMAIL,
     userId: DEMO_USER_ID,
-    startedAt: Date.now(),
+    startedAt: now.getTime(),
+    created_at: now.toISOString(),
+    expires_at: "2099-12-31T23:59:59.000Z",
   };
   safeWrite(DEMO_SESSION_KEY, session);
+  safeWrite(DEMO_USER_KEY, user);
   ensureDemoSeed();
   return session;
 }
 
+export function getDemoUser(): DemoUser | null {
+  return safeRead<DemoUser>(DEMO_USER_KEY);
+}
+
+/** Convenience guard for route gates and AuthProvider checks. */
+export function isDemoAuthenticated(): boolean {
+  if (!isDemoMode()) return false;
+  const s = getDemoSession();
+  if (!s) return false;
+  if (!s.expires_at) return true;
+  return new Date(s.expires_at).getTime() > Date.now();
+}
+
 export function endDemoSession(): void {
   safeRemove(DEMO_SESSION_KEY);
+  safeRemove(DEMO_USER_KEY);
   safeRemove(LEGACY_SESSION_KEY);
 }
 
@@ -226,6 +266,7 @@ export function clearDemoStorage(): void {
   try {
     [
       DEMO_SESSION_KEY,
+      DEMO_USER_KEY,
       DEMO_COMPANIES_KEY,
       DEMO_CURRENT_COMPANY_KEY,
       DEMO_SETTINGS_KEY,
