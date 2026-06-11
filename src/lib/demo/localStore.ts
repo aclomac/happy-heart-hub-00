@@ -32,10 +32,22 @@ export type DemoCompany = {
   created_at: string;
 };
 
+export type DemoUser = {
+  id: string;
+  email: string;
+  role: "owner" | "admin" | "user";
+  name: string;
+};
+
 export type DemoSession = {
+  isDemo: true;
+  access_token: string;
+  user: DemoUser;
   email: string;
   userId: string;
   startedAt: number;
+  created_at: string;
+  expires_at: string;
 };
 
 export type DemoSettings = {
