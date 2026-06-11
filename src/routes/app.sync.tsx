@@ -160,6 +160,14 @@ function Sync() {
   const { data: devices = [] } = useQuery({
     queryKey: ["my-devices"],
     queryFn: async () => {
+      if (isDemoMode()) {
+        const { data } = await supabase
+          .from("devices")
+          .select("id,device_name,device_fingerprint,last_seen_at")
+          .eq("user_id", DEMO_USER_ID)
+          .order("last_seen_at", { ascending: false });
+        return data ?? [];
+      }
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return [];
       const { data } = await supabase
