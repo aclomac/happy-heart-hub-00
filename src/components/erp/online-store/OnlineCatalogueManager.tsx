@@ -1,169 +1,92 @@
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useCurrentCompanyId } from "@/lib/use-company";
+import { useState, useMemo } from "react";
 import { useI18n } from "@/lib/i18n";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { MoneyText } from "@/components/erp/MoneyText";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { useState } from "react";
 import { Search } from "lucide-react";
+import {
+  ensureOnlineStoreSeed, getOnlineProducts, setOnlineProducts,
+} from "@/lib/demo/online-store";
 
 export function OnlineCatalogueManager() {
   const { t } = useI18n();
-  const companyId = useCurrentCompanyId();
   const [search, setSearch] = useState("");
+  const [tick, setTick] = useState(0);
 
-  const { data: items, isLoading, refetch } = useQuery({
-    queryKey: ["online-catalogue-items", companyId],
-    enabled: !!companyId,
-    queryFn: async () => {
-      // Fetch all items and their online store settings
-      const { data: allItems, error: itemsError } = await supabase
-        .from("items")
-        .select("id, name, sku, sale_price")
-        .eq("company_id", companyId!)
-        .is("deleted_at", null)
-        .order("name");
+  const items = useMemo(() => { ensureOnlineStoreSeed(); return getOnlineProducts(); }, [tick]);
 
-      if (itemsError) throw itemsError;
-
-      const { data: onlineItems, error: onlineError } = await supabase
-        .from("online_store_items")
-        .select("*")
-        .eq("company_id", companyId!);
-
-      if (onlineError) throw onlineError;
-
-      return allItems.map(item => {
-        const online = onlineItems?.find(oi => oi.item_id === item.id);
-        return {
-          ...item,
-          is_active: !!online?.visible,
-          online_price: online?.online_price || item.sale_price,
-          online_item_id: online?.id
-        };
-      });
-    },
-  });
-
-  const toggleOnline = async (item: any) => {
-    if (item.online_item_id) {
-      // Update existing
-      const { error } = await supabase
-        .from("online_store_items")
-        .update({ visible: !item.is_active })
-        .eq("id", item.online_item_id);
-
-      if (error) toast.error(t("Failed to update"));
-      else refetch();
-    } else {
-      // Create new
-      const { error } = await supabase
-        .from("online_store_items")
-        .insert({
-          company_id: companyId!,
-          item_id: item.id,
-          visible: true,
-          online_price: item.sale_price || 0
-        });
-
-      if (error) toast.error(t("Failed to add to store"));
-      else refetch();
-    }
+  const toggleVisible = (sku: string) => {
+    const next = getOnlineProducts().map((p) => p.sku === sku ? { ...p, visible: !p.visible } : p);
+    setOnlineProducts(next);
+    setTick((n) => n + 1);
+    toast.success(t("Updated"));
   };
 
-  const updatePrice = async (item: any, newPrice: string) => {
-    const price = parseFloat(newPrice);
+  const updatePrice = (sku: string, raw: string) => {
+    const price = parseFloat(raw);
     if (isNaN(price)) return;
-
-    if (item.online_item_id) {
-      const { error } = await supabase
-        .from("online_store_items")
-        .update({ online_price: price })
-        .eq("id", item.online_item_id);
-
-      if (error) toast.error(t("Failed to update price"));
-      else refetch();
-    } else {
-      const { error } = await supabase
-        .from("online_store_items")
-        .insert({
-          company_id: companyId!,
-          item_id: item.id,
-          visible: true,
-          online_price: price
-        });
-
-      if (error) toast.error(t("Failed to update price"));
-      else refetch();
-    }
+    const next = getOnlineProducts().map((p) => p.sku === sku ? { ...p, discount_price: price } : p);
+    setOnlineProducts(next);
+    setTick((n) => n + 1);
+    toast.success(t("Price updated"));
   };
 
-  const filteredItems = items?.filter(item => 
-    item.name.toLowerCase().includes(search.toLowerCase()) || 
-    item.sku?.toLowerCase().includes(search.toLowerCase())
+  const filtered = items.filter((p) =>
+    p.name.toLowerCase().includes(search.toLowerCase()) ||
+    p.sku.toLowerCase().includes(search.toLowerCase()) ||
+    p.category.toLowerCase().includes(search.toLowerCase())
   );
-
-  if (isLoading) return <div className="py-8 text-center">{t("Loading…")}</div>;
 
   return (
     <div className="mt-6 space-y-4">
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input 
-          placeholder={t("Search item")} 
-          className="pl-10" 
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        <Input placeholder={t("Search item")} className="pl-10" value={search} onChange={(e) => setSearch(e.target.value)} />
       </div>
-
-      <div className="border rounded-md">
+      <div className="border rounded-md overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>{t("Item Name")}</TableHead>
+              <TableHead>{t("Category")}</TableHead>
+              <TableHead>{t("Stock")}</TableHead>
               <TableHead>{t("ERP Price")}</TableHead>
               <TableHead>{t("Online Price")}</TableHead>
               <TableHead className="text-right">{t("Visible Online")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {!filteredItems?.length ? (
-              <TableRow>
-                <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
-                  {t("No items found")}
+            {filtered.length === 0 ? (
+              <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">{t("No items found")}</TableCell></TableRow>
+            ) : filtered.map((item) => (
+              <TableRow key={item.sku}>
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    <img src={item.image_url} alt={item.name} className="w-10 h-10 rounded object-cover border" loading="lazy" />
+                    <div>
+                      <div className="font-medium flex items-center gap-2">
+                        {item.name}
+                        {item.featured && <Badge variant="secondary" className="text-[10px]">{t("Featured")}</Badge>}
+                      </div>
+                      <div className="text-xs text-muted-foreground">{item.sku}</div>
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell><Badge variant="outline">{item.category}</Badge></TableCell>
+                <TableCell>{item.stock === 0 ? <Badge variant="destructive">{t("Out")}</Badge> : item.stock}</TableCell>
+                <TableCell><MoneyText value={item.sale_price} /></TableCell>
+                <TableCell>
+                  <Input type="number" defaultValue={item.discount_price}
+                    onBlur={(e) => updatePrice(item.sku, e.target.value)} className="w-24 h-8" />
+                </TableCell>
+                <TableCell className="text-right">
+                  <Switch checked={item.visible} onCheckedChange={() => toggleVisible(item.sku)} />
                 </TableCell>
               </TableRow>
-            ) : (
-              filteredItems.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell>
-                    <div className="font-medium">{item.name}</div>
-                    <div className="text-xs text-muted-foreground">{item.sku}</div>
-                  </TableCell>
-                  <TableCell>
-                    <MoneyText value={item.sale_price || 0} />
-                  </TableCell>
-                  <TableCell>
-                    <Input 
-                      type="number" 
-                      defaultValue={item.online_price}
-                      onBlur={(e) => updatePrice(item, e.target.value)}
-                      className="w-24 h-8"
-                    />
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Switch 
-                      checked={item.is_active} 
-                      onCheckedChange={() => toggleOnline(item)} 
-                    />
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
+            ))}
           </TableBody>
         </Table>
       </div>
