@@ -184,12 +184,6 @@
   }
 }
 
-@keyframes bounce-subtle {
-  0%,
-  100% {
-    transform: translateY(0);
-}
-
 /* Premium sidebar scrollbar */
 .sidebar-scroll {
   scrollbar-width: thin;
@@ -245,6 +239,13 @@
     #000 calc(100% - 16px),
     transparent 100%
   );
+}
+
+@keyframes bounce-subtle {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
   50% {
     transform: translateY(-10px);
   }
