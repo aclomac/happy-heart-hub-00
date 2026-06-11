@@ -95,24 +95,10 @@ function Dashboard() {
     enabled: !!companyId,
     retry: false,
     queryFn: async () => {
-      if (isDemoMode()) {
-        const d = getDemoDashboardData();
-        return {
-          items: [],
-          warehouses: [],
-          storeStock: [],
-          adjustments: [],
-          transfers: Array.from({ length: d.inventory.transfers }, (_, i) => ({ id: String(i) })),
-          totals: {
-            stockValue: d.inventory.stockValue,
-            totalItems: d.inventory.totalItems,
-            lowStock: d.inventory.lowStock,
-            outOfStock: d.inventory.outOfStock,
-            warehouses: d.inventory.warehouses,
-          },
-        };
-      }
       try {
+        // In demo mode the supabase shim reads from the local inventory
+        // repo, so this returns live demo numbers that reflect any
+        // adjustments / transfers the user has made.
         return await loadInventoryDashboard(companyId!);
       } catch (err) {
         if (import.meta.env.DEV) console.warn("[dashboard-inventory] empty fallback:", err);
