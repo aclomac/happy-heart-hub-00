@@ -79,16 +79,31 @@ async function createWindow() {
   mainWindow.show();
 
   // Open external links in default browser, never inside the app window.
+  // IMPORTANT: never forward blob: / data: / about: URLs to shell.openExternal —
+  // Windows shows a "Get an app to open this 'blob' link" prompt for those.
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    shell.openExternal(url);
+    if (url.startsWith("blob:") || url.startsWith("data:") || url.startsWith("about:")) {
+      // Let Chromium open it in a child BrowserWindow (PDF viewer, etc.).
+      return { action: "allow" };
+    }
+    if (url.startsWith("http:") || url.startsWith("https:")) {
+      const allowed = new URL(isDev ? DEV_URL : `http://127.0.0.1:${PROD_PORT}`);
+      try {
+        if (new URL(url).origin === allowed.origin) return { action: "allow" };
+      } catch { /* ignore */ }
+      shell.openExternal(url);
+      return { action: "deny" };
+    }
     return { action: "deny" };
   });
   mainWindow.webContents.on("will-navigate", (event, url) => {
-    const target = new URL(url);
+    if (url.startsWith("blob:") || url.startsWith("data:")) return;
+    let target;
+    try { target = new URL(url); } catch { return; }
     const allowed = new URL(isDev ? DEV_URL : `http://127.0.0.1:${PROD_PORT}`);
     if (target.origin !== allowed.origin) {
       event.preventDefault();
-      shell.openExternal(url);
+      if (url.startsWith("http:") || url.startsWith("https:")) shell.openExternal(url);
     }
   });
 
