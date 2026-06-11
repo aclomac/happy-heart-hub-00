@@ -315,6 +315,15 @@ export function POS() {
     },
   });
 
+  // Fallback to Walk-in if the persisted/selected customer no longer exists.
+  useEffect(() => {
+    if (!parties.length) return;
+    if (partyId === WALK_IN) return;
+    if (!parties.some((p) => p.id === partyId)) {
+      setPartyId(WALK_IN);
+    }
+  }, [parties, partyId, WALK_IN]);
+
   const categories = useMemo(() => {
     const set = new Set<string>();
     items.forEach((i) => i.category && set.add(i.category));
