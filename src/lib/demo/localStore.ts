@@ -22,6 +22,7 @@ import {
   getDemoBillPayables,
 } from "./purchases";
 import { ensureExpensesSeed, getDemoMonthExpenses } from "./expenses";
+import { ensureCashSeed } from "./cash";
 import { DEMO_COMPANY_ID, DEMO_USER_EMAIL, DEMO_USER_ID } from "./constants";
 
 export { DEMO_COMPANY_ID, DEMO_USER_EMAIL, DEMO_USER_ID } from "./constants";
@@ -393,6 +394,7 @@ export function getDemoDashboardData(): DemoDashboardData {
     ensureSalesSeed();
     ensurePurchasesSeed();
     ensureExpensesSeed();
+    ensureCashSeed();
     receivables = getDemoReceivables();
     payables = getDemoBillPayables();
     partyCount = getDemoPartyCount();
