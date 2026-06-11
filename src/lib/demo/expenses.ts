@@ -4,7 +4,7 @@
  * Seeds Chair King with realistic expense categories and entries. Backed
  * by localStorage and mutated through the demo Supabase shim in `demoDb.ts`.
  */
-import { DEMO_COMPANY_ID } from "./localStore";
+import { DEMO_COMPANY_ID } from "./constants";
 
 export const DEMO_EXPENSES_KEY = "erpovo_demo_expenses";
 export const DEMO_EXPENSE_CATEGORIES_KEY = "erpovo_demo_expense_categories";

@@ -69,7 +69,8 @@ import {
   getExpenseCategories,
   setExpenseCategories,
 } from "./expenses";
-import { getDemoCompanies, setDemoCompanies, DEMO_COMPANY_ID } from "./localStore";
+import { DEMO_COMPANY_ID } from "./constants";
+import { getDemoCompanies, setDemoCompanies } from "./localStore";
 
 /**
  * Mirror DB triggers: when a stock_movements row is inserted, update the
