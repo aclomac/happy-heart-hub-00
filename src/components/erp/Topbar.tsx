@@ -135,13 +135,7 @@ export function ERPTopbar() {
   return (
     <TooltipProvider delayDuration={200}>
       <header className="h-12 bg-card border-b flex items-center gap-2 px-4 sticky top-0 z-30 print:hidden">
-        <div className="relative flex-1 max-w-md">
-          <Search className="w-4 h-4 absolute left-2.5 top-2.5 text-muted-foreground" />
-          <Input
-            placeholder={t("Search Transactions, Parties, Items...")}
-            className="pl-8 h-9 bg-muted/40 border-transparent"
-          />
-        </div>
+        <GlobalSearch />
         <div className="flex-1 flex items-center gap-2 pl-4">
           <Button
             variant="ghost"
