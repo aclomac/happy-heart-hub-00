@@ -5,7 +5,7 @@
  * debit notes (purchase returns), and supplier payments. Backed by
  * localStorage and mutated through the demo Supabase shim in `demoDb.ts`.
  */
-import { DEMO_COMPANY_ID } from "./localStore";
+import { DEMO_COMPANY_ID } from "./constants";
 
 export const DEMO_PURCHASES_KEY = "erpovo_demo_purchases";
 export const DEMO_PURCHASE_ITEMS_KEY = "erpovo_demo_purchase_items";
@@ -18,7 +18,9 @@ function read<T>(key: string): T[] {
   if (!isBrowser()) return [];
   try {
     const raw = localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as T[]) : [];
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as T[]) : [];
   } catch {
     return [];
   }

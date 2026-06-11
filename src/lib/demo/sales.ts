@@ -7,7 +7,7 @@
  *
  * Tables are mutated through the demo Supabase shim in `demoDb.ts`.
  */
-import { DEMO_COMPANY_ID } from "./localStore";
+import { DEMO_COMPANY_ID } from "./constants";
 
 export const DEMO_SALES_KEY = "erpovo_demo_sales";
 export const DEMO_SALE_ITEMS_KEY = "erpovo_demo_sale_items";
