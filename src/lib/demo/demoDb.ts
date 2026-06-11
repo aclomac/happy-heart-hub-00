@@ -185,14 +185,16 @@ class Builder<T extends Row = Row> implements PromiseLike<{ data: any; error: an
   private payload: Row | Row[] | null = null;
   private upsertConflict: string[] | null = null;
   private singleMode: "none" | "maybe" | "single" = "none";
+  private cols = "";
 
   constructor(private name: string) {}
 
   // ----- query verbs -----
-  select(_cols?: string, opts?: { count?: string; head?: boolean }) {
+  select(cols?: string, opts?: { count?: string; head?: boolean }) {
     if (this.mode !== "insert" && this.mode !== "update" && this.mode !== "upsert") {
       this.mode = "select";
     }
+    if (cols) this.cols = cols;
     if (opts?.count) this.wantCount = true;
     if (opts?.head) this.headOnly = true;
     return this;
