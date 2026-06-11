@@ -245,7 +245,7 @@ function POSSmokeTest() {
       const moveCount = getMovements().filter(
         (m) =>
           m.company_id === companyId &&
-          newSales.some((s) => s.id === m.ref_id),
+          newSales.some((s) => s.id === m.reference_id),
       ).length;
       checks.push({
         name: "Stock movements written",
@@ -257,7 +257,7 @@ function POSSmokeTest() {
       const newCashTxns = getCashTxns().filter(
         (t) =>
           t.company_id === companyId &&
-          newSales.some((s) => s.id === t.ref_id),
+          newSales.some((s) => s.id === t.reference_id),
       );
       checks.push({
         name: "Cash/mobile txn(s) created for paid sales",
@@ -351,13 +351,13 @@ function POSSmokeTest() {
     const items = getItems();
     const itemMap = new Map(items.map((i) => [i.id, i]));
     for (const m of moves) {
-      if (m.ref_id && smokeIds.has(m.ref_id)) {
+      if (m.reference_id && smokeIds.has(m.reference_id)) {
         const it = itemMap.get(m.item_id);
         if (it) it.stock = Number(it.stock) - Number(m.qty); // reverse delta
       }
     }
     setItems(Array.from(itemMap.values()));
-    setMovements(moves.filter((m) => !m.ref_id || !smokeIds.has(m.ref_id)));
+    setMovements(moves.filter((m) => !m.reference_id || !smokeIds.has(m.reference_id)));
 
     // Revert receivable from sales (party.balance was bumped by balance)
     const parties = getParties();
@@ -370,7 +370,7 @@ function POSSmokeTest() {
     setParties(Array.from(partyMap.values()));
 
     // Remove cash txns & payments & sale_items & sales
-    setCashTxns(getCashTxns().filter((t) => !t.ref_id || !smokeIds.has(t.ref_id)));
+    setCashTxns(getCashTxns().filter((t) => !t.reference_id || !smokeIds.has(t.reference_id)));
     setPayments(getPayments().filter((p) => !smokeIds.has(p.sale_id)));
     setSaleItems(getSaleItems().filter((r) => !smokeIds.has(r.sale_id)));
     setSales(sales.filter((s) => !smokeIds.has(s.id)));
