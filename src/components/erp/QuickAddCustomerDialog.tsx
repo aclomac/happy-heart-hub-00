@@ -140,7 +140,7 @@ export function QuickAddCustomerDialog({
         created_at: new Date().toISOString(),
       };
       setParties([newParty, ...all]);
-      toast.success(t("Customer added"));
+      toast.success(t("Customer added and selected"));
       onCreated({
         id: newParty.id,
         name: newParty.name,
@@ -149,8 +149,8 @@ export function QuickAddCustomerDialog({
         type: newParty.type,
       });
       onOpenChange(false);
-    } catch (e) {
-      toast.error((e as Error).message);
+    } catch {
+      toast.error(t("Could not add customer. Please try again."));
     } finally {
       setSaving(false);
     }
