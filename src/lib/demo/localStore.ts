@@ -8,7 +8,6 @@
 import {
   ensurePartiesSeed,
   getDemoReceivables,
-  getDemoPayables,
   getDemoPartyCount,
   getDemoTopReceivables,
 } from "./parties";
@@ -17,6 +16,12 @@ import {
   getDemoTodaySales,
   getDemoMonthSales,
 } from "./sales";
+import {
+  ensurePurchasesSeed,
+  getDemoMonthPurchases,
+  getDemoBillPayables,
+} from "./purchases";
+import { ensureExpensesSeed, getDemoMonthExpenses } from "./expenses";
 
 export const DEMO_SESSION_KEY = "erpovo_demo_session";
 export const DEMO_USER_KEY = "erpovo_demo_user";
@@ -382,25 +387,31 @@ export function getDemoDashboardData(): DemoDashboardData {
   let topReceivables: { id: string; name: string; balance: number }[] = [];
   let todaySales = 18500;
   let monthSales = 425000;
+  let monthPurchases = 280000;
+  let monthExpenses = 42500;
   try {
     ensurePartiesSeed();
     ensureSalesSeed();
+    ensurePurchasesSeed();
+    ensureExpensesSeed();
     receivables = getDemoReceivables();
-    payables = getDemoPayables();
+    payables = getDemoBillPayables();
     partyCount = getDemoPartyCount();
     topReceivables = getDemoTopReceivables();
     todaySales = getDemoTodaySales();
     monthSales = getDemoMonthSales();
+    monthPurchases = getDemoMonthPurchases();
+    monthExpenses = getDemoMonthExpenses();
   } catch {
     /* ignore — fall back to canned values */
   }
   return {
     todaySales,
     monthSales,
-    monthPurchases: 280000,
+    monthPurchases,
     receivables,
     payables,
-    monthExpenses: 42500,
+    monthExpenses,
     monthOtherIncome: 8500,
     itemCount: 12,
     partyCount,

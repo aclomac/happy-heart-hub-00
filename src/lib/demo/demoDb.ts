@@ -53,6 +53,22 @@ import {
   getOtherIncome,
   setOtherIncome,
 } from "./sales";
+import {
+  ensurePurchasesSeed,
+  getPurchases,
+  setPurchases,
+  getPurchaseItems,
+  setPurchaseItems,
+  getBankAccounts,
+  setBankAccounts,
+} from "./purchases";
+import {
+  ensureExpensesSeed,
+  getExpenses,
+  setExpenses,
+  getExpenseCategories,
+  setExpenseCategories,
+} from "./expenses";
 import { getDemoCompanies, setDemoCompanies, DEMO_COMPANY_ID } from "./localStore";
 
 /**
@@ -102,6 +118,8 @@ function table(name: string): { read: Reader; write: Writer } {
   ensureInventorySeed();
   ensurePartiesSeed();
   ensureSalesSeed();
+  ensurePurchasesSeed();
+  ensureExpensesSeed();
   switch (name) {
     case "items": return { read: getItems as Reader, write: setItems as unknown as Writer };
     case "item_categories": return { read: getCategories as Reader, write: setCategories as unknown as Writer };
@@ -119,6 +137,12 @@ function table(name: string): { read: Reader; write: Writer } {
     case "payments": return { read: getPayments as Reader, write: setPayments as unknown as Writer };
     case "cash_transactions": return { read: getCashTxns as Reader, write: setCashTxns as unknown as Writer };
     case "other_income": return { read: getOtherIncome as Reader, write: setOtherIncome as unknown as Writer };
+    case "other_incomes": return { read: getOtherIncome as Reader, write: setOtherIncome as unknown as Writer };
+    case "purchases": return { read: getPurchases as Reader, write: setPurchases as unknown as Writer };
+    case "purchase_items": return { read: getPurchaseItems as Reader, write: setPurchaseItems as unknown as Writer };
+    case "bank_accounts": return { read: getBankAccounts as Reader, write: setBankAccounts as unknown as Writer };
+    case "expenses": return { read: getExpenses as Reader, write: setExpenses as unknown as Writer };
+    case "expense_categories": return { read: getExpenseCategories as Reader, write: setExpenseCategories as unknown as Writer };
     case "companies": return {
       read: () => getDemoCompanies() as unknown as Row[],
       write: (rows) => setDemoCompanies(rows as any),
@@ -388,6 +412,34 @@ function defaults(name: string): Row {
       entry_date: nowIso.slice(0, 10), entry_type: "manual",
       reference_no: null, debit: 0, credit: 0, balance: 0, note: null,
       created_at: nowIso, company_id: DEMO_COMPANY_ID,
+    };
+    case "purchases": return {
+      doc_type: "bill", bill_no: "", bill_date: nowIso.slice(0, 10), due_date: null,
+      party_id: null, subtotal: 0, discount: 0, tax: 0, total: 0, paid: 0,
+      balance: 0, status: "unpaid", payment_method: null, notes: null,
+      reference_purchase_id: null, deleted_at: null, created_at: nowIso,
+      company_id: DEMO_COMPANY_ID,
+    };
+    case "purchase_items": return {
+      variant_id: null, description: null, qty: 0, unit: "PCS",
+      price: 0, discount_pct: 0, tax_pct: 0, amount: 0,
+    };
+    case "bank_accounts": return {
+      account_type: "bank", current_balance: 0, is_active: true,
+      deleted_at: null, created_at: nowIso, company_id: DEMO_COMPANY_ID,
+    };
+    case "expenses": return {
+      expense_no: "", expense_date: nowIso.slice(0, 10), category: null,
+      category_id: null, vendor: null, store: null, amount: 0, tax: 0,
+      payment_method: "cash", bank_account_id: null, notes: null,
+      attachment_url: null, is_recurring: false, recurrence: null,
+      status: "posted", posted_txn_id: null, reversed_at: null, reversed_by: null,
+      created_by: null, deleted_at: null, created_at: nowIso,
+      company_id: DEMO_COMPANY_ID,
+    };
+    case "expense_categories": return {
+      is_active: true, deleted_at: null, created_at: nowIso,
+      company_id: DEMO_COMPANY_ID,
     };
     default: return {};
   }
