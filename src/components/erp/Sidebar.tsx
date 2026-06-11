@@ -41,8 +41,7 @@ import { companies } from "@/lib/mock-data";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { checkIsAdmin } from "@/lib/billing.functions";
-import { useSubscription, planAllowsModule } from "@/lib/use-subscription";
-import { toast } from "sonner";
+// Subscription/plan gating removed for personal use.
 
 type LinkNode = {
   kind: "link";
@@ -395,7 +394,7 @@ export function ERPSidebar() {
       return pathname === p || pathname.startsWith(p + "/");
     });
     const open = !!openGroups[g.key];
-    const planLocked = !!sub && !!g.module && !planAllowsModule(sub.plan, g.module);
+    const planLocked = false;
     return (
       <div key={g.key}>
         <button
@@ -487,7 +486,7 @@ export function ERPSidebar() {
           <div className="min-w-0">
             <div className="truncate font-medium">{currentCompany?.name || (isDemoMode() ? "Chair King" : t("Loading…"))}</div>
             <div className="opacity-60 text-[10px]">
-              {isDemoMode() ? "Pro Demo · Local data" : `${sub?.plan ? t(sub.plan) : "Basic"} · ${t("Synced")}`}
+              {isDemoMode() ? "Personal Mode · All features unlocked" : t("Personal Mode")}
             </div>
           </div>
         </div>
