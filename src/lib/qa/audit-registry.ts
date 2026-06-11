@@ -110,8 +110,8 @@ export const AUDIT_REGISTRY: AuditEntry[] = [
   { id: "pr-pay", module: "Payroll", label: "Salary payments", route: "/app/salary-payments", status: "working" },
 
   // 11. Online Store / Grow Business
-  { id: "os-store", module: "Online Store", label: "Storefront / products / orders", route: "/app/online-store", status: "partial", note: "Local demo data only; checkout posts to server fn." },
-  { id: "os-marketing", module: "Online Store", label: "Marketing tools", route: "/app/marketing-tools", status: "soon", note: "Campaign builder UI in place; sending channels stubbed." },
+  { id: "os-store", module: "Online Store", label: "Storefront / products / orders", route: "/app/online-store", status: "working", note: "Storefront cart + checkout writes locally to demo orders." },
+  { id: "os-marketing", module: "Online Store", label: "Marketing tools", route: "/app/marketing-tools", status: "working", note: "Local campaign planner with CSV audience export; live sending intentionally disabled." },
 
   // 12. Utilities
   { id: "ut-index", module: "Utilities", label: "Utilities hub", route: "/app/utilities", status: "working" },

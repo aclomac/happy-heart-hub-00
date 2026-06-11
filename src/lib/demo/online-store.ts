@@ -132,7 +132,7 @@ export type DemoCoupon = {
 export type DemoCampaign = {
   id: string;
   name: string;
-  channel: "Facebook" | "Google" | "SMS" | "WhatsApp";
+  channel: "Facebook" | "Google" | "SMS" | "WhatsApp" | "Email";
   status: "active" | "scheduled" | "ended";
   budget: number;
   spent: number;
@@ -141,6 +141,11 @@ export type DemoCampaign = {
   conversions: number;
   starts_at: string;
   ends_at: string;
+  /** Optional planner fields used by the local marketing planner. */
+  audience?: "all" | "due" | "recent" | "custom";
+  message?: string;
+  planned_for?: string;
+  notes?: string;
 };
 
 // ---------------- Seeds ----------------
@@ -346,6 +351,111 @@ export function setOnlineCoupons(v: DemoCoupon[]) { write(DEMO_ONLINE_COUPONS_KE
 
 export function getOnlineCampaigns(): DemoCampaign[] {
   return read<DemoCampaign[]>(DEMO_ONLINE_CAMPAIGNS_KEY, []);
+}
+export function setOnlineCampaigns(v: DemoCampaign[]) { write(DEMO_ONLINE_CAMPAIGNS_KEY, v); }
+
+export function addOnlineCampaign(input: Omit<DemoCampaign, "id">): DemoCampaign {
+  const list = getOnlineCampaigns();
+  const c: DemoCampaign = { ...input, id: `cm-${Date.now()}` };
+  setOnlineCampaigns([c, ...list]);
+  return c;
+}
+export function updateOnlineCampaign(id: string, patch: Partial<DemoCampaign>) {
+  const list = getOnlineCampaigns().map((c) => (c.id === id ? { ...c, ...patch } : c));
+  setOnlineCampaigns(list);
+}
+export function deleteOnlineCampaign(id: string) {
+  setOnlineCampaigns(getOnlineCampaigns().filter((c) => c.id !== id));
+}
+
+// Local online checkout — creates an order without any server call.
+export function nextOnlineOrderNumber(): string {
+  const orders = getOnlineOrders();
+  const year = new Date().getFullYear();
+  const prefix = `WEB-${year}-`;
+  const used = orders
+    .map((o) => o.order_no)
+    .filter((n) => typeof n === "string" && n.startsWith(prefix))
+    .map((n) => parseInt(n.slice(prefix.length), 10))
+    .filter((n) => Number.isFinite(n));
+  const next = (used.length ? Math.max(...used) : 0) + 1;
+  return `${prefix}${String(next).padStart(4, "0")}`;
+}
+
+export type AddOnlineOrderInput = {
+  customer_name: string;
+  customer_phone: string;
+  customer_address: string;
+  city: string;
+  items: { sku: string; name: string; qty: number; price: number }[];
+  discount?: number;
+  delivery_charge?: number;
+  payment_method?: DemoOnlineOrder["payment_method"];
+  notes?: string;
+};
+
+export function addOnlineOrder(input: AddOnlineOrderInput): DemoOnlineOrder {
+  const subtotal = input.items.reduce((s, it) => s + it.qty * it.price, 0);
+  const discount = input.discount ?? 0;
+  const delivery_charge = input.delivery_charge ?? 0;
+  const total = subtotal - discount + delivery_charge;
+  const order: DemoOnlineOrder = {
+    id: `ord-${Date.now()}`,
+    order_no: nextOnlineOrderNumber(),
+    customer_name: input.customer_name,
+    customer_phone: input.customer_phone,
+    customer_address: input.customer_address,
+    city: input.city,
+    items: input.items,
+    subtotal,
+    discount,
+    delivery_charge,
+    total,
+    payment_method: input.payment_method ?? "COD",
+    payment_status: input.payment_method === "COD" || !input.payment_method ? "unpaid" : "paid",
+    status: "New",
+    order_date: isoDate(new Date()),
+    notes: input.notes ?? "",
+  };
+  setOnlineOrders([order, ...getOnlineOrders()]);
+
+  // Reduce stock for matched products.
+  const products = getOnlineProducts();
+  let mutated = false;
+  for (const it of input.items) {
+    const p = products.find((x) => x.sku === it.sku);
+    if (p && typeof p.stock === "number") {
+      p.stock = Math.max(0, p.stock - it.qty);
+      mutated = true;
+    }
+  }
+  if (mutated) setOnlineProducts(products);
+
+  // Upsert online customer record.
+  const customers = getOnlineCustomers();
+  const phone = input.customer_phone.trim();
+  let cust = customers.find((c) => c.phone === phone);
+  if (!cust) {
+    cust = {
+      id: `oc-${Date.now()}`,
+      name: input.customer_name,
+      phone,
+      city: input.city,
+      address: input.customer_address,
+      total_orders: 0,
+      total_spent: 0,
+      due: 0,
+      last_order_date: order.order_date,
+    };
+    customers.unshift(cust);
+  }
+  cust.total_orders += 1;
+  cust.total_spent += total;
+  if (order.payment_status !== "paid") cust.due += total;
+  cust.last_order_date = order.order_date;
+  write(DEMO_ONLINE_CUSTOMERS_KEY, customers);
+
+  return order;
 }
 
 // ---------------- Seed ----------------
