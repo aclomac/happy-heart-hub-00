@@ -27,7 +27,7 @@ export interface AuditEntry {
 
 export const AUDIT_REGISTRY: AuditEntry[] = [
   // 1. Topbar
-  { id: "tb-search", module: "Topbar", label: "Global search", route: "/app", status: "soon", note: "Search input is visual; results panel not wired yet." },
+  { id: "tb-search", module: "Topbar", label: "Global search", route: "/app", status: "working", note: "Searches items, parties, sales, purchases, payments, expenses, routes from localStorage." },
   { id: "tb-company", module: "Topbar", label: "Company switcher", route: "/app", status: "working" },
   { id: "tb-support", module: "Topbar", label: "Support", route: "/app/support", status: "working" },
   { id: "tb-add-sale", module: "Topbar", label: "Add Sale", route: "/app/sales/new", status: "working" },
