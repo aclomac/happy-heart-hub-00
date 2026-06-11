@@ -153,13 +153,13 @@ export function POS() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("parties")
-        .select("id,name")
+        .select("id,name,phone")
         .is("deleted_at", null)
         .eq("company_id", companyId!)
         .in("type", ["customer", "both"])
         .order("name");
       if (error) throw error;
-      return data as { id: string; name: string }[];
+      return data as { id: string; name: string; phone: string | null }[];
     },
   });
 
