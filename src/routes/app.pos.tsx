@@ -542,10 +542,32 @@ export function POS() {
         })),
       });
 
-      toast.success(`Sale ${invoiceNo} completed`);
+      // Verify the invoice landed in the shared sales store, then notify.
+      const allSales = getSales();
+      const allItems = getSaleItems();
+      const saved = allSales.find((s) => s.id === saleId);
+      if (import.meta.env.DEV) {
+        // eslint-disable-next-line no-console
+        console.log("[POS-DEBUG] saved sale", {
+          saleId,
+          invoiceNo,
+          savedFound: !!saved,
+          salesCount: allSales.length,
+          saleItemsCount: allItems.length,
+        });
+      }
+      if (saved) {
+        toast.success(`POS invoice saved to Sales: ${invoiceNo}`);
+      } else {
+        toast.warning(`Sale ${invoiceNo} created but not found in Sales list — please refresh`);
+      }
       setLastSaleId(saleId);
       setLastInvoiceNo(invoiceNo);
       qc.invalidateQueries({ queryKey: ["pos-items"] });
+      qc.invalidateQueries({ queryKey: ["sales"] });
+      qc.invalidateQueries({ queryKey: ["payments"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+      qc.invalidateQueries({ queryKey: ["reports"] });
       // Auto-print thermal receipt (safe; never throws to UI)
       printSaleReceiptNow(saleId, companyId).catch(() => {
         toast.message("Receipt preview unavailable in demo mode");
