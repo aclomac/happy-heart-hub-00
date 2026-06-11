@@ -91,15 +91,20 @@ function CustomerCombobox({
   walkInLabel,
   searchPlaceholder,
   emptyLabel,
+  onAddNew,
+  addNewLabel,
 }: {
   value: string;
   onChange: (v: string) => void;
-  parties: { id: string; name: string; phone: string | null }[];
+  parties: { id: string; name: string; phone: string | null; email: string | null }[];
   walkInLabel: string;
   searchPlaceholder: string;
   emptyLabel: string;
+  onAddNew?: (typed: string) => void;
+  addNewLabel: (typed: string) => string;
 }) {
   const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
   const selected = parties.find((p) => p.id === value);
   const label =
     value === WALK_IN_VALUE || !selected
@@ -107,8 +112,15 @@ function CustomerCombobox({
       : selected.phone
         ? `${selected.name} · ${selected.phone}`
         : selected.name;
+  const trimmed = query.trim();
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover
+      open={open}
+      onOpenChange={(o) => {
+        setOpen(o);
+        if (!o) setQuery("");
+      }}
+    >
       <PopoverTrigger asChild>
         <Button
           type="button"
@@ -129,15 +141,40 @@ function CustomerCombobox({
             return itemValue.toLowerCase().includes(search.toLowerCase()) ? 1 : 0;
           }}
         >
-          <CommandInput placeholder={searchPlaceholder} autoFocus />
+          <CommandInput
+            placeholder={searchPlaceholder}
+            autoFocus
+            value={query}
+            onValueChange={setQuery}
+          />
           <CommandList>
-            <CommandEmpty>{emptyLabel}</CommandEmpty>
+            <CommandEmpty>
+              <div className="flex flex-col items-stretch gap-2 px-2 py-3 text-sm">
+                <span className="text-muted-foreground">{emptyLabel}</span>
+                {onAddNew && trimmed && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      onAddNew(trimmed);
+                      setOpen(false);
+                      setQuery("");
+                    }}
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    {addNewLabel(trimmed)}
+                  </Button>
+                )}
+              </div>
+            </CommandEmpty>
             <CommandGroup>
               <CommandItem
                 value={`${walkInLabel} walkin`}
                 onSelect={() => {
                   onChange(WALK_IN_VALUE);
                   setOpen(false);
+                  setQuery("");
                 }}
               >
                 <Check
@@ -151,26 +188,43 @@ function CustomerCombobox({
               {parties.map((p) => (
                 <CommandItem
                   key={p.id}
-                  value={`${p.name} ${p.phone ?? ""} ${p.id}`}
+                  value={`${p.name} ${p.phone ?? ""} ${p.email ?? ""} ${p.id}`}
                   onSelect={() => {
                     onChange(p.id);
                     setOpen(false);
+                    setQuery("");
                   }}
                 >
                   <Check
                     className={cn(
-                      "mr-2 h-4 w-4",
+                      "mr-2 h-4 w-4 mt-0.5 shrink-0",
                       value === p.id ? "opacity-100" : "opacity-0",
                     )}
                   />
-                  <span className="truncate">{p.name}</span>
-                  {p.phone && (
-                    <span className="ml-2 text-xs text-muted-foreground truncate">
-                      {p.phone}
-                    </span>
-                  )}
+                  <div className="flex flex-col min-w-0 flex-1">
+                    <span className="truncate">{p.name}</span>
+                    {p.phone && (
+                      <span className="text-xs text-muted-foreground truncate">
+                        {p.phone}
+                      </span>
+                    )}
+                  </div>
                 </CommandItem>
               ))}
+              {onAddNew && trimmed && (
+                <CommandItem
+                  value={`__add_new__ ${trimmed}`}
+                  onSelect={() => {
+                    onAddNew(trimmed);
+                    setOpen(false);
+                    setQuery("");
+                  }}
+                  className="text-primary"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  {addNewLabel(trimmed)}
+                </CommandItem>
+              )}
             </CommandGroup>
           </CommandList>
         </Command>
