@@ -413,6 +413,34 @@ function defaults(name: string): Row {
       reference_no: null, debit: 0, credit: 0, balance: 0, note: null,
       created_at: nowIso, company_id: DEMO_COMPANY_ID,
     };
+    case "purchases": return {
+      doc_type: "bill", bill_no: "", bill_date: nowIso.slice(0, 10), due_date: null,
+      party_id: null, subtotal: 0, discount: 0, tax: 0, total: 0, paid: 0,
+      balance: 0, status: "unpaid", payment_method: null, notes: null,
+      reference_purchase_id: null, deleted_at: null, created_at: nowIso,
+      company_id: DEMO_COMPANY_ID,
+    };
+    case "purchase_items": return {
+      variant_id: null, description: null, qty: 0, unit: "PCS",
+      price: 0, discount_pct: 0, tax_pct: 0, amount: 0,
+    };
+    case "bank_accounts": return {
+      account_type: "bank", current_balance: 0, is_active: true,
+      deleted_at: null, created_at: nowIso, company_id: DEMO_COMPANY_ID,
+    };
+    case "expenses": return {
+      expense_no: "", expense_date: nowIso.slice(0, 10), category: null,
+      category_id: null, vendor: null, store: null, amount: 0, tax: 0,
+      payment_method: "cash", bank_account_id: null, notes: null,
+      attachment_url: null, is_recurring: false, recurrence: null,
+      status: "posted", posted_txn_id: null, reversed_at: null, reversed_by: null,
+      created_by: null, deleted_at: null, created_at: nowIso,
+      company_id: DEMO_COMPANY_ID,
+    };
+    case "expense_categories": return {
+      is_active: true, deleted_at: null, created_at: nowIso,
+      company_id: DEMO_COMPANY_ID,
+    };
     default: return {};
   }
 }
