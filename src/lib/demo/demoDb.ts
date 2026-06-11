@@ -69,6 +69,20 @@ import {
   getExpenseCategories,
   setExpenseCategories,
 } from "./expenses";
+import {
+  ensureCashSeed,
+  getCheques,
+  setCheques,
+  getBankTransfers,
+  setBankTransfers,
+  getLoans,
+  setLoans,
+  getLoanPayments,
+  setLoanPayments,
+  getReconciliations,
+  setReconciliations,
+} from "./cash";
+
 import { DEMO_COMPANY_ID } from "./constants";
 import { getDemoCompanies, setDemoCompanies } from "./localStore";
 
