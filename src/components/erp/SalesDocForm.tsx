@@ -41,6 +41,7 @@ import { nextDocNumber } from "@/lib/doc-number";
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
 import { usePermission } from "@/lib/permissions";
+import { isDemoMode } from "@/lib/demo/localStore";
 import { QuickAddCustomerDialog } from "./QuickAddCustomerDialog";
 import {
   saveSaleInvoice,
