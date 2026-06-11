@@ -17,21 +17,6 @@ import {
   ChevronDown as ChevronDownIcon,
 } from "lucide-react";
 import { GlobalSearch } from "@/components/erp/GlobalSearch";
-  Headphones,
-  Plus,
-  Printer,
-  MoreVertical,
-  Globe,
-  LogOut,
-  Bell,
-  Lock,
-  Settings as SettingsIcon,
-  Eye,
-  EyeOff,
-  Check,
-  Building2,
-  ChevronDown as ChevronDownIcon,
-} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
