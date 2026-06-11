@@ -18,7 +18,9 @@ function read<T>(key: string): T[] {
   if (!isBrowser()) return [];
   try {
     const raw = localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as T[]) : [];
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as T[]) : [];
   } catch {
     return [];
   }
