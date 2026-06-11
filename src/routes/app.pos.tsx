@@ -503,7 +503,14 @@ export function POS() {
                       >
                         <Minus className="w-3 h-3" />
                       </Button>
-                      <span className="w-8 text-center text-sm font-semibold">{l.qty}</span>
+                      <Input
+                        type="number"
+                        min={1}
+                        value={l.qty}
+                        onChange={(e) => setQty(l.item.id, e.target.value)}
+                        className="h-7 w-12 text-center text-sm font-semibold px-1"
+                      />
+
                       <Button
                         variant="outline"
                         size="icon"
