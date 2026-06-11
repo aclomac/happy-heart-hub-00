@@ -375,7 +375,7 @@ function POSSmokeTest() {
 
     // Remove cash txns & payments & sale_items & sales
     setCashTxns(getCashTxns().filter((t) => !t.reference_id || !smokeIds.has(t.reference_id)));
-    setPayments(getPayments().filter((p) => !smokeIds.has(p.sale_id)));
+    setPayments(getPayments().filter((p) => !(p.notes || "").includes(SMOKE_TAG)));
     setSaleItems(getSaleItems().filter((r) => !smokeIds.has(r.sale_id)));
     setSales(sales.filter((s) => !smokeIds.has(s.id)));
 
