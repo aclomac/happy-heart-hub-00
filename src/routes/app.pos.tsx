@@ -196,6 +196,9 @@ export function POS() {
     setDiscount(0);
     setReceived(0);
     setPartyId(WALK_IN);
+    if (typeof window !== "undefined") {
+      try { localStorage.removeItem(POS_CART_KEY); } catch { /* ignore */ }
+    }
   };
 
   const subtotal = cart.reduce((s, l) => s + l.qty * Number(l.item.sale_price), 0);
