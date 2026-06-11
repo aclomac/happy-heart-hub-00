@@ -14,7 +14,25 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Search, Plus, Minus, Trash2, ShoppingCart, X, UserPlus } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+const POS_CART_KEY = "erpovo_demo_pos_cart";
+type PersistedCart = {
+  cart: Line[];
+  partyId: string;
+  paymentMethod: string;
+  discount: number;
+  received: number;
+};
+function loadPersistedCart(): PersistedCart | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(POS_CART_KEY);
+    return raw ? (JSON.parse(raw) as PersistedCart) : null;
+  } catch {
+    return null;
+  }
+}
 import { nextDocNumber } from "@/lib/doc-number";
 import { saveSaleInvoice } from "@/lib/sale-invoices";
 import { toast } from "sonner";
