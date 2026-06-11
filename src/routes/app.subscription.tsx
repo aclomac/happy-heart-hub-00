@@ -1,9 +1,15 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useChildMatches } from "@tanstack/react-router";
 import { PageHeader } from "@/components/erp/PageHeader";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2 } from "lucide-react";
 
-export const Route = createFileRoute("/app/subscription")({ component: SubscriptionDisabled });
+export const Route = createFileRoute("/app/subscription")({ component: SubscriptionLayout });
+
+function SubscriptionLayout() {
+  const childMatches = useChildMatches();
+  if (childMatches.length > 0) return <Outlet />;
+  return <SubscriptionDisabled />;
+}
 
 function SubscriptionDisabled() {
   return (
