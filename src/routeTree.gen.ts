@@ -88,6 +88,7 @@ import { Route as SuperAdminDevicesIdRouteImport } from './routes/super-admin.de
 import { Route as SuperAdminCustomersUserIdRouteImport } from './routes/super-admin.customers.$userId'
 import { Route as SuperAdminCouponsIdRouteImport } from './routes/super-admin.coupons.$id'
 import { Route as SuperAdminCompaniesCompanyIdRouteImport } from './routes/super-admin.companies.$companyId'
+import { Route as AppUtilitiesPosSmokeTestRouteImport } from './routes/app.utilities.pos-smoke-test'
 import { Route as AppUtilitiesImportPartiesRouteImport } from './routes/app.utilities.import-parties'
 import { Route as AppUtilitiesImportItemsRouteImport } from './routes/app.utilities.import-items'
 import { Route as AppUtilitiesImportExportRouteImport } from './routes/app.utilities.import-export'
@@ -536,6 +537,12 @@ const SuperAdminCompaniesCompanyIdRoute =
     path: '/$companyId',
     getParentRoute: () => SuperAdminCompaniesRoute,
   } as any)
+const AppUtilitiesPosSmokeTestRoute =
+  AppUtilitiesPosSmokeTestRouteImport.update({
+    id: '/pos-smoke-test',
+    path: '/pos-smoke-test',
+    getParentRoute: () => AppUtilitiesRoute,
+  } as any)
 const AppUtilitiesImportPartiesRoute =
   AppUtilitiesImportPartiesRouteImport.update({
     id: '/import-parties',
@@ -880,6 +887,7 @@ export interface FileRoutesByFullPath {
   '/app/utilities/import-export': typeof AppUtilitiesImportExportRoute
   '/app/utilities/import-items': typeof AppUtilitiesImportItemsRoute
   '/app/utilities/import-parties': typeof AppUtilitiesImportPartiesRoute
+  '/app/utilities/pos-smoke-test': typeof AppUtilitiesPosSmokeTestRoute
   '/super-admin/companies/$companyId': typeof SuperAdminCompaniesCompanyIdRoute
   '/super-admin/coupons/$id': typeof SuperAdminCouponsIdRoute
   '/super-admin/customers/$userId': typeof SuperAdminCustomersUserIdRoute
@@ -1005,6 +1013,7 @@ export interface FileRoutesByTo {
   '/app/utilities/import-export': typeof AppUtilitiesImportExportRoute
   '/app/utilities/import-items': typeof AppUtilitiesImportItemsRoute
   '/app/utilities/import-parties': typeof AppUtilitiesImportPartiesRoute
+  '/app/utilities/pos-smoke-test': typeof AppUtilitiesPosSmokeTestRoute
   '/super-admin/companies/$companyId': typeof SuperAdminCompaniesCompanyIdRoute
   '/super-admin/coupons/$id': typeof SuperAdminCouponsIdRoute
   '/super-admin/customers/$userId': typeof SuperAdminCustomersUserIdRoute
@@ -1134,6 +1143,7 @@ export interface FileRoutesById {
   '/app/utilities/import-export': typeof AppUtilitiesImportExportRoute
   '/app/utilities/import-items': typeof AppUtilitiesImportItemsRoute
   '/app/utilities/import-parties': typeof AppUtilitiesImportPartiesRoute
+  '/app/utilities/pos-smoke-test': typeof AppUtilitiesPosSmokeTestRoute
   '/super-admin/companies/$companyId': typeof SuperAdminCompaniesCompanyIdRoute
   '/super-admin/coupons/$id': typeof SuperAdminCouponsIdRoute
   '/super-admin/customers/$userId': typeof SuperAdminCustomersUserIdRoute
@@ -1264,6 +1274,7 @@ export interface FileRouteTypes {
     | '/app/utilities/import-export'
     | '/app/utilities/import-items'
     | '/app/utilities/import-parties'
+    | '/app/utilities/pos-smoke-test'
     | '/super-admin/companies/$companyId'
     | '/super-admin/coupons/$id'
     | '/super-admin/customers/$userId'
@@ -1389,6 +1400,7 @@ export interface FileRouteTypes {
     | '/app/utilities/import-export'
     | '/app/utilities/import-items'
     | '/app/utilities/import-parties'
+    | '/app/utilities/pos-smoke-test'
     | '/super-admin/companies/$companyId'
     | '/super-admin/coupons/$id'
     | '/super-admin/customers/$userId'
@@ -1517,6 +1529,7 @@ export interface FileRouteTypes {
     | '/app/utilities/import-export'
     | '/app/utilities/import-items'
     | '/app/utilities/import-parties'
+    | '/app/utilities/pos-smoke-test'
     | '/super-admin/companies/$companyId'
     | '/super-admin/coupons/$id'
     | '/super-admin/customers/$userId'
@@ -2115,6 +2128,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SuperAdminCompaniesCompanyIdRouteImport
       parentRoute: typeof SuperAdminCompaniesRoute
     }
+    '/app/utilities/pos-smoke-test': {
+      id: '/app/utilities/pos-smoke-test'
+      path: '/pos-smoke-test'
+      fullPath: '/app/utilities/pos-smoke-test'
+      preLoaderRoute: typeof AppUtilitiesPosSmokeTestRouteImport
+      parentRoute: typeof AppUtilitiesRoute
+    }
     '/app/utilities/import-parties': {
       id: '/app/utilities/import-parties'
       path: '/import-parties'
@@ -2710,6 +2730,7 @@ interface AppUtilitiesRouteChildren {
   AppUtilitiesImportExportRoute: typeof AppUtilitiesImportExportRoute
   AppUtilitiesImportItemsRoute: typeof AppUtilitiesImportItemsRoute
   AppUtilitiesImportPartiesRoute: typeof AppUtilitiesImportPartiesRoute
+  AppUtilitiesPosSmokeTestRoute: typeof AppUtilitiesPosSmokeTestRoute
   AppUtilitiesIndexRoute: typeof AppUtilitiesIndexRoute
 }
 
@@ -2721,6 +2742,7 @@ const AppUtilitiesRouteChildren: AppUtilitiesRouteChildren = {
   AppUtilitiesImportExportRoute: AppUtilitiesImportExportRoute,
   AppUtilitiesImportItemsRoute: AppUtilitiesImportItemsRoute,
   AppUtilitiesImportPartiesRoute: AppUtilitiesImportPartiesRoute,
+  AppUtilitiesPosSmokeTestRoute: AppUtilitiesPosSmokeTestRoute,
   AppUtilitiesIndexRoute: AppUtilitiesIndexRoute,
 }
 
@@ -2952,13 +2974,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
