@@ -654,8 +654,14 @@ export function POS() {
                 onChange={setPartyId}
                 parties={parties}
                 walkInLabel={t("Walk-in Customer")}
-                searchPlaceholder={t("Search customer by name or phone…")}
+                searchPlaceholder={t("Search by name, phone or email…")}
                 emptyLabel={t("No customer found")}
+                addNewLabel={(typed) => `${t("Add new customer")}: ${typed}`}
+                onAddNew={(typed) => {
+                  const isPhone = /^[+\d][\d\s\-()]{3,}$/.test(typed);
+                  setQuickAddPrefill(isPhone ? { phone: typed } : { name: typed });
+                  setShowQuickAdd(true);
+                }}
               />
             </div>
             <Button
@@ -668,6 +674,7 @@ export function POS() {
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                setQuickAddPrefill({});
                 setShowQuickAdd(true);
               }}
             >
@@ -679,6 +686,8 @@ export function POS() {
               open={showQuickAdd}
               onOpenChange={setShowQuickAdd}
               companyId={companyId ?? ""}
+              initialName={quickAddPrefill.name}
+              initialPhone={quickAddPrefill.phone}
               onCreated={(p) => {
                 qc.invalidateQueries({ queryKey: ["pos-parties", companyId] });
                 setPartyId(p.id);
