@@ -363,16 +363,30 @@ export type DemoDashboardData = {
 };
 
 export function getDemoDashboardData(): DemoDashboardData {
+  // Lazy-import to avoid circular dependency with parties → localStore.
+  let receivables = 72200;
+  let payables = 65000;
+  let partyCount = 10;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const p = require("./parties") as typeof import("./parties");
+    p.ensurePartiesSeed();
+    receivables = p.getDemoReceivables();
+    payables = p.getDemoPayables();
+    partyCount = p.getDemoPartyCount();
+  } catch {
+    /* ignore — fall back to canned values */
+  }
   return {
     todaySales: 18500,
     monthSales: 425000,
     monthPurchases: 280000,
-    receivables: 72200,
-    payables: 65000,
+    receivables,
+    payables,
     monthExpenses: 42500,
     monthOtherIncome: 8500,
     itemCount: 12,
-    partyCount: 10,
+    partyCount,
     inventory: {
       stockValue: 685000,
       totalItems: 12,
