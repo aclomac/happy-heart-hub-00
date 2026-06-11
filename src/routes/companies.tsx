@@ -34,6 +34,7 @@ import { PlanStatusBadge } from "@/components/erp/PlanStatusBadge";
 import { setCurrentCompanyId } from "@/lib/use-company";
 import { useIsPlatformAdmin } from "@/lib/use-platform-admin";
 import { ShieldCheck } from "lucide-react";
+import { clearDemoStorage, endDemoSession, isDemoMode } from "@/lib/demo/localStore";
 
 export const Route = createFileRoute("/companies")({
   component: Companies,
@@ -75,7 +76,9 @@ function Companies() {
   const filtered = companies.filter((c) => c.name.toLowerCase().includes(search.toLowerCase()));
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    if (!isDemoMode()) await supabase.auth.signOut();
+    endDemoSession();
+    clearDemoStorage();
     nav({ to: "/login" });
   };
 
