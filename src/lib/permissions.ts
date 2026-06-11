@@ -131,7 +131,11 @@ export function useRoleAndPermissions() {
   });
 }
 
+import { isDemoMode } from "@/lib/demo/localStore";
+
 export function usePermission(module: ModuleKey, action: ActionKey = "view"): boolean {
+  // Personal / local demo mode: owner has unrestricted access.
+  if (typeof window !== "undefined" && isDemoMode()) return true;
   const { data } = useRoleAndPermissions();
   if (!data) return false;
   if (data.isOwner) return true;

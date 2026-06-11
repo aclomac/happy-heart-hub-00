@@ -41,6 +41,7 @@ import { nextDocNumber } from "@/lib/doc-number";
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
 import { usePermission } from "@/lib/permissions";
+import { isDemoMode } from "@/lib/demo/localStore";
 import { QuickAddCustomerDialog } from "./QuickAddCustomerDialog";
 import {
   saveSaleInvoice,
@@ -195,7 +196,9 @@ export function SalesDocForm({
   const { t } = useI18n();
   const canAddParty = usePermission("parties", "add");
   const canEditSales = usePermission("sales", "edit");
-  const { isOffline } = usePWAStatus();
+  const { isOffline: isOfflineRaw } = usePWAStatus();
+  // In personal/local demo mode all data is on-device, so offline never blocks save.
+  const isOffline = isOfflineRaw && !isDemoMode();
   const [addCustomerOpen, setAddCustomerOpen] = useState(false);
   const attachmentsRef = useRef<AttachmentsSectionHandle | null>(null);
   const today = new Date().toISOString().slice(0, 10);
