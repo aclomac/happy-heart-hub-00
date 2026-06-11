@@ -36,6 +36,7 @@ const tiles: Tile[] = [
   { i: Barcode, n: "Barcode Generator", d: "Print labels", to: "/app/utilities/barcode-generator" },
   { i: RefreshCw, n: "Bulk Update Items", d: "Edit items in bulk", to: "/app/utilities/bulk-update-items" },
   { i: FileCheck2, n: "Verify My Data", d: "Run data & security checks", to: "/app/admin/security-tests" },
+  { i: FileCheck2, n: "POS Smoke Test", d: "Automated POS demo test", to: "/app/utilities/pos-smoke-test" },
   { i: Gift, n: "Refer & Earn", d: "Invite & earn rewards", comingSoon: true },
   { i: Trash2, n: "Recycle Bin", d: "Restore deleted records", to: "/app/recycle-bin" },
   { i: CalendarX, n: "Close Financial Year", d: "Reset numbers, fresh start", to: "/app/utilities/close-financial-year" },
