@@ -278,7 +278,7 @@ export function POS() {
     }
     setSaving(true);
     try {
-      const invoiceNo = await nextDocNumber(companyId, "sales", "POS");
+      const invoiceNo = nextPosInvoiceNo();
       const isCredit = paymentMethod === "credit";
       const effReceived = isCredit ? 0 : received;
       const effBalance = total - effReceived;
