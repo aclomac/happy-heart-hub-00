@@ -326,6 +326,44 @@ export function useDeviceGuard(): DeviceGuardState {
     maxDevices,
     currentFingerprint: guard.data?.currentFingerprint ?? "",
     devices: guard.data?.devices ?? [],
+  const guard = useQuery({
+    queryKey: ["device-guard", ownerId, maxDevices, isDemoMode() ? "demo" : "live"],
+    enabled: !!sub && !isDemoMode(),
+    queryFn: async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) {
+        return {
+          allowed: true,
+          deviceCount: 0,
+          currentFingerprint: "",
+          devices: [] as DeviceRow[],
+        };
+      }
+      return checkDeviceAllowed(u.user.id, maxDevices);
+    },
+    staleTime: 30_000,
+  });
+
+  if (isDemoMode()) {
+    return {
+      loading: false,
+      allowed: true,
+      deviceCount: 1,
+      maxDevices,
+      currentFingerprint: "demo-device",
+      devices: [],
+      isExpired: false,
+      refetch: () => {},
+    };
+  }
+
+  return {
+    loading: subQ.isLoading || (!!sub && guard.isLoading),
+    allowed: guard.data?.allowed ?? true,
+    deviceCount: guard.data?.deviceCount ?? 0,
+    maxDevices,
+    currentFingerprint: guard.data?.currentFingerprint ?? "",
+    devices: guard.data?.devices ?? [],
     isExpired: sub?.isExpired ?? false,
     refetch: () => guard.refetch(),
   };
