@@ -113,9 +113,19 @@ export function POS() {
   }, [items, search, category]);
 
   const addToCart = (item: Item) => {
+    if (!item.is_service && Number(item.stock) <= 0) {
+      toast.error(`${item.name} is out of stock`);
+      return;
+    }
     setCart((c) => {
       const ex = c.find((l) => l.item.id === item.id);
-      if (ex) return c.map((l) => (l.item.id === item.id ? { ...l, qty: l.qty + 1 } : l));
+      if (ex) {
+        if (!item.is_service && ex.qty + 1 > Number(item.stock)) {
+          toast.warning(`Only ${item.stock} ${item.unit} in stock`);
+          return c;
+        }
+        return c.map((l) => (l.item.id === item.id ? { ...l, qty: l.qty + 1 } : l));
+      }
       return [...c, { item, qty: 1 }];
     });
   };
@@ -268,10 +278,19 @@ export function POS() {
             </Select>
           </div>
           <div className="flex-1 overflow-y-auto p-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 gap-2 content-start">
-            {filtered.map((item) => (
-              <div
+            {filtered.map((item) => {
+              const outOfStock = !item.is_service && Number(item.stock) <= 0;
+              return (
+              <button
+                type="button"
                 key={item.id}
-                className="bg-background border rounded-md p-3 text-left hover:border-primary hover:shadow-md transition-all flex flex-col"
+                onClick={() => addToCart(item)}
+                disabled={outOfStock}
+                className={`bg-background border rounded-md p-3 text-left transition-all flex flex-col cursor-pointer ${
+                  outOfStock
+                    ? "opacity-60 cursor-not-allowed"
+                    : "hover:border-primary hover:shadow-md active:scale-[0.98]"
+                }`}
                 data-testid="pos-item-card"
               >
                 <div className="flex gap-2">
@@ -291,27 +310,37 @@ export function POS() {
                     )}
                   </div>
                 </div>
-                
+
                   <div className="flex justify-between items-end mt-auto pt-2">
                     <span className="text-primary font-bold">
                       <MoneyText value={`৳ ${Number(item.sale_price).toLocaleString()}`} />
                     </span>
                     {!item.is_service && (
-                      <span className="text-[10px] text-muted-foreground">
-                        {Number(item.stock)} {item.unit}
+                      <span className={`text-[10px] ${outOfStock ? "text-destructive font-semibold" : "text-muted-foreground"}`}>
+                        {outOfStock ? "Out of Stock" : `${Number(item.stock)} ${item.unit}`}
                       </span>
                     )}
                     <Button
+                      asChild
                       size="icon"
                       variant="ghost"
                       className="h-6 w-6"
-                      onClick={() => addToCart(item)}
                     >
-                      <Plus className="w-3 h-3" />
+                      <span
+                        role="button"
+                        tabIndex={-1}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          addToCart(item);
+                        }}
+                      >
+                        <Plus className="w-3 h-3" />
+                      </span>
                     </Button>
                   </div>
-              </div>
-            ))}
+              </button>
+              );
+            })}
             {filtered.length === 0 && (
               <div className="col-span-full text-center text-muted-foreground py-12">
                 No items found
