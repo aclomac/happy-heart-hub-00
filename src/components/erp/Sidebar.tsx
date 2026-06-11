@@ -275,16 +275,24 @@ export function ERPSidebar() {
   const currentHash = useRouterState({ select: (s) => s.location.hash || "" });
 
   const { data: currentCompany } = useQuery({
-    queryKey: ["current-company", companyId],
+    queryKey: ["current-company", companyId, isDemoMode() ? "demo" : "live"],
     enabled: !!companyId,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("companies")
-        .select("name")
-        .eq("id", companyId!)
-        .maybeSingle();
-      if (error) throw error;
-      return data;
+      if (isDemoMode()) {
+        const c = getDemoCompany(companyId);
+        return c ? { name: c.name } : null;
+      }
+      try {
+        const { data, error } = await supabase
+          .from("companies")
+          .select("name")
+          .eq("id", companyId!)
+          .maybeSingle();
+        if (error) throw error;
+        return data;
+      } catch {
+        return null;
+      }
     },
   });
 
