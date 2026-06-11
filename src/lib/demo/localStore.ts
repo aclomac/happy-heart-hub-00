@@ -395,6 +395,7 @@ export function clearDemoStorage(): void {
       DEMO_CURRENT_COMPANY_KEY,
       DEMO_SETTINGS_KEY,
       LEGACY_SESSION_KEY,
+      "erpovo:companyId",
     ].forEach((k) => localStorage.removeItem(k));
     clearDemoAuthCookies();
   } catch {
