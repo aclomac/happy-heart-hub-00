@@ -101,6 +101,7 @@ type Writer = (rows: Row[]) => void;
 function table(name: string): { read: Reader; write: Writer } {
   ensureInventorySeed();
   ensurePartiesSeed();
+  ensureSalesSeed();
   switch (name) {
     case "items": return { read: getItems as Reader, write: setItems as unknown as Writer };
     case "item_categories": return { read: getCategories as Reader, write: setCategories as unknown as Writer };
@@ -113,6 +114,11 @@ function table(name: string): { read: Reader; write: Writer } {
     case "parties": return { read: getParties as Reader, write: setParties as unknown as Writer };
     case "party_groups": return { read: getPartyGroups as Reader, write: setPartyGroups as unknown as Writer };
     case "party_ledger": return { read: getPartyLedger as Reader, write: setPartyLedger as unknown as Writer };
+    case "sales": return { read: getSales as Reader, write: setSales as unknown as Writer };
+    case "sale_items": return { read: getSaleItems as Reader, write: setSaleItems as unknown as Writer };
+    case "payments": return { read: getPayments as Reader, write: setPayments as unknown as Writer };
+    case "cash_transactions": return { read: getCashTxns as Reader, write: setCashTxns as unknown as Writer };
+    case "other_income": return { read: getOtherIncome as Reader, write: setOtherIncome as unknown as Writer };
     case "companies": return {
       read: () => getDemoCompanies() as unknown as Row[],
       write: (rows) => setDemoCompanies(rows as any),
