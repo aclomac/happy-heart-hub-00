@@ -185,6 +185,11 @@ function table(name: string): { read: Reader; write: Writer } {
     case "loans": return { read: getLoans as Reader, write: setLoans as unknown as Writer };
     case "loan_payments": return { read: getLoanPayments as Reader, write: setLoanPayments as unknown as Writer };
     case "cash_reconciliations": return { read: getReconciliations as Reader, write: setReconciliations as unknown as Writer };
+    case "employees": return { read: getEmployees as Reader, write: setEmployees as unknown as Writer };
+    case "attendance": return { read: getAttendance as Reader, write: setAttendance as unknown as Writer };
+    case "salary_slips": return { read: getSalarySlips as Reader, write: setSalarySlips as unknown as Writer };
+    case "employee_payments": return { read: getEmployeePayments as Reader, write: setEmployeePayments as unknown as Writer };
+
 
     case "companies": return {
       read: () => getDemoCompanies() as unknown as Row[],
