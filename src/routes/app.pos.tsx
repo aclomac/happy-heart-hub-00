@@ -70,17 +70,28 @@ export function POS() {
   const canAddCustomer = usePermission("parties", "add");
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
-  const [cart, setCart] = useState<Line[]>([]);
-  // Radix Select forbids "" as an item value, so we use a sentinel for
-  // "walk-in" and translate it back to null on persist.
   const WALK_IN = "__walkin__";
-  const [partyId, setPartyId] = useState<string>(WALK_IN);
-  const [paymentMethod, setPaymentMethod] = useState("cash");
-  const [discount, setDiscount] = useState(0);
-  const [received, setReceived] = useState(0);
+  const persisted = useMemo(() => loadPersistedCart(), []);
+  const [cart, setCart] = useState<Line[]>(persisted?.cart ?? []);
+  const [partyId, setPartyId] = useState<string>(persisted?.partyId ?? WALK_IN);
+  const [paymentMethod, setPaymentMethod] = useState(persisted?.paymentMethod ?? "cash");
+  const [discount, setDiscount] = useState(persisted?.discount ?? 0);
+  const [received, setReceived] = useState(persisted?.received ?? 0);
   const [saving, setSaving] = useState(false);
   const [lastSaleId, setLastSaleId] = useState<string | null>(null);
   const [showQuickAdd, setShowQuickAdd] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      localStorage.setItem(
+        POS_CART_KEY,
+        JSON.stringify({ cart, partyId, paymentMethod, discount, received }),
+      );
+    } catch {
+      /* ignore */
+    }
+  }, [cart, partyId, paymentMethod, discount, received]);
 
   const { data: items = [] } = useQuery({
     queryKey: ["pos-items", companyId],
