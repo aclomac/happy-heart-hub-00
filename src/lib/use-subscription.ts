@@ -1,7 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { checkDeviceAllowed, type DeviceRow } from "@/lib/device-fingerprint";
-import { isDemoMode } from "@/lib/demo/localStore";
+import { type DeviceRow } from "@/lib/device-fingerprint";
 
 export type PlanKey = "basic" | "gold" | "pro";
 export type RawSubStatus = "trial" | "active" | "expired" | "cancelled";
@@ -167,121 +165,49 @@ export type SubscriptionState = {
   latestPaymentRequest: LatestPaymentRequest | null;
 };
 
+// Personal mode: subscription/device gating is fully disabled.
+// All hooks return an unlimited, always-active state so every route, module,
+// and company-creation flow is unlocked. No Supabase round-trips.
+const PERSONAL_FEATURES: PlanFeatures = {
+  maxCompanies: Infinity,
+  maxDevices: Infinity,
+  payrollEnabled: true,
+  employeeEnabled: true,
+  attendanceEnabled: true,
+};
+
+function personalState(): SubscriptionState {
+  return {
+    subscription: {
+      id: "personal",
+      owner_id: "personal",
+      plan: "pro",
+      status: "active",
+      started_at: new Date(0).toISOString(),
+      expires_at: new Date(Date.now() + 3650 * 86_400_000).toISOString(),
+      max_companies: 999999,
+      max_devices: 999999,
+    },
+    plan: "pro",
+    status: "active",
+    expiresAt: null,
+    daysRemaining: 36500,
+    isExpired: false,
+    features: PERSONAL_FEATURES,
+    latestPaymentRequest: null,
+  };
+}
+
 export function useSubscription() {
   return useQuery<SubscriptionState>({
-    queryKey: ["subscription", isDemoMode() ? "demo" : "live"],
-    queryFn: async () => {
-      // Demo mode: pretend we are on an active Pro plan with no expiry,
-      // and skip every Supabase round-trip so the dashboard can render.
-      if (isDemoMode()) {
-        const expiresAt = new Date(Date.now() + 365 * 86_400_000).toISOString();
-        return {
-          subscription: {
-            id: "demo-sub",
-            owner_id: "00000000-0000-0000-0000-000000000001",
-            plan: "pro",
-            status: "active",
-            started_at: new Date().toISOString(),
-            expires_at: expiresAt,
-            max_companies: 999999,
-            max_devices: 10,
-          } as Subscription,
-          plan: "pro",
-          status: "active",
-          expiresAt,
-          daysRemaining: 365,
-          isExpired: false,
-          features: PLAN_FEATURES.pro,
-          latestPaymentRequest: null,
-        };
-      }
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) {
-        return {
-          subscription: null,
-          plan: "basic" as PlanKey,
-          status: "expired" as ResolvedStatus,
-          expiresAt: null,
-          daysRemaining: 0,
-          isExpired: true,
-          features: PLAN_FEATURES.basic,
-          latestPaymentRequest: null,
-        };
-      }
-
-      const [{ data: subRow, error: subErr }, { data: prRows }] = await Promise.all([
-        supabase.from("subscriptions").select("*").eq("owner_id", u.user.id).maybeSingle(),
-        supabase
-          .from("payment_requests")
-          .select("id, plan, status, created_at, reject_reason")
-          .eq("user_id", u.user.id)
-          .order("created_at", { ascending: false })
-          .limit(1),
-      ]);
-      if (subErr) throw subErr;
-
-      const latestPaymentRequest = (prRows?.[0] ?? null) as LatestPaymentRequest | null;
-
-      if (!subRow) {
-        return {
-          subscription: null,
-          plan: "basic",
-          status: latestPaymentRequest?.status === "pending" ? "pending_upgrade" : "expired",
-          expiresAt: null,
-          daysRemaining: 0,
-          isExpired: true,
-          features: PLAN_FEATURES.basic,
-          latestPaymentRequest,
-        };
-      }
-
-      const sub = subRow as Subscription;
-      const expiresAtMs = new Date(sub.expires_at).getTime();
-      const isExpired = expiresAtMs < Date.now();
-
-      // Auto-flip stored status if expired
-      if (isExpired && sub.status !== "expired") {
-        await supabase.from("subscriptions").update({ status: "expired" }).eq("id", sub.id);
-        sub.status = "expired";
-      }
-
-      const plan = sub.plan;
-      const features = PLAN_FEATURES[plan] ?? PLAN_FEATURES.basic;
-      const daysRemaining = Math.max(0, Math.ceil((expiresAtMs - Date.now()) / 86_400_000));
-
-      let status: ResolvedStatus;
-      if (isExpired) {
-        status = "expired";
-      } else if (latestPaymentRequest?.status === "pending") {
-        status = "pending_upgrade";
-      } else if (latestPaymentRequest?.status === "rejected" && plan === "basic") {
-        status = "rejected_payment";
-      } else if (plan === "basic") {
-        status = "trial";
-      } else {
-        status = "active";
-      }
-
-      return {
-        subscription: sub,
-        plan,
-        status,
-        expiresAt: sub.expires_at,
-        daysRemaining,
-        isExpired,
-        features,
-        latestPaymentRequest,
-      };
-    },
-    staleTime: 60_000,
+    queryKey: ["subscription", "personal"],
+    queryFn: async () => personalState(),
+    staleTime: Infinity,
   });
 }
 
-export function daysRemaining(state?: SubscriptionState | Subscription | null): number {
-  if (!state) return 0;
-  if ("daysRemaining" in state) return state.daysRemaining;
-  const ms = new Date(state.expires_at).getTime() - Date.now();
-  return Math.max(0, Math.ceil(ms / 86_400_000));
+export function daysRemaining(_state?: SubscriptionState | Subscription | null): number {
+  return 36500;
 }
 
 export type DeviceGuardState = {
@@ -296,51 +222,14 @@ export type DeviceGuardState = {
 };
 
 export function useDeviceGuard(): DeviceGuardState {
-  const subQ = useSubscription();
-  const sub = subQ.data;
-  const maxDevices = sub?.features.maxDevices ?? 1;
-  const ownerId = sub?.subscription?.owner_id;
-
-  const guard = useQuery({
-    queryKey: ["device-guard", ownerId, maxDevices, isDemoMode() ? "demo" : "live"],
-    enabled: !!sub && !isDemoMode(),
-    queryFn: async () => {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) {
-        return {
-          allowed: true,
-          deviceCount: 0,
-          currentFingerprint: "",
-          devices: [] as DeviceRow[],
-        };
-      }
-      return checkDeviceAllowed(u.user.id, maxDevices);
-    },
-    staleTime: 30_000,
-  });
-
-
-  if (isDemoMode()) {
-    return {
-      loading: false,
-      allowed: true,
-      deviceCount: 1,
-      maxDevices,
-      currentFingerprint: "demo-device",
-      devices: [],
-      isExpired: false,
-      refetch: () => {},
-    };
-  }
-
   return {
-    loading: subQ.isLoading || (!!sub && guard.isLoading),
-    allowed: guard.data?.allowed ?? true,
-    deviceCount: guard.data?.deviceCount ?? 0,
-    maxDevices,
-    currentFingerprint: guard.data?.currentFingerprint ?? "",
-    devices: guard.data?.devices ?? [],
-    isExpired: sub?.isExpired ?? false,
-    refetch: () => guard.refetch(),
+    loading: false,
+    allowed: true,
+    deviceCount: 1,
+    maxDevices: Infinity,
+    currentFingerprint: "personal-device",
+    devices: [],
+    isExpired: false,
+    refetch: () => {},
   };
 }
