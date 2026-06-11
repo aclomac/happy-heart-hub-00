@@ -121,6 +121,7 @@ function table(name: string): { read: Reader; write: Writer } {
   ensureSalesSeed();
   ensurePurchasesSeed();
   ensureExpensesSeed();
+  const empty = { read: () => [], write: () => {} };
   switch (name) {
     case "items": return { read: getItems as Reader, write: setItems as unknown as Writer };
     case "item_categories": return { read: getCategories as Reader, write: setCategories as unknown as Writer };
@@ -130,6 +131,7 @@ function table(name: string): { read: Reader; write: Writer } {
     case "stock_adjustments": return { read: getAdjustments as Reader, write: setAdjustments as unknown as Writer };
     case "stock_transfers": return { read: getTransfers as Reader, write: setTransfers as unknown as Writer };
     case "stock_transfer_items": return { read: getTransferItems as Reader, write: setTransferItems as unknown as Writer };
+    case "item_variants": return empty;
     case "parties": return { read: getParties as Reader, write: setParties as unknown as Writer };
     case "party_groups": return { read: getPartyGroups as Reader, write: setPartyGroups as unknown as Writer };
     case "party_ledger": return { read: getPartyLedger as Reader, write: setPartyLedger as unknown as Writer };
@@ -140,10 +142,14 @@ function table(name: string): { read: Reader; write: Writer } {
     case "other_income": return { read: getOtherIncome as Reader, write: setOtherIncome as unknown as Writer };
     case "other_incomes": return { read: getOtherIncome as Reader, write: setOtherIncome as unknown as Writer };
     case "purchases": return { read: getPurchases as Reader, write: setPurchases as unknown as Writer };
+    case "purchase_orders": return { read: getPurchases as Reader, write: setPurchases as unknown as Writer };
+    case "debit_notes": return { read: getPurchases as Reader, write: setPurchases as unknown as Writer };
     case "purchase_items": return { read: getPurchaseItems as Reader, write: setPurchaseItems as unknown as Writer };
     case "bank_accounts": return { read: getBankAccounts as Reader, write: setBankAccounts as unknown as Writer };
     case "expenses": return { read: getExpenses as Reader, write: setExpenses as unknown as Writer };
     case "expense_categories": return { read: getExpenseCategories as Reader, write: setExpenseCategories as unknown as Writer };
+    case "settings_kv": return empty;
+    case "audit_logs": return empty;
     case "companies": return {
       read: () => getDemoCompanies() as unknown as Row[],
       write: (rows) => setDemoCompanies(rows as any),
