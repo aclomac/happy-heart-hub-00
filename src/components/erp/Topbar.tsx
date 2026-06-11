@@ -299,6 +299,11 @@ export function ERPTopbar() {
                 {t("Settings")}
               </Link>
             </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={logout} className="text-destructive focus:text-destructive">
+              <LogOut className="w-4 h-4 mr-2" />
+              {t("Logout")}
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 

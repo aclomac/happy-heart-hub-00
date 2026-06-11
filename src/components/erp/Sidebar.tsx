@@ -32,7 +32,10 @@ import {
   ArrowRightLeft,
   Activity,
   LifeBuoy,
+  LogOut,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { endDemoSession, clearDemoStorage } from "@/lib/demo/localStore";
 import { useI18n } from "@/lib/i18n";
 import { companies } from "@/lib/mock-data";
 import { useQuery } from "@tanstack/react-query";
@@ -489,7 +492,7 @@ export function ERPSidebar() {
         )}
       </nav>
       <div
-        className="px-3 py-3 border-t text-xs"
+        className="px-3 py-3 border-t text-xs space-y-2"
         style={{ borderColor: "var(--color-sidebar-border-c)" }}
       >
         <div
@@ -504,7 +507,39 @@ export function ERPSidebar() {
             </div>
           </div>
         </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-full justify-start gap-2 text-[13px] hover:bg-white/10"
+          style={{ color: "var(--color-sidebar-fg)" }}
+          onClick={async () => {
+            try {
+              if (!isDemoMode()) await supabase.auth.signOut();
+            } catch { /* ignore */ }
+            endDemoSession();
+            clearDemoStorage();
+            if (typeof window !== "undefined") {
+              Object.keys(localStorage).forEach((key) => {
+                if (
+                  key.startsWith("erpovo:") ||
+                  key.startsWith("erpovo_demo_") ||
+                  key === "erpovo.lang" ||
+                  key.includes("announcements")
+                ) {
+                  localStorage.removeItem(key);
+                }
+              });
+              sessionStorage.clear();
+              window.location.href = "/login";
+            }
+          }}
+          aria-label={t("Logout")}
+        >
+          <LogOut className="w-4 h-4" />
+          {t("Logout")}
+        </Button>
       </div>
     </aside>
   );
 }
+
