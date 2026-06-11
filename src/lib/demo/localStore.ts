@@ -67,7 +67,9 @@ function isBrowser() {
 function writeCookie(name: string, value: string, maxAge = DEMO_COOKIE_MAX_AGE_SECONDS): void {
   if (typeof document === "undefined") return;
   try {
-    document.cookie = `${name}=${encodeURIComponent(value)}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
+    document.cookie = `${name}=${encodeURIComponent(
+      value,
+    )}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
   } catch {
     /* ignore */
   }
@@ -190,7 +192,9 @@ export function startDemoSession(): DemoSession {
   safeWrite(DEMO_USER_KEY, user);
   setDemoAuthCookies(user.email);
   ensureDemoSeed();
-  if (import.meta.env.DEV) console.log("[demo-auth] demo localStorage + cookie session created");
+  if (import.meta.env.DEV) {
+    console.log("[demo-auth] demo localStorage + cookie session created");
+  }
   return session;
 }
 
