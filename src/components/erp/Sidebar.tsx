@@ -1,4 +1,4 @@
-import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentCompanyId } from "@/lib/use-company";
@@ -17,7 +17,7 @@ import {
   RefreshCw,
   Wrench,
   Settings,
-  Crown,
+  
   Building2,
   Zap,
   ShieldCheck,
@@ -271,7 +271,7 @@ function pathOf(to: string) {
 
 export function ERPSidebar() {
   const { t } = useI18n();
-  const navigate = useNavigate();
+  
   const companyId = useCurrentCompanyId();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const currentHash = useRouterState({ select: (s) => s.location.hash || "" });
