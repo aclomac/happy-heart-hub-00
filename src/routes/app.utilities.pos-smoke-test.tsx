@@ -353,7 +353,11 @@ function POSSmokeTest() {
     for (const m of moves) {
       if (m.reference_id && smokeIds.has(m.reference_id)) {
         const it = itemMap.get(m.item_id);
-        if (it) it.stock = Number(it.stock) - Number(m.qty); // reverse delta
+        if (it) {
+          // POS sales create "out" movements; reverse by adding qty back.
+          const delta = m.direction === "out" ? Number(m.qty) : -Number(m.qty);
+          it.stock = Number(it.stock) + delta;
+        }
       }
     }
     setItems(Array.from(itemMap.values()));
