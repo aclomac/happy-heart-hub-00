@@ -138,6 +138,7 @@ function table(name: string): { read: Reader; write: Writer } {
     case "sales": return { read: getSales as Reader, write: setSales as unknown as Writer };
     case "sale_items": return { read: getSaleItems as Reader, write: setSaleItems as unknown as Writer };
     case "payments": return { read: getPayments as Reader, write: setPayments as unknown as Writer };
+    case "payments_out": return { read: getPayments as Reader, write: setPayments as unknown as Writer };
     case "cash_transactions": return { read: getCashTxns as Reader, write: setCashTxns as unknown as Writer };
     case "other_income": return { read: getOtherIncome as Reader, write: setOtherIncome as unknown as Writer };
     case "other_incomes": return { read: getOtherIncome as Reader, write: setOtherIncome as unknown as Writer };
@@ -420,7 +421,9 @@ function defaults(name: string): Row {
       reference_no: null, debit: 0, credit: 0, balance: 0, note: null,
       created_at: nowIso, company_id: DEMO_COMPANY_ID,
     };
-    case "purchases": return {
+    case "purchases":
+    case "purchase_orders":
+    case "debit_notes": return {
       doc_type: "bill", bill_no: "", bill_date: nowIso.slice(0, 10), due_date: null,
       party_id: null, subtotal: 0, discount: 0, tax: 0, total: 0, paid: 0,
       balance: 0, status: "unpaid", payment_method: null, notes: null,
@@ -433,6 +436,12 @@ function defaults(name: string): Row {
     };
     case "bank_accounts": return {
       account_type: "bank", current_balance: 0, is_active: true,
+      deleted_at: null, created_at: nowIso, company_id: DEMO_COMPANY_ID,
+    };
+    case "payments_out": return {
+      direction: "out", amount: 0, method: "cash", reference_no: null,
+      payment_date: nowIso.slice(0, 10), notes: null, status: "posted",
+      posted_txn_id: null, reversed_at: null, reversed_by: null,
       deleted_at: null, created_at: nowIso, company_id: DEMO_COMPANY_ID,
     };
     case "expenses": return {
