@@ -203,7 +203,12 @@ function Sync() {
           action: "device.logged_out",
           metadata: { device_id: id },
         });
-        await supabase.auth.signOut();
+        if (isDemoMode()) {
+          endDemoSession();
+          clearDemoStorage();
+        } else {
+          await supabase.auth.signOut();
+        }
         void navigate({ to: "/login" });
       }
     } catch (e) {
