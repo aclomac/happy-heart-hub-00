@@ -67,7 +67,7 @@ import { MoneyText } from "@/components/erp/MoneyText";
 import { useI18n } from "@/lib/i18n";
 import { QuickAddCustomerDialog } from "@/components/erp/QuickAddCustomerDialog";
 import { usePermission } from "@/lib/permissions";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
 import { usePWAStatus } from "@/components/erp/PWAProvider";
 
 export const Route = createFileRoute("/app/pos")({ component: POS });
