@@ -167,6 +167,13 @@ function table(name: string): { read: Reader; write: Writer } {
     case "expense_categories": return { read: getExpenseCategories as Reader, write: setExpenseCategories as unknown as Writer };
     case "settings_kv": return empty;
     case "audit_logs": return empty;
+    case "company_members": return empty;
+    case "cheques": return { read: getCheques as Reader, write: setCheques as unknown as Writer };
+    case "bank_transfers": return { read: getBankTransfers as Reader, write: setBankTransfers as unknown as Writer };
+    case "loans": return { read: getLoans as Reader, write: setLoans as unknown as Writer };
+    case "loan_payments": return { read: getLoanPayments as Reader, write: setLoanPayments as unknown as Writer };
+    case "cash_reconciliations": return { read: getReconciliations as Reader, write: setReconciliations as unknown as Writer };
+
     case "companies": return {
       read: () => getDemoCompanies() as unknown as Row[],
       write: (rows) => setDemoCompanies(rows as any),
