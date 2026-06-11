@@ -14,7 +14,25 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Search, Plus, Minus, Trash2, ShoppingCart, X, UserPlus } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+const POS_CART_KEY = "erpovo_demo_pos_cart";
+type PersistedCart = {
+  cart: Line[];
+  partyId: string;
+  paymentMethod: string;
+  discount: number;
+  received: number;
+};
+function loadPersistedCart(): PersistedCart | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(POS_CART_KEY);
+    return raw ? (JSON.parse(raw) as PersistedCart) : null;
+  } catch {
+    return null;
+  }
+}
 import { nextDocNumber } from "@/lib/doc-number";
 import { saveSaleInvoice } from "@/lib/sale-invoices";
 import { toast } from "sonner";
@@ -52,17 +70,28 @@ export function POS() {
   const canAddCustomer = usePermission("parties", "add");
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
-  const [cart, setCart] = useState<Line[]>([]);
-  // Radix Select forbids "" as an item value, so we use a sentinel for
-  // "walk-in" and translate it back to null on persist.
   const WALK_IN = "__walkin__";
-  const [partyId, setPartyId] = useState<string>(WALK_IN);
-  const [paymentMethod, setPaymentMethod] = useState("cash");
-  const [discount, setDiscount] = useState(0);
-  const [received, setReceived] = useState(0);
+  const persisted = useMemo(() => loadPersistedCart(), []);
+  const [cart, setCart] = useState<Line[]>(persisted?.cart ?? []);
+  const [partyId, setPartyId] = useState<string>(persisted?.partyId ?? WALK_IN);
+  const [paymentMethod, setPaymentMethod] = useState(persisted?.paymentMethod ?? "cash");
+  const [discount, setDiscount] = useState(persisted?.discount ?? 0);
+  const [received, setReceived] = useState(persisted?.received ?? 0);
   const [saving, setSaving] = useState(false);
   const [lastSaleId, setLastSaleId] = useState<string | null>(null);
   const [showQuickAdd, setShowQuickAdd] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      localStorage.setItem(
+        POS_CART_KEY,
+        JSON.stringify({ cart, partyId, paymentMethod, discount, received }),
+      );
+    } catch {
+      /* ignore */
+    }
+  }, [cart, partyId, paymentMethod, discount, received]);
 
   const { data: items = [] } = useQuery({
     queryKey: ["pos-items", companyId],
@@ -132,7 +161,32 @@ export function POS() {
   const changeQty = (id: string, delta: number) => {
     setCart((c) =>
       c
-        .map((l) => (l.item.id === id ? { ...l, qty: Math.max(0, l.qty + delta) } : l))
+        .map((l) => {
+          if (l.item.id !== id) return l;
+          const next = l.qty + delta;
+          if (delta > 0 && !l.item.is_service && next > Number(l.item.stock)) {
+            toast.warning(`Only ${l.item.stock} ${l.item.unit} in stock`);
+            return l;
+          }
+          return { ...l, qty: Math.max(0, next) };
+        })
+        .filter((l) => l.qty > 0),
+    );
+  };
+  const setQty = (id: string, raw: string) => {
+    const n = Math.floor(Number(raw));
+    if (!Number.isFinite(n) || n < 0) return;
+    setCart((c) =>
+      c
+        .map((l) => {
+          if (l.item.id !== id) return l;
+          let q = n;
+          if (!l.item.is_service && q > Number(l.item.stock)) {
+            toast.warning(`Only ${l.item.stock} ${l.item.unit} in stock`);
+            q = Number(l.item.stock);
+          }
+          return { ...l, qty: q };
+        })
         .filter((l) => l.qty > 0),
     );
   };
@@ -142,6 +196,9 @@ export function POS() {
     setDiscount(0);
     setReceived(0);
     setPartyId(WALK_IN);
+    if (typeof window !== "undefined") {
+      try { localStorage.removeItem(POS_CART_KEY); } catch { /* ignore */ }
+    }
   };
 
   const subtotal = cart.reduce((s, l) => s + l.qty * Number(l.item.sale_price), 0);
@@ -446,7 +503,14 @@ export function POS() {
                       >
                         <Minus className="w-3 h-3" />
                       </Button>
-                      <span className="w-8 text-center text-sm font-semibold">{l.qty}</span>
+                      <Input
+                        type="number"
+                        min={1}
+                        value={l.qty}
+                        onChange={(e) => setQty(l.item.id, e.target.value)}
+                        className="h-7 w-12 text-center text-sm font-semibold px-1"
+                      />
+
                       <Button
                         variant="outline"
                         size="icon"
