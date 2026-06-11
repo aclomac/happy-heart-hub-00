@@ -7,7 +7,6 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { JwtPayload } from "@supabase/auth-js";
 import type { Database } from "./types";
 
-
 const DEMO_USER_ID = "demo-user-001";
 const DEMO_USER_EMAIL = "demo@erpovo.com";
 
@@ -42,7 +41,6 @@ function buildDemoContext(): DemoCtx {
     } as unknown as JwtPayload,
   };
 }
-
 
 export const requireSupabaseAuth = createMiddleware({ type: "function" }).server(
   async ({ next }) => {
