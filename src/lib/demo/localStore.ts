@@ -7,6 +7,7 @@
  */
 
 export const DEMO_SESSION_KEY = "erpovo_demo_session";
+export const DEMO_USER_KEY = "erpovo_demo_user";
 export const DEMO_COMPANIES_KEY = "erpovo_demo_companies";
 export const DEMO_CURRENT_COMPANY_KEY = "erpovo_demo_current_company";
 export const DEMO_SETTINGS_KEY = "erpovo_demo_settings";
