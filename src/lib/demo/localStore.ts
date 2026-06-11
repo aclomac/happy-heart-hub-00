@@ -266,6 +266,7 @@ export function clearDemoStorage(): void {
   try {
     [
       DEMO_SESSION_KEY,
+      DEMO_USER_KEY,
       DEMO_COMPANIES_KEY,
       DEMO_CURRENT_COMPANY_KEY,
       DEMO_SETTINGS_KEY,
