@@ -304,13 +304,13 @@ export function POS() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("parties")
-        .select("id,name,phone")
+        .select("id,name,phone,email")
         .is("deleted_at", null)
         .eq("company_id", companyId!)
         .in("type", ["customer", "both"])
         .order("name");
       if (error) throw error;
-      return data as { id: string; name: string; phone: string | null }[];
+      return data as { id: string; name: string; phone: string | null; email: string | null }[];
     },
   });
 
