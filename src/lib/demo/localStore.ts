@@ -376,24 +376,27 @@ export type DemoDashboardData = {
 };
 
 export function getDemoDashboardData(): DemoDashboardData {
-  // Dynamic-style access via require would break in Vite; use a top-level
-  // import (parties.ts only imports a constant so no cycle).
   let receivables = 72200;
   let payables = 65000;
   let partyCount = 10;
   let topReceivables: { id: string; name: string; balance: number }[] = [];
+  let todaySales = 18500;
+  let monthSales = 425000;
   try {
     ensurePartiesSeed();
+    ensureSalesSeed();
     receivables = getDemoReceivables();
     payables = getDemoPayables();
     partyCount = getDemoPartyCount();
     topReceivables = getDemoTopReceivables();
+    todaySales = getDemoTodaySales();
+    monthSales = getDemoMonthSales();
   } catch {
     /* ignore — fall back to canned values */
   }
   return {
-    todaySales: 18500,
-    monthSales: 425000,
+    todaySales,
+    monthSales,
     monthPurchases: 280000,
     receivables,
     payables,
