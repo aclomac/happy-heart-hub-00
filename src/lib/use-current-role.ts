@@ -23,8 +23,17 @@ export type RoleInfo = {
 export function useCurrentRole() {
   const companyId = useCurrentCompanyId();
   return useQuery<RoleInfo>({
-    queryKey: ["current-role", companyId],
+    queryKey: ["current-role", companyId, isDemoMode() ? "demo" : "live"],
     queryFn: async () => {
+      // Demo mode: act as owner/admin with full permissions, no Supabase calls.
+      if (isDemoMode()) {
+        return {
+          isAdmin: true,
+          isOwner: true,
+          permissions: new Set<string>(),
+          has: () => true,
+        };
+      }
       const { data: u } = await supabase.auth.getUser();
       const allow: RoleInfo = {
         isAdmin: false,
