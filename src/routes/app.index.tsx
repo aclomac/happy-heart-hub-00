@@ -175,6 +175,45 @@ function Dashboard() {
         }[],
       };
 
+      if (isDemoMode()) {
+        const d = getDemoDashboardData();
+        const months = { ...emptyMonths };
+        const keys = Object.keys(months);
+        // Plot a simple ramp into the trailing months for visual richness.
+        keys.forEach((k, idx) => {
+          months[k].sale = Math.round((d.monthSales / keys.length) * (0.4 + idx * 0.12));
+          months[k].purchase = Math.round((d.monthPurchases / keys.length) * (0.4 + idx * 0.1));
+          months[k].otherIncome = Math.round((d.monthOtherIncome / keys.length) * (0.5 + idx * 0.08));
+        });
+        return {
+          ...emptyResult,
+          todaySales: d.todaySales,
+          monthSales: d.monthSales,
+          monthPurchases: d.monthPurchases,
+          receivables: d.receivables,
+          payables: d.payables,
+          monthExpenses: d.monthExpenses,
+          monthOtherIncome: d.monthOtherIncome,
+          itemCount: d.itemCount,
+          partyCount: d.partyCount,
+          lowStock: [
+            { id: "demo-1", name: "Office Chair", stock: 3, low_stock_alert: 5, is_service: false },
+            { id: "demo-2", name: "Visitor Chair", stock: 8, low_stock_alert: 10, is_service: false },
+          ],
+          topReceivables: [
+            { id: "p1", name: "Dhaka Office Solutions", balance: 32000 },
+            { id: "p2", name: "Chittagong Corporate Ltd", balance: 15000 },
+            { id: "p3", name: "Star Furnishing Co", balance: 9000 },
+            { id: "p4", name: "Karim Traders", balance: 8500 },
+            { id: "p5", name: "Rashid Enterprises", balance: 4200 },
+            { id: "p6", name: "Ahmed Hardware", balance: 1500 },
+          ],
+          chart: Object.values(months),
+          recent: [],
+        };
+      }
+
+
       try {
         const [salesRes, purchasesRes, itemsRes, partiesRes, expRes, recentRes, oiRes] = await Promise.all([
           supabase
