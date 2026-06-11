@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentCompanyId } from "@/lib/use-company";
+import { isDemoMode } from "@/lib/demo/localStore";
 
 export type RoleInfo = {
   isAdmin: boolean;
