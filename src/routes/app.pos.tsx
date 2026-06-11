@@ -497,19 +497,14 @@ export function POS() {
           </div>
           <div className="p-3 border-b flex gap-1.5">
             <div className="flex-1">
-              <Select value={partyId} onValueChange={setPartyId}>
-                <SelectTrigger className="h-9">
-                  <SelectValue placeholder={t("Walk-in Customer")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={WALK_IN}>{t("Walk-in Customer")}</SelectItem>
-                  {parties.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <CustomerCombobox
+                value={partyId}
+                onChange={setPartyId}
+                parties={parties}
+                walkInLabel={t("Walk-in Customer")}
+                searchPlaceholder={t("Search customer by name or phone…")}
+                emptyLabel={t("No customer found")}
+              />
             </div>
             <Button
               type="button"
