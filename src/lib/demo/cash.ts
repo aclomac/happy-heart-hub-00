@@ -187,15 +187,15 @@ const EXTRA_BANK_SEED: DemoBankAccount[] = [
 
 const CASH_TXNS_SEED: DemoCashTxn[] = [
   // Bank deposits / withdrawals so dashboard aggregates aren't empty.
-  { id: "demo-ct-001", company_id: C, bank_account_id: BANK_DBBL, direction: "in", amount: 50000, txn_date: daysAgo(20), category: "Deposit", notes: "Customer payment", reference_type: "manual", reference_id: null, status: "posted", deleted_at: null, created_at: now() },
-  { id: "demo-ct-002", company_id: C, bank_account_id: BANK_DBBL, direction: "out", amount: 18000, txn_date: daysAgo(12), category: "Withdrawal", notes: "Office expenses", reference_type: "manual", reference_id: null, status: "posted", deleted_at: null, created_at: now() },
-  { id: "demo-ct-003", company_id: C, bank_account_id: BANK_BRAC, direction: "in", amount: 90000, txn_date: daysAgo(10), category: "Deposit", notes: "Bulk sale settlement", reference_type: "manual", reference_id: null, status: "posted", deleted_at: null, created_at: now() },
-  { id: "demo-ct-004", company_id: C, bank_account_id: BANK_BRAC, direction: "out", amount: 25000, txn_date: daysAgo(4), category: "Supplier payment", notes: "BILL-0005", reference_type: "manual", reference_id: null, status: "posted", deleted_at: null, created_at: now() },
-  { id: "demo-ct-005", company_id: C, bank_account_id: BANK_BKASH, direction: "in", amount: 12500, txn_date: daysAgo(6), category: "Mobile receipt", notes: "Online sale", reference_type: "manual", reference_id: null, status: "posted", deleted_at: null, created_at: now() },
-  { id: "demo-ct-006", company_id: C, bank_account_id: BANK_NAGAD, direction: "in", amount: 8500, txn_date: daysAgo(2), category: "Mobile receipt", notes: "Walk-in customer", reference_type: "manual", reference_id: null, status: "posted", deleted_at: null, created_at: now() },
+  { id: "demo-ct-001", company_id: C, bank_account_id: BANK_DBBL, direction: "in", amount: 50000, txn_date: daysAgo(20), category: "Deposit", notes: "Customer payment", reference_type: "manual", reference_id: null, status: "posted", reversed_at: null, reversed_by: null, created_at: now() },
+  { id: "demo-ct-002", company_id: C, bank_account_id: BANK_DBBL, direction: "out", amount: 18000, txn_date: daysAgo(12), category: "Withdrawal", notes: "Office expenses", reference_type: "manual", reference_id: null, status: "posted", reversed_at: null, reversed_by: null, created_at: now() },
+  { id: "demo-ct-003", company_id: C, bank_account_id: BANK_BRAC, direction: "in", amount: 90000, txn_date: daysAgo(10), category: "Deposit", notes: "Bulk sale settlement", reference_type: "manual", reference_id: null, status: "posted", reversed_at: null, reversed_by: null, created_at: now() },
+  { id: "demo-ct-004", company_id: C, bank_account_id: BANK_BRAC, direction: "out", amount: 25000, txn_date: daysAgo(4), category: "Supplier payment", notes: "BILL-0005", reference_type: "manual", reference_id: null, status: "posted", reversed_at: null, reversed_by: null, created_at: now() },
+  { id: "demo-ct-005", company_id: C, bank_account_id: BANK_BKASH, direction: "in", amount: 12500, txn_date: daysAgo(6), category: "Mobile receipt", notes: "Online sale", reference_type: "manual", reference_id: null, status: "posted", reversed_at: null, reversed_by: null, created_at: now() },
+  { id: "demo-ct-006", company_id: C, bank_account_id: BANK_NAGAD, direction: "in", amount: 8500, txn_date: daysAgo(2), category: "Mobile receipt", notes: "Walk-in customer", reference_type: "manual", reference_id: null, status: "posted", reversed_at: null, reversed_by: null, created_at: now() },
   // Cash in hand movements
-  { id: "demo-ct-007", company_id: C, bank_account_id: null, direction: "in", amount: 12000, txn_date: daysAgo(8), category: "Cash sale", notes: null, reference_type: "manual", reference_id: null, status: "posted", deleted_at: null, created_at: now() },
-  { id: "demo-ct-008", company_id: C, bank_account_id: null, direction: "out", amount: 4500, txn_date: daysAgo(3), category: "Petty expense", notes: null, reference_type: "manual", reference_id: null, status: "posted", deleted_at: null, created_at: now() },
+  { id: "demo-ct-007", company_id: C, bank_account_id: null, direction: "in", amount: 12000, txn_date: daysAgo(8), category: "Cash sale", notes: null, reference_type: "manual", reference_id: null, status: "posted", reversed_at: null, reversed_by: null, created_at: now() },
+  { id: "demo-ct-008", company_id: C, bank_account_id: null, direction: "out", amount: 4500, txn_date: daysAgo(3), category: "Petty expense", notes: null, reference_type: "manual", reference_id: null, status: "posted", reversed_at: null, reversed_by: null, created_at: now() },
 ];
 
 const CHEQUES_SEED: DemoCheque[] = [
@@ -218,9 +218,9 @@ const LOANS_SEED: DemoLoan[] = [
 ];
 
 const LOAN_PAYMENTS_SEED: DemoLoanPayment[] = [
-  { id: "demo-lp-001", company_id: C, loan_id: "demo-loan-01", payment_date: daysAgo(45), principal_amount: 15000, interest_amount: 7200, total_amount: 22200, bank_account_id: BANK_BRAC, notes: "EMI Jan", status: "posted", deleted_at: null, created_at: now() },
-  { id: "demo-lp-002", company_id: C, loan_id: "demo-loan-01", payment_date: daysAgo(15), principal_amount: 15000, interest_amount: 7050, total_amount: 22050, bank_account_id: BANK_BRAC, notes: "EMI Feb", status: "posted", deleted_at: null, created_at: now() },
-  { id: "demo-lp-003", company_id: C, loan_id: "demo-loan-02", payment_date: daysAgo(10), principal_amount: 8000, interest_amount: 1575, total_amount: 9575, bank_account_id: BANK_DBBL, notes: "Monthly EMI", status: "posted", deleted_at: null, created_at: now() },
+  { id: "demo-lp-001", company_id: C, loan_id: "demo-loan-01", payment_date: daysAgo(45), principal_amount: 15000, interest_amount: 7200, total_amount: 22200, bank_account_id: BANK_BRAC, notes: "EMI Jan", status: "posted", reversed_at: null, reversed_by: null, created_at: now() },
+  { id: "demo-lp-002", company_id: C, loan_id: "demo-loan-01", payment_date: daysAgo(15), principal_amount: 15000, interest_amount: 7050, total_amount: 22050, bank_account_id: BANK_BRAC, notes: "EMI Feb", status: "posted", reversed_at: null, reversed_by: null, created_at: now() },
+  { id: "demo-lp-003", company_id: C, loan_id: "demo-loan-02", payment_date: daysAgo(10), principal_amount: 8000, interest_amount: 1575, total_amount: 9575, bank_account_id: BANK_DBBL, notes: "Monthly EMI", status: "posted", reversed_at: null, reversed_by: null, created_at: now() },
 ];
 
 const RECONS_SEED: DemoReconciliation[] = [
@@ -253,7 +253,7 @@ export function ensureCashSeed() {
 // ---------- Dashboard helpers ----------
 export function getDemoCashInHand(): number {
   return getCashTxns()
-    .filter((t) => !t.deleted_at && t.status === "posted" && !t.bank_account_id)
+    .filter((t) => t.status === "posted" && !t.bank_account_id)
     .reduce(
       (s, t) => s + (t.direction === "in" ? Number(t.amount) : -Number(t.amount)),
       0,
