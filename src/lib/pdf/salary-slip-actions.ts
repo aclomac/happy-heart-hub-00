@@ -41,8 +41,8 @@ export async function runSalarySlipPdfAction(opts: {
       await printInvoicePDF(data);
     } else if (action === "preview") {
       const doc = await generateInvoicePDF(data);
-      const url = URL.createObjectURL(doc.output("blob"));
-      window.open(url, "_blank");
+      const { openOrDownloadBlob } = await import("./open-blob");
+      openOrDownloadBlob(doc.output("blob"), `salary-slip-${employeeId ?? "preview"}.pdf`);
     } else {
       await downloadInvoicePDF(data);
     }
