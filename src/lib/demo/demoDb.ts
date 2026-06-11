@@ -48,13 +48,36 @@ import { getDemoCompanies, setDemoCompanies, DEMO_COMPANY_ID } from "./localStor
  * the app sees consistent numbers without a real backend.
  */
 function applyInsertSideEffects(name: string, rows: Row[]) {
-  if (name !== "stock_movements") return;
-  for (const r of rows) {
-    const qty = Number(r.qty || 0);
-    if (!qty) continue;
-    const delta = r.direction === "out" ? -qty : qty;
-    if (!r.item_id || !r.warehouse_id) continue;
-    adjustStoreStock(r.company_id ?? DEMO_COMPANY_ID, r.item_id, r.warehouse_id, delta);
+  if (name === "stock_movements") {
+    for (const r of rows) {
+      const qty = Number(r.qty || 0);
+      if (!qty) continue;
+      const delta = r.direction === "out" ? -qty : qty;
+      if (!r.item_id || !r.warehouse_id) continue;
+      adjustStoreStock(r.company_id ?? DEMO_COMPANY_ID, r.item_id, r.warehouse_id, delta);
+    }
+    return;
+  }
+  if (name === "parties") {
+    const ledger = getPartyLedger();
+    for (const r of rows) {
+      const ob = Number(r.opening_balance || 0);
+      if (!ob) continue;
+      ledger.push({
+        id: `ob-${r.id}`,
+        company_id: r.company_id ?? DEMO_COMPANY_ID,
+        party_id: r.id,
+        entry_date: new Date().toISOString().slice(0, 10),
+        entry_type: "opening_balance",
+        reference_no: "OPENING",
+        debit: ob > 0 ? ob : 0,
+        credit: ob < 0 ? -ob : 0,
+        balance: ob,
+        note: "Opening balance",
+        created_at: new Date().toISOString(),
+      });
+    }
+    setPartyLedger(ledger);
   }
 }
 
