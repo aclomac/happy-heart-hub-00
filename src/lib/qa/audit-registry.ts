@@ -53,6 +53,8 @@ export const AUDIT_REGISTRY: AuditEntry[] = [
 
   // 3. Sales
   { id: "sa-add", module: "Sales", label: "+ Add Sale", route: "/app/sales/new", status: "working" },
+  { id: "sa-new-customer", module: "Sales", label: "New Customer (inline)", route: "/app/sales/new", status: "working", note: "Opens QuickAddCustomerDialog; permission unblocked in personal mode." },
+  { id: "sa-save-invoice", module: "Sales", label: "Save Invoice", route: "/app/sales/new", status: "working", note: "Validates customer + items, writes to local sales repo, updates stock/cash/ledger." },
   { id: "sa-list", module: "Sales", label: "Invoice list", route: "/app/sales", status: "working" },
   { id: "sa-view", module: "Sales", label: "View invoice", route: "/app/sales", status: "working" },
   { id: "sa-edit", module: "Sales", label: "Edit invoice", route: "/app/sales", status: "working" },
