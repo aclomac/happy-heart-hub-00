@@ -92,7 +92,22 @@ function Dashboard() {
   const invQ = useQuery({
     queryKey: ["dashboard-inventory", companyId],
     enabled: !!companyId,
-    queryFn: () => loadInventoryDashboard(companyId!),
+    retry: false,
+    queryFn: async () => {
+      try {
+        return await loadInventoryDashboard(companyId!);
+      } catch (err) {
+        if (import.meta.env.DEV) console.warn("[dashboard-inventory] empty fallback:", err);
+        return {
+          items: [],
+          warehouses: [],
+          storeStock: [],
+          adjustments: [],
+          transfers: [],
+          totals: { stockValue: 0, totalItems: 0, lowStock: 0, outOfStock: 0, warehouses: 0 },
+        };
+      }
+    },
   });
 
   const { data, isLoading } = useQuery({
