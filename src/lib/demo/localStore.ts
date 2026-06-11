@@ -12,6 +12,11 @@ import {
   getDemoPartyCount,
   getDemoTopReceivables,
 } from "./parties";
+import {
+  ensureSalesSeed,
+  getDemoTodaySales,
+  getDemoMonthSales,
+} from "./sales";
 
 export const DEMO_SESSION_KEY = "erpovo_demo_session";
 export const DEMO_USER_KEY = "erpovo_demo_user";
