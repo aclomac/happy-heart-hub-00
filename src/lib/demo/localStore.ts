@@ -22,6 +22,9 @@ import {
   getDemoBillPayables,
 } from "./purchases";
 import { ensureExpensesSeed, getDemoMonthExpenses } from "./expenses";
+import { DEMO_COMPANY_ID, DEMO_USER_EMAIL, DEMO_USER_ID } from "./constants";
+
+export { DEMO_COMPANY_ID, DEMO_USER_EMAIL, DEMO_USER_ID } from "./constants";
 
 export const DEMO_SESSION_KEY = "erpovo_demo_session";
 export const DEMO_USER_KEY = "erpovo_demo_user";
@@ -34,10 +37,6 @@ const DEMO_COOKIE_MAX_AGE_SECONDS = 31_536_000;
 
 // Legacy marker written by earlier demo bypass. Still honored for compatibility.
 const LEGACY_SESSION_KEY = "erpovo:demoSession";
-
-export const DEMO_USER_ID = "demo-user-001";
-export const DEMO_USER_EMAIL = "demo@erpovo.com";
-export const DEMO_COMPANY_ID = "00000000-0000-0000-0000-0000000000c1";
 
 export type DemoCompany = {
   id: string;

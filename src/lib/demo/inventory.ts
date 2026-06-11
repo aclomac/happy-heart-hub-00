@@ -8,7 +8,7 @@
  * Tables are seeded once for the Chair King demo company, then mutated by
  * the demo Supabase shim in `demoDb.ts`.
  */
-import { DEMO_COMPANY_ID } from "./localStore";
+import { DEMO_COMPANY_ID } from "./constants";
 
 export const DEMO_ITEMS_KEY = "erpovo_demo_items";
 export const DEMO_ITEM_CATEGORIES_KEY = "erpovo_demo_item_categories";
