@@ -84,21 +84,26 @@ export async function downloadInvoicePDF(data: InvoiceData) {
 }
 
 export async function printInvoicePDF(data: InvoiceData) {
+  const { isDesktop, openOrDownloadBlob } = await import("./open-blob");
   const doc = await generateInvoicePDF(data);
+  const filename = `${data.number || "invoice"}.pdf`;
+  if (isDesktop()) {
+    // Desktop: save the PDF directly — opening a blob URL triggers Windows'
+    // "Get an app to open this 'blob' link" prompt.
+    doc.save(filename);
+    return;
+  }
   doc.autoPrint();
   const blob = doc.output("blob");
-  const url = URL.createObjectURL(blob);
-  const w = window.open(url, "_blank");
-  if (!w) {
-    // Fallback: download
-    doc.save(`${data.number || "invoice"}.pdf`);
-  }
+  openOrDownloadBlob(blob, filename);
 }
 
 export async function shareInvoicePDF(data: InvoiceData) {
+  const { isDesktop, downloadBlob, openOrDownloadBlob } = await import("./open-blob");
   const doc = await generateInvoicePDF(data);
   const blob = doc.output("blob");
-  const file = new File([blob], `${data.number || "invoice"}.pdf`, { type: "application/pdf" });
+  const filename = `${data.number || "invoice"}.pdf`;
+  const file = new File([blob], filename, { type: "application/pdf" });
   const nav = navigator as Navigator & {
     canShare?: (d: { files: File[] }) => boolean;
     share?: (d: { files: File[]; title?: string; text?: string }) => Promise<void>;
@@ -112,12 +117,14 @@ export async function shareInvoicePDF(data: InvoiceData) {
       });
       return;
     } catch {
-      // user cancelled or browser refused; fall through to WhatsApp
+      // user cancelled or browser refused; fall through
     }
   }
-  // WhatsApp fallback (text only — file share not supported on web)
-  const url = URL.createObjectURL(blob);
-  window.open(url, "_blank");
+  if (isDesktop()) {
+    downloadBlob(blob, filename);
+    return;
+  }
+  openOrDownloadBlob(blob, filename);
   const msg = `Invoice ${data.number} from ${data.company.name} — Total ${data.currencySymbol || ""} ${fmt(data.total)}`;
   if (data.party?.phone) {
     const phone = data.party.phone.replace(/\D/g, "");
