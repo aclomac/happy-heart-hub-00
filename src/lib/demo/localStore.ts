@@ -5,6 +5,13 @@
  * Supabase. Keys are namespaced `erpovo_demo_*` and every read/write is
  * wrapped in try/catch so a corrupted entry never crashes the app.
  */
+import {
+  ensurePartiesSeed,
+  getDemoReceivables,
+  getDemoPayables,
+  getDemoPartyCount,
+  getDemoTopReceivables,
+} from "./parties";
 
 export const DEMO_SESSION_KEY = "erpovo_demo_session";
 export const DEMO_USER_KEY = "erpovo_demo_user";
