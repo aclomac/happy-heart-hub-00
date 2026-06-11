@@ -161,7 +161,32 @@ export function POS() {
   const changeQty = (id: string, delta: number) => {
     setCart((c) =>
       c
-        .map((l) => (l.item.id === id ? { ...l, qty: Math.max(0, l.qty + delta) } : l))
+        .map((l) => {
+          if (l.item.id !== id) return l;
+          const next = l.qty + delta;
+          if (delta > 0 && !l.item.is_service && next > Number(l.item.stock)) {
+            toast.warning(`Only ${l.item.stock} ${l.item.unit} in stock`);
+            return l;
+          }
+          return { ...l, qty: Math.max(0, next) };
+        })
+        .filter((l) => l.qty > 0),
+    );
+  };
+  const setQty = (id: string, raw: string) => {
+    const n = Math.floor(Number(raw));
+    if (!Number.isFinite(n) || n < 0) return;
+    setCart((c) =>
+      c
+        .map((l) => {
+          if (l.item.id !== id) return l;
+          let q = n;
+          if (!l.item.is_service && q > Number(l.item.stock)) {
+            toast.warning(`Only ${l.item.stock} ${l.item.unit} in stock`);
+            q = Number(l.item.stock);
+          }
+          return { ...l, qty: q };
+        })
         .filter((l) => l.qty > 0),
     );
   };
