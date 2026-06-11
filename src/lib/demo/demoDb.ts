@@ -39,14 +39,14 @@ type Writer = (rows: Row[]) => void;
 function table(name: string): { read: Reader; write: Writer } {
   ensureInventorySeed();
   switch (name) {
-    case "items": return { read: getItems, write: setItems };
-    case "item_categories": return { read: getCategories, write: setCategories };
-    case "warehouses": return { read: getWarehouses, write: setWarehouses };
-    case "item_store_stock": return { read: getStoreStock, write: setStoreStock };
-    case "stock_movements": return { read: getMovements, write: setMovements };
-    case "stock_adjustments": return { read: getAdjustments, write: setAdjustments };
-    case "stock_transfers": return { read: getTransfers, write: setTransfers };
-    case "stock_transfer_items": return { read: getTransferItems, write: setTransferItems };
+    case "items": return { read: getItems as Reader, write: setItems as unknown as Writer };
+    case "item_categories": return { read: getCategories as Reader, write: setCategories as unknown as Writer };
+    case "warehouses": return { read: getWarehouses as Reader, write: setWarehouses as unknown as Writer };
+    case "item_store_stock": return { read: getStoreStock as Reader, write: setStoreStock as unknown as Writer };
+    case "stock_movements": return { read: getMovements as Reader, write: setMovements as unknown as Writer };
+    case "stock_adjustments": return { read: getAdjustments as Reader, write: setAdjustments as unknown as Writer };
+    case "stock_transfers": return { read: getTransfers as Reader, write: setTransfers as unknown as Writer };
+    case "stock_transfer_items": return { read: getTransferItems as Reader, write: setTransferItems as unknown as Writer };
     case "companies": return {
       read: () => getDemoCompanies() as unknown as Row[],
       write: (rows) => setDemoCompanies(rows as any),
