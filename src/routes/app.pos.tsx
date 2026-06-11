@@ -113,9 +113,19 @@ export function POS() {
   }, [items, search, category]);
 
   const addToCart = (item: Item) => {
+    if (!item.is_service && Number(item.stock) <= 0) {
+      toast.error(`${item.name} is out of stock`);
+      return;
+    }
     setCart((c) => {
       const ex = c.find((l) => l.item.id === item.id);
-      if (ex) return c.map((l) => (l.item.id === item.id ? { ...l, qty: l.qty + 1 } : l));
+      if (ex) {
+        if (!item.is_service && ex.qty + 1 > Number(item.stock)) {
+          toast.warning(`Only ${item.stock} ${item.unit} in stock`);
+          return c;
+        }
+        return c.map((l) => (l.item.id === item.id ? { ...l, qty: l.qty + 1 } : l));
+      }
       return [...c, { item, qty: 1 }];
     });
   };
