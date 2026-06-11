@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { toast } from "sonner";
 import {
@@ -13,6 +12,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  ensurePartiesSeed,
+  getParties,
+  setParties,
+  type DemoParty,
+} from "@/lib/demo/parties";
 
 export type Party = {
   id: string;
@@ -36,64 +41,109 @@ export function QuickAddCustomerDialog({
   const { t } = useI18n();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
+  const [opening, setOpening] = useState<string>("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (open) {
+      ensurePartiesSeed();
       setName("");
       setPhone("");
+      setEmail("");
       setAddress("");
+      setOpening("");
     }
   }, [open]);
 
-  const save = async () => {
-    const trimmed = name.trim();
-    if (!trimmed) {
-      toast.error(t("Customer name is required"));
+  const save = () => {
+    const trimmedName = name.trim();
+    const trimmedPhone = phone.trim();
+    if (!trimmedName && !trimmedPhone) {
+      toast.error(t("Customer name or phone is required"));
       return;
     }
     setSaving(true);
     try {
-      // Duplicate guard: same name + phone (when phone provided) in this company
-      const dupQuery = supabase
-        .from("parties")
-        .select("id,name,phone,address,type")
-        .is("deleted_at", null)
-        .eq("company_id", companyId)
-        .in("type", ["customer", "both"])
-        .ilike("name", trimmed);
+      const all = getParties();
 
-      const { data: dup } = phone.trim()
-        ? await dupQuery.eq("phone", phone.trim()).maybeSingle()
-        : await dupQuery.maybeSingle();
+      // Duplicate by phone
+      if (trimmedPhone) {
+        const byPhone = all.find(
+          (p) =>
+            !p.deleted_at &&
+            p.company_id === companyId &&
+            (p.type === "customer" || p.type === "both") &&
+            (p.phone || "") === trimmedPhone,
+        );
+        if (byPhone) {
+          toast.info(t("Customer already exists"));
+          onCreated({
+            id: byPhone.id,
+            name: byPhone.name,
+            phone: byPhone.phone,
+            address: byPhone.address,
+            type: byPhone.type,
+          });
+          onOpenChange(false);
+          return;
+        }
+      }
 
-      if (dup) {
+      // Duplicate by name (case-insensitive)
+      const byName = all.find(
+        (p) =>
+          !p.deleted_at &&
+          p.company_id === companyId &&
+          (p.type === "customer" || p.type === "both") &&
+          p.name.toLowerCase() === trimmedName.toLowerCase(),
+      );
+      if (byName && !trimmedPhone) {
         toast.info(t("Customer already exists"));
-        onCreated(dup as Party);
+        onCreated({
+          id: byName.id,
+          name: byName.name,
+          phone: byName.phone,
+          address: byName.address,
+          type: byName.type,
+        });
         onOpenChange(false);
         return;
       }
 
-      const opening = 0;
-      const { data, error } = await supabase
-        .from("parties")
-        .insert({
-          company_id: companyId,
-          name: trimmed,
-          type: "customer",
-          phone: phone.trim() || null,
-          address: address.trim() || null,
-          opening_balance: opening,
-          balance: opening,
-          loyalty_points: 0,
-        })
-        .select("id,name,phone,address,type")
-        .single();
-
-      if (error) throw error;
+      const opn = Number(opening) || 0;
+      const newParty: DemoParty = {
+        id:
+          typeof crypto !== "undefined" && "randomUUID" in crypto
+            ? crypto.randomUUID()
+            : `demo-pty-${Date.now()}`,
+        company_id: companyId,
+        name: trimmedName || trimmedPhone,
+        type: "customer",
+        phone: trimmedPhone || null,
+        email: email.trim() || null,
+        address: address.trim() || null,
+        shipping_address: null,
+        group_id: null,
+        opening_balance: opn,
+        balance: opn,
+        credit_limit: null,
+        loyalty_points: 0,
+        gst_number: null,
+        is_active: true,
+        deleted_at: null,
+        created_at: new Date().toISOString(),
+      };
+      setParties([newParty, ...all]);
       toast.success(t("Customer added"));
-      onCreated(data as Party);
+      onCreated({
+        id: newParty.id,
+        name: newParty.name,
+        phone: newParty.phone,
+        address: newParty.address,
+        type: newParty.type,
+      });
       onOpenChange(false);
     } catch (e) {
       toast.error((e as Error).message);
@@ -123,8 +173,21 @@ export function QuickAddCustomerDialog({
             <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
           </div>
           <div>
+            <Label className="text-xs">{t("Email")}</Label>
+            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+          </div>
+          <div>
             <Label className="text-xs">{t("Address")}</Label>
             <Textarea rows={2} value={address} onChange={(e) => setAddress(e.target.value)} />
+          </div>
+          <div>
+            <Label className="text-xs">{t("Opening Balance")}</Label>
+            <Input
+              type="number"
+              value={opening}
+              onChange={(e) => setOpening(e.target.value)}
+              placeholder="0"
+            />
           </div>
         </div>
         <DialogFooter>
@@ -134,7 +197,7 @@ export function QuickAddCustomerDialog({
           <Button
             variant="sale"
             size="sm"
-            disabled={!name.trim() || saving}
+            disabled={(!name.trim() && !phone.trim()) || saving}
             onClick={save}
             data-testid="quick-add-customer-save"
           >
