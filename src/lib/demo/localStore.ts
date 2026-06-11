@@ -358,6 +358,7 @@ export function ensureDemoSeed(): void {
   } catch {
     /* ignore */
   }
+  try { ensureOnlineStoreSeed(); } catch { /* ignore */ }
 }
 
 /** Canned demo numbers used by the dashboard widgets when in demo mode. */
