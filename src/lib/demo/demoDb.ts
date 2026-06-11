@@ -29,8 +29,25 @@ import {
   getTransferItems,
   setTransferItems,
   genId,
+  adjustStoreStock,
 } from "./inventory";
 import { getDemoCompanies, setDemoCompanies, DEMO_COMPANY_ID } from "./localStore";
+
+/**
+ * Mirror DB triggers: when a stock_movements row is inserted, update the
+ * matching item_store_stock row and the item's total stock so the rest of
+ * the app sees consistent numbers without a real backend.
+ */
+function applyInsertSideEffects(name: string, rows: Row[]) {
+  if (name !== "stock_movements") return;
+  for (const r of rows) {
+    const qty = Number(r.qty || 0);
+    if (!qty) continue;
+    const delta = r.direction === "out" ? -qty : qty;
+    if (!r.item_id || !r.warehouse_id) continue;
+    adjustStoreStock(r.company_id ?? DEMO_COMPANY_ID, r.item_id, r.warehouse_id, delta);
+  }
+}
 
 type Row = Record<string, any>;
 type Reader = () => Row[];
