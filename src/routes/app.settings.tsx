@@ -4,6 +4,7 @@ import { PlanStatusBadge } from "@/components/erp/PlanStatusBadge";
 import { useCurrentCompanyId } from "@/lib/use-company";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { isDemoMode } from "@/lib/demo/localStore";
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
