@@ -5,7 +5,7 @@
  * debit notes (purchase returns), and supplier payments. Backed by
  * localStorage and mutated through the demo Supabase shim in `demoDb.ts`.
  */
-import { DEMO_COMPANY_ID } from "./localStore";
+import { DEMO_COMPANY_ID } from "./constants";
 
 export const DEMO_PURCHASES_KEY = "erpovo_demo_purchases";
 export const DEMO_PURCHASE_ITEMS_KEY = "erpovo_demo_purchase_items";
