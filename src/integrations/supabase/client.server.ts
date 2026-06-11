@@ -8,7 +8,9 @@ type AdminClient = ReturnType<typeof createClient<Database>>;
 
 function createStubAdminClient(): AdminClient {
   const demoErr = { message: "Demo mode: Supabase admin not configured", code: "DEMO_MODE" };
-  const emptyResult = { data: null, error: demoErr, count: null, status: 200, statusText: "OK" };
+  // IMPORTANT: keep `error: null` on read-style stubs so callers that do
+  // `if (error) throw` don't crash the app in demo mode.
+  const emptyResult = { data: null, error: null, count: null, status: 200, statusText: "OK" };
   const emptyList = { data: [], error: null, count: 0, status: 200, statusText: "OK" };
 
   const queryBuilder: any = new Proxy(
@@ -30,7 +32,7 @@ function createStubAdminClient(): AdminClient {
 
   const stub: any = {
     from: () => queryBuilder,
-    rpc: () => Promise.resolve(emptyResult),
+    rpc: () => Promise.resolve({ data: null, error: null, count: null, status: 200, statusText: "OK" }),
     auth: {
       admin: {
         listUsers: () => Promise.resolve({ data: { users: [] }, error: null }),
