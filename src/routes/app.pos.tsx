@@ -35,7 +35,29 @@ function loadPersistedCart(): PersistedCart | null {
     return null;
   }
 }
-import { nextDocNumber } from "@/lib/doc-number";
+import { getSales } from "@/lib/demo/sales";
+
+/**
+ * Generate next POS invoice number in format POS-YYYY-####.
+ * Scans existing sales (demo localStorage) to keep the sequence unique
+ * per calendar year and stable across refresh.
+ */
+function nextPosInvoiceNo(): string {
+  const year = new Date().getFullYear();
+  const prefix = `POS-${year}-`;
+  let max = 0;
+  try {
+    for (const s of getSales()) {
+      const no = s.invoice_no || "";
+      if (!no.startsWith(prefix)) continue;
+      const n = parseInt(no.slice(prefix.length), 10);
+      if (Number.isFinite(n) && n > max) max = n;
+    }
+  } catch {
+    /* ignore */
+  }
+  return `${prefix}${String(max + 1).padStart(4, "0")}`;
+}
 import { saveSaleInvoice } from "@/lib/sale-invoices";
 import { toast } from "sonner";
 import { printSaleReceiptNow } from "@/components/erp/InvoiceActions";
