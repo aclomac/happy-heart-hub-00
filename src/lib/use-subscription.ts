@@ -169,8 +169,32 @@ export type SubscriptionState = {
 
 export function useSubscription() {
   return useQuery<SubscriptionState>({
-    queryKey: ["subscription"],
+    queryKey: ["subscription", isDemoMode() ? "demo" : "live"],
     queryFn: async () => {
+      // Demo mode: pretend we are on an active Pro plan with no expiry,
+      // and skip every Supabase round-trip so the dashboard can render.
+      if (isDemoMode()) {
+        const expiresAt = new Date(Date.now() + 365 * 86_400_000).toISOString();
+        return {
+          subscription: {
+            id: "demo-sub",
+            owner_id: "00000000-0000-0000-0000-000000000001",
+            plan: "pro",
+            status: "active",
+            started_at: new Date().toISOString(),
+            expires_at: expiresAt,
+            max_companies: 999999,
+            max_devices: 10,
+          } as Subscription,
+          plan: "pro",
+          status: "active",
+          expiresAt,
+          daysRemaining: 365,
+          isExpired: false,
+          features: PLAN_FEATURES.pro,
+          latestPaymentRequest: null,
+        };
+      }
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) {
         return {
