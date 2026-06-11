@@ -79,8 +79,11 @@ export function POS() {
   const [paymentMethod, setPaymentMethod] = useState(persisted?.paymentMethod ?? "cash");
   const [discount, setDiscount] = useState(persisted?.discount ?? 0);
   const [received, setReceived] = useState(persisted?.received ?? 0);
+  const [vatPct, setVatPct] = useState(persisted?.vatPct ?? 0);
+  const [notes, setNotes] = useState(persisted?.notes ?? "");
   const [saving, setSaving] = useState(false);
   const [lastSaleId, setLastSaleId] = useState<string | null>(null);
+  const [lastInvoiceNo, setLastInvoiceNo] = useState<string | null>(null);
   const [showQuickAdd, setShowQuickAdd] = useState(false);
 
   useEffect(() => {
@@ -88,12 +91,13 @@ export function POS() {
     try {
       localStorage.setItem(
         POS_CART_KEY,
-        JSON.stringify({ cart, partyId, paymentMethod, discount, received }),
+        JSON.stringify({ cart, partyId, paymentMethod, discount, received, vatPct, notes }),
       );
     } catch {
       /* ignore */
     }
-  }, [cart, partyId, paymentMethod, discount, received]);
+  }, [cart, partyId, paymentMethod, discount, received, vatPct, notes]);
+
 
   const { data: items = [] } = useQuery({
     queryKey: ["pos-items", companyId],
