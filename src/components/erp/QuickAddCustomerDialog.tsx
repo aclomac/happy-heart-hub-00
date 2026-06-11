@@ -82,7 +82,7 @@ export function QuickAddCustomerDialog({
             (p.phone || "") === trimmedPhone,
         );
         if (byPhone) {
-          toast.info(t("Customer already exists"));
+          toast.info(t("Customer already exists. Existing customer selected."));
           onCreated({
             id: byPhone.id,
             name: byPhone.name,
