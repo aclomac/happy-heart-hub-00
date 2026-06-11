@@ -498,9 +498,9 @@ export function ERPSidebar() {
         >
           <Building2 className="w-4 h-4 opacity-70" />
           <div className="min-w-0">
-            <div className="truncate font-medium">{currentCompany?.name || t("Loading…")}</div>
+            <div className="truncate font-medium">{currentCompany?.name || (isDemoMode() ? "Chair King" : t("Loading…"))}</div>
             <div className="opacity-60 text-[10px]">
-              {sub?.plan ? t(sub.plan) : "Basic"} · {t("Synced")}
+              {isDemoMode() ? "Pro Demo · Local data" : `${sub?.plan ? t(sub.plan) : "Basic"} · ${t("Synced")}`}
             </div>
           </div>
         </div>
