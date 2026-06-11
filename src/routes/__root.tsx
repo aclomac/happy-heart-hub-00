@@ -79,14 +79,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "ERPOVO" },
+      { title: "Chair King Accounts" },
       {
         name: "description",
         content:
           "ERPOVO is a comprehensive business management ERP for retail, wholesale, manufacturing, and service businesses.",
       },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "ERPOVO" },
+      { property: "og:title", content: "Chair King Accounts" },
       {
         property: "og:description",
         content:
@@ -95,7 +95,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
-      { name: "twitter:title", content: "ERPOVO" },
+      { name: "twitter:title", content: "Chair King Accounts" },
       {
         name: "twitter:description",
         content:
@@ -111,6 +111,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content:
           "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/e823af4b-c945-4d87-bce7-56cd69d0020c/id-preview-8543a3a4--ef93fa9a-952a-47ce-99d4-129057413352.lovable.app-1780472431113.png",
       },
+      { name: "description", content: "Friendly Chat is a local/demo mode business management application." },
+      { property: "og:description", content: "Friendly Chat is a local/demo mode business management application." },
+      { name: "twitter:description", content: "Friendly Chat is a local/demo mode business management application." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/d37f1aed-18f5-4356-9982-039f7a6cb12e/id-preview-afafa849--d59691b2-917a-41f2-8ac4-d39a85a5be1f.lovable.app-1781152991520.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/d37f1aed-18f5-4356-9982-039f7a6cb12e/id-preview-afafa849--d59691b2-917a-41f2-8ac4-d39a85a5be1f.lovable.app-1781152991520.png" },
     ],
     links: [
       {
