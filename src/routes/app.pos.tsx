@@ -268,6 +268,7 @@ export function POS() {
   const [lastSaleId, setLastSaleId] = useState<string | null>(null);
   const [lastInvoiceNo, setLastInvoiceNo] = useState<string | null>(null);
   const [showQuickAdd, setShowQuickAdd] = useState(false);
+  const [quickAddPrefill, setQuickAddPrefill] = useState<{ name?: string; phone?: string }>({});
 
   useEffect(() => {
     if (typeof window === "undefined") return;
