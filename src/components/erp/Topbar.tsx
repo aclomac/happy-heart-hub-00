@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useI18n } from "@/lib/i18n";
-import { PlanBadge } from "@/components/erp/PlanBadge";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -153,7 +153,7 @@ export function ERPTopbar() {
             <ChevronDownIcon className="w-4 h-4 text-muted-foreground" />
           </Button>
         </div>
-        <PlanBadge />
+        
 
         <Button variant="ghost" size="sm" className="text-muted-foreground" asChild>
           <Link to="/app/support">

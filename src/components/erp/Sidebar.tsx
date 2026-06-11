@@ -1,4 +1,4 @@
-import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentCompanyId } from "@/lib/use-company";
@@ -17,7 +17,7 @@ import {
   RefreshCw,
   Wrench,
   Settings,
-  Crown,
+  
   Building2,
   Zap,
   ShieldCheck,
@@ -41,8 +41,7 @@ import { companies } from "@/lib/mock-data";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { checkIsAdmin } from "@/lib/billing.functions";
-import { useSubscription, planAllowsModule } from "@/lib/use-subscription";
-import { toast } from "sonner";
+// Subscription/plan gating removed for personal use.
 
 type LinkNode = {
   kind: "link";
@@ -250,7 +249,7 @@ const nav: NavNode[] = [
     ],
   },
 
-  { kind: "link", to: "/app/subscription", key: "subscription", icon: Crown, module: null },
+  
   { kind: "link", to: "/app/support", key: "support", icon: LifeBuoy, module: null },
   { kind: "link", to: "/app/settings", key: "settings", icon: Settings, module: null },
 ];
@@ -272,7 +271,7 @@ function pathOf(to: string) {
 
 export function ERPSidebar() {
   const { t } = useI18n();
-  const navigate = useNavigate();
+  
   const companyId = useCurrentCompanyId();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const currentHash = useRouterState({ select: (s) => s.location.hash || "" });
@@ -305,13 +304,8 @@ export function ERPSidebar() {
     queryFn: () => isAdminFn(),
     staleTime: 5 * 60_000,
   });
-  const subQ = useSubscription();
-  const sub = subQ.data;
-  const expired = !!sub?.isExpired;
-  const allowExpired = (to: string) =>
-    to.startsWith("/app/subscription") ||
-    to.startsWith("/app/settings") ||
-    to.startsWith("/app/admin");
+  // Personal mode: subscription/plan gating disabled — everything unlocked.
+  // Personal mode: subscription/plan gating disabled — everything unlocked.
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     if (typeof window === "undefined") return {};
@@ -367,25 +361,12 @@ export function ERPSidebar() {
         ? pathname === linkPath && normHash === hash
         : pathMatch && (opts.nested ? normHash === "" : true);
     const Icon = n.icon;
-    const planLocked = !!sub && !!n.module && !planAllowsModule(sub.plan, n.module);
-    const expiredLocked = expired && !allowExpired(linkPath);
-    const locked = planLocked || expiredLocked;
+    const locked = false;
     return (
       <Link
         key={n.to + n.key}
         to={linkPath as never}
         hash={hash as never}
-        onClick={(e) => {
-          if (planLocked) {
-            e.preventDefault();
-            toast.error(t("Upgrade Required — this feature is not in your current plan."));
-            navigate({ to: "/app/upgrade/$plan", params: { plan: "gold" } });
-          } else if (expiredLocked) {
-            e.preventDefault();
-            toast.error(t("Subscription expired — renew to continue."));
-            navigate({ to: "/app/subscription" });
-          }
-        }}
         className="flex items-center gap-3 py-2 transition-colors"
         style={{
           background: active ? "var(--color-sidebar-active)" : "transparent",
@@ -411,7 +392,7 @@ export function ERPSidebar() {
       return pathname === p || pathname.startsWith(p + "/");
     });
     const open = !!openGroups[g.key];
-    const planLocked = !!sub && !!g.module && !planAllowsModule(sub.plan, g.module);
+    const planLocked = false;
     return (
       <div key={g.key}>
         <button
@@ -503,7 +484,7 @@ export function ERPSidebar() {
           <div className="min-w-0">
             <div className="truncate font-medium">{currentCompany?.name || (isDemoMode() ? "Chair King" : t("Loading…"))}</div>
             <div className="opacity-60 text-[10px]">
-              {isDemoMode() ? "Pro Demo · Local data" : `${sub?.plan ? t(sub.plan) : "Basic"} · ${t("Synced")}`}
+              {isDemoMode() ? "Personal Mode · All features unlocked" : t("Personal Mode")}
             </div>
           </div>
         </div>
