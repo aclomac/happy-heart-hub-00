@@ -305,9 +305,7 @@ export function ERPSidebar() {
     staleTime: 5 * 60_000,
   });
   // Personal mode: subscription/plan gating disabled — everything unlocked.
-  const sub = null as null | { plan: "pro"; isExpired: false };
-  const expired = false;
-  const allowExpired = (_to: string) => true;
+  // Personal mode: subscription/plan gating disabled — everything unlocked.
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     if (typeof window === "undefined") return {};
