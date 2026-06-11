@@ -109,18 +109,45 @@ export function getDemoSession(): DemoSession | null {
 }
 
 export function startDemoSession(): DemoSession {
+  const now = new Date();
+  const user: DemoUser = {
+    id: DEMO_USER_ID,
+    email: DEMO_USER_EMAIL,
+    role: "owner",
+    name: "Demo User",
+  };
   const session: DemoSession = {
+    isDemo: true,
+    access_token: "demo-token",
+    user,
     email: DEMO_USER_EMAIL,
     userId: DEMO_USER_ID,
-    startedAt: Date.now(),
+    startedAt: now.getTime(),
+    created_at: now.toISOString(),
+    expires_at: "2099-12-31T23:59:59.000Z",
   };
   safeWrite(DEMO_SESSION_KEY, session);
+  safeWrite(DEMO_USER_KEY, user);
   ensureDemoSeed();
   return session;
 }
 
+export function getDemoUser(): DemoUser | null {
+  return safeRead<DemoUser>(DEMO_USER_KEY);
+}
+
+/** Convenience guard for route gates and AuthProvider checks. */
+export function isDemoAuthenticated(): boolean {
+  if (!isDemoMode()) return false;
+  const s = getDemoSession();
+  if (!s) return false;
+  if (!s.expires_at) return true;
+  return new Date(s.expires_at).getTime() > Date.now();
+}
+
 export function endDemoSession(): void {
   safeRemove(DEMO_SESSION_KEY);
+  safeRemove(DEMO_USER_KEY);
   safeRemove(LEGACY_SESSION_KEY);
 }
 
