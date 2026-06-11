@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageHeader } from "@/components/erp/PageHeader";
 import { NoCompanySelected } from "@/components/erp/NoCompanySelected";
 import { StatusBadge } from "@/components/erp/StatusBadge";
-import { DashboardSubscriptionCard } from "@/components/erp/DashboardSubscriptionCard";
+
 import { LowStockAlerts } from "@/components/erp/dashboard/LowStockAlerts";
 import { loadInventoryDashboard } from "@/lib/inventory-stats";
 import { Warehouse, ArrowRightLeft } from "lucide-react";
@@ -42,38 +42,8 @@ import { useI18n } from "@/lib/i18n";
 import { isDemoMode, getDemoDashboardData } from "@/lib/demo/localStore";
 
 
-import { useSubscription, planAllowsModule } from "@/lib/use-subscription";
-import { Lock, Crown } from "lucide-react";
-
 export const Route = createFileRoute("/app/")({ component: Dashboard });
 
-function PayrollDashboardLock() {
-  const { data: sub } = useSubscription();
-  if (!sub || planAllowsModule(sub.plan, "payroll") || sub.isExpired) return null;
-  return (
-    <div className="mb-4 rounded-xl border-2 border-dashed border-amber-300 bg-amber-50/60 p-4 flex flex-wrap items-center justify-between gap-3">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow">
-          <Lock className="w-5 h-5 text-white" />
-        </div>
-        <div>
-          <div className="font-semibold text-amber-900">
-            Payroll, Employees & Attendance are locked
-          </div>
-          <div className="text-xs text-amber-800">
-            Upgrade to Gold to unlock HR features and multi-device access.
-          </div>
-        </div>
-      </div>
-      <Link to="/app/upgrade/$plan" params={{ plan: "gold" }}>
-        <Button size="sm" className="bg-gradient-to-r from-amber-500 to-amber-600 hover:opacity-90">
-          <Crown className="w-4 h-4" />
-          Upgrade Plan
-        </Button>
-      </Link>
-    </div>
-  );
-}
 
 function toneColor(t?: string) {
   return t === "success"
@@ -345,9 +315,8 @@ function Dashboard() {
         }
       />
 
-      <DashboardSubscriptionCard />
 
-      <PayrollDashboardLock />
+
 
       {isLoading || !data ? (
         <>
