@@ -249,13 +249,14 @@ class Builder<T extends Row = Row> implements PromiseLike<{ data: any; error: an
         const filtered = applyFilters(all, this.filters);
         const ordered = applyOrders(filtered, this.orders);
         const limited = this.limitN != null ? ordered.slice(0, this.limitN) : ordered;
+        const joined = attachJoins(this.cols, limited);
         const count = this.wantCount ? filtered.length : undefined;
-        if (this.singleMode === "maybe") return { data: limited[0] ?? null, error: null, count };
+        if (this.singleMode === "maybe") return { data: joined[0] ?? null, error: null, count };
         if (this.singleMode === "single") {
-          if (!limited[0]) return { data: null, error: { message: "No rows found" }, count };
-          return { data: limited[0], error: null, count };
+          if (!joined[0]) return { data: null, error: { message: "No rows found" }, count };
+          return { data: joined[0], error: null, count };
         }
-        return { data: this.headOnly ? null : limited, error: null, count };
+        return { data: this.headOnly ? null : joined, error: null, count };
       }
 
       if (this.mode === "insert") {
