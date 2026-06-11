@@ -135,6 +135,8 @@ function table(name: string): { read: Reader; write: Writer } {
   ensureSalesSeed();
   ensurePurchasesSeed();
   ensureExpensesSeed();
+  ensureCashSeed();
+
   const empty = { read: () => [], write: () => {} };
   switch (name) {
     case "items": return { read: getItems as Reader, write: setItems as unknown as Writer };
