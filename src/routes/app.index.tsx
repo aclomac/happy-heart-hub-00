@@ -39,6 +39,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCurrentCompanyId } from "@/lib/use-company";
 import { useQuery } from "@tanstack/react-query";
 import { useI18n } from "@/lib/i18n";
+import { isDemoMode, getDemoDashboardData } from "@/lib/demo/localStore";
 
 
 import { useSubscription, planAllowsModule } from "@/lib/use-subscription";
@@ -90,10 +91,27 @@ function Dashboard() {
 
 
   const invQ = useQuery({
-    queryKey: ["dashboard-inventory", companyId],
+    queryKey: ["dashboard-inventory", companyId, isDemoMode() ? "demo" : "live"],
     enabled: !!companyId,
     retry: false,
     queryFn: async () => {
+      if (isDemoMode()) {
+        const d = getDemoDashboardData();
+        return {
+          items: [],
+          warehouses: [],
+          storeStock: [],
+          adjustments: [],
+          transfers: Array.from({ length: d.inventory.transfers }, (_, i) => ({ id: String(i) })),
+          totals: {
+            stockValue: d.inventory.stockValue,
+            totalItems: d.inventory.totalItems,
+            lowStock: d.inventory.lowStock,
+            outOfStock: d.inventory.outOfStock,
+            warehouses: d.inventory.warehouses,
+          },
+        };
+      }
       try {
         return await loadInventoryDashboard(companyId!);
       } catch (err) {
@@ -111,7 +129,7 @@ function Dashboard() {
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ["dashboard", companyId],
+    queryKey: ["dashboard", companyId, isDemoMode() ? "demo" : "live"],
     enabled: !!companyId,
     retry: false,
     queryFn: async () => {
@@ -156,6 +174,45 @@ function Dashboard() {
           parties: { name: string } | null;
         }[],
       };
+
+      if (isDemoMode()) {
+        const d = getDemoDashboardData();
+        const months = { ...emptyMonths };
+        const keys = Object.keys(months);
+        // Plot a simple ramp into the trailing months for visual richness.
+        keys.forEach((k, idx) => {
+          months[k].sale = Math.round((d.monthSales / keys.length) * (0.4 + idx * 0.12));
+          months[k].purchase = Math.round((d.monthPurchases / keys.length) * (0.4 + idx * 0.1));
+          months[k].otherIncome = Math.round((d.monthOtherIncome / keys.length) * (0.5 + idx * 0.08));
+        });
+        return {
+          ...emptyResult,
+          todaySales: d.todaySales,
+          monthSales: d.monthSales,
+          monthPurchases: d.monthPurchases,
+          receivables: d.receivables,
+          payables: d.payables,
+          monthExpenses: d.monthExpenses,
+          monthOtherIncome: d.monthOtherIncome,
+          itemCount: d.itemCount,
+          partyCount: d.partyCount,
+          lowStock: [
+            { id: "demo-1", name: "Office Chair", stock: 3, low_stock_alert: 5, is_service: false },
+            { id: "demo-2", name: "Visitor Chair", stock: 8, low_stock_alert: 10, is_service: false },
+          ],
+          topReceivables: [
+            { id: "p1", name: "Dhaka Office Solutions", balance: 32000 },
+            { id: "p2", name: "Chittagong Corporate Ltd", balance: 15000 },
+            { id: "p3", name: "Star Furnishing Co", balance: 9000 },
+            { id: "p4", name: "Karim Traders", balance: 8500 },
+            { id: "p5", name: "Rashid Enterprises", balance: 4200 },
+            { id: "p6", name: "Ahmed Hardware", balance: 1500 },
+          ],
+          chart: Object.values(months),
+          recent: [],
+        };
+      }
+
 
       try {
         const [salesRes, purchasesRes, itemsRes, partiesRes, expRes, recentRes, oiRes] = await Promise.all([

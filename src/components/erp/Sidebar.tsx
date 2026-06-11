@@ -2,6 +2,7 @@ import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentCompanyId } from "@/lib/use-company";
+import { isDemoMode, getDemoCompany } from "@/lib/demo/localStore";
 
 import {
   LayoutDashboard,
@@ -274,16 +275,24 @@ export function ERPSidebar() {
   const currentHash = useRouterState({ select: (s) => s.location.hash || "" });
 
   const { data: currentCompany } = useQuery({
-    queryKey: ["current-company", companyId],
+    queryKey: ["current-company", companyId, isDemoMode() ? "demo" : "live"],
     enabled: !!companyId,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("companies")
-        .select("name")
-        .eq("id", companyId!)
-        .maybeSingle();
-      if (error) throw error;
-      return data;
+      if (isDemoMode()) {
+        const c = getDemoCompany(companyId);
+        return c ? { name: c.name } : null;
+      }
+      try {
+        const { data, error } = await supabase
+          .from("companies")
+          .select("name")
+          .eq("id", companyId!)
+          .maybeSingle();
+        if (error) throw error;
+        return data;
+      } catch {
+        return null;
+      }
     },
   });
 
@@ -489,9 +498,9 @@ export function ERPSidebar() {
         >
           <Building2 className="w-4 h-4 opacity-70" />
           <div className="min-w-0">
-            <div className="truncate font-medium">{currentCompany?.name || t("Loading…")}</div>
+            <div className="truncate font-medium">{currentCompany?.name || (isDemoMode() ? "Chair King" : t("Loading…"))}</div>
             <div className="opacity-60 text-[10px]">
-              {sub?.plan ? t(sub.plan) : "Basic"} · {t("Synced")}
+              {isDemoMode() ? "Pro Demo · Local data" : `${sub?.plan ? t(sub.plan) : "Basic"} · ${t("Synced")}`}
             </div>
           </div>
         </div>

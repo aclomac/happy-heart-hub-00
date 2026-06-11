@@ -325,6 +325,63 @@ export function ensureDemoSeed(): void {
       status: "active",
     });
   }
+  // Persist current-company selection so the sidebar/topbar resolve Chair
+  // King synchronously on refresh, no orchestrator round-trip needed.
+  try {
+    const list = safeRead<DemoCompany[]>(DEMO_COMPANIES_KEY) ?? [];
+    const pick = list.find((c) => c.id === DEMO_COMPANY_ID) ?? list[0];
+    if (pick) {
+      safeWrite(DEMO_CURRENT_COMPANY_KEY, pick.id);
+      if (!localStorage.getItem("erpovo:companyId")) {
+        localStorage.setItem("erpovo:companyId", pick.id);
+      }
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Canned demo numbers used by the dashboard widgets when in demo mode. */
+export type DemoDashboardData = {
+  todaySales: number;
+  monthSales: number;
+  monthPurchases: number;
+  receivables: number;
+  payables: number;
+  monthExpenses: number;
+  monthOtherIncome: number;
+  itemCount: number;
+  partyCount: number;
+  inventory: {
+    stockValue: number;
+    totalItems: number;
+    lowStock: number;
+    outOfStock: number;
+    warehouses: number;
+    transfers: number;
+  };
+};
+
+export function getDemoDashboardData(): DemoDashboardData {
+  return {
+    todaySales: 18500,
+    monthSales: 425000,
+    monthPurchases: 280000,
+    receivables: 72200,
+    payables: 65000,
+    monthExpenses: 42500,
+    monthOtherIncome: 8500,
+    itemCount: 12,
+    partyCount: 10,
+    inventory: {
+      stockValue: 685000,
+      totalItems: 12,
+      lowStock: 2,
+      outOfStock: 1,
+      warehouses: 2,
+      transfers: 3,
+    },
+  };
 }
 
 /** Clears every demo-related localStorage key. Used by logout. */
@@ -338,6 +395,7 @@ export function clearDemoStorage(): void {
       DEMO_CURRENT_COMPANY_KEY,
       DEMO_SETTINGS_KEY,
       LEGACY_SESSION_KEY,
+      "erpovo:companyId",
     ].forEach((k) => localStorage.removeItem(k));
     clearDemoAuthCookies();
   } catch {
