@@ -124,9 +124,9 @@ export const AUDIT_REGISTRY: AuditEntry[] = [
   { id: "sub-cash-cheques", module: M.cash, label: "Cheques", kind: "submenu", route: "/app/cash", status: W },
   { id: "sub-cash-loans", module: M.cash, label: "Loan Accounts", kind: "submenu", route: "/app/cash", status: W },
   { id: "sub-cash-transfers", module: M.cash, label: "Money Transfer", kind: "submenu", route: "/app/cash", status: W },
-  { id: "sub-cash-recon", module: M.cash, label: "Reconciliation", kind: "submenu", route: "/app/cash", status: P, note: "Reconciliation tab opens; auto-match is manual only.", fix: "Add bulk match action." },
-  { id: "sub-cash-mobile", module: M.cash, label: "Mobile Banking", kind: "submenu", route: "/app/cash", status: P, note: "Lists balances; live integrations are not wired." },
-  { id: "sub-cash-statement", module: M.cash, label: "Bank Statement import", kind: "submenu", route: "/app/cash", status: S, fix: "Add CSV statement import." },
+  { id: "sub-cash-recon", module: M.cash, label: "Reconciliation", kind: "submenu", route: "/app/cash", status: W, note: "Cash reconciliation: opening/system/physical with adjustment posting, attachments, PDF/print." },
+  { id: "sub-cash-mobile", module: M.cash, label: "Mobile Banking", kind: "submenu", route: "/app/cash", status: W, note: "Manual bKash/Nagad/Rocket accounts and transactions; live API integration intentionally disabled." },
+  { id: "sub-cash-statement", module: M.cash, label: "Bank Statement import", kind: "submenu", route: "/app/cash", status: W, note: "CSV import with column mapping + preview; rows saved locally." },
 
   // ============== REPORTS ==============
   { id: "nav-reports", module: M.reports, label: "Reports hub (P&L, BS, TB, Day Book)", kind: "submenu", route: "/app/reports", status: W },
