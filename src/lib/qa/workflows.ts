@@ -940,66 +940,45 @@ export const ecommerceWorkflow = ecoOrderLifecycleWorkflow;
 
 // ---------- Auth / Signup ----------
 export const signupWorkflow = () =>
-  run("wf-signup", "Signup + OTP + Login workflow", async () => {
+  run("wf-signup", "Signup + Login workflow", async () => {
     const steps: WorkflowStep[] = [];
     const {
-      generateOtp,
-      verifyOtp,
       addLocalUser,
       findUserByEmailOrMobile,
       deleteLocalUser,
-      isValidBdMobile,
+      isValidEmail,
       validatePassword,
-      clearOtp,
     } = await import("@/lib/demo/localUsers");
 
-    const mobile = "01711000999";
     const email = `qa+${Date.now()}@erpovo.local`;
 
-    if (!isValidBdMobile(mobile)) return [fail("BD mobile validator", "01711000999 rejected")];
-    if (!validatePassword("password123")) return [fail("Password validator", "8-char password rejected")];
-    steps.push(pass("Validators", "BD mobile + password length OK"));
-
-    const code = generateOtp(mobile);
-    if (!/^\d{6}$/.test(code)) {
-      steps.push(fail("OTP generation", `Got '${code}'`));
-      return steps;
-    }
-    steps.push(pass("OTP generation", `6-digit code generated (${code.length} digits)`));
-
-    if (!verifyOtp(mobile, code)) {
-      steps.push(fail("OTP verification", "Generated OTP did not verify"));
-      return steps;
-    }
-    if (verifyOtp(mobile, "000000")) {
-      steps.push(fail("OTP rejects wrong code", "000000 accepted"));
-      return steps;
-    }
-    steps.push(pass("OTP verification", "Correct accepted, wrong rejected"));
+    if (!isValidEmail(email)) return [fail("Email validator", `${email} rejected`)];
+    if (!validatePassword("password123"))
+      return [fail("Password validator", "8-char password rejected")];
+    if (validatePassword("short"))
+      return [fail("Password validator", "Short password accepted")];
+    steps.push(pass("Validators", "Email + password length OK"));
 
     const user = addLocalUser({
       fullName: "[QA] Signup User",
       email,
-      mobile,
+      mobile: "",
       password: "password123",
-      mobileVerified: true,
+      mobileVerified: false,
     });
     steps.push(pass("Persist local user", `id=${user.id}`));
 
     const byEmail = findUserByEmailOrMobile(email);
-    const byMobile = findUserByEmailOrMobile(mobile);
-    if (!byEmail || !byMobile || byEmail.id !== user.id) {
-      steps.push(fail("Lookup by email/mobile", "User not retrievable"));
+    if (!byEmail || byEmail.id !== user.id) {
+      steps.push(fail("Lookup by email", "User not retrievable"));
     } else if (byEmail.password !== "password123") {
       steps.push(fail("Login credential check", "Password mismatch"));
     } else {
-      steps.push(pass("Login by email + mobile", "Credentials match for both"));
+      steps.push(pass("Login by email", "Credentials match"));
     }
 
-    // cleanup
     deleteLocalUser(user.id);
-    clearOtp();
-    steps.push(pass("Cleanup", "[QA] user and OTP removed"));
+    steps.push(pass("Cleanup", "[QA] user removed"));
 
     return steps;
   });
