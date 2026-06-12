@@ -168,7 +168,7 @@ export const AUDIT_REGISTRY: AuditEntry[] = [
   { id: "sub-set-pbs", module: M.settings, label: "Purchase Bill Settings", kind: "submenu", route: "/app/purchase-bill-settings", status: W },
   { id: "sub-set-access", module: M.settings, label: "Access Matrix / Roles", kind: "submenu", route: "/app/admin/access-matrix", status: W },
   { id: "sub-set-pay", module: M.settings, label: "Payment Methods", kind: "submenu", route: "/app/admin/payment-settings", status: W },
-  { id: "sub-set-msg", module: M.settings, label: "Message Templates", kind: "submenu", route: "/app/settings", status: P, note: "Templates editable from Settings; per-channel send is local-only." },
+  { id: "sub-set-msg", module: M.settings, label: "Message Templates", kind: "submenu", route: "/app/settings", status: W, note: "Templates editable per channel with live preview and reset; live SMS/Email send intentionally disabled in local mode." },
   { id: "sub-set-tax", module: M.settings, label: "Tax / VAT Settings", kind: "submenu", route: "/app/settings", status: W },
   { id: "sub-set-backup", module: M.settings, label: "Backup / Restore", kind: "submenu", route: "/app/sync", status: W },
 
