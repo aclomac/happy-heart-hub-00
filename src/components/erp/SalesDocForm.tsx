@@ -1122,13 +1122,13 @@ export function SalesDocForm({
         <button
           type="button"
           data-testid="save-invoice-btn-bottom"
-          disabled={saving}
           onClick={handleSaveInvoice}
-          className="inline-flex h-8 items-center justify-center gap-2 rounded-md bg-sale px-3 text-xs font-medium text-sale-foreground shadow-sm hover:bg-sale/90 disabled:pointer-events-none disabled:opacity-50"
+          className="inline-flex h-8 items-center justify-center gap-2 rounded-md bg-sale px-3 text-xs font-medium text-sale-foreground shadow-sm hover:bg-sale/90"
         >
           <Save className="w-4 h-4" />
           {saving ? "Saving…" : editingId ? "Update" : meta.saveLabel}
         </button>
+
       </div>
 
 
