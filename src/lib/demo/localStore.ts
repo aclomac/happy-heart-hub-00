@@ -59,6 +59,7 @@ export type DemoUser = {
   email: string;
   role: "owner" | "admin" | "user";
   name: string;
+  isDemoUser?: boolean;
 };
 
 export type DemoSession = {
@@ -70,7 +71,9 @@ export type DemoSession = {
   startedAt: number;
   created_at: string;
   expires_at: string;
+  isDemoUser?: boolean;
 };
+
 
 export type DemoSettings = {
   dateFormat: string;
