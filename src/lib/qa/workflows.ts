@@ -995,6 +995,20 @@ export const signupWorkflow = () =>
       steps.push(pass("Active session = created user", `userId=${sess.userId}, isDemoUser=false`));
     }
 
+    try {
+      createLocalSignupAccount({
+        fullName: "[QA] Duplicate User",
+        email,
+        mobile: "",
+        password: "password123",
+      });
+      steps.push(fail("Duplicate email error", "Duplicate account was created"));
+    } catch (e) {
+      String((e as Error).message) === "Account already exists. Please sign in."
+        ? steps.push(pass("Duplicate email error", "Account already exists. Please sign in."))
+        : steps.push(fail("Duplicate email error", String((e as Error).message)));
+    }
+
     steps.push(pass("Redirect target", "Signup route sends valid creates to /app"));
 
     const byEmail = findUserByEmailOrMobile(email);
