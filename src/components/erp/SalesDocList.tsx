@@ -393,41 +393,22 @@ export function SalesDocList({ kind }: { kind: DocKind }) {
                     />
                   </td>
                   <td className="flex items-center gap-1">
-                    <InvoiceActionsMenu saleId={s.id} companyId={companyId} label="" kind={kind} />
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-7 w-7">
-                          <MoreHorizontal className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        {kind === "sale_order" && s.status !== "converted" && (
-                          <DropdownMenuItem
-                            onSelect={() =>
-                              navigate({
-                                to: "/app/sale-orders/$id/edit",
-                                params: { id: s.id },
-                              })
-                            }
+                    {kind === "estimate" ? (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            aria-label="Row actions"
                           >
-                            <Pencil className="w-3.5 h-3.5 mr-2" />
-                            Edit
-                          </DropdownMenuItem>
-                        )}
-                        {kind === "delivery_challan" && s.status !== "converted" && (
-                          <DropdownMenuItem
-                            onSelect={() =>
-                              navigate({
-                                to: "/app/delivery-challans/$id/edit",
-                                params: { id: s.id },
-                              })
-                            }
-                          >
-                            <Pencil className="w-3.5 h-3.5 mr-2" />
-                            Edit
-                          </DropdownMenuItem>
-                        )}
-                        {kind === "estimate" && s.status !== "converted" && (
+                            <MoreHorizontal className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                          align="end"
+                          className="w-56 bg-popover rounded-lg shadow-lg border"
+                        >
                           <DropdownMenuItem
                             onSelect={() =>
                               navigate({
@@ -437,34 +418,125 @@ export function SalesDocList({ kind }: { kind: DocKind }) {
                             }
                           >
                             <Pencil className="w-3.5 h-3.5 mr-2" />
-                            Edit
+                            View / Edit
                           </DropdownMenuItem>
-                        )}
-                        {meta.convertTo && s.status !== "converted" && (
-                          <DropdownMenuItem onSelect={() => convertToInvoice(s)}>
-                            <ArrowRightLeft className="w-3.5 h-3.5 mr-2" />
-                            Convert to Invoice
-                          </DropdownMenuItem>
-                        )}
-                        {kind === "invoice" && (
                           <DropdownMenuItem
-                            onSelect={() =>
-                              navigate({
-                                to: "/app/credit-notes/new",
-                                search: { source: s.id },
-                              } as any)
-                            }
+                            onSelect={() => runPdfAction(s, previewInvoicePDF)}
                           >
-                            <Receipt className="w-3.5 h-3.5 mr-2" />
-                            Create Credit Note
+                            <Eye className="w-3.5 h-3.5 mr-2" />
+                            Preview
                           </DropdownMenuItem>
-                        )}
-                        <DropdownMenuItem className="text-sale" onSelect={() => setDelOpen(s)}>
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                          <DropdownMenuItem
+                            onSelect={() => runPdfAction(s, previewInvoicePDF)}
+                          >
+                            <FileText className="w-3.5 h-3.5 mr-2" />
+                            Open PDF
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onSelect={() => runPdfAction(s, printInvoicePDF)}
+                          >
+                            <Printer className="w-3.5 h-3.5 mr-2" />
+                            Print
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onSelect={() => runPdfAction(s, downloadInvoicePDF)}
+                          >
+                            <FileText className="w-3.5 h-3.5 mr-2" />
+                            Download PDF
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onSelect={() => duplicateDoc(s)}>
+                            <Copy className="w-3.5 h-3.5 mr-2" />
+                            Duplicate
+                          </DropdownMenuItem>
+                          {s.status !== "converted" && (
+                            <DropdownMenuItem onSelect={() => convertToInvoice(s)}>
+                              <ArrowRightLeft className="w-3.5 h-3.5 mr-2" />
+                              Convert to Sale Invoice
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="text-sale focus:text-sale"
+                            onSelect={() => setDelOpen(s)}
+                          >
+                            <Trash2 className="w-3.5 h-3.5 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    ) : (
+                      <>
+                        <InvoiceActionsMenu
+                          saleId={s.id}
+                          companyId={companyId}
+                          label=""
+                          kind={kind}
+                        />
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-7 w-7">
+                              <MoreHorizontal className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {kind === "sale_order" && s.status !== "converted" && (
+                              <DropdownMenuItem
+                                onSelect={() =>
+                                  navigate({
+                                    to: "/app/sale-orders/$id/edit",
+                                    params: { id: s.id },
+                                  })
+                                }
+                              >
+                                <Pencil className="w-3.5 h-3.5 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                            )}
+                            {kind === "delivery_challan" && s.status !== "converted" && (
+                              <DropdownMenuItem
+                                onSelect={() =>
+                                  navigate({
+                                    to: "/app/delivery-challans/$id/edit",
+                                    params: { id: s.id },
+                                  })
+                                }
+                              >
+                                <Pencil className="w-3.5 h-3.5 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                            )}
+                            {meta.convertTo && s.status !== "converted" && (
+                              <DropdownMenuItem onSelect={() => convertToInvoice(s)}>
+                                <ArrowRightLeft className="w-3.5 h-3.5 mr-2" />
+                                Convert to Invoice
+                              </DropdownMenuItem>
+                            )}
+                            {kind === "invoice" && (
+                              <DropdownMenuItem
+                                onSelect={() =>
+                                  navigate({
+                                    to: "/app/credit-notes/new",
+                                    search: { source: s.id },
+                                  } as any)
+                                }
+                              >
+                                <Receipt className="w-3.5 h-3.5 mr-2" />
+                                Create Credit Note
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem
+                              className="text-sale"
+                              onSelect={() => setDelOpen(s)}
+                            >
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </>
+                    )}
                   </td>
+
                 </tr>
               ))}
             </tbody>
