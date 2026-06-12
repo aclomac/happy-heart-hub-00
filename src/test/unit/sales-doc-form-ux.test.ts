@@ -54,7 +54,7 @@ describe("SalesDocForm UX upgrades", () => {
 
   it("renders + New Customer quick-add as a native button in personal/local mode", () => {
     expect(src).toContain('data-testid="quick-add-customer-btn"');
-    expect(src).toContain('alert("NEW_CUSTOMER_CLICKED")');
+    expect(src).toContain('setAddCustomerOpen(true)');
     expect(src).toContain('{t("New Customer")}');
   });
 
