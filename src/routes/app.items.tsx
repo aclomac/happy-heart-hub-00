@@ -37,6 +37,14 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { useState, useMemo, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentCompanyId } from "@/lib/use-company";
@@ -84,6 +92,62 @@ function Items() {
   const [catFilter, setCatFilter] = useState<string>("all");
   const [lowOnly, setLowOnly] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [addOpen, setAddOpen] = useState(false);
+  const [form, setForm] = useState({
+    name: "",
+    sku: "",
+    category_id: "",
+    unit: "PCS",
+    purchase_price: "",
+    sale_price: "",
+    stock: "",
+    low_stock_alert: "",
+    description: "",
+  });
+  const resetForm = () =>
+    setForm({
+      name: "",
+      sku: "",
+      category_id: "",
+      unit: "PCS",
+      purchase_price: "",
+      sale_price: "",
+      stock: "",
+      low_stock_alert: "",
+      description: "",
+    });
+  const handleCreateItem = async () => {
+    if (!form.name.trim()) {
+      toast.error("Item name is required");
+      return;
+    }
+    try {
+      const payload: any = {
+        company_id: companyId,
+        name: form.name.trim(),
+        sku: form.sku.trim() || null,
+        category_id: form.category_id || null,
+        unit: form.unit || "PCS",
+        purchase_price: Number(form.purchase_price) || 0,
+        sale_price: Number(form.sale_price) || 0,
+        wholesale_price: 0,
+        mrp: 0,
+        stock: Number(form.stock) || 0,
+        low_stock_alert: form.low_stock_alert ? Number(form.low_stock_alert) : null,
+        tax_rate: 0,
+        is_service: false,
+        description: form.description.trim() || null,
+      };
+      const res = await mut.mutateAsync(payload);
+      if ((res as any)?.error) throw (res as any).error;
+      toast.success("Item created successfully");
+      qc.invalidateQueries({ queryKey: ["items", companyId] });
+      resetForm();
+      setAddOpen(false);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to create item");
+    }
+  };
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["items", companyId],
@@ -256,12 +320,18 @@ function Items() {
                 e.target.value = "";
               }}
             />
-            <Link to="/app/items">
-               <Button variant="default" size="sm" disabled={isOffline}>
-                 <Plus className="w-4 h-4" />
-                 Add Item
-               </Button>
-            </Link>
+            <Button
+              variant="default"
+              size="sm"
+              data-testid="items-add-item-btn"
+              onClick={() => {
+                console.log("ITEM_MODULE_ADD_ITEM_CLICKED");
+                setAddOpen(true);
+              }}
+            >
+              <Plus className="w-4 h-4" />
+              Add Item
+            </Button>
           </>
         }
       />
@@ -441,6 +511,79 @@ function Items() {
           </table>
         )}
       </div>
+
+      <Dialog open={addOpen} onOpenChange={(o) => { setAddOpen(o); if (!o) resetForm(); }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Add Item</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="col-span-2">
+              <Label>Item Name *</Label>
+              <Input
+                data-testid="add-item-name"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                placeholder="e.g. Premium T-Shirt"
+                autoFocus
+              />
+            </div>
+            <div>
+              <Label>Item Code / SKU</Label>
+              <Input value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} />
+            </div>
+            <div>
+              <Label>Category</Label>
+              <Select
+                value={form.category_id || "none"}
+                onValueChange={(v) => setForm({ ...form, category_id: v === "none" ? "" : v })}
+              >
+                <SelectTrigger><SelectValue placeholder="Uncategorized" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Uncategorized</SelectItem>
+                  {cats.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Unit</Label>
+              <Input value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} />
+            </div>
+            <div>
+              <Label>Purchase Price</Label>
+              <Input type="number" value={form.purchase_price} onChange={(e) => setForm({ ...form, purchase_price: e.target.value })} />
+            </div>
+            <div>
+              <Label>Sale Price</Label>
+              <Input type="number" value={form.sale_price} onChange={(e) => setForm({ ...form, sale_price: e.target.value })} />
+            </div>
+            <div>
+              <Label>Opening Stock</Label>
+              <Input type="number" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} />
+            </div>
+            <div>
+              <Label>Low Stock Alert</Label>
+              <Input type="number" value={form.low_stock_alert} onChange={(e) => setForm({ ...form, low_stock_alert: e.target.value })} />
+            </div>
+            <div className="col-span-2">
+              <Label>Description</Label>
+              <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setAddOpen(false); resetForm(); }}>Cancel</Button>
+            <Button
+              data-testid="add-item-save"
+              onClick={handleCreateItem}
+              disabled={mut.isPending}
+            >
+              {mut.isPending ? "Saving..." : "Save Item"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
