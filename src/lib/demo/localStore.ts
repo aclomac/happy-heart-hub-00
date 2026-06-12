@@ -117,6 +117,23 @@ export function hasDemoAuthCookie(): boolean {
   }
 }
 
+export function getDemoAuthCookieEmail(): string | null {
+  if (typeof document === "undefined") return null;
+  try {
+    const part = document.cookie
+      .split(";")
+      .map((p) => p.trim())
+      .find((p) => p.startsWith(`${DEMO_EMAIL_COOKIE}=`));
+    return part ? decodeURIComponent(part.split("=").slice(1).join("=")) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function hasRestorableDemoCookie(): boolean {
+  return hasDemoAuthCookie() && getDemoAuthCookieEmail() === DEMO_USER_EMAIL;
+}
+
 export function setDemoAuthCookies(email = DEMO_USER_EMAIL): void {
   writeCookie(DEMO_AUTH_COOKIE, "1");
   writeCookie(DEMO_EMAIL_COOKIE, email);
@@ -163,7 +180,7 @@ export function isDemoMode(): boolean {
     return (
       !!localStorage.getItem(DEMO_SESSION_KEY) ||
       !!localStorage.getItem(LEGACY_SESSION_KEY) ||
-      hasDemoAuthCookie()
+      hasRestorableDemoCookie()
     );
   } catch {
     return false;
@@ -174,7 +191,7 @@ export function getDemoSession(): DemoSession | null {
   return (
     safeRead<DemoSession>(DEMO_SESSION_KEY) ??
     safeRead<DemoSession>(LEGACY_SESSION_KEY) ??
-    (hasDemoAuthCookie()
+    (hasRestorableDemoCookie()
       ? {
           isDemo: true,
           access_token: "demo-token",
@@ -183,12 +200,16 @@ export function getDemoSession(): DemoSession | null {
             email: DEMO_USER_EMAIL,
             role: "owner",
             name: "Demo User",
+            fullName: "Demo User",
+            isDemoUser: true,
           },
           email: DEMO_USER_EMAIL,
           userId: DEMO_USER_ID,
+          fullName: "Demo User",
           startedAt: Date.now(),
           created_at: new Date().toISOString(),
           expires_at: "2099-12-31T23:59:59.000Z",
+          isDemoUser: true,
         }
       : null)
   );
@@ -201,6 +222,8 @@ export function startDemoSession(): DemoSession {
     email: DEMO_USER_EMAIL,
     role: "owner",
     name: "Demo User",
+    fullName: "Demo User",
+    isDemoUser: true,
   };
   const session: DemoSession = {
     isDemo: true,
@@ -208,9 +231,11 @@ export function startDemoSession(): DemoSession {
     user,
     email: DEMO_USER_EMAIL,
     userId: DEMO_USER_ID,
+    fullName: "Demo User",
     startedAt: now.getTime(),
     created_at: now.toISOString(),
     expires_at: "2099-12-31T23:59:59.000Z",
+    isDemoUser: true,
   };
   safeWrite(DEMO_SESSION_KEY, session);
   safeWrite(DEMO_USER_KEY, user);
