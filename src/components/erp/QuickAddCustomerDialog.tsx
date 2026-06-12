@@ -140,7 +140,7 @@ export function QuickAddCustomerDialog({
         created_at: new Date().toISOString(),
       };
       setParties([newParty, ...all]);
-      toast.success(t("Customer added and selected"));
+      toast.success(t("Customer created and selected"));
       onCreated({
         id: newParty.id,
         name: newParty.name,
