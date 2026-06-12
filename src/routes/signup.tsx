@@ -5,20 +5,7 @@ import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import {
-  addLocalUser,
-  isValidEmail,
-  normalizeMobile,
-  userExists,
-  validatePassword,
-} from "@/lib/demo/localUsers";
-import {
-  ensureDemoSeed,
-  startLocalUserSession,
-  addDemoCompany,
-} from "@/lib/demo/localStore";
-
-import { setCurrentCompanyId } from "@/lib/use-company";
+import { createLocalSignupAccount, validateSignupInput } from "@/lib/demo/signup";
 
 export const Route = createFileRoute("/signup")({
   beforeLoad: async () => {
@@ -57,58 +44,21 @@ function Signup() {
 
   const onCreateAccount = async (e?: React.FormEvent) => {
     e?.preventDefault?.();
-    const next: Record<string, string> = {};
-    if (!name.trim()) next.name = "Full Name is required";
-    if (!isValidEmail(email)) next.email = "Please enter a valid email";
-    if (!validatePassword(pass)) next.password = "Password must be at least 8 characters";
+    const next = validateSignupInput({ fullName: name, email, mobile, password: pass });
     setErrs(next);
     if (Object.keys(next).length) {
       toast.error(Object.values(next)[0]);
       return;
     }
 
-    try {
-      if (userExists(email, mobile || `__none_${Date.now()}__`)) {
-        toast.error("Account already exists. Please sign in.");
-        return;
-      }
-    } catch {
-      /* ignore lookup failure */
-    }
-
     setLoading(true);
     try {
-      ensureDemoSeed();
-      const newUser = addLocalUser({
-        fullName: name.trim(),
-        email: email.trim(),
-        mobile: mobile ? normalizeMobile(mobile) : "",
+      createLocalSignupAccount({
+        fullName: name,
+        email,
+        mobile,
         password: pass,
-        mobileVerified: false,
       });
-      // Create a personal company for this user so they don't share Chair King.
-      const company = addDemoCompany({
-        name: `${name.trim()}'s Business`,
-        owner_id: newUser.id,
-        email: newUser.email,
-      });
-      // Persist company id back onto the local user record.
-      try {
-        const { getLocalUsers, setLocalUsers } = await import("@/lib/demo/localUsers");
-        const all = getLocalUsers().map((u) =>
-          u.id === newUser.id ? { ...u, companyId: company.id } : u,
-        );
-        setLocalUsers(all);
-      } catch {
-        /* ignore */
-      }
-      startLocalUserSession({
-        id: newUser.id,
-        email: newUser.email,
-        name: newUser.fullName,
-      });
-      setCurrentCompanyId(company.id, newUser.id);
-
       toast.success("Account created successfully");
       if (typeof window !== "undefined") {
         window.location.replace("/app");
@@ -117,7 +67,7 @@ function Signup() {
       nav({ to: "/app", replace: true });
     } catch (err: any) {
       console.error("[signup] create account failed", err);
-      toast.error(`Could not create account: ${err?.message ?? "unknown error"}`);
+      toast.error(`Signup failed: ${err?.message ?? "unknown error"}`);
     } finally {
       setLoading(false);
     }
@@ -228,7 +178,7 @@ function Signup() {
                   className="w-full"
                   disabled={loading}
                 >
-                  {loading ? "Creating..." : "Create Account"}
+                  {loading ? "Creating account..." : "Create Account"}
                 </Button>
                 <p className="text-[11px] text-muted-foreground text-center">
                   Local account stored on this device. No email verification required.
