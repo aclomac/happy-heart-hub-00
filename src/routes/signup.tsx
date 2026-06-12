@@ -78,17 +78,26 @@ function Signup() {
 
     setLoading(true);
     try {
-      addLocalUser({
+      ensureDemoSeed();
+      // Create a personal company for this user so they don't share Chair King.
+      const company = addDemoCompany({
+        name: `${name.trim()}'s Business`,
+        owner_id: "pending",
+      });
+      const newUser = addLocalUser({
         fullName: name.trim(),
         email: email.trim(),
         mobile: mobile ? normalizeMobile(mobile) : "",
         password: pass,
         mobileVerified: false,
-        companyId: DEMO_COMPANY_ID,
+        companyId: company.id,
       });
-      ensureDemoSeed();
-      startDemoSession();
-      setCurrentCompanyId(DEMO_COMPANY_ID, DEMO_USER_ID);
+      startLocalUserSession({
+        id: newUser.id,
+        email: newUser.email,
+        name: newUser.fullName,
+      });
+      setCurrentCompanyId(company.id, newUser.id);
       toast.success("Account created successfully");
       if (typeof window !== "undefined") {
         window.location.replace("/app");
@@ -102,6 +111,7 @@ function Signup() {
       setLoading(false);
     }
   };
+
 
   return (
     <div
