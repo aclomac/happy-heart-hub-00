@@ -157,14 +157,16 @@ function Signup() {
                 Personal ERP account for your business
               </p>
 
-              <div className="space-y-3">
+              <form className="space-y-3" onSubmit={onCreateAccount} noValidate>
                 <div>
                   <Label className="text-xs">Full Name</Label>
                   <Input
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Md. Rahman"
+                    autoComplete="name"
                   />
+                  {errs.name && <p className="text-[11px] text-destructive mt-1">{errs.name}</p>}
                 </div>
                 <div>
                   <Label className="text-xs">Email</Label>
@@ -173,7 +175,9 @@ function Signup() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@business.com"
+                    autoComplete="email"
                   />
+                  {errs.email && <p className="text-[11px] text-destructive mt-1">{errs.email}</p>}
                 </div>
                 <div>
                   <Label className="text-xs">Mobile No. (optional)</Label>
@@ -181,6 +185,7 @@ function Signup() {
                     value={mobile}
                     onChange={(e) => setMobile(e.target.value)}
                     placeholder="01XXXXXXXXX"
+                    autoComplete="tel"
                   />
                 </div>
                 <div>
@@ -190,12 +195,16 @@ function Signup() {
                     value={pass}
                     onChange={(e) => setPass(e.target.value)}
                     placeholder="At least 8 characters"
+                    autoComplete="new-password"
                   />
+                  {errs.password && (
+                    <p className="text-[11px] text-destructive mt-1">{errs.password}</p>
+                  )}
                 </div>
                 <Button
+                  type="submit"
                   variant="default"
                   className="w-full"
-                  onClick={onCreateAccount}
                   disabled={loading}
                 >
                   {loading ? "Creating..." : "Create Account"}
@@ -203,7 +212,7 @@ function Signup() {
                 <p className="text-[11px] text-muted-foreground text-center">
                   Local account stored on this device. No email verification required.
                 </p>
-              </div>
+              </form>
               <div className="mt-6 text-sm text-center">
                 Already have an account?{" "}
                 <Link to="/login" className="text-primary font-medium hover:underline">
