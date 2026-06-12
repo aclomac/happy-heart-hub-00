@@ -97,6 +97,7 @@ function CashAndBank() {
       {section === "cheques" && <ChequesSection companyId={companyId} />}
       {section === "loans" && <LoanAccountsSection companyId={companyId} />}
       {section === "statement" && <CashBankStatementSection companyId={companyId} />}
+      {section === "import" && <BankStatementImportSection companyId={companyId} />}
     </div>
   );
 }
