@@ -14,7 +14,7 @@ import {
   getDemoSession,
   getDemoCompanies,
   DEMO_SESSION_KEY,
-  hasDemoAuthCookie,
+  hasRestorableDemoCookie,
   startDemoSession,
   DEMO_USER_ID,
   DEMO_USER_EMAIL,
@@ -62,7 +62,7 @@ function useAuthUser() {
     // already authenticated — prevents a brief "no user → /login" flicker
     // after refresh.
     if (typeof window !== "undefined" && isDemoMode()) {
-      if (hasDemoAuthCookie() && !window.localStorage.getItem(DEMO_SESSION_KEY)) {
+      if (hasRestorableDemoCookie() && !window.localStorage.getItem(DEMO_SESSION_KEY)) {
         startDemoSession();
       }
       const s = getDemoSession();
@@ -82,7 +82,7 @@ function useAuthUser() {
     let active = true;
     // Demo session short-circuits Supabase auth entirely.
     if (isDemoMode()) {
-      if (hasDemoAuthCookie() && !window.localStorage.getItem(DEMO_SESSION_KEY)) {
+      if (hasRestorableDemoCookie() && !window.localStorage.getItem(DEMO_SESSION_KEY)) {
         startDemoSession();
       }
       const s = getDemoSession();
