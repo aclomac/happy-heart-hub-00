@@ -92,7 +92,7 @@ export function labelsFor(kind: DocKindLike): DocKindLabels {
       return {
         noun: "Invoice",
         noLabel: "Invoice No.",
-        pdfTitle: "TAX INVOICE",
+        pdfTitle: "INVOICE",
         savedTitle: "Invoice Saved",
         printLabel: "Print Invoice",
         printThermalLabel: "Print Receipt (Thermal)",
