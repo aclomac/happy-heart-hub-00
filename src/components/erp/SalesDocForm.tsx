@@ -194,15 +194,101 @@ function nextLocalInvoiceNo(
   prefix: string,
 ): string {
   const normalizedPrefix = prefix.endsWith("-") ? prefix : `${prefix}-`;
+  const year = new Date().getFullYear();
+  const yearPrefix = `${normalizedPrefix}${year}-`;
   let max = 0;
   for (const sale of sales) {
     if (String(sale.company_id) !== companyId || String(sale.doc_type) !== docType) continue;
+    if (sale.deleted_at) continue;
     const invoiceNo = String(sale.invoice_no || "");
-    if (!invoiceNo.startsWith(normalizedPrefix)) continue;
-    const suffix = invoiceNo.slice(normalizedPrefix.length);
-    if (/^\d+$/.test(suffix)) max = Math.max(max, Number(suffix));
+    // Match both legacy INV-#### and INV-YYYY-#### (any year)
+    let suffix: string | null = null;
+    if (invoiceNo.startsWith(yearPrefix)) {
+      suffix = invoiceNo.slice(yearPrefix.length);
+    } else {
+      const m = invoiceNo.match(
+        new RegExp(`^${normalizedPrefix.replace(/-/g, "\\-")}(\\d{4}-)?(\\d+)$`),
+      );
+      if (m) suffix = m[2];
+    }
+    if (suffix && /^\d+$/.test(suffix)) max = Math.max(max, Number(suffix));
   }
-  return `${normalizedPrefix}${String(max + 1).padStart(4, "0")}`;
+  const next = max + 1;
+  // eslint-disable-next-line no-console
+  console.log("INVOICE_NUMBER_GEN", { docType, prefix: normalizedPrefix, year, max, next });
+  return `${yearPrefix}${String(next).padStart(4, "0")}`;
+}
+
+// One-time repair: detect duplicate manual sale invoice numbers and rename
+// later duplicates to the next sequential unique number. Keeps oldest row
+// (by created_at) as the original. Idempotent — safe to call on every mount.
+function repairDuplicateInvoiceNos(companyId: string) {
+  if (typeof window === "undefined" || !companyId) return;
+  try {
+    const raw = localStorage.getItem("erpovo_demo_sales");
+    if (!raw) return;
+    const sales = JSON.parse(raw) as Array<Record<string, unknown>>;
+    if (!Array.isArray(sales) || sales.length === 0) return;
+    const byKey = new Map<string, Array<Record<string, unknown>>>();
+    for (const s of sales) {
+      if (s.deleted_at) continue;
+      if (String(s.company_id) !== companyId) continue;
+      const key = `${String(s.doc_type)}::${String(s.invoice_no || "")}`;
+      const arr = byKey.get(key) || [];
+      arr.push(s);
+      byKey.set(key, arr);
+    }
+    let changed = false;
+    const items = (() => {
+      try {
+        const r = localStorage.getItem("erpovo_demo_sale_items");
+        return r ? (JSON.parse(r) as Array<Record<string, unknown>>) : [];
+      } catch {
+        return [] as Array<Record<string, unknown>>;
+      }
+    })();
+    for (const [key, dups] of byKey.entries()) {
+      if (dups.length < 2) continue;
+      // Oldest first stays as-is; rename rest.
+      dups.sort((a, b) =>
+        String(a.created_at || "").localeCompare(String(b.created_at || "")),
+      );
+      const docType = key.split("::")[0];
+      // Compute starting max across all sales for this docType.
+      for (let i = 1; i < dups.length; i++) {
+        const sale = dups[i];
+        const prefix =
+          docType === "invoice"
+            ? "INV"
+            : docType === "estimate"
+              ? "EST"
+              : docType === "sale_order"
+                ? "SO"
+                : docType === "delivery_challan"
+                  ? "DC"
+                  : "CN";
+        const newNo = nextLocalInvoiceNo(sales, companyId, docType, prefix);
+        const oldNo = String(sale.invoice_no || "");
+        sale.invoice_no = newNo;
+        changed = true;
+        // Update any sale_items referring to invoice_no (rare; usually they FK by sale_id).
+        for (const it of items) {
+          if (String(it.invoice_no || "") === oldNo && String(it.sale_id) === String(sale.id)) {
+            it.invoice_no = newNo;
+          }
+        }
+        // eslint-disable-next-line no-console
+        console.log("INVOICE_DUP_REPAIRED", { id: sale.id, oldNo, newNo });
+      }
+    }
+    if (changed) {
+      localStorage.setItem("erpovo_demo_sales", JSON.stringify(sales));
+      localStorage.setItem("erpovo_demo_sale_items", JSON.stringify(items));
+    }
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.warn("repairDuplicateInvoiceNos failed", e);
+  }
 }
 
 export function SalesDocForm({
@@ -318,18 +404,24 @@ export function SalesDocForm({
     },
   });
 
-  // Auto-number (new doc only). For Sale Invoice (kind === "invoice"), use the
-  // per-company configurable number series; for other doc types keep the
-  // legacy nextDocNumber behavior.
+  // Auto-number (new doc only). In demo mode read from local sales so each
+  // new invoice gets a fresh sequential number (INV-YYYY-####). Outside demo
+  // use the configurable per-company series.
   useEffect(() => {
-    if (companyId && !invoiceNo && !editingId) {
-      const fallback = `${meta.prefix}-0001`;
-      const gen =
-        kind === "invoice"
-          ? loadInvoiceSeries(companyId).then((s) => nextSaleInvoiceNumber(companyId, s))
-          : nextDocNumber(companyId, "sales", meta.prefix, kind);
-      gen.then(setInvoiceNo).catch(() => setInvoiceNo(fallback));
+    if (!companyId || invoiceNo || editingId) return;
+    if (isDemoMode()) {
+      repairDuplicateInvoiceNos(companyId);
+      const sales = readLocalArray<Record<string, unknown>>("erpovo_demo_sales");
+      const next = nextLocalInvoiceNo(sales, companyId, kind, meta.prefix);
+      setInvoiceNo(next);
+      return;
     }
+    const fallback = `${meta.prefix}-0001`;
+    const gen =
+      kind === "invoice"
+        ? loadInvoiceSeries(companyId).then((s) => nextSaleInvoiceNumber(companyId, s))
+        : nextDocNumber(companyId, "sales", meta.prefix, kind);
+    gen.then(setInvoiceNo).catch(() => setInvoiceNo(fallback));
   }, [companyId, invoiceNo, meta.prefix, kind, editingId]);
 
   // Hydrate edit mode
@@ -503,7 +595,35 @@ export function SalesDocForm({
     const saleItems = readLocalArray<Record<string, unknown>>("erpovo_demo_sale_items");
     const id = editingId || `local-sale-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const nowIso = new Date().toISOString();
-    const finalInvoiceNo = payload.invoice_no || nextLocalInvoiceNo(sales, companyId, payload.doc_type, meta.prefix);
+    // Always recompute unique invoice_no at save time unless the user manually
+    // typed a number. Avoids duplicates from stale form defaults / races.
+    const usedNumbers = new Set(
+      sales
+        .filter(
+          (s) =>
+            !s.deleted_at &&
+            String(s.company_id) === companyId &&
+            String(s.doc_type) === payload.doc_type &&
+            (!editingId || String(s.id) !== editingId),
+        )
+        .map((s) => String(s.invoice_no || "")),
+    );
+    let finalInvoiceNo = payload.invoice_no || "";
+    if (!invoiceNoManual || !finalInvoiceNo || usedNumbers.has(finalInvoiceNo)) {
+      finalInvoiceNo = nextLocalInvoiceNo(sales, companyId, payload.doc_type, meta.prefix);
+      // Defensive bump in case of any residual collision.
+      while (usedNumbers.has(finalInvoiceNo)) {
+        const m = finalInvoiceNo.match(/(\d+)$/);
+        const next = m ? Number(m[1]) + 1 : 1;
+        finalInvoiceNo = finalInvoiceNo.replace(/\d+$/, String(next).padStart(4, "0"));
+      }
+    }
+    // eslint-disable-next-line no-console
+    console.log("INVOICE_NUMBER_ASSIGNED", {
+      existingCount: usedNumbers.size,
+      manual: invoiceNoManual,
+      finalInvoiceNo,
+    });
     const saleRecord: Record<string, unknown> = {
       id,
       company_id: companyId,
@@ -553,7 +673,12 @@ export function SalesDocForm({
     ];
     localStorage.setItem("erpovo_demo_sales", JSON.stringify(nextSales));
     localStorage.setItem("erpovo_demo_sale_items", JSON.stringify(nextItems));
-    if (!payload.invoice_no) setInvoiceNo(finalInvoiceNo);
+    // Reflect the actually-saved number back into the form state so subsequent
+    // saves (or re-renders) don't reuse the stale default.
+    if (finalInvoiceNo !== payload.invoice_no) {
+      payload.invoice_no = finalInvoiceNo;
+    }
+    setInvoiceNo(finalInvoiceNo);
     return { id, invoiceNo: finalInvoiceNo, localSalesCount: nextSales.length };
   };
 
