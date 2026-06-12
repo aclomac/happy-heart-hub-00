@@ -69,13 +69,12 @@ function Signup() {
           </div>
         </div>
         <h1 className="text-4xl font-bold mb-4 leading-tight">
-          Start with 1 month
+          Personal ERP
           <br />
-          free trial.
+          for your business.
         </h1>
         <p className="text-base opacity-80 max-w-md">
-          No credit card required. Get all core features — sales, purchase, inventory, parties,
-          reports.
+          Local-first. All core features — sales, purchase, inventory, parties, reports.
         </p>
       </div>
       <div className="w-full lg:w-[480px] bg-card flex items-center justify-center p-8">
