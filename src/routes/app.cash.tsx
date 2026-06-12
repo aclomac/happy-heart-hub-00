@@ -15,7 +15,8 @@ import { LoanAccountsSection } from "@/components/erp/cash/LoanAccountsSection";
 import { MobileBankingSection } from "@/components/erp/cash/MobileBankingSection";
 import { CashBankStatementSection } from "@/components/erp/cash/CashBankStatementSection";
 import { CashReconciliationSection } from "@/components/erp/cash/CashReconciliationSection";
-import { Landmark, Wallet, FileText, HandCoins, Smartphone, BookOpen, Scale } from "lucide-react";
+import { BankStatementImportSection } from "@/components/erp/cash/BankStatementImportSection";
+import { Landmark, Wallet, FileText, HandCoins, Smartphone, BookOpen, Scale, Upload } from "lucide-react";
 
 export const Route = createFileRoute("/app/cash")({ component: CashShell });
 
@@ -24,7 +25,7 @@ function CashShell() {
   return pathname === "/app/cash" ? <CashAndBank /> : <Outlet />;
 }
 
-type SectionKey = "bank" | "cash" | "reconcile" | "mobile" | "cheques" | "loans" | "statement";
+type SectionKey = "bank" | "cash" | "reconcile" | "mobile" | "cheques" | "loans" | "statement" | "import";
 
 const tabs: { key: SectionKey; label: string; icon: typeof Wallet }[] = [
   { key: "bank", label: "Bank Accounts", icon: Landmark },
@@ -34,6 +35,7 @@ const tabs: { key: SectionKey; label: string; icon: typeof Wallet }[] = [
   { key: "cheques", label: "Cheques", icon: FileText },
   { key: "loans", label: "Loan Accounts", icon: HandCoins },
   { key: "statement", label: "Statement", icon: BookOpen },
+  { key: "import", label: "Import Statement", icon: Upload },
 ];
 
 const VALID: SectionKey[] = [
@@ -44,6 +46,7 @@ const VALID: SectionKey[] = [
   "cheques",
   "loans",
   "statement",
+  "import",
 ];
 
 function CashAndBank() {
@@ -94,6 +97,7 @@ function CashAndBank() {
       {section === "cheques" && <ChequesSection companyId={companyId} />}
       {section === "loans" && <LoanAccountsSection companyId={companyId} />}
       {section === "statement" && <CashBankStatementSection companyId={companyId} />}
+      {section === "import" && <BankStatementImportSection companyId={companyId} />}
     </div>
   );
 }

@@ -124,9 +124,9 @@ export const AUDIT_REGISTRY: AuditEntry[] = [
   { id: "sub-cash-cheques", module: M.cash, label: "Cheques", kind: "submenu", route: "/app/cash", status: W },
   { id: "sub-cash-loans", module: M.cash, label: "Loan Accounts", kind: "submenu", route: "/app/cash", status: W },
   { id: "sub-cash-transfers", module: M.cash, label: "Money Transfer", kind: "submenu", route: "/app/cash", status: W },
-  { id: "sub-cash-recon", module: M.cash, label: "Reconciliation", kind: "submenu", route: "/app/cash", status: P, note: "Reconciliation tab opens; auto-match is manual only.", fix: "Add bulk match action." },
-  { id: "sub-cash-mobile", module: M.cash, label: "Mobile Banking", kind: "submenu", route: "/app/cash", status: P, note: "Lists balances; live integrations are not wired." },
-  { id: "sub-cash-statement", module: M.cash, label: "Bank Statement import", kind: "submenu", route: "/app/cash", status: S, fix: "Add CSV statement import." },
+  { id: "sub-cash-recon", module: M.cash, label: "Reconciliation", kind: "submenu", route: "/app/cash", status: W, note: "Cash reconciliation: opening/system/physical with adjustment posting, attachments, PDF/print." },
+  { id: "sub-cash-mobile", module: M.cash, label: "Mobile Banking", kind: "submenu", route: "/app/cash", status: W, note: "Manual bKash/Nagad/Rocket accounts and transactions; live API integration intentionally disabled." },
+  { id: "sub-cash-statement", module: M.cash, label: "Bank Statement import", kind: "submenu", route: "/app/cash", status: W, note: "CSV import with column mapping + preview; rows saved locally." },
 
   // ============== REPORTS ==============
   { id: "nav-reports", module: M.reports, label: "Reports hub (P&L, BS, TB, Day Book)", kind: "submenu", route: "/app/reports", status: W },
@@ -154,7 +154,7 @@ export const AUDIT_REGISTRY: AuditEntry[] = [
   { id: "sub-ut-refer", module: M.utilities, label: "Refer & Earn", kind: "submenu", route: "/app/utilities/refer-earn", status: S, note: "SaaS-only; placeholder page with disabled CTA." },
   { id: "sub-ut-bulk", module: M.utilities, label: "Update Items In Bulk", kind: "submenu", route: "/app/utilities/bulk-update-items", status: W },
   { id: "sub-ut-imp-parties", module: M.utilities, label: "Import Parties", kind: "submenu", route: "/app/utilities/import-parties", status: W },
-  { id: "sub-ut-tally", module: M.utilities, label: "Exports To Tally", kind: "submenu", route: "/app/utilities/export-to-tally", status: P, note: "CSV export works; Tally XML coming soon.", fix: "Add Tally XML writer." },
+  { id: "sub-ut-tally", module: M.utilities, label: "Exports To Tally", kind: "submenu", route: "/app/utilities/export-to-tally", status: W, note: "CSV export for sales/purchases/receipts/payments/expenses/parties. Tally XML intentionally disabled." },
   { id: "sub-ut-exp", module: M.utilities, label: "Export Items", kind: "submenu", route: "/app/utilities/export-items", status: W },
   { id: "sub-ut-verify", module: M.utilities, label: "Verify My Data", kind: "submenu", route: "/app/utilities/verify-data", status: W },
   { id: "sub-ut-bin", module: M.utilities, label: "Recycle Bin", kind: "submenu", route: "/app/utilities/recycle-bin", status: W },
@@ -168,7 +168,7 @@ export const AUDIT_REGISTRY: AuditEntry[] = [
   { id: "sub-set-pbs", module: M.settings, label: "Purchase Bill Settings", kind: "submenu", route: "/app/purchase-bill-settings", status: W },
   { id: "sub-set-access", module: M.settings, label: "Access Matrix / Roles", kind: "submenu", route: "/app/admin/access-matrix", status: W },
   { id: "sub-set-pay", module: M.settings, label: "Payment Methods", kind: "submenu", route: "/app/admin/payment-settings", status: W },
-  { id: "sub-set-msg", module: M.settings, label: "Message Templates", kind: "submenu", route: "/app/settings", status: P, note: "Templates editable from Settings; per-channel send is local-only." },
+  { id: "sub-set-msg", module: M.settings, label: "Message Templates", kind: "submenu", route: "/app/settings", status: W, note: "Templates editable per channel with live preview and reset; live SMS/Email send intentionally disabled in local mode." },
   { id: "sub-set-tax", module: M.settings, label: "Tax / VAT Settings", kind: "submenu", route: "/app/settings", status: W },
   { id: "sub-set-backup", module: M.settings, label: "Backup / Restore", kind: "submenu", route: "/app/sync", status: W },
 
