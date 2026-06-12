@@ -227,6 +227,44 @@ function OrdersPage() {
           </table>
         </CardContent>
       </Card>
+
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader><DialogTitle>New Manual Order</DialogTitle></DialogHeader>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="col-span-2">
+              <Label>Website</Label>
+              <Select value={form.websiteId} onValueChange={(v) => setForm((f) => ({ ...f, websiteId: v }))}>
+                <SelectTrigger><SelectValue placeholder="Select website" /></SelectTrigger>
+                <SelectContent>{websites.map((w) => <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div><Label>Customer Name</Label><Input value={form.customerName} onChange={(e) => setForm((f) => ({ ...f, customerName: e.target.value }))} /></div>
+            <div><Label>Phone</Label><Input value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} /></div>
+            <div className="col-span-2"><Label>Address</Label><Input value={form.address} onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))} /></div>
+            <div><Label>District</Label><Input value={form.district} onChange={(e) => setForm((f) => ({ ...f, district: e.target.value }))} /></div>
+            <div><Label>Payment Method</Label><Input value={form.paymentMethod} onChange={(e) => setForm((f) => ({ ...f, paymentMethod: e.target.value }))} /></div>
+            <div><Label>SKU</Label><Input value={form.sku} onChange={(e) => setForm((f) => ({ ...f, sku: e.target.value }))} /></div>
+            <div><Label>Product Name</Label><Input value={form.productName} onChange={(e) => setForm((f) => ({ ...f, productName: e.target.value }))} /></div>
+            <div><Label>Quantity</Label><Input type="number" value={form.qty} onChange={(e) => setForm((f) => ({ ...f, qty: Number(e.target.value) }))} /></div>
+            <div><Label>Unit Price</Label><Input type="number" value={form.price} onChange={(e) => setForm((f) => ({ ...f, price: Number(e.target.value) }))} /></div>
+            <div><Label>Discount</Label><Input type="number" value={form.discount} onChange={(e) => setForm((f) => ({ ...f, discount: Number(e.target.value) }))} /></div>
+            <div><Label>Delivery Charge</Label><Input type="number" value={form.deliveryCharge} onChange={(e) => setForm((f) => ({ ...f, deliveryCharge: Number(e.target.value) }))} /></div>
+            <div>
+              <Label>Status</Label>
+              <Select value={form.status} onValueChange={(v) => setForm((f) => ({ ...f, status: v as EcoOrderStatus }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
+            <Button onClick={createOrder}>Create Order</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
+
 }
