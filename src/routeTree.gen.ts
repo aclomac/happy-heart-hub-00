@@ -116,6 +116,7 @@ import { Route as AppExpensesNewRouteImport } from './routes/app.expenses.new'
 import { Route as AppEstimatesNewRouteImport } from './routes/app.estimates.new'
 import { Route as AppEcommerceWebsitesRouteImport } from './routes/app.ecommerce.websites'
 import { Route as AppEcommerceProductsRouteImport } from './routes/app.ecommerce.products'
+import { Route as AppEcommerceOrdersRouteImport } from './routes/app.ecommerce.orders'
 import { Route as AppDeliveryChallansNewRouteImport } from './routes/app.delivery-challans.new'
 import { Route as AppDebitNotesNewRouteImport } from './routes/app.debit-notes.new'
 import { Route as AppCreditNotesNewRouteImport } from './routes/app.credit-notes.new'
@@ -693,6 +694,11 @@ const AppEcommerceProductsRoute = AppEcommerceProductsRouteImport.update({
   path: '/products',
   getParentRoute: () => AppEcommerceRoute,
 } as any)
+const AppEcommerceOrdersRoute = AppEcommerceOrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => AppEcommerceRoute,
+} as any)
 const AppDeliveryChallansNewRoute = AppDeliveryChallansNewRouteImport.update({
   id: '/new',
   path: '/new',
@@ -925,6 +931,7 @@ export interface FileRoutesByFullPath {
   '/app/credit-notes/new': typeof AppCreditNotesNewRoute
   '/app/debit-notes/new': typeof AppDebitNotesNewRoute
   '/app/delivery-challans/new': typeof AppDeliveryChallansNewRoute
+  '/app/ecommerce/orders': typeof AppEcommerceOrdersRoute
   '/app/ecommerce/products': typeof AppEcommerceProductsRoute
   '/app/ecommerce/websites': typeof AppEcommerceWebsitesRoute
   '/app/estimates/new': typeof AppEstimatesNewRoute
@@ -1059,6 +1066,7 @@ export interface FileRoutesByTo {
   '/app/credit-notes/new': typeof AppCreditNotesNewRoute
   '/app/debit-notes/new': typeof AppDebitNotesNewRoute
   '/app/delivery-challans/new': typeof AppDeliveryChallansNewRoute
+  '/app/ecommerce/orders': typeof AppEcommerceOrdersRoute
   '/app/ecommerce/products': typeof AppEcommerceProductsRoute
   '/app/ecommerce/websites': typeof AppEcommerceWebsitesRoute
   '/app/estimates/new': typeof AppEstimatesNewRoute
@@ -1198,6 +1206,7 @@ export interface FileRoutesById {
   '/app/credit-notes/new': typeof AppCreditNotesNewRoute
   '/app/debit-notes/new': typeof AppDebitNotesNewRoute
   '/app/delivery-challans/new': typeof AppDeliveryChallansNewRoute
+  '/app/ecommerce/orders': typeof AppEcommerceOrdersRoute
   '/app/ecommerce/products': typeof AppEcommerceProductsRoute
   '/app/ecommerce/websites': typeof AppEcommerceWebsitesRoute
   '/app/estimates/new': typeof AppEstimatesNewRoute
@@ -1338,6 +1347,7 @@ export interface FileRouteTypes {
     | '/app/credit-notes/new'
     | '/app/debit-notes/new'
     | '/app/delivery-challans/new'
+    | '/app/ecommerce/orders'
     | '/app/ecommerce/products'
     | '/app/ecommerce/websites'
     | '/app/estimates/new'
@@ -1472,6 +1482,7 @@ export interface FileRouteTypes {
     | '/app/credit-notes/new'
     | '/app/debit-notes/new'
     | '/app/delivery-challans/new'
+    | '/app/ecommerce/orders'
     | '/app/ecommerce/products'
     | '/app/ecommerce/websites'
     | '/app/estimates/new'
@@ -1610,6 +1621,7 @@ export interface FileRouteTypes {
     | '/app/credit-notes/new'
     | '/app/debit-notes/new'
     | '/app/delivery-challans/new'
+    | '/app/ecommerce/orders'
     | '/app/ecommerce/products'
     | '/app/ecommerce/websites'
     | '/app/estimates/new'
@@ -2431,6 +2443,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppEcommerceProductsRouteImport
       parentRoute: typeof AppEcommerceRoute
     }
+    '/app/ecommerce/orders': {
+      id: '/app/ecommerce/orders'
+      path: '/orders'
+      fullPath: '/app/ecommerce/orders'
+      preLoaderRoute: typeof AppEcommerceOrdersRouteImport
+      parentRoute: typeof AppEcommerceRoute
+    }
     '/app/delivery-challans/new': {
       id: '/app/delivery-challans/new'
       path: '/new'
@@ -2694,12 +2713,14 @@ const AppDeliveryChallansRouteWithChildren =
   AppDeliveryChallansRoute._addFileChildren(AppDeliveryChallansRouteChildren)
 
 interface AppEcommerceRouteChildren {
+  AppEcommerceOrdersRoute: typeof AppEcommerceOrdersRoute
   AppEcommerceProductsRoute: typeof AppEcommerceProductsRoute
   AppEcommerceWebsitesRoute: typeof AppEcommerceWebsitesRoute
   AppEcommerceIndexRoute: typeof AppEcommerceIndexRoute
 }
 
 const AppEcommerceRouteChildren: AppEcommerceRouteChildren = {
+  AppEcommerceOrdersRoute: AppEcommerceOrdersRoute,
   AppEcommerceProductsRoute: AppEcommerceProductsRoute,
   AppEcommerceWebsitesRoute: AppEcommerceWebsitesRoute,
   AppEcommerceIndexRoute: AppEcommerceIndexRoute,

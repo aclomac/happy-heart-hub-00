@@ -14,7 +14,8 @@ import {
   getOrders, setOrders, getWebsites, getCouriers, getSettings,
   type EcoOrder, type EcoOrderStatus,
 } from "@/lib/demo/ecommerce";
-import { getSales, setSales, genId } from "@/lib/demo/sales";
+import { getSales, setSales } from "@/lib/demo/sales";
+import { genId } from "@/lib/demo/inventory";
 import { MoreVertical, Truck, FileText, Copy, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/app/ecommerce/orders")({ component: OrdersPage });
