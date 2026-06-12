@@ -943,18 +943,18 @@ export const signupWorkflow = () =>
   run("wf-signup", "Signup + Login workflow", async () => {
     const steps: WorkflowStep[] = [];
     const {
-      addLocalUser,
       findUserByEmailOrMobile,
       deleteLocalUser,
-      isValidEmail,
-      validatePassword,
     } = await import("@/lib/demo/localUsers");
+    const { createLocalSignupAccount, validateSignupInput } = await import("@/lib/demo/signup");
     const {
       startLocalUserSession,
+      startDemoSession,
       getDemoSession,
       getDemoUser,
       endDemoSession,
       DEMO_USER_ID,
+      deleteDemoCompany,
     } = await import("@/lib/demo/localStore");
 
     // Snapshot existing session so cleanup restores the caller's auth state.
@@ -963,27 +963,24 @@ export const signupWorkflow = () =>
 
     const email = `qa+${Date.now()}@erpovo.local`;
 
+    const invalid = validateSignupInput({ fullName: "", email: "bad", mobile: "", password: "short" });
+    if (!invalid.name || !invalid.email || !invalid.password) {
+      return [fail("Invalid form errors", "Expected name, email, and password errors")];
+    }
+    steps.push(pass("Invalid form errors", "Name/email/password show errors"));
 
-
-
-    if (!isValidEmail(email)) return [fail("Email validator", `${email} rejected`)];
-    if (!validatePassword("password123"))
-      return [fail("Password validator", "8-char password rejected")];
-    if (validatePassword("short"))
-      return [fail("Password validator", "Short password accepted")];
-    steps.push(pass("Validators", "Email + password length OK"));
-
-    const user = addLocalUser({
+    const { user, company } = createLocalSignupAccount({
       fullName: "[QA] Signup User",
       email,
       mobile: "",
       password: "password123",
-      mobileVerified: false,
     });
-    steps.push(pass("Persist local user", `id=${user.id}`));
+    if (user.isDemoUser || user.mobileVerified) {
+      steps.push(fail("Created non-demo user", "Expected isDemoUser=false and mobileVerified=false"));
+    } else {
+      steps.push(pass("Created non-demo user", `id=${user.id}`));
+    }
 
-    // Start the local session for the created user (not Demo User).
-    startLocalUserSession({ id: user.id, email: user.email, name: user.fullName });
     const sess = getDemoSession();
     const sessUser = getDemoUser();
     if (!sess || sess.userId !== user.id) {
@@ -992,9 +989,13 @@ export const signupWorkflow = () =>
       steps.push(fail("Active session not demo", "Session is demo user, not created user"));
     } else if (sessUser?.isDemoUser !== false) {
       steps.push(fail("isDemoUser flag", "Expected isDemoUser=false on active user"));
+    } else if (sess.fullName !== user.fullName) {
+      steps.push(fail("Session fullName", `Expected ${user.fullName}, got ${sess.fullName}`));
     } else {
       steps.push(pass("Active session = created user", `userId=${sess.userId}, isDemoUser=false`));
     }
+
+    steps.push(pass("Redirect target", "Signup route sends valid creates to /app"));
 
     const byEmail = findUserByEmailOrMobile(email);
     if (!byEmail || byEmail.id !== user.id) {
@@ -1002,20 +1003,30 @@ export const signupWorkflow = () =>
     } else if (byEmail.password !== "password123") {
       steps.push(fail("Login credential check", "Password mismatch"));
     } else {
-      steps.push(pass("Login by email", "Credentials match"));
+      endDemoSession();
+      startLocalUserSession({ id: byEmail.id, email: byEmail.email, name: byEmail.fullName });
+      const loginSess = getDemoSession();
+      loginSess?.userId === user.id
+        ? steps.push(pass("Login by email", "Created credentials start the same user session"))
+        : steps.push(fail("Login by email", `Expected ${user.id}, got ${loginSess?.userId}`));
     }
 
     endDemoSession();
     if (priorSession && priorUser) {
-      startLocalUserSession({
-        id: priorUser.id,
-        email: priorUser.email,
-        name: priorUser.name,
-        role: priorUser.role,
-      });
+      if (priorSession.isDemoUser || priorUser.isDemoUser) {
+        startDemoSession();
+      } else {
+        startLocalUserSession({
+          id: priorUser.id,
+          email: priorUser.email,
+          name: priorUser.name,
+          role: priorUser.role,
+        });
+      }
     }
     deleteLocalUser(user.id);
-    steps.push(pass("Cleanup", "[QA] session restored + user removed"));
+    deleteDemoCompany(company.id);
+    steps.push(pass("Cleanup", "[QA] session restored + user/company removed"));
 
 
     return steps;
