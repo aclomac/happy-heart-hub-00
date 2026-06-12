@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatusBadge } from "@/components/erp/ecommerce/EcommerceUI";
 import { getReturns, setReturns, getOrders, genId, type EcoReturn } from "@/lib/demo/ecommerce";
+import { getItems, setItems } from "@/lib/demo/inventory";
 import { Plus, Check, X } from "lucide-react";
 
 export const Route = createFileRoute("/app/ecommerce/returns")({ component: ReturnsPage });
@@ -39,11 +40,26 @@ function ReturnsPage() {
     toast.success("Return created");
   };
 
+  const applyStockAction = (r: EcoReturn) => {
+    if (r.stockAction !== "Add back to stock" || !r.sku) return;
+    const items = getItems();
+    const item = items.find((i) => i.sku && i.sku.toLowerCase() === r.sku.toLowerCase());
+    if (!item) return;
+    item.stock = (item.stock || 0) + r.qty;
+    setItems(items);
+    toast.message(`Stock +${r.qty} → ${item.name}`);
+  };
+
   const setStatus = (id: string, status: EcoReturn["status"]) => {
     const next = list.map((r) => r.id === id ? { ...r, status } : r);
     setList(next); setReturns(next);
+    if (status === "Completed") {
+      const r = next.find((x) => x.id === id);
+      if (r) applyStockAction(r);
+    }
     toast.success(status);
   };
+
 
   return (
     <div>

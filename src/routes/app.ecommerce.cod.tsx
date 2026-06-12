@@ -10,6 +10,9 @@ import {
   getCodEntries, setCodEntries, getOrders, getCouriers,
   type EcoCodEntry,
 } from "@/lib/demo/ecommerce";
+import { getCashTxns, setCashTxns, type DemoCashTxn } from "@/lib/demo/sales";
+import { BANK_CASH, BANK_DBBL, BANK_BKASH, BANK_NAGAD } from "@/lib/demo/cash";
+import { genId } from "@/lib/demo/inventory";
 
 export const Route = createFileRoute("/app/ecommerce/cod")({ component: CodPage });
 
@@ -24,14 +27,40 @@ function CodPage() {
     .filter((c) => courierFilter === "all" || c.courierId === courierFilter)
     .filter((c) => statusFilter === "all" || c.status === statusFilter);
 
+  const accountFor = (m: "Cash" | "Bank" | "bKash" | "Nagad") =>
+    m === "Cash" ? BANK_CASH : m === "Bank" ? BANK_DBBL : m === "bKash" ? BANK_BKASH : BANK_NAGAD;
+
   const collect = (id: string, method: "Cash" | "Bank" | "bKash" | "Nagad") => {
+    const entry = list.find((c) => c.id === id);
+    if (!entry) return;
+    const net = entry.codAmount - entry.courierCharge - entry.returnCharge;
     const next = list.map((c) => c.id === id ? {
       ...c, collectedAmount: c.codAmount, status: "Collected" as const,
       collectionDate: new Date().toISOString().slice(0, 10), paymentMethod: method,
     } : c);
     setList(next); setCodEntries(next);
-    toast.success(`COD collected via ${method}`);
+    // Post a real cash/bank transaction so ledgers update.
+    const o = orders.find((x) => x.id === entry.orderId);
+    const txn: DemoCashTxn = {
+      id: genId("ctx"),
+      company_id: "demo",
+      bank_account_id: accountFor(method),
+      direction: "in",
+      amount: net,
+      txn_date: new Date().toISOString().slice(0, 10),
+      category: "Ecommerce COD",
+      notes: `COD collected for order ${o?.orderNo || entry.orderId}`,
+      reference_type: "ecommerce_cod",
+      reference_id: entry.id,
+      status: "posted",
+      reversed_at: null,
+      reversed_by: null,
+      created_at: new Date().toISOString(),
+    };
+    setCashTxns([...getCashTxns(), txn]);
+    toast.success(`COD collected via ${method} · ৳${net.toLocaleString()} posted`);
   };
+
 
   const totalPending = filtered.filter((c) => c.status === "Pending").reduce((s, c) => s + c.codAmount, 0);
   const totalCollected = filtered.filter((c) => c.status === "Collected").reduce((s, c) => s + c.collectedAmount, 0);
