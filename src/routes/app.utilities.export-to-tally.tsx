@@ -11,26 +11,20 @@ import { Download, Info } from "lucide-react";
 
 export const Route = createFileRoute("/app/utilities/export-to-tally")({ component: ExportToTally });
 
-type Dataset =
-  | { key: "sales"; label: string; table: "sales"; columns: string }
-  | { key: "purchases"; label: string; table: "purchases"; columns: string }
-  | { key: "payments_in"; label: string; table: "payments_in"; columns: string }
-  | { key: "payment_out"; label: string; table: "payment_out"; columns: string }
-  | { key: "expenses"; label: string; table: "expenses"; columns: string }
-  | { key: "parties"; label: string; table: "parties"; columns: string };
+type DatasetKey = "sales" | "purchases" | "receipts" | "payments" | "expenses" | "parties";
 
-const DATASETS: Dataset[] = [
-  { key: "sales", label: "Sales", table: "sales", columns: "invoice_number,date,party_id,subtotal,tax_amount,total,paid_amount,due_amount" },
-  { key: "purchases", label: "Purchases", table: "purchases", columns: "bill_number,date,party_id,subtotal,tax_amount,total,paid_amount,due_amount" },
-  { key: "payments_in", label: "Receipts", table: "payments_in", columns: "receipt_number,date,party_id,amount,payment_method,reference" },
-  { key: "payment_out", label: "Payments", table: "payment_out", columns: "payment_number,date,party_id,amount,payment_method,reference" },
-  { key: "expenses", label: "Expenses", table: "expenses", columns: "expense_number,date,category_id,amount,payment_method,notes" },
-  { key: "parties", label: "Parties Ledger", table: "parties", columns: "name,type,phone,email,opening_balance,balance" },
+const DATASETS: { key: DatasetKey; label: string }[] = [
+  { key: "sales", label: "Sales" },
+  { key: "purchases", label: "Purchases" },
+  { key: "receipts", label: "Receipts (Payment-In)" },
+  { key: "payments", label: "Payments (Payment-Out)" },
+  { key: "expenses", label: "Expenses" },
+  { key: "parties", label: "Parties Ledger" },
 ];
 
 function ExportToTally() {
   const companyId = useCurrentCompanyId();
-  const [busy, setBusy] = useState<string | null>(null);
+  const [busy, setBusy] = useState<DatasetKey | null>(null);
 
   if (!companyId) {
     return (
@@ -41,22 +35,64 @@ function ExportToTally() {
     );
   }
 
-  const exportOne = async (ds: Dataset) => {
-    setBusy(ds.key);
-    try {
+  const fetchRows = async (key: DatasetKey): Promise<Array<Record<string, unknown>>> => {
+    if (key === "sales") {
       const { data, error } = await supabase
-        .from(ds.table as never)
-        .select(ds.columns)
+        .from("sales")
+        .select("invoice_no,invoice_date,party_id,subtotal,tax,total,paid,balance,status")
         .eq("company_id", companyId)
         .is("deleted_at", null);
       if (error) throw error;
-      const rows = (data ?? []) as Array<Record<string, unknown>>;
+      return data ?? [];
+    }
+    if (key === "purchases") {
+      const { data, error } = await supabase
+        .from("purchases")
+        .select("bill_no,bill_date,party_id,subtotal,tax,total,paid,balance,status")
+        .eq("company_id", companyId)
+        .is("deleted_at", null);
+      if (error) throw error;
+      return data ?? [];
+    }
+    if (key === "receipts" || key === "payments") {
+      const direction = key === "receipts" ? "in" : "out";
+      const { data, error } = await supabase
+        .from("payments")
+        .select("payment_date,party_id,amount,method,reference_no,direction,status")
+        .eq("company_id", companyId)
+        .eq("direction", direction)
+        .is("deleted_at", null);
+      if (error) throw error;
+      return data ?? [];
+    }
+    if (key === "expenses") {
+      const { data, error } = await supabase
+        .from("expenses")
+        .select("expense_no,expense_date,category,amount,tax,payment_method,vendor,notes")
+        .eq("company_id", companyId)
+        .is("deleted_at", null);
+      if (error) throw error;
+      return data ?? [];
+    }
+    const { data, error } = await supabase
+      .from("parties")
+      .select("name,type,phone,email,opening_balance,balance,gst_number")
+      .eq("company_id", companyId)
+      .is("deleted_at", null);
+    if (error) throw error;
+    return data ?? [];
+  };
+
+  const exportOne = async (key: DatasetKey, label: string) => {
+    setBusy(key);
+    try {
+      const rows = await fetchRows(key);
       if (rows.length === 0) {
-        toast.info(`No ${ds.label.toLowerCase()} to export.`);
+        toast.info(`No ${label.toLowerCase()} to export.`);
         return;
       }
-      downloadCSV(`tally-${ds.key}.csv`, rows);
-      toast.success(`Exported ${rows.length} ${ds.label.toLowerCase()} row(s)`);
+      downloadCSV(`tally-${key}.csv`, rows);
+      toast.success(`Exported ${rows.length} ${label.toLowerCase()} row(s)`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Export failed");
     } finally {
@@ -65,7 +101,7 @@ function ExportToTally() {
   };
 
   const exportAll = async () => {
-    for (const ds of DATASETS) await exportOne(ds);
+    for (const ds of DATASETS) await exportOne(ds.key, ds.label);
   };
 
   return (
@@ -101,7 +137,7 @@ function ExportToTally() {
               <div className="font-semibold text-sm">{ds.label}</div>
               <div className="text-xs text-muted-foreground">CSV export</div>
             </div>
-            <Button size="sm" variant="outline" onClick={() => exportOne(ds)} disabled={busy === ds.key}>
+            <Button size="sm" variant="outline" onClick={() => exportOne(ds.key, ds.label)} disabled={busy === ds.key}>
               <Download className="w-4 h-4 mr-1.5" />
               {busy === ds.key ? "…" : "CSV"}
             </Button>

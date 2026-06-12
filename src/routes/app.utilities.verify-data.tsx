@@ -36,12 +36,12 @@ function VerifyData() {
       // Duplicate invoice numbers
       const { data: sales } = await supabase
         .from("sales")
-        .select("invoice_number")
+        .select("invoice_no")
         .eq("company_id", companyId)
         .is("deleted_at", null);
       const counts = new Map<string, number>();
       (sales ?? []).forEach((s) => {
-        const n = (s as { invoice_number: string }).invoice_number;
+        const n = (s as { invoice_no: string }).invoice_no;
         if (n) counts.set(n, (counts.get(n) ?? 0) + 1);
       });
       const dups = Array.from(counts.entries()).filter(([, c]) => c > 1);
@@ -85,7 +85,7 @@ function VerifyData() {
       // Sales without customer
       const { data: salesNoCust } = await supabase
         .from("sales")
-        .select("invoice_number,party_id")
+        .select("invoice_no,party_id")
         .eq("company_id", companyId)
         .is("deleted_at", null)
         .is("party_id", null);
