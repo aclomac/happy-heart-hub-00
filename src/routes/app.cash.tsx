@@ -25,7 +25,7 @@ function CashShell() {
   return pathname === "/app/cash" ? <CashAndBank /> : <Outlet />;
 }
 
-type SectionKey = "bank" | "cash" | "reconcile" | "mobile" | "cheques" | "loans" | "statement";
+type SectionKey = "bank" | "cash" | "reconcile" | "mobile" | "cheques" | "loans" | "statement" | "import";
 
 const tabs: { key: SectionKey; label: string; icon: typeof Wallet }[] = [
   { key: "bank", label: "Bank Accounts", icon: Landmark },
@@ -35,6 +35,7 @@ const tabs: { key: SectionKey; label: string; icon: typeof Wallet }[] = [
   { key: "cheques", label: "Cheques", icon: FileText },
   { key: "loans", label: "Loan Accounts", icon: HandCoins },
   { key: "statement", label: "Statement", icon: BookOpen },
+  { key: "import", label: "Import Statement", icon: Upload },
 ];
 
 const VALID: SectionKey[] = [
@@ -45,6 +46,7 @@ const VALID: SectionKey[] = [
   "cheques",
   "loans",
   "statement",
+  "import",
 ];
 
 function CashAndBank() {
