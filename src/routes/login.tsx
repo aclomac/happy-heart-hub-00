@@ -80,6 +80,29 @@ function Login() {
       return;
     }
 
+    // Local user (created via /signup OTP flow) — match by email OR mobile.
+    const localUser = findUserByEmailOrMobile(useEmail);
+    if (localUser && localUser.password === usePass) {
+      try {
+        ensureDemoSeed();
+        startDemoSession();
+        setCurrentCompanyId(localUser.companyId ?? DEMO_COMPANY_ID, DEMO_USER_ID);
+        toast.success(`Welcome back, ${localUser.fullName}`);
+      } catch {
+        toast.error("Could not start local session");
+        setLoading(false);
+        return;
+      }
+      setLoading(false);
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("erpovo:cameFromLogin", "1");
+        window.location.replace("/app");
+        return;
+      }
+      nav({ to: "/app", replace: true });
+      return;
+    }
+
     const { error } = await supabase.auth.signInWithPassword({
       email: useEmail,
       password: usePass,
