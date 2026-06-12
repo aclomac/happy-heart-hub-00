@@ -613,10 +613,11 @@ export function SalesDocForm({
         >
           TEST CLICK
         </button>
-        <div className="min-w-0 truncate text-muted-foreground" data-testid="sales-click-debug-panel">
-          {lastClickDebug}
+        <div className="min-w-0 truncate text-muted-foreground">
+          Personal mode — all actions wired natively.
         </div>
       </div>
+
       <PageHeader
         title={editingId ? `Edit ${invoiceNo || meta.title}` : meta.title}
         subtitle={meta.subtitle}
