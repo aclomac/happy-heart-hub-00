@@ -118,6 +118,7 @@ import { Route as AppEcommerceWebsitesRouteImport } from './routes/app.ecommerce
 import { Route as AppEcommerceTrackingRouteImport } from './routes/app.ecommerce.tracking'
 import { Route as AppEcommerceReturnsRouteImport } from './routes/app.ecommerce.returns'
 import { Route as AppEcommerceProductsRouteImport } from './routes/app.ecommerce.products'
+import { Route as AppEcommercePaymentsRouteImport } from './routes/app.ecommerce.payments'
 import { Route as AppEcommerceOrdersRouteImport } from './routes/app.ecommerce.orders'
 import { Route as AppEcommerceOrderSyncRouteImport } from './routes/app.ecommerce.order-sync'
 import { Route as AppEcommerceDeliveryChargeRouteImport } from './routes/app.ecommerce.delivery-charge'
@@ -711,6 +712,11 @@ const AppEcommerceProductsRoute = AppEcommerceProductsRouteImport.update({
   path: '/products',
   getParentRoute: () => AppEcommerceRoute,
 } as any)
+const AppEcommercePaymentsRoute = AppEcommercePaymentsRouteImport.update({
+  id: '/payments',
+  path: '/payments',
+  getParentRoute: () => AppEcommerceRoute,
+} as any)
 const AppEcommerceOrdersRoute = AppEcommerceOrdersRouteImport.update({
   id: '/orders',
   path: '/orders',
@@ -980,6 +986,7 @@ export interface FileRoutesByFullPath {
   '/app/ecommerce/delivery-charge': typeof AppEcommerceDeliveryChargeRoute
   '/app/ecommerce/order-sync': typeof AppEcommerceOrderSyncRoute
   '/app/ecommerce/orders': typeof AppEcommerceOrdersRoute
+  '/app/ecommerce/payments': typeof AppEcommercePaymentsRoute
   '/app/ecommerce/products': typeof AppEcommerceProductsRoute
   '/app/ecommerce/returns': typeof AppEcommerceReturnsRoute
   '/app/ecommerce/tracking': typeof AppEcommerceTrackingRoute
@@ -1122,6 +1129,7 @@ export interface FileRoutesByTo {
   '/app/ecommerce/delivery-charge': typeof AppEcommerceDeliveryChargeRoute
   '/app/ecommerce/order-sync': typeof AppEcommerceOrderSyncRoute
   '/app/ecommerce/orders': typeof AppEcommerceOrdersRoute
+  '/app/ecommerce/payments': typeof AppEcommercePaymentsRoute
   '/app/ecommerce/products': typeof AppEcommerceProductsRoute
   '/app/ecommerce/returns': typeof AppEcommerceReturnsRoute
   '/app/ecommerce/tracking': typeof AppEcommerceTrackingRoute
@@ -1269,6 +1277,7 @@ export interface FileRoutesById {
   '/app/ecommerce/delivery-charge': typeof AppEcommerceDeliveryChargeRoute
   '/app/ecommerce/order-sync': typeof AppEcommerceOrderSyncRoute
   '/app/ecommerce/orders': typeof AppEcommerceOrdersRoute
+  '/app/ecommerce/payments': typeof AppEcommercePaymentsRoute
   '/app/ecommerce/products': typeof AppEcommerceProductsRoute
   '/app/ecommerce/returns': typeof AppEcommerceReturnsRoute
   '/app/ecommerce/tracking': typeof AppEcommerceTrackingRoute
@@ -1417,6 +1426,7 @@ export interface FileRouteTypes {
     | '/app/ecommerce/delivery-charge'
     | '/app/ecommerce/order-sync'
     | '/app/ecommerce/orders'
+    | '/app/ecommerce/payments'
     | '/app/ecommerce/products'
     | '/app/ecommerce/returns'
     | '/app/ecommerce/tracking'
@@ -1559,6 +1569,7 @@ export interface FileRouteTypes {
     | '/app/ecommerce/delivery-charge'
     | '/app/ecommerce/order-sync'
     | '/app/ecommerce/orders'
+    | '/app/ecommerce/payments'
     | '/app/ecommerce/products'
     | '/app/ecommerce/returns'
     | '/app/ecommerce/tracking'
@@ -1705,6 +1716,7 @@ export interface FileRouteTypes {
     | '/app/ecommerce/delivery-charge'
     | '/app/ecommerce/order-sync'
     | '/app/ecommerce/orders'
+    | '/app/ecommerce/payments'
     | '/app/ecommerce/products'
     | '/app/ecommerce/returns'
     | '/app/ecommerce/tracking'
@@ -2542,6 +2554,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppEcommerceProductsRouteImport
       parentRoute: typeof AppEcommerceRoute
     }
+    '/app/ecommerce/payments': {
+      id: '/app/ecommerce/payments'
+      path: '/payments'
+      fullPath: '/app/ecommerce/payments'
+      preLoaderRoute: typeof AppEcommercePaymentsRouteImport
+      parentRoute: typeof AppEcommerceRoute
+    }
     '/app/ecommerce/orders': {
       id: '/app/ecommerce/orders'
       path: '/orders'
@@ -2853,6 +2872,7 @@ interface AppEcommerceRouteChildren {
   AppEcommerceDeliveryChargeRoute: typeof AppEcommerceDeliveryChargeRoute
   AppEcommerceOrderSyncRoute: typeof AppEcommerceOrderSyncRoute
   AppEcommerceOrdersRoute: typeof AppEcommerceOrdersRoute
+  AppEcommercePaymentsRoute: typeof AppEcommercePaymentsRoute
   AppEcommerceProductsRoute: typeof AppEcommerceProductsRoute
   AppEcommerceReturnsRoute: typeof AppEcommerceReturnsRoute
   AppEcommerceTrackingRoute: typeof AppEcommerceTrackingRoute
@@ -2867,6 +2887,7 @@ const AppEcommerceRouteChildren: AppEcommerceRouteChildren = {
   AppEcommerceDeliveryChargeRoute: AppEcommerceDeliveryChargeRoute,
   AppEcommerceOrderSyncRoute: AppEcommerceOrderSyncRoute,
   AppEcommerceOrdersRoute: AppEcommerceOrdersRoute,
+  AppEcommercePaymentsRoute: AppEcommercePaymentsRoute,
   AppEcommerceProductsRoute: AppEcommerceProductsRoute,
   AppEcommerceReturnsRoute: AppEcommerceReturnsRoute,
   AppEcommerceTrackingRoute: AppEcommerceTrackingRoute,
