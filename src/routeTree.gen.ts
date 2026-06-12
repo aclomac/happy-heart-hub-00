@@ -75,6 +75,7 @@ import { Route as AppExpensesRouteImport } from './routes/app.expenses'
 import { Route as AppExpenseCategoriesRouteImport } from './routes/app.expense-categories'
 import { Route as AppEstimatesRouteImport } from './routes/app.estimates'
 import { Route as AppEmployeesRouteImport } from './routes/app.employees'
+import { Route as AppEcommerceRouteImport } from './routes/app.ecommerce'
 import { Route as AppDeviceLimitRouteImport } from './routes/app.device-limit'
 import { Route as AppDeliveryChallansRouteImport } from './routes/app.delivery-challans'
 import { Route as AppDebitNotesRouteImport } from './routes/app.debit-notes'
@@ -475,6 +476,11 @@ const AppEmployeesRoute = AppEmployeesRouteImport.update({
   path: '/employees',
   getParentRoute: () => AppRoute,
 } as any)
+const AppEcommerceRoute = AppEcommerceRouteImport.update({
+  id: '/ecommerce',
+  path: '/ecommerce',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppDeviceLimitRoute = AppDeviceLimitRouteImport.update({
   id: '/device-limit',
   path: '/device-limit',
@@ -836,6 +842,7 @@ export interface FileRoutesByFullPath {
   '/app/debit-notes': typeof AppDebitNotesRouteWithChildren
   '/app/delivery-challans': typeof AppDeliveryChallansRouteWithChildren
   '/app/device-limit': typeof AppDeviceLimitRoute
+  '/app/ecommerce': typeof AppEcommerceRoute
   '/app/employees': typeof AppEmployeesRoute
   '/app/estimates': typeof AppEstimatesRouteWithChildren
   '/app/expense-categories': typeof AppExpenseCategoriesRoute
@@ -968,6 +975,7 @@ export interface FileRoutesByTo {
   '/app/debit-notes': typeof AppDebitNotesRouteWithChildren
   '/app/delivery-challans': typeof AppDeliveryChallansRouteWithChildren
   '/app/device-limit': typeof AppDeviceLimitRoute
+  '/app/ecommerce': typeof AppEcommerceRoute
   '/app/employees': typeof AppEmployeesRoute
   '/app/estimates': typeof AppEstimatesRouteWithChildren
   '/app/expense-categories': typeof AppExpenseCategoriesRoute
@@ -1102,6 +1110,7 @@ export interface FileRoutesById {
   '/app/debit-notes': typeof AppDebitNotesRouteWithChildren
   '/app/delivery-challans': typeof AppDeliveryChallansRouteWithChildren
   '/app/device-limit': typeof AppDeviceLimitRoute
+  '/app/ecommerce': typeof AppEcommerceRoute
   '/app/employees': typeof AppEmployeesRoute
   '/app/estimates': typeof AppEstimatesRouteWithChildren
   '/app/expense-categories': typeof AppExpenseCategoriesRoute
@@ -1238,6 +1247,7 @@ export interface FileRouteTypes {
     | '/app/debit-notes'
     | '/app/delivery-challans'
     | '/app/device-limit'
+    | '/app/ecommerce'
     | '/app/employees'
     | '/app/estimates'
     | '/app/expense-categories'
@@ -1370,6 +1380,7 @@ export interface FileRouteTypes {
     | '/app/debit-notes'
     | '/app/delivery-challans'
     | '/app/device-limit'
+    | '/app/ecommerce'
     | '/app/employees'
     | '/app/estimates'
     | '/app/expense-categories'
@@ -1503,6 +1514,7 @@ export interface FileRouteTypes {
     | '/app/debit-notes'
     | '/app/delivery-challans'
     | '/app/device-limit'
+    | '/app/ecommerce'
     | '/app/employees'
     | '/app/estimates'
     | '/app/expense-categories'
@@ -2096,6 +2108,13 @@ declare module '@tanstack/react-router' {
       path: '/employees'
       fullPath: '/app/employees'
       preLoaderRoute: typeof AppEmployeesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/ecommerce': {
+      id: '/app/ecommerce'
+      path: '/ecommerce'
+      fullPath: '/app/ecommerce'
+      preLoaderRoute: typeof AppEcommerceRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/device-limit': {
@@ -2864,6 +2883,7 @@ interface AppRouteChildren {
   AppDebitNotesRoute: typeof AppDebitNotesRouteWithChildren
   AppDeliveryChallansRoute: typeof AppDeliveryChallansRouteWithChildren
   AppDeviceLimitRoute: typeof AppDeviceLimitRoute
+  AppEcommerceRoute: typeof AppEcommerceRoute
   AppEmployeesRoute: typeof AppEmployeesRoute
   AppEstimatesRoute: typeof AppEstimatesRouteWithChildren
   AppExpenseCategoriesRoute: typeof AppExpenseCategoriesRoute
@@ -2919,6 +2939,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppDebitNotesRoute: AppDebitNotesRouteWithChildren,
   AppDeliveryChallansRoute: AppDeliveryChallansRouteWithChildren,
   AppDeviceLimitRoute: AppDeviceLimitRoute,
+  AppEcommerceRoute: AppEcommerceRoute,
   AppEmployeesRoute: AppEmployeesRoute,
   AppEstimatesRoute: AppEstimatesRouteWithChildren,
   AppExpenseCategoriesRoute: AppExpenseCategoriesRoute,
