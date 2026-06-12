@@ -303,6 +303,38 @@ function QaAuditPage() {
         title="ERPOVO Functional QA Audit"
         subtitle="Verify every menu, submenu, route, button and core workflow"
         actions={
+          // eslint-disable-next-line react/jsx-no-useless-fragment
+          <>{null}</> as never && null
+        }
+      />
+
+      {/* Stable Build banner */}
+      <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-md p-4 flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
+        <div>
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+            <div className="font-semibold text-emerald-700 dark:text-emerald-300">
+              {BUILD_LABEL}
+            </div>
+            <Badge variant="outline" className="border-emerald-500/40 text-emerald-700 dark:text-emerald-300">
+              {BUILD_STAMP}
+            </Badge>
+          </div>
+          <div className="mt-2 text-xs text-muted-foreground flex flex-wrap gap-x-3 gap-y-1">
+            {BUILD_NOTES.map((n) => (
+              <span key={n} className="inline-flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                {n}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <PageHeader
+        title="Audit controls"
+        subtitle="Run probes, workflows and export the latest QA report"
+        actions={
           <div className="flex flex-wrap gap-2">
             <Button size="sm" onClick={runFullAudit} disabled={probing || running}>
               <PlayCircle className="w-4 h-4 mr-1.5" />
