@@ -881,36 +881,7 @@ export function SalesDocForm({
 
   return (
     <div>
-      <div className="mb-3 flex items-center gap-2 rounded-md border border-warning/30 bg-warning/10 p-2 text-xs">
-        <button
-          type="button"
-          onClick={() => alert("TEST CLICK WORKS")}
-          className="inline-flex h-8 items-center justify-center rounded-md bg-primary px-3 font-medium text-primary-foreground shadow-sm hover:bg-primary/90"
-          data-testid="sales-test-click-btn"
-        >
-          TEST CLICK
-        </button>
-        <div className="min-w-0 truncate text-muted-foreground">
-          Personal mode — all actions wired natively.
-        </div>
-      </div>
 
-      <div
-        data-testid="save-invoice-debug-panel"
-        className="mb-3 rounded-md border bg-muted/40 px-3 py-2 text-[11px] font-mono text-muted-foreground grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-1"
-      >
-        <div>Save clicked: <b>{saveDebug.clicked ? "yes" : "no"}</b></div>
-        <div>Customer selected: <b>{party ? `${party.name} (${party.id})` : partyId || saveDebug.customer}</b></div>
-        <div>Items count: <b>{rows.filter((r) => r.item_id && r.qty > 0).length || saveDebug.itemsCount}</b></div>
-        <div>Subtotal: <b>{subTotal}</b></div>
-        <div>Total: <b>{total}</b></div>
-        <div>Validation status: <b>{saveDebug.validation}</b></div>
-        <div>Saved invoice id: <b>{saveDebug.savedInvoiceId || "—"}</b></div>
-        <div>Local sales count: <b>{saveDebug.localSalesCount ?? "—"}</b></div>
-        {saveDebug.error ? (
-          <div className="col-span-full text-destructive">Error: {saveDebug.error}</div>
-        ) : null}
-      </div>
 
       <PageHeader
         title={editingId ? `Edit ${invoiceNo || meta.title}` : meta.title}
