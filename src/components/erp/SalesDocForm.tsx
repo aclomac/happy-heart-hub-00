@@ -871,7 +871,9 @@ export function SalesDocForm({
     if (!savedInvoiceId || !companyId) return;
     setPdfBusy(true);
     try {
-      const d = await buildInvoiceDataFromSale(savedInvoiceId, companyId);
+      const d = await buildInvoiceDataFromSale(savedInvoiceId, companyId, {
+        title: docLabels.pdfTitle,
+      });
       await fn(d);
     } catch (e) {
       console.error(e);
