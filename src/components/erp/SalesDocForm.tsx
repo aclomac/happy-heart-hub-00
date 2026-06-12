@@ -305,6 +305,7 @@ export function SalesDocForm({
 }) {
   const prefillSourceId = sourceSaleId || duplicateSaleId;
   const meta = META[kind];
+  const docLabels = labelsFor(kind);
   const companyId = useCurrentCompanyId();
   const navigate = useNavigate();
   const qc = useQueryClient();
