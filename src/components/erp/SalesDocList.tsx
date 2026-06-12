@@ -10,9 +10,22 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Search, Loader2, ArrowRightLeft, Receipt, Pencil } from "lucide-react";
+import {
+  MoreHorizontal,
+  Search,
+  Loader2,
+  ArrowRightLeft,
+  Receipt,
+  Pencil,
+  Eye,
+  Printer,
+  FileText,
+  Copy,
+  Trash2,
+} from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentCompanyId } from "@/lib/use-company";
@@ -20,6 +33,13 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/erp/ConfirmDialog";
 import { InvoiceActionsMenu } from "@/components/erp/InvoiceActions";
+import { buildInvoiceDataFromSale } from "@/lib/pdf/build-invoice";
+import {
+  previewInvoicePDF,
+  printInvoicePDF,
+  downloadInvoicePDF,
+} from "@/lib/pdf/invoice-pdf";
+import { labelsFor } from "@/lib/doc-kind-labels";
 import type { DocKind } from "./SalesDocForm";
 import { softDeleteWithUndo, type SoftDeleteModule } from "@/lib/soft-delete";
 
