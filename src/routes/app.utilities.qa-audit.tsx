@@ -411,6 +411,19 @@ function QaAuditPage() {
             >
               Test Buttons
             </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={async () => {
+                toast.info("Running CI smoke suite in browser…");
+                await runWorkflows(ALL_WORKFLOWS);
+                toast.message("CLI equivalent: bun run qa:smoke");
+              }}
+              disabled={running}
+            >
+              <PlayCircle className="w-4 h-4 mr-1.5" />
+              Run CI Smoke Tests
+            </Button>
             <Button size="sm" variant="outline" onClick={() => downloadReport("csv")}>
               <Download className="w-4 h-4 mr-1.5" />
               Export CSV
