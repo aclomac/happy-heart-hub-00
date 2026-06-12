@@ -5,7 +5,11 @@ import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
 
 const demoCookieMiddleware = createMiddleware().server(async ({ next, request }) => {
   const cookie = request.headers.get("cookie") ?? "";
-  const demoAuth = /(?:^|;\s*)erpovo_demo_auth=1(?:;|$)/.test(cookie);
+  const demoEmail = decodeURIComponent(
+    cookie.match(/(?:^|;\s*)erpovo_demo_email=([^;]*)/)?.[1] ?? "",
+  );
+  const demoAuth =
+    /(?:^|;\s*)erpovo_demo_auth=1(?:;|$)/.test(cookie) && demoEmail === "demo@erpovo.com";
   if (demoAuth) console.log("[demo-auth] demo cookie detected on server request");
   return next({
     context: {
