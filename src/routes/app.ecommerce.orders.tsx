@@ -5,6 +5,8 @@ import { PageHeader } from "@/components/erp/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
@@ -16,7 +18,7 @@ import {
 } from "@/lib/demo/ecommerce";
 import { getSales, setSales } from "@/lib/demo/sales";
 import { genId } from "@/lib/demo/inventory";
-import { MoreVertical, Truck, FileText, Copy, Trash2 } from "lucide-react";
+import { MoreVertical, Truck, FileText, Copy, Trash2, Plus } from "lucide-react";
 
 export const Route = createFileRoute("/app/ecommerce/orders")({ component: OrdersPage });
 
@@ -24,6 +26,7 @@ const STATUSES: EcoOrderStatus[] = [
   "New", "Confirmed", "Processing", "Packed", "Ready to Ship", "Shipped",
   "Delivered", "Cancelled", "Returned", "Partially Returned", "Exchange", "Failed Delivery",
 ];
+
 
 function OrdersPage() {
   const [list, setList] = useState<EcoOrder[]>(() => getOrders());
