@@ -84,6 +84,62 @@ function Items() {
   const [catFilter, setCatFilter] = useState<string>("all");
   const [lowOnly, setLowOnly] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [addOpen, setAddOpen] = useState(false);
+  const [form, setForm] = useState({
+    name: "",
+    sku: "",
+    category_id: "",
+    unit: "PCS",
+    purchase_price: "",
+    sale_price: "",
+    stock: "",
+    low_stock_alert: "",
+    description: "",
+  });
+  const resetForm = () =>
+    setForm({
+      name: "",
+      sku: "",
+      category_id: "",
+      unit: "PCS",
+      purchase_price: "",
+      sale_price: "",
+      stock: "",
+      low_stock_alert: "",
+      description: "",
+    });
+  const handleCreateItem = async () => {
+    if (!form.name.trim()) {
+      toast.error("Item name is required");
+      return;
+    }
+    try {
+      const payload: any = {
+        company_id: companyId,
+        name: form.name.trim(),
+        sku: form.sku.trim() || null,
+        category_id: form.category_id || null,
+        unit: form.unit || "PCS",
+        purchase_price: Number(form.purchase_price) || 0,
+        sale_price: Number(form.sale_price) || 0,
+        wholesale_price: 0,
+        mrp: 0,
+        stock: Number(form.stock) || 0,
+        low_stock_alert: form.low_stock_alert ? Number(form.low_stock_alert) : null,
+        tax_rate: 0,
+        is_service: false,
+        description: form.description.trim() || null,
+      };
+      const res = await mut.mutateAsync(payload);
+      if ((res as any)?.error) throw (res as any).error;
+      toast.success("Item created successfully");
+      qc.invalidateQueries({ queryKey: ["items", companyId] });
+      resetForm();
+      setAddOpen(false);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to create item");
+    }
+  };
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["items", companyId],
