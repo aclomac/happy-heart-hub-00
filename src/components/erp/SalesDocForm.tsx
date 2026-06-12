@@ -624,6 +624,19 @@ export function SalesDocForm({
 
   return (
     <div>
+      <div className="mb-3 flex items-center gap-2 rounded-md border border-warning/30 bg-warning/10 p-2 text-xs">
+        <button
+          type="button"
+          onClick={() => alert("TEST CLICK WORKS")}
+          className="inline-flex h-8 items-center justify-center rounded-md bg-primary px-3 font-medium text-primary-foreground shadow-sm hover:bg-primary/90"
+          data-testid="sales-test-click-btn"
+        >
+          TEST CLICK
+        </button>
+        <div className="min-w-0 truncate text-muted-foreground" data-testid="sales-click-debug-panel">
+          {lastClickDebug}
+        </div>
+      </div>
       <PageHeader
         title={editingId ? `Edit ${invoiceNo || meta.title}` : meta.title}
         subtitle={meta.subtitle}
@@ -634,17 +647,16 @@ export function SalesDocForm({
                 Cancel
               </Button>
             </Link>
-              <button
-                type="button"
+            <button
               type="button"
               data-testid="save-invoice-btn"
               disabled={saving || convertedBlocked}
-                onClick={handleSaveInvoice}
-                className="inline-flex h-8 items-center justify-center gap-2 rounded-md bg-sale px-3 text-xs font-medium text-sale-foreground shadow-sm hover:bg-sale/90 disabled:pointer-events-none disabled:opacity-50"
+              onClick={handleSaveInvoice}
+              className="inline-flex h-8 items-center justify-center gap-2 rounded-md bg-sale px-3 text-xs font-medium text-sale-foreground shadow-sm hover:bg-sale/90 disabled:pointer-events-none disabled:opacity-50"
             >
               <Save className="w-4 h-4" />
               {saving ? "Saving…" : editingId ? "Update" : meta.saveLabel}
-              </button>
+            </button>
           </>
         }
       />
