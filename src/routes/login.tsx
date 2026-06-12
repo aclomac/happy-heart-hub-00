@@ -2,7 +2,6 @@ import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-ro
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -175,12 +174,13 @@ function Login() {
         <div className="w-full max-w-sm">
           <h2 className="text-2xl font-bold mb-1">Welcome back</h2>
           <p className="text-sm text-muted-foreground mb-6">Sign in to your ERPOVO account</p>
-          <Tabs defaultValue="email">
-            <TabsList className="grid grid-cols-2 w-full">
-              <TabsTrigger value="email">Email</TabsTrigger>
-              <TabsTrigger value="mobile">Mobile + OTP</TabsTrigger>
-            </TabsList>
-            <TabsContent value="email" className="space-y-3 mt-4">
+          <form
+            className="space-y-3"
+            onSubmit={(e) => {
+              e.preventDefault();
+              void handleLogin();
+            }}
+          >
               <div>
                 <Label className="text-xs">Email</Label>
                 <Input
@@ -200,9 +200,9 @@ function Login() {
                 />
               </div>
               <Button
+                type="submit"
                 variant="default"
                 className="w-full"
-                onClick={() => handleLogin()}
                 disabled={loading}
               >
                 {loading ? "Signing in..." : "Sign In"}
@@ -229,20 +229,7 @@ function Login() {
                   Forgot password?
                 </Link>
               </div>
-            </TabsContent>
-            <TabsContent value="mobile" className="space-y-3 mt-4">
-              <div>
-                <Label className="text-xs">Mobile Number</Label>
-                <Input placeholder="+880 1XXX XXXXXX" />
-              </div>
-              <Button variant="default" className="w-full">
-                Send OTP
-              </Button>
-              <p className="text-xs text-muted-foreground text-center">
-                We'll send a 6-digit code to verify your mobile.
-              </p>
-            </TabsContent>
-          </Tabs>
+          </form>
           <div className="mt-6 text-sm text-center">
             Don't have an account?{" "}
             <Link to="/signup" className="text-primary font-medium hover:underline">
