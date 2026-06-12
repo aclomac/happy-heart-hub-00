@@ -59,6 +59,7 @@ export type DemoUser = {
   email: string;
   role: "owner" | "admin" | "user";
   name: string;
+  fullName?: string;
   isDemoUser?: boolean;
 };
 
@@ -68,6 +69,7 @@ export type DemoSession = {
   user: DemoUser;
   email: string;
   userId: string;
+  fullName?: string;
   startedAt: number;
   created_at: string;
   expires_at: string;
@@ -229,6 +231,7 @@ export function startLocalUserSession(input: {
   id: string;
   email: string;
   name: string;
+  fullName?: string;
   role?: "owner" | "admin" | "user";
 }): DemoSession {
   const now = new Date();
@@ -237,6 +240,7 @@ export function startLocalUserSession(input: {
     email: input.email,
     role: input.role ?? "owner",
     name: input.name,
+    fullName: input.fullName ?? input.name,
     isDemoUser: false,
   };
   const session: DemoSession = {
@@ -245,6 +249,7 @@ export function startLocalUserSession(input: {
     user,
     email: input.email,
     userId: input.id,
+    fullName: input.fullName ?? input.name,
     startedAt: now.getTime(),
     created_at: now.toISOString(),
     expires_at: "2099-12-31T23:59:59.000Z",
