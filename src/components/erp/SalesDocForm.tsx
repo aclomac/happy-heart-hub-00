@@ -613,7 +613,9 @@ export function SalesDocForm({
             <Button
               variant="sale"
               size="sm"
-              disabled={saving || convertedBlocked || isOffline}
+              type="button"
+              data-testid="save-invoice-btn"
+              disabled={saving || convertedBlocked}
               onClick={save}
             >
               <Save className="w-4 h-4" />
