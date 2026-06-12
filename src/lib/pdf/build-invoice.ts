@@ -51,7 +51,7 @@ export async function buildInvoiceDataFromSale(
     printSettings: invoiceCo.printSettings,
     signatureLabel: invoiceCo.signatureLabel,
     footerNote: invoiceCo.footerNote,
-    title: opts?.title || "TAX INVOICE",
+    title: opts?.title || "INVOICE",
     company: invoiceCo.company,
     party: {
       ...(sale.parties as {

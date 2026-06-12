@@ -243,7 +243,7 @@ export async function renderRegularInvoice(
   else doc.setTextColor(cfg.primary[0], cfg.primary[1], cfg.primary[2]);
   doc.setFont(headingFont, "bold");
   doc.setFontSize(cfg.density === "compact" ? 17 : 22);
-  safeText(doc, localizeDocTitle(data.title || "TAX INVOICE").toUpperCase(), W - M, 16, {
+  safeText(doc, localizeDocTitle(data.title || "INVOICE").toUpperCase(), W - M, 16, {
     align: "right",
   });
   doc.setFont(cfg.font, "normal");
