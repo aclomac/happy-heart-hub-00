@@ -441,6 +441,59 @@ export function SalesDocForm({
     setRows(copy);
   };
 
+  const handleAddItem = () => {
+    alert("ADD_ITEM_CLICKED");
+    // eslint-disable-next-line no-console
+    console.log("ADD_ITEM_CLICKED", { composerItemId, composerQty, composerRate });
+    setLastAddItemAt(new Date().toLocaleTimeString());
+    const it = items.find((i) => i.id === composerItemId);
+    if (!it) {
+      toast.error(t("Please select an item."));
+      return;
+    }
+    const qtyNum = Number(composerQty);
+    if (!qtyNum || qtyNum <= 0) {
+      toast.error(t("Please enter quantity."));
+      return;
+    }
+    const rateNum = Number(composerRate);
+    if (rateNum <= 0) {
+      toast.error(t("Please enter rate."));
+      return;
+    }
+    setRows((prev) => {
+      // Merge with existing row that has same item and matching rate; else append.
+      const idx = prev.findIndex(
+        (r) => r.item_id === it.id && Number(r.price) === rateNum,
+      );
+      if (idx >= 0) {
+        const copy = [...prev];
+        copy[idx] = { ...copy[idx], qty: Number(copy[idx].qty) + qtyNum };
+        return copy;
+      }
+      // If first row is empty (no item), replace it; else append.
+      const newRow: Row = {
+        item_id: it.id,
+        item_name: it.name,
+        desc: "",
+        qty: qtyNum,
+        unit: it.unit,
+        price: rateNum,
+        disc: 0,
+        tax: Number(it.tax_rate),
+      };
+      if (prev.length === 1 && !prev[0].item_id) return [newRow];
+      return [...prev, newRow];
+    });
+    toast.success(`${t("Item added")}: ${it.name}`);
+    // Reset composer for next add
+    setComposerItemId("");
+    setComposerQty("1");
+    setComposerRate("0");
+  };
+
+
+
   const handleSaveInvoice = async () => {
     // Immediate click feedback — proves the handler ran before any validation.
     alert("SAVE_INVOICE_CLICKED");
