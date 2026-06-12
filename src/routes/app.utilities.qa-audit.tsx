@@ -14,6 +14,7 @@ import {
 } from "@/lib/qa/audit-registry";
 import {
   ALL_WORKFLOWS,
+  ALL_ECOMMERCE_WORKFLOWS,
   itemsWorkflow,
   partiesWorkflow,
   saleInvoiceWorkflow,
