@@ -20,7 +20,6 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Command,
@@ -194,7 +193,6 @@ export function SalesDocForm({
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { t } = useI18n();
-  const canAddParty = usePermission("parties", "add");
   const canEditSales = usePermission("sales", "edit");
   const { isOffline: isOfflineRaw } = usePWAStatus();
   // In personal/local demo mode all data is on-device, so offline never blocks save.
@@ -224,6 +222,29 @@ export function SalesDocForm({
   const [savedInvoiceNo, setSavedInvoiceNo] = useState<string>("");
   const [successOpen, setSuccessOpen] = useState(false);
   const [pdfBusy, setPdfBusy] = useState(false);
+  const [lastClickDebug, setLastClickDebug] = useState("No clicks captured yet");
+
+  useEffect(() => {
+    if (!import.meta.env.DEV && !isDemoMode()) return;
+    if (typeof document === "undefined") return;
+    const describe = (el: Element | null) => {
+      if (!el) return "none";
+      const text = (el.textContent || "").replace(/\s+/g, " ").trim().slice(0, 80);
+      return `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ""}${
+        el.className ? `.${String(el.className).replace(/\s+/g, ".").slice(0, 120)}` : ""
+      }${text ? ` · ${text}` : ""}`;
+    };
+    const onClickCapture = (event: MouseEvent) => {
+      const target = event.target instanceof Element ? event.target : null;
+      const top = document.elementFromPoint(event.clientX, event.clientY);
+      const message = `target=${describe(target)} | elementFromPoint=${describe(top)}`;
+      // eslint-disable-next-line no-console
+      console.log("SALES_DOC_CLICK_CAPTURE", message);
+      setLastClickDebug(message);
+    };
+    document.addEventListener("click", onClickCapture, true);
+    return () => document.removeEventListener("click", onClickCapture, true);
+  }, []);
 
   // Load per-company Sale Invoice customization toggles.
   const { data: settings = DEFAULT_SALE_INVOICE_SETTINGS } = useQuery({
