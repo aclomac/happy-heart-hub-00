@@ -42,7 +42,7 @@ function ReportsPage() {
       case "order-status": {
         const map = new Map<string, number>();
         orders.forEach((o) => map.set(o.status, (map.get(o.status) || 0) + 1));
-        rows = [["Status", "Count"], ...Array.from(map.entries())];
+        rows = [["Status", "Count"], ...Array.from(map.entries()).map(([s, c]) => [s, String(c)])];
         break;
       }
       case "courier":
