@@ -68,6 +68,9 @@ function Signup() {
     } catch (err: any) {
       console.error("[signup] create account failed", err);
       const reason = err?.message ?? "unknown error";
+      if (reason === "Account already exists. Please sign in.") {
+        setErrs({ email: reason });
+      }
       toast.error(reason === "Account already exists. Please sign in." ? reason : `Signup failed: ${reason}`);
     } finally {
       setLoading(false);
