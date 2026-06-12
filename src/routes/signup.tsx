@@ -100,8 +100,9 @@ function Signup() {
             </div>
           ) : (
             <>
-              <h2 className="text-2xl font-bold mb-1">Create your account</h2>
-              <p className="text-sm text-muted-foreground mb-6">Free 1-month trial · Basic plan</p>
+              <h2 className="text-2xl font-bold mb-1">Create your local ERPOVO account</h2>
+              <p className="text-sm text-muted-foreground mb-6">Personal ERP account for your business</p>
+
               <div className="space-y-3">
                 <div>
                   <Label className="text-xs">Full Name</Label>
