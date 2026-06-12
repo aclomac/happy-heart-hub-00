@@ -46,9 +46,11 @@ import { CompanySwitcher } from "@/components/erp/CompanySwitcher";
 import {
   isDemoMode,
   getDemoCompany,
+  getDemoUser,
   clearDemoStorage,
   endDemoSession,
 } from "@/lib/demo/localStore";
+
 
 export function ERPTopbar() {
   const { lang, setLang, t } = useI18n();
