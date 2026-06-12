@@ -455,8 +455,9 @@ export function SalesDocForm({
     setRows(copy);
   };
 
-  const save = async () => {
+  const handleSaveInvoice = async () => {
     // Immediate click feedback — proves the handler ran before any validation.
+    alert("SAVE_INVOICE_CLICKED");
     // eslint-disable-next-line no-console
     console.log("SAVE_INVOICE_CLICKED", {
       partyId,
@@ -633,17 +634,17 @@ export function SalesDocForm({
                 Cancel
               </Button>
             </Link>
-            <Button
-              variant="sale"
-              size="sm"
+              <button
+                type="button"
               type="button"
               data-testid="save-invoice-btn"
               disabled={saving || convertedBlocked}
-              onClick={save}
+                onClick={handleSaveInvoice}
+                className="inline-flex h-8 items-center justify-center gap-2 rounded-md bg-sale px-3 text-xs font-medium text-sale-foreground shadow-sm hover:bg-sale/90 disabled:pointer-events-none disabled:opacity-50"
             >
               <Save className="w-4 h-4" />
               {saving ? "Saving…" : editingId ? "Update" : meta.saveLabel}
-            </Button>
+              </button>
           </>
         }
       />
@@ -662,31 +663,20 @@ export function SalesDocForm({
             <div>
               <div className="flex items-center justify-between mb-1">
                 <Label className="text-xs">{t("Customer")} *</Label>
-                {canAddParty ? (
-                  <button
-                    type="button"
-                    onClick={() => setAddCustomerOpen(true)}
-                    className="text-xs text-primary hover:underline inline-flex items-center gap-1"
-                    data-testid="quick-add-customer-btn"
-                  >
-                    <UserPlus className="w-3 h-3" />
-                    {t("New Customer")}
-                  </button>
-                ) : (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="text-xs text-muted-foreground inline-flex items-center gap-1 cursor-not-allowed">
-                          <UserPlus className="w-3 h-3" />
-                          {t("New Customer")}
-                        </span>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {t("You don't have permission to add customers")}
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    alert("NEW_CUSTOMER_CLICKED");
+                    // eslint-disable-next-line no-console
+                    console.log("NEW_CUSTOMER_CLICKED");
+                    setAddCustomerOpen(true);
+                  }}
+                  className="text-xs text-primary hover:underline inline-flex items-center gap-1"
+                  data-testid="quick-add-customer-btn"
+                >
+                  <UserPlus className="w-3 h-3" />
+                  {t("New Customer")}
+                </button>
               </div>
               <Select value={partyId} onValueChange={setPartyId}>
                 <SelectTrigger className="h-9">
