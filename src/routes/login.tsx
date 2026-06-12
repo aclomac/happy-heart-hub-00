@@ -11,12 +11,14 @@ import { DEMO_EMAIL, DEMO_PASSWORD } from "@/lib/demo/constants";
 import { setCurrentCompanyId } from "@/lib/use-company";
 import {
   startDemoSession,
+  startLocalUserSession,
   ensureDemoSeed,
   DEMO_COMPANY_ID,
   DEMO_USER_ID,
   DEMO_USER_EMAIL,
   isDemoMode,
 } from "@/lib/demo/localStore";
+
 import { findUserByEmailOrMobile } from "@/lib/demo/localUsers";
 import { PWAInstallButton } from "@/components/erp/PWAInstallButton";
 
