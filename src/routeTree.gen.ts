@@ -84,6 +84,7 @@ import { Route as AppCashRouteImport } from './routes/app.cash'
 import { Route as AppAuditRouteImport } from './routes/app.audit'
 import { Route as AppAttendanceRouteImport } from './routes/app.attendance'
 import { Route as AppUtilitiesIndexRouteImport } from './routes/app.utilities.index'
+import { Route as AppEcommerceIndexRouteImport } from './routes/app.ecommerce.index'
 import { Route as SuperAdminPaymentsIdRouteImport } from './routes/super-admin.payments.$id'
 import { Route as SuperAdminDevicesIdRouteImport } from './routes/super-admin.devices.$id'
 import { Route as SuperAdminCustomersUserIdRouteImport } from './routes/super-admin.customers.$userId'
@@ -521,6 +522,11 @@ const AppUtilitiesIndexRoute = AppUtilitiesIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppUtilitiesRoute,
 } as any)
+const AppEcommerceIndexRoute = AppEcommerceIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppEcommerceRoute,
+} as any)
 const SuperAdminPaymentsIdRoute = SuperAdminPaymentsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -842,7 +848,7 @@ export interface FileRoutesByFullPath {
   '/app/debit-notes': typeof AppDebitNotesRouteWithChildren
   '/app/delivery-challans': typeof AppDeliveryChallansRouteWithChildren
   '/app/device-limit': typeof AppDeviceLimitRoute
-  '/app/ecommerce': typeof AppEcommerceRoute
+  '/app/ecommerce': typeof AppEcommerceRouteWithChildren
   '/app/employees': typeof AppEmployeesRoute
   '/app/estimates': typeof AppEstimatesRouteWithChildren
   '/app/expense-categories': typeof AppExpenseCategoriesRoute
@@ -936,6 +942,7 @@ export interface FileRoutesByFullPath {
   '/super-admin/customers/$userId': typeof SuperAdminCustomersUserIdRoute
   '/super-admin/devices/$id': typeof SuperAdminDevicesIdRoute
   '/super-admin/payments/$id': typeof SuperAdminPaymentsIdRoute
+  '/app/ecommerce/': typeof AppEcommerceIndexRoute
   '/app/utilities/': typeof AppUtilitiesIndexRoute
   '/app/cash/cheques/$id': typeof AppCashChequesIdRoute
   '/app/cash/loan-payments/$id': typeof AppCashLoanPaymentsIdRoute
@@ -975,7 +982,6 @@ export interface FileRoutesByTo {
   '/app/debit-notes': typeof AppDebitNotesRouteWithChildren
   '/app/delivery-challans': typeof AppDeliveryChallansRouteWithChildren
   '/app/device-limit': typeof AppDeviceLimitRoute
-  '/app/ecommerce': typeof AppEcommerceRoute
   '/app/employees': typeof AppEmployeesRoute
   '/app/estimates': typeof AppEstimatesRouteWithChildren
   '/app/expense-categories': typeof AppExpenseCategoriesRoute
@@ -1068,6 +1074,7 @@ export interface FileRoutesByTo {
   '/super-admin/customers/$userId': typeof SuperAdminCustomersUserIdRoute
   '/super-admin/devices/$id': typeof SuperAdminDevicesIdRoute
   '/super-admin/payments/$id': typeof SuperAdminPaymentsIdRoute
+  '/app/ecommerce': typeof AppEcommerceIndexRoute
   '/app/utilities': typeof AppUtilitiesIndexRoute
   '/app/cash/cheques/$id': typeof AppCashChequesIdRoute
   '/app/cash/loan-payments/$id': typeof AppCashLoanPaymentsIdRoute
@@ -1110,7 +1117,7 @@ export interface FileRoutesById {
   '/app/debit-notes': typeof AppDebitNotesRouteWithChildren
   '/app/delivery-challans': typeof AppDeliveryChallansRouteWithChildren
   '/app/device-limit': typeof AppDeviceLimitRoute
-  '/app/ecommerce': typeof AppEcommerceRoute
+  '/app/ecommerce': typeof AppEcommerceRouteWithChildren
   '/app/employees': typeof AppEmployeesRoute
   '/app/estimates': typeof AppEstimatesRouteWithChildren
   '/app/expense-categories': typeof AppExpenseCategoriesRoute
@@ -1204,6 +1211,7 @@ export interface FileRoutesById {
   '/super-admin/customers/$userId': typeof SuperAdminCustomersUserIdRoute
   '/super-admin/devices/$id': typeof SuperAdminDevicesIdRoute
   '/super-admin/payments/$id': typeof SuperAdminPaymentsIdRoute
+  '/app/ecommerce/': typeof AppEcommerceIndexRoute
   '/app/utilities/': typeof AppUtilitiesIndexRoute
   '/app/cash/cheques/$id': typeof AppCashChequesIdRoute
   '/app/cash/loan-payments/$id': typeof AppCashLoanPaymentsIdRoute
@@ -1341,6 +1349,7 @@ export interface FileRouteTypes {
     | '/super-admin/customers/$userId'
     | '/super-admin/devices/$id'
     | '/super-admin/payments/$id'
+    | '/app/ecommerce/'
     | '/app/utilities/'
     | '/app/cash/cheques/$id'
     | '/app/cash/loan-payments/$id'
@@ -1380,7 +1389,6 @@ export interface FileRouteTypes {
     | '/app/debit-notes'
     | '/app/delivery-challans'
     | '/app/device-limit'
-    | '/app/ecommerce'
     | '/app/employees'
     | '/app/estimates'
     | '/app/expense-categories'
@@ -1473,6 +1481,7 @@ export interface FileRouteTypes {
     | '/super-admin/customers/$userId'
     | '/super-admin/devices/$id'
     | '/super-admin/payments/$id'
+    | '/app/ecommerce'
     | '/app/utilities'
     | '/app/cash/cheques/$id'
     | '/app/cash/loan-payments/$id'
@@ -1608,6 +1617,7 @@ export interface FileRouteTypes {
     | '/super-admin/customers/$userId'
     | '/super-admin/devices/$id'
     | '/super-admin/payments/$id'
+    | '/app/ecommerce/'
     | '/app/utilities/'
     | '/app/cash/cheques/$id'
     | '/app/cash/loan-payments/$id'
@@ -2173,6 +2183,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppUtilitiesIndexRouteImport
       parentRoute: typeof AppUtilitiesRoute
     }
+    '/app/ecommerce/': {
+      id: '/app/ecommerce/'
+      path: '/'
+      fullPath: '/app/ecommerce/'
+      preLoaderRoute: typeof AppEcommerceIndexRouteImport
+      parentRoute: typeof AppEcommerceRoute
+    }
     '/super-admin/payments/$id': {
       id: '/super-admin/payments/$id'
       path: '/$id'
@@ -2638,6 +2655,18 @@ const AppDeliveryChallansRouteChildren: AppDeliveryChallansRouteChildren = {
 const AppDeliveryChallansRouteWithChildren =
   AppDeliveryChallansRoute._addFileChildren(AppDeliveryChallansRouteChildren)
 
+interface AppEcommerceRouteChildren {
+  AppEcommerceIndexRoute: typeof AppEcommerceIndexRoute
+}
+
+const AppEcommerceRouteChildren: AppEcommerceRouteChildren = {
+  AppEcommerceIndexRoute: AppEcommerceIndexRoute,
+}
+
+const AppEcommerceRouteWithChildren = AppEcommerceRoute._addFileChildren(
+  AppEcommerceRouteChildren,
+)
+
 interface AppEstimatesRouteChildren {
   AppEstimatesNewRoute: typeof AppEstimatesNewRoute
   AppEstimatesIdEditRoute: typeof AppEstimatesIdEditRoute
@@ -2883,7 +2912,7 @@ interface AppRouteChildren {
   AppDebitNotesRoute: typeof AppDebitNotesRouteWithChildren
   AppDeliveryChallansRoute: typeof AppDeliveryChallansRouteWithChildren
   AppDeviceLimitRoute: typeof AppDeviceLimitRoute
-  AppEcommerceRoute: typeof AppEcommerceRoute
+  AppEcommerceRoute: typeof AppEcommerceRouteWithChildren
   AppEmployeesRoute: typeof AppEmployeesRoute
   AppEstimatesRoute: typeof AppEstimatesRouteWithChildren
   AppExpenseCategoriesRoute: typeof AppExpenseCategoriesRoute
@@ -2939,7 +2968,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppDebitNotesRoute: AppDebitNotesRouteWithChildren,
   AppDeliveryChallansRoute: AppDeliveryChallansRouteWithChildren,
   AppDeviceLimitRoute: AppDeviceLimitRoute,
-  AppEcommerceRoute: AppEcommerceRoute,
+  AppEcommerceRoute: AppEcommerceRouteWithChildren,
   AppEmployeesRoute: AppEmployeesRoute,
   AppEstimatesRoute: AppEstimatesRouteWithChildren,
   AppExpenseCategoriesRoute: AppExpenseCategoriesRoute,
