@@ -237,6 +237,82 @@ export function SalesDocList({ kind }: { kind: DocKind }) {
     }
   };
 
+  const duplicateDoc = async (r: Row) => {
+    try {
+      const { data: src, error: e1 } = await (supabase as any)
+        .from("sales")
+        .select("*")
+        .is("deleted_at", null)
+        .eq("id", r.id)
+        .single();
+      if (e1) throw e1;
+      const { data: srcItems, error: e2 } = await supabase
+        .from("sale_items")
+        .select("*")
+        .eq("sale_id", r.id);
+      if (e2) throw e2;
+
+      const { nextDocNumber } = await import("@/lib/doc-number");
+      const prefix = kind === "estimate" ? "EST" : kind === "sale_order" ? "SO" : "INV";
+      const newNo = await nextDocNumber(companyId!, "sales", prefix, kind);
+
+      const insert = { ...src };
+      delete insert.id;
+      delete insert.created_at;
+      delete insert.updated_at;
+      insert.invoice_no = newNo;
+      insert.invoice_date = new Date().toISOString().slice(0, 10);
+      insert.status = kind === "invoice" ? "unpaid" : "open";
+      insert.paid = 0;
+      insert.balance = src.total;
+
+      const { data: newSale, error: e3 } = await (supabase as any)
+        .from("sales")
+        .insert(insert)
+        .select("id")
+        .single();
+      if (e3) throw e3;
+
+      if (srcItems && srcItems.length) {
+        await supabase.from("sale_items").insert(
+          srcItems.map((it: any) => ({
+            sale_id: newSale.id,
+            item_id: it.item_id,
+            item_name: it.item_name,
+            description: it.description,
+            qty: it.qty,
+            unit: it.unit,
+            price: it.price,
+            discount_pct: it.discount_pct,
+            tax_pct: it.tax_pct,
+            amount: it.amount,
+          })),
+        );
+      }
+
+      toast.success(`Duplicated as ${newNo}`);
+      qc.invalidateQueries({ queryKey: ["sales"] });
+      if (kind === "estimate") {
+        navigate({ to: "/app/estimates/$id/edit", params: { id: newSale.id } });
+      }
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  };
+
+  const runPdfAction = async (
+    r: Row,
+    action: (d: Awaited<ReturnType<typeof buildInvoiceDataFromSale>>) => Promise<void> | void,
+  ) => {
+    try {
+      const title = labelsFor(kind).pdfTitle;
+      const data = await buildInvoiceDataFromSale(r.id, companyId!, { title });
+      await action(data);
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  };
+
   return (
     <div>
       <PageHeader
