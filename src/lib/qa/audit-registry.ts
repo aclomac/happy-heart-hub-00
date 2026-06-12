@@ -207,6 +207,13 @@ export const AUDIT_REGISTRY: AuditEntry[] = [
   { id: "eco-smoke-convert", module: M.ecommerce, label: "Smoke: Convert to Sale Invoice", kind: "workflow", route: "/app/ecommerce/orders", status: W, note: "WEB-YYYY-#### invoice number, appears in Sale Invoices list, order linked." },
   { id: "eco-smoke-reports", module: M.ecommerce, label: "Smoke: Reports & exports", kind: "workflow", route: "/app/ecommerce/reports", status: W, note: "Profit/Loss computes; CSV + open-blob Print/PDF fallback available." },
 
+  // ---- Signup / Auth ----
+  { id: "auth-signup-validation", module: "Auth", page: "Signup", label: "Signup form validation", kind: "button", route: "/signup", status: W, note: "Name/email/BD mobile/password length all validated; toast on error." },
+  { id: "auth-signup-otp-gen", module: "Auth", page: "Signup", label: "OTP generation", kind: "button", route: "/signup", status: W, note: "Generates 6-digit OTP, 5-min expiry, shown in demo notice." },
+  { id: "auth-signup-otp-verify", module: "Auth", page: "Signup", label: "OTP verification", kind: "button", route: "/signup", status: W, note: "Invalid → toast; correct OTP (or fixed 123456) proceeds." },
+  { id: "auth-signup-create", module: "Auth", page: "Signup", label: "Account creation", kind: "button", route: "/signup", status: W, note: "Saves local user, starts demo session, redirects to /app." },
+  { id: "auth-signup-login", module: "Auth", page: "Login", label: "Login with created account", kind: "button", route: "/login", status: W, note: "Created user can sign in with email or mobile + password." },
+  { id: "auth-smoke-signup", module: "Auth", page: "Signup", label: "Smoke: signup + OTP + login", kind: "workflow", route: "/signup", status: W, note: "Creates [QA] user, generates OTP, verifies, confirms persistence, cleans up." },
 ];
 
 export function summarizeAudit(entries: AuditEntry[] = AUDIT_REGISTRY) {
