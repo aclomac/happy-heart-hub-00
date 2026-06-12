@@ -222,11 +222,8 @@ export function SalesDocForm({
   const [savedInvoiceNo, setSavedInvoiceNo] = useState<string>("");
   const [successOpen, setSuccessOpen] = useState(false);
   const [pdfBusy, setPdfBusy] = useState(false);
-  // Add Item composer state
-  const [composerItemId, setComposerItemId] = useState<string>("");
-  const [composerQty, setComposerQty] = useState<string>("1");
-  const [composerRate, setComposerRate] = useState<string>("0");
-  const [lastAddItemAt, setLastAddItemAt] = useState<string>("never");
+  // (Removed) Add Item composer state — original invoice table is the only item editor.
+
   // Visible Save Invoice debug panel state (per /app/sales/new spec).
   const [saveDebug, setSaveDebug] = useState<{
     clicked: boolean;
@@ -449,56 +446,8 @@ export function SalesDocForm({
     setRows(copy);
   };
 
-  const handleAddItem = () => {
-    alert("ADD_ITEM_CLICKED");
-    // eslint-disable-next-line no-console
-    console.log("ADD_ITEM_CLICKED", { composerItemId, composerQty, composerRate });
-    setLastAddItemAt(new Date().toLocaleTimeString());
-    const it = items.find((i) => i.id === composerItemId);
-    if (!it) {
-      toast.error(t("Please select an item."));
-      return;
-    }
-    const qtyNum = Number(composerQty);
-    if (!qtyNum || qtyNum <= 0) {
-      toast.error(t("Please enter quantity."));
-      return;
-    }
-    const rateNum = Number(composerRate);
-    if (rateNum <= 0) {
-      toast.error(t("Please enter rate."));
-      return;
-    }
-    setRows((prev) => {
-      // Merge with existing row that has same item and matching rate; else append.
-      const idx = prev.findIndex(
-        (r) => r.item_id === it.id && Number(r.price) === rateNum,
-      );
-      if (idx >= 0) {
-        const copy = [...prev];
-        copy[idx] = { ...copy[idx], qty: Number(copy[idx].qty) + qtyNum };
-        return copy;
-      }
-      // If first row is empty (no item), replace it; else append.
-      const newRow: Row = {
-        item_id: it.id,
-        item_name: it.name,
-        desc: "",
-        qty: qtyNum,
-        unit: it.unit,
-        price: rateNum,
-        disc: 0,
-        tax: Number(it.tax_rate),
-      };
-      if (prev.length === 1 && !prev[0].item_id) return [newRow];
-      return [...prev, newRow];
-    });
-    toast.success(`${t("Item added")}: ${it.name}`);
-    // Reset composer for next add
-    setComposerItemId("");
-    setComposerQty("1");
-    setComposerRate("0");
-  };
+  // handleAddItem removed — the original invoice item table manages rows directly.
+
 
 
 
@@ -998,71 +947,6 @@ export function SalesDocForm({
         </div>
       </div>
 
-      {/* Add Item composer — wired natively to handleAddItem */}
-      <div className="bg-card border rounded-md p-3 mb-3" data-testid="add-item-composer">
-        <div className="grid grid-cols-1 md:grid-cols-[1fr_100px_140px_auto] gap-2 items-end">
-          <div>
-            <Label className="text-xs">{t("Item")}</Label>
-            <Select
-              value={composerItemId}
-              onValueChange={(v) => {
-                setComposerItemId(v);
-                const it = items.find((i) => i.id === v);
-                if (it) setComposerRate(String(Number(it.sale_price) || 0));
-              }}
-            >
-              <SelectTrigger className="h-9" data-testid="composer-item-select">
-                <SelectValue placeholder={t("Select item")} />
-              </SelectTrigger>
-              <SelectContent>
-                {items.length === 0 ? (
-                  <div className="p-2 text-xs text-muted-foreground">
-                    {t("No items. Add one in Items.")}
-                  </div>
-                ) : (
-                  items.map((i) => (
-                    <SelectItem key={i.id} value={i.id}>
-                      {i.name} {i.sku ? `· ${i.sku}` : ""}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label className="text-xs">{t("Qty")}</Label>
-            <Input
-              type="number"
-              className="h-9"
-              value={composerQty}
-              onChange={(e) => setComposerQty(e.target.value)}
-              data-testid="composer-qty"
-            />
-          </div>
-          <div>
-            <Label className="text-xs">{t("Rate")}</Label>
-            <Input
-              type="number"
-              className="h-9"
-              value={composerRate}
-              onChange={(e) => setComposerRate(e.target.value)}
-              data-testid="composer-rate"
-            />
-          </div>
-          <button
-            type="button"
-            onClick={handleAddItem}
-            data-testid="add-item-btn"
-            className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-primary px-4 text-xs font-medium text-primary-foreground shadow-sm hover:bg-primary/90"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            {t("Add Item")}
-          </button>
-        </div>
-        <div className="mt-2 text-[11px] text-muted-foreground" data-testid="add-item-debug">
-          Add Item handler: attached · Last click: {lastAddItemAt} · item={composerItemId || "—"} · qty={composerQty} · rate={composerRate}
-        </div>
-      </div>
 
       <div className="bg-card border rounded-md overflow-x-auto mb-3">
 
