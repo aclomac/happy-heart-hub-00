@@ -768,8 +768,7 @@ export const ecoCodWorkflow = () =>
     steps.push(pass("Cleanup"));
     return steps;
   });
-    return steps;
-  });
+
 
 // 6. Return / exchange (stock back + profit/loss)
 export const ecoReturnWorkflow = () =>
