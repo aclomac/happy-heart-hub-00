@@ -1,8 +1,6 @@
 /**
- * Local user store + OTP helpers for personal/local ERPOVO mode.
- *
- * NOTE: For production, use server-side authentication and a real SMS OTP
- * provider. Passwords here are stored in localStorage for local demo only.
+ * Local user store for personal/local ERPOVO mode.
+ * Passwords here are stored in localStorage for local demo only.
  */
 
 export type LocalUser = {
@@ -12,15 +10,12 @@ export type LocalUser = {
   mobile: string;
   password: string; // local demo only
   mobileVerified: boolean;
+  isDemoUser: boolean;
   createdAt: string;
   companyId?: string;
 };
 
 const USERS_KEY = "erpovo_local_users";
-const OTP_KEY = "erpovo_local_otp";
-
-const OTP_TTL_MS = 5 * 60 * 1000;
-const FIXED_TEST_OTP = "123456";
 
 function isBrowser() {
   return typeof window !== "undefined" && typeof localStorage !== "undefined";
@@ -83,7 +78,7 @@ export function userExists(email: string, mobile: string): boolean {
   const e = email.trim().toLowerCase();
   const m = normalizeMobile(mobile);
   return users.some(
-    (u) => u.email.toLowerCase() === e || normalizeMobile(u.mobile) === m,
+    (u) => u.email.toLowerCase() === e || (!!m && normalizeMobile(u.mobile) === m),
   );
 }
 
@@ -101,6 +96,7 @@ export function addLocalUser(u: Omit<LocalUser, "id" | "createdAt" | "mobileVeri
     mobile: normalizeMobile(u.mobile),
     password: u.password,
     mobileVerified: u.mobileVerified ?? true,
+    isDemoUser: u.isDemoUser ?? false,
     createdAt: new Date().toISOString(),
     companyId: u.companyId,
   };
