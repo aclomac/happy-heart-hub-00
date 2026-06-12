@@ -195,6 +195,33 @@ function QaAuditPage() {
         mark("btn-pur-save", r, true);
       } else if (r.id === "wf-exp") {
         mark("btn-exp-save", r);
+      } else if (r.id === "wf-eco-website") {
+        mark("eco-smoke-website", r);
+        mark("eco-websites", r);
+      } else if (r.id === "wf-eco-product") {
+        mark("eco-smoke-product", r);
+        mark("eco-products", r);
+      } else if (r.id === "wf-eco-sync") {
+        mark("eco-smoke-sync", r);
+        mark("eco-sync", r);
+        mark("eco-logs", r);
+      } else if (r.id === "wf-eco-lifecycle") {
+        mark("eco-smoke-lifecycle", r);
+        mark("eco-orders", r);
+        mark("eco-tracking", r);
+      } else if (r.id === "wf-eco-cod") {
+        mark("eco-smoke-cod", r);
+        mark("eco-cod", r);
+      } else if (r.id === "wf-eco-return") {
+        mark("eco-smoke-return", r);
+        mark("eco-returns", r);
+      } else if (r.id === "wf-eco-convert") {
+        mark("eco-smoke-convert", r);
+        mark("eco-wf-convert", r, true);
+      } else if (r.id === "wf-eco-reports") {
+        mark("eco-smoke-reports", r);
+        mark("eco-reports", r);
+        mark("eco-pl", r);
       }
     }
     setOverrides(o);
