@@ -444,9 +444,7 @@ export function SalesDocForm({
       total,
       received,
     });
-    if (import.meta.env.DEV) {
-      toast(t("Save invoice clicked"));
-    }
+    toast.success(t("Save invoice clicked"));
     if (editingId && convertedBlocked) {
       toast.error(t("This order has been locked and can no longer be edited."));
       return;
