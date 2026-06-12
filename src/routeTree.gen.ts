@@ -121,6 +121,7 @@ import { Route as AppEcommerceProductsRouteImport } from './routes/app.ecommerce
 import { Route as AppEcommercePaymentsRouteImport } from './routes/app.ecommerce.payments'
 import { Route as AppEcommerceOrdersRouteImport } from './routes/app.ecommerce.orders'
 import { Route as AppEcommerceOrderSyncRouteImport } from './routes/app.ecommerce.order-sync'
+import { Route as AppEcommerceExpensesRouteImport } from './routes/app.ecommerce.expenses'
 import { Route as AppEcommerceDeliveryChargeRouteImport } from './routes/app.ecommerce.delivery-charge'
 import { Route as AppEcommerceCustomersRouteImport } from './routes/app.ecommerce.customers'
 import { Route as AppEcommerceCourierRouteImport } from './routes/app.ecommerce.courier'
@@ -727,6 +728,11 @@ const AppEcommerceOrderSyncRoute = AppEcommerceOrderSyncRouteImport.update({
   path: '/order-sync',
   getParentRoute: () => AppEcommerceRoute,
 } as any)
+const AppEcommerceExpensesRoute = AppEcommerceExpensesRouteImport.update({
+  id: '/expenses',
+  path: '/expenses',
+  getParentRoute: () => AppEcommerceRoute,
+} as any)
 const AppEcommerceDeliveryChargeRoute =
   AppEcommerceDeliveryChargeRouteImport.update({
     id: '/delivery-charge',
@@ -984,6 +990,7 @@ export interface FileRoutesByFullPath {
   '/app/ecommerce/courier': typeof AppEcommerceCourierRoute
   '/app/ecommerce/customers': typeof AppEcommerceCustomersRoute
   '/app/ecommerce/delivery-charge': typeof AppEcommerceDeliveryChargeRoute
+  '/app/ecommerce/expenses': typeof AppEcommerceExpensesRoute
   '/app/ecommerce/order-sync': typeof AppEcommerceOrderSyncRoute
   '/app/ecommerce/orders': typeof AppEcommerceOrdersRoute
   '/app/ecommerce/payments': typeof AppEcommercePaymentsRoute
@@ -1127,6 +1134,7 @@ export interface FileRoutesByTo {
   '/app/ecommerce/courier': typeof AppEcommerceCourierRoute
   '/app/ecommerce/customers': typeof AppEcommerceCustomersRoute
   '/app/ecommerce/delivery-charge': typeof AppEcommerceDeliveryChargeRoute
+  '/app/ecommerce/expenses': typeof AppEcommerceExpensesRoute
   '/app/ecommerce/order-sync': typeof AppEcommerceOrderSyncRoute
   '/app/ecommerce/orders': typeof AppEcommerceOrdersRoute
   '/app/ecommerce/payments': typeof AppEcommercePaymentsRoute
@@ -1275,6 +1283,7 @@ export interface FileRoutesById {
   '/app/ecommerce/courier': typeof AppEcommerceCourierRoute
   '/app/ecommerce/customers': typeof AppEcommerceCustomersRoute
   '/app/ecommerce/delivery-charge': typeof AppEcommerceDeliveryChargeRoute
+  '/app/ecommerce/expenses': typeof AppEcommerceExpensesRoute
   '/app/ecommerce/order-sync': typeof AppEcommerceOrderSyncRoute
   '/app/ecommerce/orders': typeof AppEcommerceOrdersRoute
   '/app/ecommerce/payments': typeof AppEcommercePaymentsRoute
@@ -1424,6 +1433,7 @@ export interface FileRouteTypes {
     | '/app/ecommerce/courier'
     | '/app/ecommerce/customers'
     | '/app/ecommerce/delivery-charge'
+    | '/app/ecommerce/expenses'
     | '/app/ecommerce/order-sync'
     | '/app/ecommerce/orders'
     | '/app/ecommerce/payments'
@@ -1567,6 +1577,7 @@ export interface FileRouteTypes {
     | '/app/ecommerce/courier'
     | '/app/ecommerce/customers'
     | '/app/ecommerce/delivery-charge'
+    | '/app/ecommerce/expenses'
     | '/app/ecommerce/order-sync'
     | '/app/ecommerce/orders'
     | '/app/ecommerce/payments'
@@ -1714,6 +1725,7 @@ export interface FileRouteTypes {
     | '/app/ecommerce/courier'
     | '/app/ecommerce/customers'
     | '/app/ecommerce/delivery-charge'
+    | '/app/ecommerce/expenses'
     | '/app/ecommerce/order-sync'
     | '/app/ecommerce/orders'
     | '/app/ecommerce/payments'
@@ -2575,6 +2587,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppEcommerceOrderSyncRouteImport
       parentRoute: typeof AppEcommerceRoute
     }
+    '/app/ecommerce/expenses': {
+      id: '/app/ecommerce/expenses'
+      path: '/expenses'
+      fullPath: '/app/ecommerce/expenses'
+      preLoaderRoute: typeof AppEcommerceExpensesRouteImport
+      parentRoute: typeof AppEcommerceRoute
+    }
     '/app/ecommerce/delivery-charge': {
       id: '/app/ecommerce/delivery-charge'
       path: '/delivery-charge'
@@ -2870,6 +2889,7 @@ interface AppEcommerceRouteChildren {
   AppEcommerceCourierRoute: typeof AppEcommerceCourierRoute
   AppEcommerceCustomersRoute: typeof AppEcommerceCustomersRoute
   AppEcommerceDeliveryChargeRoute: typeof AppEcommerceDeliveryChargeRoute
+  AppEcommerceExpensesRoute: typeof AppEcommerceExpensesRoute
   AppEcommerceOrderSyncRoute: typeof AppEcommerceOrderSyncRoute
   AppEcommerceOrdersRoute: typeof AppEcommerceOrdersRoute
   AppEcommercePaymentsRoute: typeof AppEcommercePaymentsRoute
@@ -2885,6 +2905,7 @@ const AppEcommerceRouteChildren: AppEcommerceRouteChildren = {
   AppEcommerceCourierRoute: AppEcommerceCourierRoute,
   AppEcommerceCustomersRoute: AppEcommerceCustomersRoute,
   AppEcommerceDeliveryChargeRoute: AppEcommerceDeliveryChargeRoute,
+  AppEcommerceExpensesRoute: AppEcommerceExpensesRoute,
   AppEcommerceOrderSyncRoute: AppEcommerceOrderSyncRoute,
   AppEcommerceOrdersRoute: AppEcommerceOrdersRoute,
   AppEcommercePaymentsRoute: AppEcommercePaymentsRoute,
