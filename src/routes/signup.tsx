@@ -22,13 +22,25 @@ import { setCurrentCompanyId } from "@/lib/use-company";
 
 export const Route = createFileRoute("/signup")({
   beforeLoad: async () => {
-    const { data } = await supabase.auth.getUser();
-    if (data.user) throw redirect({ to: "/companies" });
+    try {
+      const { data } = await supabase.auth.getUser();
+      if (data?.user) throw redirect({ to: "/companies" });
+    } catch (e: any) {
+      if (e?.to) throw e;
+      // ignore — local mode doesn't require supabase auth
+    }
   },
   loader: async () => {
-    const { data } = await supabase.rpc("get_public_platform_settings");
-    const row = data?.[0];
-    return { signupEnabled: row?.signup_enabled ?? true, brand: row?.platform_name ?? "ERPOVO" };
+    try {
+      const { data } = await supabase.rpc("get_public_platform_settings");
+      const row = data?.[0];
+      return {
+        signupEnabled: row?.signup_enabled ?? true,
+        brand: row?.platform_name ?? "ERPOVO",
+      };
+    } catch {
+      return { signupEnabled: true, brand: "ERPOVO" };
+    }
   },
   component: Signup,
 });
@@ -41,14 +53,28 @@ function Signup() {
   const [mobile, setMobile] = useState("");
   const [pass, setPass] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errs, setErrs] = useState<Record<string, string>>({});
 
-  const onCreateAccount = async () => {
-    if (!name.trim()) return toast.error("Full Name is required");
-    if (!isValidEmail(email)) return toast.error("Please enter a valid email");
-    if (!validatePassword(pass))
-      return toast.error("Password must be at least 8 characters");
-    if (userExists(email, mobile || `none-${Date.now()}`))
-      return toast.error("Account already exists. Please sign in.");
+  const onCreateAccount = async (e?: React.FormEvent) => {
+    e?.preventDefault?.();
+    const next: Record<string, string> = {};
+    if (!name.trim()) next.name = "Full Name is required";
+    if (!isValidEmail(email)) next.email = "Please enter a valid email";
+    if (!validatePassword(pass)) next.password = "Password must be at least 8 characters";
+    setErrs(next);
+    if (Object.keys(next).length) {
+      toast.error(Object.values(next)[0]);
+      return;
+    }
+
+    try {
+      if (userExists(email, mobile || `__none_${Date.now()}__`)) {
+        toast.error("Account already exists. Please sign in.");
+        return;
+      }
+    } catch {
+      /* ignore lookup failure */
+    }
 
     setLoading(true);
     try {
@@ -69,8 +95,9 @@ function Signup() {
         return;
       }
       nav({ to: "/app", replace: true });
-    } catch (e: any) {
-      toast.error(`Could not create account: ${e?.message ?? "unknown error"}`);
+    } catch (err: any) {
+      console.error("[signup] create account failed", err);
+      toast.error(`Could not create account: ${err?.message ?? "unknown error"}`);
     } finally {
       setLoading(false);
     }
@@ -130,14 +157,16 @@ function Signup() {
                 Personal ERP account for your business
               </p>
 
-              <div className="space-y-3">
+              <form className="space-y-3" onSubmit={onCreateAccount} noValidate>
                 <div>
                   <Label className="text-xs">Full Name</Label>
                   <Input
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Md. Rahman"
+                    autoComplete="name"
                   />
+                  {errs.name && <p className="text-[11px] text-destructive mt-1">{errs.name}</p>}
                 </div>
                 <div>
                   <Label className="text-xs">Email</Label>
@@ -146,7 +175,9 @@ function Signup() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@business.com"
+                    autoComplete="email"
                   />
+                  {errs.email && <p className="text-[11px] text-destructive mt-1">{errs.email}</p>}
                 </div>
                 <div>
                   <Label className="text-xs">Mobile No. (optional)</Label>
@@ -154,6 +185,7 @@ function Signup() {
                     value={mobile}
                     onChange={(e) => setMobile(e.target.value)}
                     placeholder="01XXXXXXXXX"
+                    autoComplete="tel"
                   />
                 </div>
                 <div>
@@ -163,12 +195,16 @@ function Signup() {
                     value={pass}
                     onChange={(e) => setPass(e.target.value)}
                     placeholder="At least 8 characters"
+                    autoComplete="new-password"
                   />
+                  {errs.password && (
+                    <p className="text-[11px] text-destructive mt-1">{errs.password}</p>
+                  )}
                 </div>
                 <Button
+                  type="submit"
                   variant="default"
                   className="w-full"
-                  onClick={onCreateAccount}
                   disabled={loading}
                 >
                   {loading ? "Creating..." : "Create Account"}
@@ -176,7 +212,7 @@ function Signup() {
                 <p className="text-[11px] text-muted-foreground text-center">
                   Local account stored on this device. No email verification required.
                 </p>
-              </div>
+              </form>
               <div className="mt-6 text-sm text-center">
                 Already have an account?{" "}
                 <Link to="/login" className="text-primary font-medium hover:underline">
