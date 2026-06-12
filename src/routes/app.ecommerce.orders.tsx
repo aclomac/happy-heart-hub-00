@@ -147,10 +147,12 @@ function OrdersPage() {
         actions={
           <>
             <Link to="/app/ecommerce"><Button variant="outline" size="sm">Back</Button></Link>
+            <Button size="sm" variant="outline" onClick={() => setCreateOpen(true)}><Plus className="w-4 h-4 mr-1" /> New Order</Button>
             <Link to="/app/ecommerce/order-sync"><Button size="sm">Sync / Import Orders</Button></Link>
           </>
         }
       />
+
 
       <div className="flex flex-wrap items-center gap-2 mb-3">
         <Input className="w-64" placeholder="Search order #, customer, phone…" value={q} onChange={(e) => setQ(e.target.value)} />
