@@ -1,0 +1,102 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
+import { toast } from "sonner";
+import { PageHeader } from "@/components/erp/PageHeader";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { StatusBadge } from "@/components/erp/ecommerce/EcommerceUI";
+import {
+  getCodEntries, setCodEntries, getOrders, getCouriers,
+  type EcoCodEntry,
+} from "@/lib/demo/ecommerce";
+
+export const Route = createFileRoute("/app/ecommerce/cod")({ component: CodPage });
+
+function CodPage() {
+  const [list, setList] = useState<EcoCodEntry[]>(() => getCodEntries());
+  const orders = getOrders();
+  const couriers = getCouriers();
+  const [courierFilter, setCourierFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  const filtered = list
+    .filter((c) => courierFilter === "all" || c.courierId === courierFilter)
+    .filter((c) => statusFilter === "all" || c.status === statusFilter);
+
+  const collect = (id: string, method: "Cash" | "Bank" | "bKash" | "Nagad") => {
+    const next = list.map((c) => c.id === id ? {
+      ...c, collectedAmount: c.codAmount, status: "Collected" as const,
+      collectionDate: new Date().toISOString().slice(0, 10), paymentMethod: method,
+    } : c);
+    setList(next); setCodEntries(next);
+    toast.success(`COD collected via ${method}`);
+  };
+
+  const totalPending = filtered.filter((c) => c.status === "Pending").reduce((s, c) => s + c.codAmount, 0);
+  const totalCollected = filtered.filter((c) => c.status === "Collected").reduce((s, c) => s + c.collectedAmount, 0);
+
+  return (
+    <div>
+      <PageHeader
+        title="COD Collection"
+        subtitle="Track cash-on-delivery from couriers"
+        actions={<Link to="/app/ecommerce"><Button variant="outline" size="sm">Back</Button></Link>}
+      />
+      <div className="grid grid-cols-3 gap-3 mb-4">
+        <Card><CardContent className="pt-4"><div className="text-xs uppercase text-muted-foreground">Pending</div><div className="text-xl font-semibold text-amber-700">৳{totalPending.toLocaleString()}</div></CardContent></Card>
+        <Card><CardContent className="pt-4"><div className="text-xs uppercase text-muted-foreground">Collected</div><div className="text-xl font-semibold text-emerald-700">৳{totalCollected.toLocaleString()}</div></CardContent></Card>
+        <Card><CardContent className="pt-4"><div className="text-xs uppercase text-muted-foreground">Entries</div><div className="text-xl font-semibold">{filtered.length}</div></CardContent></Card>
+      </div>
+
+      <div className="flex gap-2 mb-3">
+        <Select value={courierFilter} onValueChange={setCourierFilter}>
+          <SelectTrigger className="w-48"><SelectValue placeholder="Courier" /></SelectTrigger>
+          <SelectContent><SelectItem value="all">All Couriers</SelectItem>{couriers.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+        </Select>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-48"><SelectValue placeholder="Status" /></SelectTrigger>
+          <SelectContent>{["all", "Pending", "Collected", "Partially Collected", "Adjusted"].map((s) => <SelectItem key={s} value={s}>{s === "all" ? "All Statuses" : s}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
+
+      <Card>
+        <CardContent className="pt-4 overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead><tr className="text-left text-xs uppercase text-muted-foreground border-b"><th className="py-2">Order</th><th>Courier</th><th>COD</th><th>Courier Fee</th><th>Return Fee</th><th>Net</th><th>Collected</th><th>Date</th><th>Method</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              {filtered.map((c) => {
+                const o = orders.find((x) => x.id === c.orderId);
+                const cr = couriers.find((x) => x.id === c.courierId)?.name || "—";
+                const net = c.codAmount - c.courierCharge - c.returnCharge;
+                return (
+                  <tr key={c.id} className="border-b last:border-0">
+                    <td className="py-2 font-mono text-xs">{o?.orderNo || "—"}</td>
+                    <td>{cr}</td>
+                    <td>৳{c.codAmount.toLocaleString()}</td>
+                    <td>৳{c.courierCharge}</td>
+                    <td>৳{c.returnCharge}</td>
+                    <td className="font-medium">৳{net.toLocaleString()}</td>
+                    <td>৳{c.collectedAmount.toLocaleString()}</td>
+                    <td>{c.collectionDate || "—"}</td>
+                    <td>{c.paymentMethod || "—"}</td>
+                    <td><StatusBadge status={c.status} /></td>
+                    <td className="text-right">
+                      {c.status === "Pending" && (
+                        <Select onValueChange={(v) => collect(c.id, v as "Cash" | "Bank" | "bKash" | "Nagad")}>
+                          <SelectTrigger className="h-7 w-28 text-xs"><SelectValue placeholder="Collect" /></SelectTrigger>
+                          <SelectContent>{["Cash", "Bank", "bKash", "Nagad"].map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
+                        </Select>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+              {filtered.length === 0 && <tr><td colSpan={11} className="py-8 text-center text-muted-foreground">No COD entries.</td></tr>}
+            </tbody>
+          </table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
