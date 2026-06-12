@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { StatusBadge } from "@/components/erp/ecommerce/EcommerceUI";
 import {
   getCodEntries, setCodEntries, getOrders, getCouriers,
+  getPayments, setPayments, getExpenses, setExpenses, getSyncLogs, setSyncLogs,
   type EcoCodEntry,
 } from "@/lib/demo/ecommerce";
 import { getCashTxns, setCashTxns, type DemoCashTxn } from "@/lib/demo/sales";
