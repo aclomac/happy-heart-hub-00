@@ -222,29 +222,9 @@ export function SalesDocForm({
   const [savedInvoiceNo, setSavedInvoiceNo] = useState<string>("");
   const [successOpen, setSuccessOpen] = useState(false);
   const [pdfBusy, setPdfBusy] = useState(false);
-  const [lastClickDebug, setLastClickDebug] = useState("No clicks captured yet");
+  // Debug capture removed — it was interfering with click handlers in some
+  // builds. Buttons are now native <button type="button" onClick={...}>.
 
-  useEffect(() => {
-    if (!import.meta.env.DEV && !isDemoMode()) return;
-    if (typeof document === "undefined") return;
-    const describe = (el: Element | null) => {
-      if (!el) return "none";
-      const text = (el.textContent || "").replace(/\s+/g, " ").trim().slice(0, 80);
-      return `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ""}${
-        el.className ? `.${String(el.className).replace(/\s+/g, ".").slice(0, 120)}` : ""
-      }${text ? ` · ${text}` : ""}`;
-    };
-    const onClickCapture = (event: MouseEvent) => {
-      const target = event.target instanceof Element ? event.target : null;
-      const top = document.elementFromPoint(event.clientX, event.clientY);
-      const message = `target=${describe(target)} | elementFromPoint=${describe(top)}`;
-      // eslint-disable-next-line no-console
-      console.log("SALES_DOC_CLICK_CAPTURE", message);
-      setLastClickDebug(message);
-    };
-    document.addEventListener("click", onClickCapture, true);
-    return () => document.removeEventListener("click", onClickCapture, true);
-  }, []);
 
   // Load per-company Sale Invoice customization toggles.
   const { data: settings = DEFAULT_SALE_INVOICE_SETTINGS } = useQuery({
