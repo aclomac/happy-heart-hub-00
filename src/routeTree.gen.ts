@@ -116,6 +116,7 @@ import { Route as AppExpensesNewRouteImport } from './routes/app.expenses.new'
 import { Route as AppEstimatesNewRouteImport } from './routes/app.estimates.new'
 import { Route as AppEcommerceWebsitesRouteImport } from './routes/app.ecommerce.websites'
 import { Route as AppEcommerceTrackingRouteImport } from './routes/app.ecommerce.tracking'
+import { Route as AppEcommerceSyncLogsRouteImport } from './routes/app.ecommerce.sync-logs'
 import { Route as AppEcommerceSettingsRouteImport } from './routes/app.ecommerce.settings'
 import { Route as AppEcommerceReturnsRouteImport } from './routes/app.ecommerce.returns'
 import { Route as AppEcommerceReportsRouteImport } from './routes/app.ecommerce.reports'
@@ -706,6 +707,11 @@ const AppEcommerceTrackingRoute = AppEcommerceTrackingRouteImport.update({
   path: '/tracking',
   getParentRoute: () => AppEcommerceRoute,
 } as any)
+const AppEcommerceSyncLogsRoute = AppEcommerceSyncLogsRouteImport.update({
+  id: '/sync-logs',
+  path: '/sync-logs',
+  getParentRoute: () => AppEcommerceRoute,
+} as any)
 const AppEcommerceSettingsRoute = AppEcommerceSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -1017,6 +1023,7 @@ export interface FileRoutesByFullPath {
   '/app/ecommerce/reports': typeof AppEcommerceReportsRoute
   '/app/ecommerce/returns': typeof AppEcommerceReturnsRoute
   '/app/ecommerce/settings': typeof AppEcommerceSettingsRoute
+  '/app/ecommerce/sync-logs': typeof AppEcommerceSyncLogsRoute
   '/app/ecommerce/tracking': typeof AppEcommerceTrackingRoute
   '/app/ecommerce/websites': typeof AppEcommerceWebsitesRoute
   '/app/estimates/new': typeof AppEstimatesNewRoute
@@ -1164,6 +1171,7 @@ export interface FileRoutesByTo {
   '/app/ecommerce/reports': typeof AppEcommerceReportsRoute
   '/app/ecommerce/returns': typeof AppEcommerceReturnsRoute
   '/app/ecommerce/settings': typeof AppEcommerceSettingsRoute
+  '/app/ecommerce/sync-logs': typeof AppEcommerceSyncLogsRoute
   '/app/ecommerce/tracking': typeof AppEcommerceTrackingRoute
   '/app/ecommerce/websites': typeof AppEcommerceWebsitesRoute
   '/app/estimates/new': typeof AppEstimatesNewRoute
@@ -1316,6 +1324,7 @@ export interface FileRoutesById {
   '/app/ecommerce/reports': typeof AppEcommerceReportsRoute
   '/app/ecommerce/returns': typeof AppEcommerceReturnsRoute
   '/app/ecommerce/settings': typeof AppEcommerceSettingsRoute
+  '/app/ecommerce/sync-logs': typeof AppEcommerceSyncLogsRoute
   '/app/ecommerce/tracking': typeof AppEcommerceTrackingRoute
   '/app/ecommerce/websites': typeof AppEcommerceWebsitesRoute
   '/app/estimates/new': typeof AppEstimatesNewRoute
@@ -1469,6 +1478,7 @@ export interface FileRouteTypes {
     | '/app/ecommerce/reports'
     | '/app/ecommerce/returns'
     | '/app/ecommerce/settings'
+    | '/app/ecommerce/sync-logs'
     | '/app/ecommerce/tracking'
     | '/app/ecommerce/websites'
     | '/app/estimates/new'
@@ -1616,6 +1626,7 @@ export interface FileRouteTypes {
     | '/app/ecommerce/reports'
     | '/app/ecommerce/returns'
     | '/app/ecommerce/settings'
+    | '/app/ecommerce/sync-logs'
     | '/app/ecommerce/tracking'
     | '/app/ecommerce/websites'
     | '/app/estimates/new'
@@ -1767,6 +1778,7 @@ export interface FileRouteTypes {
     | '/app/ecommerce/reports'
     | '/app/ecommerce/returns'
     | '/app/ecommerce/settings'
+    | '/app/ecommerce/sync-logs'
     | '/app/ecommerce/tracking'
     | '/app/ecommerce/websites'
     | '/app/estimates/new'
@@ -2588,6 +2600,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppEcommerceTrackingRouteImport
       parentRoute: typeof AppEcommerceRoute
     }
+    '/app/ecommerce/sync-logs': {
+      id: '/app/ecommerce/sync-logs'
+      path: '/sync-logs'
+      fullPath: '/app/ecommerce/sync-logs'
+      preLoaderRoute: typeof AppEcommerceSyncLogsRouteImport
+      parentRoute: typeof AppEcommerceRoute
+    }
     '/app/ecommerce/settings': {
       id: '/app/ecommerce/settings'
       path: '/settings'
@@ -2955,6 +2974,7 @@ interface AppEcommerceRouteChildren {
   AppEcommerceReportsRoute: typeof AppEcommerceReportsRoute
   AppEcommerceReturnsRoute: typeof AppEcommerceReturnsRoute
   AppEcommerceSettingsRoute: typeof AppEcommerceSettingsRoute
+  AppEcommerceSyncLogsRoute: typeof AppEcommerceSyncLogsRoute
   AppEcommerceTrackingRoute: typeof AppEcommerceTrackingRoute
   AppEcommerceWebsitesRoute: typeof AppEcommerceWebsitesRoute
   AppEcommerceIndexRoute: typeof AppEcommerceIndexRoute
@@ -2974,6 +2994,7 @@ const AppEcommerceRouteChildren: AppEcommerceRouteChildren = {
   AppEcommerceReportsRoute: AppEcommerceReportsRoute,
   AppEcommerceReturnsRoute: AppEcommerceReturnsRoute,
   AppEcommerceSettingsRoute: AppEcommerceSettingsRoute,
+  AppEcommerceSyncLogsRoute: AppEcommerceSyncLogsRoute,
   AppEcommerceTrackingRoute: AppEcommerceTrackingRoute,
   AppEcommerceWebsitesRoute: AppEcommerceWebsitesRoute,
   AppEcommerceIndexRoute: AppEcommerceIndexRoute,
