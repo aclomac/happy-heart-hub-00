@@ -244,8 +244,8 @@ export function BankStatementImportSection({ companyId }: { companyId: string })
           <div>
             <h3 className="font-semibold">Imported Statement</h3>
             <p className="text-xs text-muted-foreground">
-              {saved.length} rows · In <MoneyText amount={totalIn} /> · Out{" "}
-              <MoneyText amount={totalOut} />
+              {saved.length} rows · In <MoneyText value={String(totalIn)} /> · Out{" "}
+              <MoneyText value={String(totalOut)} />
             </p>
           </div>
           <div className="flex gap-2">
@@ -288,13 +288,13 @@ export function BankStatementImportSection({ companyId }: { companyId: string })
                     <td className="p-2">{r.date}</td>
                     <td className="p-2">{r.description}</td>
                     <td className="p-2 text-right">
-                      {r.debit ? <MoneyText amount={r.debit} /> : ""}
+                      {r.debit ? <MoneyText value={String(r.debit)} /> : ""}
                     </td>
                     <td className="p-2 text-right">
-                      {r.credit ? <MoneyText amount={r.credit} /> : ""}
+                      {r.credit ? <MoneyText value={String(r.credit)} /> : ""}
                     </td>
                     <td className="p-2 text-right">
-                      {r.balance ? <MoneyText amount={r.balance} /> : ""}
+                      {r.balance ? <MoneyText value={String(r.balance)} /> : ""}
                     </td>
                     <td className="p-2">{r.reference}</td>
                   </tr>
