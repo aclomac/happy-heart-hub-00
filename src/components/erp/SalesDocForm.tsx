@@ -64,6 +64,7 @@ import {
   type AttachmentsSectionHandle,
 } from "@/components/erp/AttachmentsSection";
 import { usePWAStatus } from "@/components/erp/PWAProvider";
+import { labelsFor } from "@/lib/doc-kind-labels";
 
 export type DocKind = "invoice" | "estimate" | "sale_order" | "delivery_challan" | "credit_note";
 
