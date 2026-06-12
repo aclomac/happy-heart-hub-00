@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { BUILD_LABEL, BUILD_STAMP, BUILD_NOTES } from "@/lib/build-info";
 import {
   AUDIT_REGISTRY,
   summarizeAudit,
@@ -299,6 +300,30 @@ function QaAuditPage() {
 
   return (
     <div className="space-y-4">
+      {/* Stable Build banner */}
+      <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-md p-4">
+        <div className="flex items-center gap-2">
+          <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+          <div className="font-semibold text-emerald-700 dark:text-emerald-300">
+            {BUILD_LABEL}
+          </div>
+          <Badge
+            variant="outline"
+            className="border-emerald-500/40 text-emerald-700 dark:text-emerald-300"
+          >
+            {BUILD_STAMP}
+          </Badge>
+        </div>
+        <div className="mt-2 text-xs text-muted-foreground flex flex-wrap gap-x-3 gap-y-1">
+          {BUILD_NOTES.map((n: string) => (
+            <span key={n} className="inline-flex items-center gap-1">
+              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+              {n}
+            </span>
+          ))}
+        </div>
+      </div>
+
       <PageHeader
         title="ERPOVO Functional QA Audit"
         subtitle="Verify every menu, submenu, route, button and core workflow"
