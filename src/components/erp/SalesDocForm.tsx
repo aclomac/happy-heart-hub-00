@@ -1435,7 +1435,7 @@ export function SalesDocForm({
       >
         <DialogContent className="sm:max-w-md" data-testid="invoice-saved-dialog">
           <DialogHeader>
-            <DialogTitle>{t("Invoice Saved")}</DialogTitle>
+            <DialogTitle>{t(docLabels.savedTitle)}</DialogTitle>
           </DialogHeader>
           <div className="text-sm text-muted-foreground">
             <span className="font-medium text-foreground">{savedInvoiceNo}</span>
@@ -1448,7 +1448,7 @@ export function SalesDocForm({
               data-testid="success-print-invoice"
               onClick={() => runWithInvoicePdf(printInvoicePDF)}
             >
-              <Printer className="w-4 h-4" /> {t("Print Invoice")}
+              <Printer className="w-4 h-4" /> {t(docLabels.printLabel)}
             </Button>
             <Button
               variant="outline"
@@ -1470,7 +1470,7 @@ export function SalesDocForm({
                 navigate({ to: `/app/sales/${savedInvoiceId}/edit` as any });
               }}
             >
-              <Eye className="w-4 h-4" /> {t("Open Invoice")}
+              <Eye className="w-4 h-4" /> {t(docLabels.openLabel)}
             </Button>
             <Button
               variant="sale"
@@ -1478,7 +1478,7 @@ export function SalesDocForm({
               data-testid="success-create-another"
               onClick={resetForm}
             >
-              <FilePlus2 className="w-4 h-4" /> {t("Create Another Sale")}
+              <FilePlus2 className="w-4 h-4" /> {t(docLabels.createAnotherLabel)}
             </Button>
           </div>
           <DialogFooter className="pt-2">
