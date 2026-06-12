@@ -975,10 +975,15 @@ export function SalesDocForm({
           </tbody>
         </table>
         <div className="p-2 border-t">
-          <Button variant="outline" size="sm" onClick={() => setRows([...rows, emptyRow()])}>
+          <button
+            type="button"
+            onClick={() => setRows([...rows, emptyRow()])}
+            className="inline-flex h-8 items-center justify-center gap-2 rounded-md border border-input bg-background px-3 text-xs font-medium shadow-sm hover:bg-accent hover:text-accent-foreground"
+            data-testid="add-invoice-row-btn"
+          >
             <Plus className="w-3.5 h-3.5" />
             Add Row
-          </Button>
+          </button>
         </div>
       </div>
 
