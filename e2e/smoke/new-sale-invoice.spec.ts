@@ -21,13 +21,24 @@ test.describe("/app/sales/new", () => {
   test("page loads with Save Invoice button", async ({ page }) => {
     const bag = attachErrorWatch(page);
     await gotoNewSale(page);
+    await expect(page.getByTestId("sales-test-click-btn")).toBeVisible();
     await expect(page.getByTestId("save-invoice-btn")).toBeVisible();
     await expect(page.getByTestId("save-invoice-btn-bottom")).toBeVisible();
     expect(bag.all(), bag.all().join("\n")).toEqual([]);
   });
 
-  test("clicking Save Invoice fires the click toast", async ({ page }) => {
+  test("TEST CLICK and Save Invoice fire immediate click feedback", async ({ page }) => {
     await gotoNewSale(page);
+    page.once("dialog", async (dialog) => {
+      expect(dialog.message()).toBe("TEST CLICK WORKS");
+      await dialog.accept();
+    });
+    await page.getByTestId("sales-test-click-btn").click();
+
+    page.once("dialog", async (dialog) => {
+      expect(dialog.message()).toBe("SAVE_INVOICE_CLICKED");
+      await dialog.accept();
+    });
     await page.getByTestId("save-invoice-btn").click();
     await expect(page.getByText(/save invoice clicked/i).first()).toBeVisible({
       timeout: 5_000,
@@ -36,6 +47,7 @@ test.describe("/app/sales/new", () => {
 
   test("empty save shows validation toast", async ({ page }) => {
     await gotoNewSale(page);
+    page.once("dialog", async (dialog) => await dialog.accept());
     await page.getByTestId("save-invoice-btn").click();
     // Either no-customer or no-items toast is acceptable depending on prefill.
     await expect(
@@ -49,6 +61,10 @@ test.describe("/app/sales/new", () => {
 
   test("New Customer button opens the quick-add modal", async ({ page }) => {
     await gotoNewSale(page);
+    page.once("dialog", async (dialog) => {
+      expect(dialog.message()).toBe("NEW_CUSTOMER_CLICKED");
+      await dialog.accept();
+    });
     await page.getByTestId("quick-add-customer-btn").click();
     await expect(page.getByRole("dialog")).toBeVisible({ timeout: 5_000 });
     await expect(page.getByText(/add new customer/i)).toBeVisible();
