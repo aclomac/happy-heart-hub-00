@@ -15,7 +15,8 @@ import { LoanAccountsSection } from "@/components/erp/cash/LoanAccountsSection";
 import { MobileBankingSection } from "@/components/erp/cash/MobileBankingSection";
 import { CashBankStatementSection } from "@/components/erp/cash/CashBankStatementSection";
 import { CashReconciliationSection } from "@/components/erp/cash/CashReconciliationSection";
-import { Landmark, Wallet, FileText, HandCoins, Smartphone, BookOpen, Scale } from "lucide-react";
+import { BankStatementImportSection } from "@/components/erp/cash/BankStatementImportSection";
+import { Landmark, Wallet, FileText, HandCoins, Smartphone, BookOpen, Scale, Upload } from "lucide-react";
 
 export const Route = createFileRoute("/app/cash")({ component: CashShell });
 
