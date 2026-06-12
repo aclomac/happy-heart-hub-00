@@ -64,6 +64,7 @@ import {
   type AttachmentsSectionHandle,
 } from "@/components/erp/AttachmentsSection";
 import { usePWAStatus } from "@/components/erp/PWAProvider";
+import { labelsFor } from "@/lib/doc-kind-labels";
 
 export type DocKind = "invoice" | "estimate" | "sale_order" | "delivery_challan" | "credit_note";
 
@@ -304,6 +305,7 @@ export function SalesDocForm({
 }) {
   const prefillSourceId = sourceSaleId || duplicateSaleId;
   const meta = META[kind];
+  const docLabels = labelsFor(kind);
   const companyId = useCurrentCompanyId();
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -814,7 +816,7 @@ export function SalesDocForm({
         localSalesCount,
         error: null,
       }));
-      toast.success(editingId ? `${finalInvoiceNo} updated` : `Sale invoice saved: ${finalInvoiceNo}`);
+      toast.success(editingId ? `${finalInvoiceNo} updated` : docLabels.savedToast(finalInvoiceNo));
       qc.invalidateQueries({ queryKey: ["sales", companyId] });
 
       // Phase 2 — flush pending attachments uploaded before the invoice existed.
@@ -869,7 +871,9 @@ export function SalesDocForm({
     if (!savedInvoiceId || !companyId) return;
     setPdfBusy(true);
     try {
-      const d = await buildInvoiceDataFromSale(savedInvoiceId, companyId);
+      const d = await buildInvoiceDataFromSale(savedInvoiceId, companyId, {
+        title: docLabels.pdfTitle,
+      });
       await fn(d);
     } catch (e) {
       console.error(e);
@@ -1431,7 +1435,7 @@ export function SalesDocForm({
       >
         <DialogContent className="sm:max-w-md" data-testid="invoice-saved-dialog">
           <DialogHeader>
-            <DialogTitle>{t("Invoice Saved")}</DialogTitle>
+            <DialogTitle>{t(docLabels.savedTitle)}</DialogTitle>
           </DialogHeader>
           <div className="text-sm text-muted-foreground">
             <span className="font-medium text-foreground">{savedInvoiceNo}</span>
@@ -1444,7 +1448,7 @@ export function SalesDocForm({
               data-testid="success-print-invoice"
               onClick={() => runWithInvoicePdf(printInvoicePDF)}
             >
-              <Printer className="w-4 h-4" /> {t("Print Invoice")}
+              <Printer className="w-4 h-4" /> {t(docLabels.printLabel)}
             </Button>
             <Button
               variant="outline"
@@ -1466,7 +1470,7 @@ export function SalesDocForm({
                 navigate({ to: `/app/sales/${savedInvoiceId}/edit` as any });
               }}
             >
-              <Eye className="w-4 h-4" /> {t("Open Invoice")}
+              <Eye className="w-4 h-4" /> {t(docLabels.openLabel)}
             </Button>
             <Button
               variant="sale"
@@ -1474,7 +1478,7 @@ export function SalesDocForm({
               data-testid="success-create-another"
               onClick={resetForm}
             >
-              <FilePlus2 className="w-4 h-4" /> {t("Create Another Sale")}
+              <FilePlus2 className="w-4 h-4" /> {t(docLabels.createAnotherLabel)}
             </Button>
           </div>
           <DialogFooter className="pt-2">

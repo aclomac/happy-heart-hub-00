@@ -16,14 +16,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { labelsFor, type DocKindLike } from "@/lib/doc-kind-labels";
 
 async function withData(
   saleId: string,
   companyId: string,
+  title: string,
   fn: (d: InvoiceData) => void | Promise<void>,
 ) {
   try {
-    const data = await buildInvoiceDataFromSale(saleId, companyId);
+    const data = await buildInvoiceDataFromSale(saleId, companyId, { title });
     await fn(data);
   } catch (e) {
     toast.error((e as Error).message);
@@ -34,15 +36,18 @@ export function InvoiceActionsMenu({
   saleId,
   companyId,
   label = "Print / Share",
+  kind = "invoice",
 }: {
   saleId: string;
   companyId: string;
   label?: string;
+  kind?: DocKindLike;
 }) {
   const [busy, setBusy] = useState(false);
+  const docLabels = labelsFor(kind);
   const run = (fn: (d: InvoiceData) => void | Promise<void>) => async () => {
     setBusy(true);
-    await withData(saleId, companyId, fn);
+    await withData(saleId, companyId, docLabels.pdfTitle, fn);
     setBusy(false);
   };
   return (
@@ -53,10 +58,10 @@ export function InvoiceActionsMenu({
           {label}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-52">
+      <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuItem onSelect={run(printInvoicePDF)}>
           <Printer className="w-3.5 h-3.5 mr-2" />
-          Print A4 Invoice
+          {docLabels.printLabel}
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={run(downloadInvoicePDF)}>
           <Download className="w-3.5 h-3.5 mr-2" />
@@ -68,7 +73,7 @@ export function InvoiceActionsMenu({
           })}
         >
           <Receipt className="w-3.5 h-3.5 mr-2" />
-          Print POS Receipt (80mm)
+          {docLabels.printThermalLabel}
         </DropdownMenuItem>
         <DropdownMenuItem
           onSelect={run((d) => {
@@ -76,11 +81,11 @@ export function InvoiceActionsMenu({
           })}
         >
           <Download className="w-3.5 h-3.5 mr-2" />
-          Download POS Receipt
+          Download Thermal
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={run(shareInvoicePDF)}>
           <Share2 className="w-3.5 h-3.5 mr-2" />
-          Share / WhatsApp
+          {docLabels.shareLabel}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -88,10 +93,10 @@ export function InvoiceActionsMenu({
 }
 
 export async function printSaleReceiptNow(saleId: string, companyId: string) {
-  await withData(saleId, companyId, (d) => {
+  await withData(saleId, companyId, "TAX INVOICE", (d) => {
     printPOSReceipt(d);
   });
 }
 export async function printSaleInvoiceNow(saleId: string, companyId: string) {
-  await withData(saleId, companyId, (d) => printInvoicePDF(d));
+  await withData(saleId, companyId, "TAX INVOICE", (d) => printInvoicePDF(d));
 }

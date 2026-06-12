@@ -297,7 +297,7 @@ export function SalesDocList({ kind }: { kind: DocKind }) {
                     />
                   </td>
                   <td className="flex items-center gap-1">
-                    <InvoiceActionsMenu saleId={s.id} companyId={companyId} label="" />
+                    <InvoiceActionsMenu saleId={s.id} companyId={companyId} label="" kind={kind} />
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-7 w-7">
