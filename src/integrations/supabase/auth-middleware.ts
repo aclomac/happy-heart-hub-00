@@ -48,7 +48,11 @@ export const requireSupabaseAuth = createMiddleware({ type: "function" }).server
     const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY;
     const request = getRequest();
     const cookie = request?.headers?.get("cookie") ?? "";
-    const demoAuth = /(?:^|;\s*)erpovo_demo_auth=1(?:;|$)/.test(cookie);
+    const demoEmail = decodeURIComponent(
+      cookie.match(/(?:^|;\s*)erpovo_demo_email=([^;]*)/)?.[1] ?? "",
+    );
+    const demoAuth =
+      /(?:^|;\s*)erpovo_demo_auth=1(?:;|$)/.test(cookie) && demoEmail === DEMO_USER_EMAIL;
 
     if (demoAuth) {
       console.log("[demo-auth] server function allowed demo user from cookie");
