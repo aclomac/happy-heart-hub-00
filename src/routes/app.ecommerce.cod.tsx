@@ -32,34 +32,60 @@ function CodPage() {
     m === "Cash" ? BANK_CASH : m === "Bank" ? BANK_DBBL : m === "bKash" ? BANK_BKASH : BANK_NAGAD;
 
   const collect = (id: string, method: "Cash" | "Bank" | "bKash" | "Nagad") => {
-    const entry = list.find((c) => c.id === id);
-    if (!entry) return;
-    const net = entry.codAmount - entry.courierCharge - entry.returnCharge;
-    const next = list.map((c) => c.id === id ? {
-      ...c, collectedAmount: c.codAmount, status: "Collected" as const,
-      collectionDate: new Date().toISOString().slice(0, 10), paymentMethod: method,
-    } : c);
-    setList(next); setCodEntries(next);
-    // Post a real cash/bank transaction so ledgers update.
-    const o = orders.find((x) => x.id === entry.orderId);
-    const txn: DemoCashTxn = {
-      id: genId("ctx"),
-      company_id: "demo",
-      bank_account_id: accountFor(method),
-      direction: "in",
-      amount: net,
-      txn_date: new Date().toISOString().slice(0, 10),
-      category: "Ecommerce COD",
-      notes: `COD collected for order ${o?.orderNo || entry.orderId}`,
-      reference_type: "ecommerce_cod",
-      reference_id: entry.id,
-      status: "posted",
-      reversed_at: null,
-      reversed_by: null,
-      created_at: new Date().toISOString(),
-    };
-    setCashTxns([...getCashTxns(), txn]);
-    toast.success(`COD collected via ${method} · ৳${net.toLocaleString()} posted`);
+    try {
+      const entry = list.find((c) => c.id === id);
+      if (!entry) throw new Error("Entry not found");
+      const o = orders.find((x) => x.id === entry.orderId);
+      const net = entry.codAmount - entry.courierCharge - entry.returnCharge;
+      if (net <= 0) throw new Error("Net receivable is zero or negative");
+      const today = new Date().toISOString().slice(0, 10);
+      const next = list.map((c) => c.id === id ? {
+        ...c, collectedAmount: c.codAmount, status: "Collected" as const,
+        collectionDate: today, paymentMethod: method,
+      } : c);
+      setList(next); setCodEntries(next);
+      // 1. Post cash/bank transaction
+      const txn: DemoCashTxn = {
+        id: genId("ctx"), company_id: "demo", bank_account_id: accountFor(method),
+        direction: "in", amount: net, txn_date: today,
+        category: "Ecommerce COD",
+        notes: `COD collected for order ${o?.orderNo || entry.orderId}`,
+        reference_type: "ecommerce_cod", reference_id: entry.id,
+        status: "posted", reversed_at: null, reversed_by: null,
+        created_at: new Date().toISOString(),
+      };
+      setCashTxns([...getCashTxns(), txn]);
+      // 2. Record ecommerce payment
+      setPayments([...getPayments(), {
+        id: genId("pm"), orderId: entry.orderId, type: method === "Bank" ? "Bank Transfer" : method,
+        amount: net, date: today, reference: `COD ${o?.orderNo || ""}`.trim(),
+        notes: "COD collection",
+      }]);
+      // 3. Record courier expense (so P&L reflects it)
+      if (entry.courierCharge > 0 || entry.returnCharge > 0) {
+        const exps = getExpenses();
+        if (entry.courierCharge > 0) exps.push({
+          id: genId("ex"), category: "Courier charge", amount: entry.courierCharge,
+          date: today, websiteId: o?.websiteId || null, orderId: entry.orderId,
+          courierId: entry.courierId, notes: `Auto · COD ${o?.orderNo || ""}`.trim(),
+        });
+        if (entry.returnCharge > 0) exps.push({
+          id: genId("ex"), category: "Return charge", amount: entry.returnCharge,
+          date: today, websiteId: o?.websiteId || null, orderId: entry.orderId,
+          courierId: entry.courierId, notes: `Auto · COD ${o?.orderNo || ""}`.trim(),
+        });
+        setExpenses(exps);
+      }
+      // 4. Sync log / audit entry
+      setSyncLogs([{
+        id: genId("sl"), time: new Date().toISOString(),
+        websiteId: o?.websiteId || "", action: `COD collected · ${o?.orderNo || entry.orderId}`,
+        status: "success", newOrders: 0, updatedOrders: 1, failed: 0,
+      }, ...getSyncLogs()]);
+      toast.success(`COD collected via ${method} · ৳${net.toLocaleString()} posted`);
+    } catch (e) {
+      toast.error(`COD collection failed: ${e instanceof Error ? e.message : String(e)}`);
+    }
   };
 
 
