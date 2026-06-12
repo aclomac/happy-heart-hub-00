@@ -404,18 +404,24 @@ export function SalesDocForm({
     },
   });
 
-  // Auto-number (new doc only). For Sale Invoice (kind === "invoice"), use the
-  // per-company configurable number series; for other doc types keep the
-  // legacy nextDocNumber behavior.
+  // Auto-number (new doc only). In demo mode read from local sales so each
+  // new invoice gets a fresh sequential number (INV-YYYY-####). Outside demo
+  // use the configurable per-company series.
   useEffect(() => {
-    if (companyId && !invoiceNo && !editingId) {
-      const fallback = `${meta.prefix}-0001`;
-      const gen =
-        kind === "invoice"
-          ? loadInvoiceSeries(companyId).then((s) => nextSaleInvoiceNumber(companyId, s))
-          : nextDocNumber(companyId, "sales", meta.prefix, kind);
-      gen.then(setInvoiceNo).catch(() => setInvoiceNo(fallback));
+    if (!companyId || invoiceNo || editingId) return;
+    if (isDemoMode()) {
+      repairDuplicateInvoiceNos(companyId);
+      const sales = readLocalArray<Record<string, unknown>>("erpovo_demo_sales");
+      const next = nextLocalInvoiceNo(sales, companyId, kind, meta.prefix);
+      setInvoiceNo(next);
+      return;
     }
+    const fallback = `${meta.prefix}-0001`;
+    const gen =
+      kind === "invoice"
+        ? loadInvoiceSeries(companyId).then((s) => nextSaleInvoiceNumber(companyId, s))
+        : nextDocNumber(companyId, "sales", meta.prefix, kind);
+    gen.then(setInvoiceNo).catch(() => setInvoiceNo(fallback));
   }, [companyId, invoiceNo, meta.prefix, kind, editingId]);
 
   // Hydrate edit mode
