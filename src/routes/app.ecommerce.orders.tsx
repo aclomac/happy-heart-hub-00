@@ -35,6 +35,40 @@ function OrdersPage() {
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [websiteFilter, setWebsiteFilter] = useState<string>("all");
+  const [createOpen, setCreateOpen] = useState(false);
+  const blankForm = {
+    websiteId: websites[0]?.id || "",
+    customerName: "", phone: "", address: "", district: "Dhaka",
+    sku: "", productName: "", qty: 1, price: 0, deliveryCharge: 70, discount: 0,
+    paymentMethod: "COD", status: "New" as EcoOrderStatus,
+  };
+  const [form, setForm] = useState(blankForm);
+
+  const createOrder = () => {
+    if (!form.websiteId) { toast.error("Select a website"); return; }
+    if (!form.customerName || !form.phone) { toast.error("Customer name and phone required"); return; }
+    if (!form.productName || form.qty <= 0 || form.price <= 0) { toast.error("Product, qty and price required"); return; }
+    const subtotal = form.qty * form.price;
+    const total = subtotal - form.discount + form.deliveryCharge;
+    const orderNo = `MAN-${Date.now().toString().slice(-7)}`;
+    const next: EcoOrder = {
+      id: genId("eo"), websiteId: form.websiteId, orderNo,
+      customerName: form.customerName, phone: form.phone, address: form.address, district: form.district,
+      orderDate: new Date().toISOString().slice(0, 10),
+      items: [{ sku: form.sku, name: form.productName, qty: form.qty, price: form.price }],
+      subtotal, discount: form.discount, deliveryCharge: form.deliveryCharge,
+      codAmount: total, paidAmount: 0,
+      paymentMethod: form.paymentMethod, status: form.status,
+      courierId: null, trackingId: null, deliveryStatus: "Pending",
+      returnStatus: null, source: "Manual",
+      createdAt: new Date().toISOString(),
+    };
+    const updated = [...list, next];
+    setList(updated); setOrders(updated);
+    setCreateOpen(false); setForm(blankForm);
+    toast.success(`Order ${orderNo} created`);
+  };
+
 
   const filtered = useMemo(() => list
     .filter((o) => statusFilter === "all" || o.status === statusFilter)
