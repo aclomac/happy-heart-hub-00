@@ -256,12 +256,18 @@ function Items() {
                 e.target.value = "";
               }}
             />
-            <Link to="/app/items">
-               <Button variant="default" size="sm" disabled={isOffline}>
-                 <Plus className="w-4 h-4" />
-                 Add Item
-               </Button>
-            </Link>
+            <Button
+              variant="default"
+              size="sm"
+              data-testid="items-add-item-btn"
+              onClick={() => {
+                console.log("ITEM_MODULE_ADD_ITEM_CLICKED");
+                setAddOpen(true);
+              }}
+            >
+              <Plus className="w-4 h-4" />
+              Add Item
+            </Button>
           </>
         }
       />
