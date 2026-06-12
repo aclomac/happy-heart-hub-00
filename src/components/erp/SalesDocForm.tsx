@@ -20,7 +20,6 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Command,
@@ -194,7 +193,6 @@ export function SalesDocForm({
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { t } = useI18n();
-  const canAddParty = usePermission("parties", "add");
   const canEditSales = usePermission("sales", "edit");
   const { isOffline: isOfflineRaw } = usePWAStatus();
   // In personal/local demo mode all data is on-device, so offline never blocks save.
@@ -224,6 +222,29 @@ export function SalesDocForm({
   const [savedInvoiceNo, setSavedInvoiceNo] = useState<string>("");
   const [successOpen, setSuccessOpen] = useState(false);
   const [pdfBusy, setPdfBusy] = useState(false);
+  const [lastClickDebug, setLastClickDebug] = useState("No clicks captured yet");
+
+  useEffect(() => {
+    if (!import.meta.env.DEV && !isDemoMode()) return;
+    if (typeof document === "undefined") return;
+    const describe = (el: Element | null) => {
+      if (!el) return "none";
+      const text = (el.textContent || "").replace(/\s+/g, " ").trim().slice(0, 80);
+      return `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ""}${
+        el.className ? `.${String(el.className).replace(/\s+/g, ".").slice(0, 120)}` : ""
+      }${text ? ` · ${text}` : ""}`;
+    };
+    const onClickCapture = (event: MouseEvent) => {
+      const target = event.target instanceof Element ? event.target : null;
+      const top = document.elementFromPoint(event.clientX, event.clientY);
+      const message = `target=${describe(target)} | elementFromPoint=${describe(top)}`;
+      // eslint-disable-next-line no-console
+      console.log("SALES_DOC_CLICK_CAPTURE", message);
+      setLastClickDebug(message);
+    };
+    document.addEventListener("click", onClickCapture, true);
+    return () => document.removeEventListener("click", onClickCapture, true);
+  }, []);
 
   // Load per-company Sale Invoice customization toggles.
   const { data: settings = DEFAULT_SALE_INVOICE_SETTINGS } = useQuery({
@@ -434,8 +455,9 @@ export function SalesDocForm({
     setRows(copy);
   };
 
-  const save = async () => {
+  const handleSaveInvoice = async () => {
     // Immediate click feedback — proves the handler ran before any validation.
+    alert("SAVE_INVOICE_CLICKED");
     // eslint-disable-next-line no-console
     console.log("SAVE_INVOICE_CLICKED", {
       partyId,
@@ -602,6 +624,19 @@ export function SalesDocForm({
 
   return (
     <div>
+      <div className="mb-3 flex items-center gap-2 rounded-md border border-warning/30 bg-warning/10 p-2 text-xs">
+        <button
+          type="button"
+          onClick={() => alert("TEST CLICK WORKS")}
+          className="inline-flex h-8 items-center justify-center rounded-md bg-primary px-3 font-medium text-primary-foreground shadow-sm hover:bg-primary/90"
+          data-testid="sales-test-click-btn"
+        >
+          TEST CLICK
+        </button>
+        <div className="min-w-0 truncate text-muted-foreground" data-testid="sales-click-debug-panel">
+          {lastClickDebug}
+        </div>
+      </div>
       <PageHeader
         title={editingId ? `Edit ${invoiceNo || meta.title}` : meta.title}
         subtitle={meta.subtitle}
@@ -612,17 +647,16 @@ export function SalesDocForm({
                 Cancel
               </Button>
             </Link>
-            <Button
-              variant="sale"
-              size="sm"
+            <button
               type="button"
               data-testid="save-invoice-btn"
               disabled={saving || convertedBlocked}
-              onClick={save}
+              onClick={handleSaveInvoice}
+              className="inline-flex h-8 items-center justify-center gap-2 rounded-md bg-sale px-3 text-xs font-medium text-sale-foreground shadow-sm hover:bg-sale/90 disabled:pointer-events-none disabled:opacity-50"
             >
               <Save className="w-4 h-4" />
               {saving ? "Saving…" : editingId ? "Update" : meta.saveLabel}
-            </Button>
+            </button>
           </>
         }
       />
@@ -641,31 +675,20 @@ export function SalesDocForm({
             <div>
               <div className="flex items-center justify-between mb-1">
                 <Label className="text-xs">{t("Customer")} *</Label>
-                {canAddParty ? (
-                  <button
-                    type="button"
-                    onClick={() => setAddCustomerOpen(true)}
-                    className="text-xs text-primary hover:underline inline-flex items-center gap-1"
-                    data-testid="quick-add-customer-btn"
-                  >
-                    <UserPlus className="w-3 h-3" />
-                    {t("New Customer")}
-                  </button>
-                ) : (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="text-xs text-muted-foreground inline-flex items-center gap-1 cursor-not-allowed">
-                          <UserPlus className="w-3 h-3" />
-                          {t("New Customer")}
-                        </span>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {t("You don't have permission to add customers")}
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    alert("NEW_CUSTOMER_CLICKED");
+                    // eslint-disable-next-line no-console
+                    console.log("NEW_CUSTOMER_CLICKED");
+                    setAddCustomerOpen(true);
+                  }}
+                  className="text-xs text-primary hover:underline inline-flex items-center gap-1"
+                  data-testid="quick-add-customer-btn"
+                >
+                  <UserPlus className="w-3 h-3" />
+                  {t("New Customer")}
+                </button>
               </div>
               <Select value={partyId} onValueChange={setPartyId}>
                 <SelectTrigger className="h-9">
@@ -952,10 +975,15 @@ export function SalesDocForm({
           </tbody>
         </table>
         <div className="p-2 border-t">
-          <Button variant="outline" size="sm" onClick={() => setRows([...rows, emptyRow()])}>
+          <button
+            type="button"
+            onClick={() => setRows([...rows, emptyRow()])}
+            className="inline-flex h-8 items-center justify-center gap-2 rounded-md border border-input bg-background px-3 text-xs font-medium shadow-sm hover:bg-accent hover:text-accent-foreground"
+            data-testid="add-invoice-row-btn"
+          >
             <Plus className="w-3.5 h-3.5" />
             Add Row
-          </Button>
+          </button>
         </div>
       </div>
 
@@ -1104,17 +1132,16 @@ export function SalesDocForm({
             Cancel
           </Button>
         </Link>
-        <Button
-          variant="sale"
-          size="sm"
+        <button
           type="button"
           data-testid="save-invoice-btn-bottom"
           disabled={saving}
-          onClick={save}
+          onClick={handleSaveInvoice}
+          className="inline-flex h-8 items-center justify-center gap-2 rounded-md bg-sale px-3 text-xs font-medium text-sale-foreground shadow-sm hover:bg-sale/90 disabled:pointer-events-none disabled:opacity-50"
         >
           <Save className="w-4 h-4" />
           {saving ? "Saving…" : editingId ? "Update" : meta.saveLabel}
-        </Button>
+        </button>
       </div>
 
 

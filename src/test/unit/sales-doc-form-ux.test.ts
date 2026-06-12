@@ -52,15 +52,15 @@ describe("SalesDocForm UX upgrades", () => {
     expect(src).toMatch(/<CommandEmpty>\{t\("No items found"\)\}<\/CommandEmpty>/);
   });
 
-  it("renders + New Customer quick-add gated by parties.add permission", () => {
-    expect(src).toContain('usePermission("parties", "add")');
+  it("renders + New Customer quick-add as a native button in personal/local mode", () => {
     expect(src).toContain('data-testid="quick-add-customer-btn"');
+    expect(src).toContain('alert("NEW_CUSTOMER_CLICKED")');
     expect(src).toContain('{t("New Customer")}');
   });
 
-  it("shows a disabled tooltip when user lacks permission", () => {
-    expect(src).toMatch(/canAddParty \? \(/);
-    expect(src).toMatch(/You don't have permission to add customers/);
+  it("does not render the old customer permission block on the invoice page", () => {
+    expect(src).not.toMatch(/canAddParty \? \(/);
+    expect(src).not.toMatch(/You don't have permission to add customers/);
   });
 
   it("QuickAddCustomerDialog uses local state (so cancel keeps invoice unchanged)", () => {
