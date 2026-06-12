@@ -1006,8 +1006,17 @@ export const signupWorkflow = () =>
     }
 
     endDemoSession();
+    if (priorSession && priorUser) {
+      startLocalUserSession({
+        id: priorUser.id,
+        email: priorUser.email,
+        name: priorUser.name,
+        role: priorUser.role,
+      });
+    }
     deleteLocalUser(user.id);
-    steps.push(pass("Cleanup", "[QA] session ended + user removed"));
+    steps.push(pass("Cleanup", "[QA] session restored + user removed"));
+
 
     return steps;
   });
