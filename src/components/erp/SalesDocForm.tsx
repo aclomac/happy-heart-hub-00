@@ -176,6 +176,35 @@ function emptyRow(): Row {
   return { item_id: null, item_name: "", desc: "", qty: 1, unit: "PCS", price: 0, disc: 0, tax: 0 };
 }
 
+function readLocalArray<T = Record<string, unknown>>(key: string): T[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(key);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? (parsed as T[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function nextLocalInvoiceNo(
+  sales: Array<Record<string, unknown>>,
+  companyId: string,
+  docType: string,
+  prefix: string,
+): string {
+  const normalizedPrefix = prefix.endsWith("-") ? prefix : `${prefix}-`;
+  let max = 0;
+  for (const sale of sales) {
+    if (String(sale.company_id) !== companyId || String(sale.doc_type) !== docType) continue;
+    const invoiceNo = String(sale.invoice_no || "");
+    if (!invoiceNo.startsWith(normalizedPrefix)) continue;
+    const suffix = invoiceNo.slice(normalizedPrefix.length);
+    if (/^\d+$/.test(suffix)) max = Math.max(max, Number(suffix));
+  }
+  return `${normalizedPrefix}${String(max + 1).padStart(4, "0")}`;
+}
+
 export function SalesDocForm({
   kind,
   sourceSaleId,
@@ -227,11 +256,21 @@ export function SalesDocForm({
   // Visible Save Invoice debug panel state (per /app/sales/new spec).
   const [saveDebug, setSaveDebug] = useState<{
     clicked: boolean;
+    customer: string;
+    itemsCount: number;
     validation: string;
     savedInvoiceId: string | null;
     localSalesCount: number | null;
     error: string | null;
-  }>({ clicked: false, validation: "—", savedInvoiceId: null, localSalesCount: null, error: null });
+  }>({
+    clicked: false,
+    customer: "—",
+    itemsCount: 0,
+    validation: "—",
+    savedInvoiceId: null,
+    localSalesCount: null,
+    error: null,
+  });
 
   // Debug capture removed — it was interfering with click handlers in some
   // builds. Buttons are now native <button type="button" onClick={...}>.
@@ -453,36 +492,101 @@ export function SalesDocForm({
 
   const readLocalSalesCount = (): number | null => {
     try {
-      const raw = typeof window !== "undefined" ? localStorage.getItem("erpovo_demo_sales") : null;
-      if (!raw) return 0;
-      const arr = JSON.parse(raw);
-      return Array.isArray(arr) ? arr.length : 0;
+      return readLocalArray("erpovo_demo_sales").length;
     } catch {
       return null;
     }
   };
 
+  const saveInvoiceFallback = (payload: SaleInvoiceInput) => {
+    const sales = readLocalArray<Record<string, unknown>>("erpovo_demo_sales");
+    const saleItems = readLocalArray<Record<string, unknown>>("erpovo_demo_sale_items");
+    const id = editingId || `local-sale-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const nowIso = new Date().toISOString();
+    const finalInvoiceNo = payload.invoice_no || nextLocalInvoiceNo(sales, companyId, payload.doc_type, meta.prefix);
+    const saleRecord: Record<string, unknown> = {
+      id,
+      company_id: companyId,
+      doc_type: payload.doc_type,
+      invoice_no: finalInvoiceNo,
+      invoice_date: payload.invoice_date,
+      due_date: payload.due_date,
+      party_id: payload.party_id,
+      subtotal: payload.subtotal,
+      discount: payload.discount,
+      tax: payload.tax,
+      delivery_charge: payload.delivery_charge,
+      labor_charge: Number(payload.labor_cost || 0),
+      total: payload.total,
+      paid: payload.paid,
+      balance: payload.balance,
+      status: payload.status,
+      payment_method: payload.payment_direction ? payload.payment_method : null,
+      notes: payload.notes,
+      reference_sale_id: payload.reference_sale_id ?? null,
+      po_no: payload.po_no ?? null,
+      po_date: payload.po_date || null,
+      billing_name: payload.billing_name ?? null,
+      deleted_at: null,
+      created_at:
+        (sales.find((s) => String(s.id) === id)?.created_at as string | undefined) || nowIso,
+    };
+    const nextSales = editingId
+      ? sales.map((s) => (String(s.id) === editingId ? { ...s, ...saleRecord } : s))
+      : [...sales, saleRecord];
+    const nextItems = [
+      ...saleItems.filter((item) => String(item.sale_id) !== id),
+      ...payload.items.map((item, index) => ({
+        id: `${id}-li-${index + 1}`,
+        sale_id: id,
+        item_id: item.item_id,
+        variant_id: item.variant_id || null,
+        item_name: item.item_name,
+        description: item.description || null,
+        qty: item.qty,
+        unit: item.unit,
+        price: item.price,
+        discount_pct: item.discount_pct,
+        tax_pct: item.tax_pct,
+        amount: item.amount,
+      })),
+    ];
+    localStorage.setItem("erpovo_demo_sales", JSON.stringify(nextSales));
+    localStorage.setItem("erpovo_demo_sale_items", JSON.stringify(nextItems));
+    if (!payload.invoice_no) setInvoiceNo(finalInvoiceNo);
+    return { id, invoiceNo: finalInvoiceNo, localSalesCount: nextSales.length };
+  };
+
   const handleSaveInvoice = async () => {
     // Immediate click feedback — proves the handler ran before any validation.
     alert("SAVE_INVOICE_CLICKED");
+    const validRows = rows.filter((r) => r.item_id && r.qty > 0);
+    const customerDebug = party ? `${party.name} (${party.id})` : partyId || "—";
     // eslint-disable-next-line no-console
     console.log("SAVE_INVOICE_CLICKED", {
       partyId,
-      itemsCount: rows.filter((r) => r.item_id).length,
+      customer: customerDebug,
+      itemsCount: validRows.length,
       subTotal,
       total,
       received,
     });
-    setSaveDebug((d) => ({ ...d, clicked: true, validation: "checking…", error: null }));
-    toast.success(t("Save invoice clicked"));
+    setSaveDebug((d) => ({
+      ...d,
+      clicked: true,
+      customer: customerDebug,
+      itemsCount: validRows.length,
+      validation: "checking…",
+      error: null,
+    }));
     if (editingId && convertedBlocked) {
       toast.error(t("This order has been locked and can no longer be edited."));
       setSaveDebug((d) => ({ ...d, validation: "locked" }));
       return;
     }
     if (!partyId) {
-      toast.error(t("Please select a customer."));
-      setSaveDebug((d) => ({ ...d, validation: "no_customer" }));
+      toast.error("Please select a customer.");
+      setSaveDebug((d) => ({ ...d, validation: "Please select a customer." }));
       console.log("SAVE_INVOICE_VALIDATION_FAIL", { reason: "no_customer" });
       return;
     }
@@ -493,11 +597,13 @@ export function SalesDocForm({
       console.log("SAVE_INVOICE_VALIDATION_FAIL", { reason: "bad_line" });
       return;
     }
-    const validRows = rows.filter((r) => r.item_id && r.qty > 0);
     const headerOnlyEdit = !!editingId && validRows.length === 0;
     if (validRows.length === 0 && !headerOnlyEdit) {
-      toast.error(t("Please add at least one item before saving invoice."));
-      setSaveDebug((d) => ({ ...d, validation: "no_items" }));
+      toast.error("Please add at least one item before saving invoice.");
+      setSaveDebug((d) => ({
+        ...d,
+        validation: "Please add at least one item before saving invoice.",
+      }));
       console.log("SAVE_INVOICE_VALIDATION_FAIL", { reason: "no_items" });
       return;
     }
@@ -555,71 +661,46 @@ export function SalesDocForm({
       };
 
       let newId: string | null = null;
-      try {
-        newId = await saveSaleInvoice(
-          payload,
-          editingId ? { editingId, headerOnly: headerOnlyEdit } : { autoNumber: !invoiceNoManual },
-        );
-      } catch (primaryErr) {
-        const msg = (primaryErr as Error).message || "";
-        if (msg === "Duplicate invoice number") throw primaryErr;
-        // Fallback: write minimally to local sales storage so the invoice still
-        // appears in the Sales list, then surface the underlying error.
-        console.error("saveSaleInvoice failed, using localStorage fallback:", primaryErr);
+      let finalInvoiceNo = invoiceNo;
+      let localSalesCount = readLocalSalesCount();
+      if (isDemoMode()) {
+        const saved = saveInvoiceFallback(payload);
+        newId = saved.id;
+        finalInvoiceNo = saved.invoiceNo;
+        localSalesCount = saved.localSalesCount;
+      } else {
         try {
-          const KEY = "erpovo_demo_sales";
-          const raw = localStorage.getItem(KEY);
-          const arr: Array<Record<string, unknown>> = raw ? JSON.parse(raw) : [];
-          const fid = `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-          const nowIso = new Date().toISOString();
-          arr.push({
-            id: fid,
-            company_id: companyId,
-            invoice_no: invoiceNo || `INV-${arr.length + 1}`,
-            invoice_date: invoiceDate,
-            due_date: payload.due_date,
-            party_id: partyId,
-            subtotal: subTotal,
-            discount,
-            tax,
-            delivery_charge: deliveryAmt,
-            labor_charge: laborAmt,
-            total,
-            paid: recv,
-            balance: meta.showPayment ? balance : 0,
-            status,
-            payment_method: payload.payment_method,
-            notes: payload.notes,
-            doc_type: kind,
-            reference_sale_id: payload.reference_sale_id,
-            po_no: payload.po_no,
-            po_date: payload.po_date,
-            billing_name: payload.billing_name,
-            deleted_at: null,
-            created_at: nowIso,
-          });
-          localStorage.setItem(KEY, JSON.stringify(arr));
-          newId = fid;
-          toast.warning(
-            `${t("Saved via fallback")}: ${(primaryErr as Error).message || "primary save failed"}`,
+          newId = await saveSaleInvoice(
+            payload,
+            editingId ? { editingId, headerOnly: headerOnlyEdit } : { autoNumber: !invoiceNoManual },
           );
-        } catch (fbErr) {
-          throw new Error(
-            `Invoice save failed: ${(primaryErr as Error).message}; fallback also failed: ${(fbErr as Error).message}`,
-          );
+          finalInvoiceNo = payload.invoice_no || invoiceNo;
+        } catch (primaryErr) {
+          const msg = (primaryErr as Error).message || "";
+          if (msg === "Duplicate invoice number") throw primaryErr;
+          console.error("saveSaleInvoice failed, using localStorage fallback:", primaryErr);
+          try {
+            const saved = saveInvoiceFallback(payload);
+            newId = saved.id;
+            finalInvoiceNo = saved.invoiceNo;
+            localSalesCount = saved.localSalesCount;
+          } catch (fbErr) {
+            throw new Error(
+              `Invoice save failed: ${(primaryErr as Error).message}; fallback also failed: ${(fbErr as Error).message}`,
+            );
+          }
         }
       }
 
-      console.log("SAVE_INVOICE_SAVED", { id: newId, invoiceNo });
+      console.log("SAVE_INVOICE_SAVED", { id: newId, invoiceNo: finalInvoiceNo, localSalesCount });
       setSaveDebug((d) => ({
         ...d,
         savedInvoiceId: newId,
-        localSalesCount: readLocalSalesCount(),
+        validation: "saved",
+        localSalesCount,
         error: null,
       }));
-      toast.success(
-        editingId ? `${invoiceNo} updated` : `${t("Sale invoice saved")}: ${invoiceNo}`,
-      );
+      toast.success(editingId ? `${finalInvoiceNo} updated` : `Sale invoice saved: ${finalInvoiceNo}`);
       qc.invalidateQueries({ queryKey: ["sales", companyId] });
 
       // Phase 2 — flush pending attachments uploaded before the invoice existed.
@@ -705,13 +786,13 @@ export function SalesDocForm({
         className="mb-3 rounded-md border bg-muted/40 px-3 py-2 text-[11px] font-mono text-muted-foreground grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-1"
       >
         <div>Save clicked: <b>{saveDebug.clicked ? "yes" : "no"}</b></div>
-        <div>Customer: <b>{partyId || "—"}</b></div>
-        <div>Items: <b>{rows.filter((r) => r.item_id && r.qty > 0).length}</b></div>
+        <div>Customer selected: <b>{party ? `${party.name} (${party.id})` : partyId || saveDebug.customer}</b></div>
+        <div>Items count: <b>{rows.filter((r) => r.item_id && r.qty > 0).length || saveDebug.itemsCount}</b></div>
         <div>Subtotal: <b>{subTotal}</b></div>
         <div>Total: <b>{total}</b></div>
-        <div>Validation: <b>{saveDebug.validation}</b></div>
-        <div>Saved id: <b>{saveDebug.savedInvoiceId || "—"}</b></div>
-        <div>Local sales: <b>{saveDebug.localSalesCount ?? "—"}</b></div>
+        <div>Validation status: <b>{saveDebug.validation}</b></div>
+        <div>Saved invoice id: <b>{saveDebug.savedInvoiceId || "—"}</b></div>
+        <div>Local sales count: <b>{saveDebug.localSalesCount ?? "—"}</b></div>
         {saveDebug.error ? (
           <div className="col-span-full text-destructive">Error: {saveDebug.error}</div>
         ) : null}
