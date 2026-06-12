@@ -511,6 +511,79 @@ function Items() {
           </table>
         )}
       </div>
+
+      <Dialog open={addOpen} onOpenChange={(o) => { setAddOpen(o); if (!o) resetForm(); }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Add Item</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="col-span-2">
+              <Label>Item Name *</Label>
+              <Input
+                data-testid="add-item-name"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                placeholder="e.g. Premium T-Shirt"
+                autoFocus
+              />
+            </div>
+            <div>
+              <Label>Item Code / SKU</Label>
+              <Input value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} />
+            </div>
+            <div>
+              <Label>Category</Label>
+              <Select
+                value={form.category_id || "none"}
+                onValueChange={(v) => setForm({ ...form, category_id: v === "none" ? "" : v })}
+              >
+                <SelectTrigger><SelectValue placeholder="Uncategorized" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Uncategorized</SelectItem>
+                  {cats.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Unit</Label>
+              <Input value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} />
+            </div>
+            <div>
+              <Label>Purchase Price</Label>
+              <Input type="number" value={form.purchase_price} onChange={(e) => setForm({ ...form, purchase_price: e.target.value })} />
+            </div>
+            <div>
+              <Label>Sale Price</Label>
+              <Input type="number" value={form.sale_price} onChange={(e) => setForm({ ...form, sale_price: e.target.value })} />
+            </div>
+            <div>
+              <Label>Opening Stock</Label>
+              <Input type="number" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} />
+            </div>
+            <div>
+              <Label>Low Stock Alert</Label>
+              <Input type="number" value={form.low_stock_alert} onChange={(e) => setForm({ ...form, low_stock_alert: e.target.value })} />
+            </div>
+            <div className="col-span-2">
+              <Label>Description</Label>
+              <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setAddOpen(false); resetForm(); }}>Cancel</Button>
+            <Button
+              data-testid="add-item-save"
+              onClick={handleCreateItem}
+              disabled={mut.isPending}
+            >
+              {mut.isPending ? "Saving..." : "Save Item"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
