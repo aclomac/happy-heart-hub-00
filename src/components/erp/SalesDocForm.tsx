@@ -529,7 +529,11 @@ export function SalesDocForm({
         editingId ? { editingId, headerOnly: headerOnlyEdit } : { autoNumber: !invoiceNoManual },
       );
 
-      toast.success(editingId ? `${invoiceNo} updated` : t("Invoice Saved"));
+      // eslint-disable-next-line no-console
+      console.log("SAVE_INVOICE_SAVED", { id: newId, invoiceNo });
+      toast.success(
+        editingId ? `${invoiceNo} updated` : `${t("Sale invoice saved")}: ${invoiceNo}`,
+      );
       qc.invalidateQueries({ queryKey: ["sales", companyId] });
 
       // Phase 2 — flush pending attachments uploaded before the invoice existed.
