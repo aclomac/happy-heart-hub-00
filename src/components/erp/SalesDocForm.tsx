@@ -595,7 +595,35 @@ export function SalesDocForm({
     const saleItems = readLocalArray<Record<string, unknown>>("erpovo_demo_sale_items");
     const id = editingId || `local-sale-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const nowIso = new Date().toISOString();
-    const finalInvoiceNo = payload.invoice_no || nextLocalInvoiceNo(sales, companyId, payload.doc_type, meta.prefix);
+    // Always recompute unique invoice_no at save time unless the user manually
+    // typed a number. Avoids duplicates from stale form defaults / races.
+    const usedNumbers = new Set(
+      sales
+        .filter(
+          (s) =>
+            !s.deleted_at &&
+            String(s.company_id) === companyId &&
+            String(s.doc_type) === payload.doc_type &&
+            (!editingId || String(s.id) !== editingId),
+        )
+        .map((s) => String(s.invoice_no || "")),
+    );
+    let finalInvoiceNo = payload.invoice_no || "";
+    if (!invoiceNoManual || !finalInvoiceNo || usedNumbers.has(finalInvoiceNo)) {
+      finalInvoiceNo = nextLocalInvoiceNo(sales, companyId, payload.doc_type, meta.prefix);
+      // Defensive bump in case of any residual collision.
+      while (usedNumbers.has(finalInvoiceNo)) {
+        const m = finalInvoiceNo.match(/(\d+)$/);
+        const next = m ? Number(m[1]) + 1 : 1;
+        finalInvoiceNo = finalInvoiceNo.replace(/\d+$/, String(next).padStart(4, "0"));
+      }
+    }
+    // eslint-disable-next-line no-console
+    console.log("INVOICE_NUMBER_ASSIGNED", {
+      existingCount: usedNumbers.size,
+      manual: invoiceNoManual,
+      finalInvoiceNo,
+    });
     const saleRecord: Record<string, unknown> = {
       id,
       company_id: companyId,
