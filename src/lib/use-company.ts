@@ -35,7 +35,9 @@ export function setCurrentCompanyId(id: string | null, userId?: string | null) {
   } else {
     localStorage.removeItem(KEY);
   }
-  window.dispatchEvent(new Event(CHANGE_EVENT));
+  if (typeof window.dispatchEvent === "function") {
+    window.dispatchEvent(new Event(CHANGE_EVENT));
+  }
 }
 
 export function getLastSelectedCompanyId(userId: string): string | null {
