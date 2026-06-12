@@ -957,7 +957,10 @@ export const signupWorkflow = () =>
       DEMO_USER_ID,
     } = await import("@/lib/demo/localStore");
 
-    const email = `qa+${Date.now()}@erpovo.local`;
+    // Snapshot existing session so cleanup restores the caller's auth state.
+    const priorSession = getDemoSession();
+    const priorUser = getDemoUser();
+
 
     if (!isValidEmail(email)) return [fail("Email validator", `${email} rejected`)];
     if (!validatePassword("password123"))
