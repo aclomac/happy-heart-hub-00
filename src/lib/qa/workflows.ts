@@ -677,22 +677,25 @@ export const ecoOrderLifecycleWorkflow = () =>
     return steps;
   });
 
-// 5. COD collection (with cash txn)
+// 5. COD collection (with cash txn, payment, courier expense, P&L)
 export const ecoCodWorkflow = () =>
   run("wf-eco-cod", "Ecommerce — COD collection", async () => {
     const steps: WorkflowStep[] = [];
     const m = await import("@/lib/demo/ecommerce");
+    const sales = await import("@/lib/demo/sales");
+    const cashMod = await import("@/lib/demo/cash");
     m.seedEcommerceIfNeeded();
     const courierId = m.getCouriers()[0]?.id || "cr_path";
+    const websiteId = m.getWebsites()[0]?.id || "web_ck";
     const id = m.genId("eo");
+    const today = new Date().toISOString().slice(0, 10);
     m.setOrders([
       ...m.getOrders(),
       {
-        id, websiteId: m.getWebsites()[0]?.id || "web_ck",
+        id, websiteId,
         orderNo: `QA-COD-${Date.now()}`,
         customerName: `${QA_TAG} COD`, phone: "01700000002",
-        address: "QA", district: "Dhaka",
-        orderDate: new Date().toISOString().slice(0, 10),
+        address: "QA", district: "Dhaka", orderDate: today,
         items: [{ sku: "QA-1", name: "QA", qty: 1, price: 2000 }],
         subtotal: 2000, discount: 0, deliveryCharge: 70, codAmount: 2070, paidAmount: 0,
         paymentMethod: "COD", status: "Delivered",
@@ -707,42 +710,64 @@ export const ecoCodWorkflow = () =>
     ]);
     const pendingBefore = m.getCodEntries().filter((c) => c.status === "Pending").length;
     steps.push(pass("Pending COD recorded", `${pendingBefore} pending`));
-    m.setCodEntries(
-      m.getCodEntries().map((c) =>
-        c.id === codId
-          ? { ...c, collectedAmount: 2070, status: "Collected", collectionDate: new Date().toISOString().slice(0, 10) }
-          : c,
-      ),
-    );
-    try {
-      const cash = (await import("@/lib/demo/cash")) as unknown as {
-        getCashTxns?: () => Array<{ notes?: string }>;
-        setCashTxns?: (v: unknown[]) => void;
-      };
-      if (cash.getCashTxns && cash.setCashTxns) {
-        cash.setCashTxns([
-          ...cash.getCashTxns(),
-          { id: m.genId("ctx"), account: "BANK_CASH", type: "in", amount: 2070, date: new Date().toISOString().slice(0, 10), ref: `QA COD ${id}`, notes: QA_TAG },
-        ]);
-        steps.push(pass("Cash/Bank txn posted"));
-      } else steps.push(warn("Cash module shape changed", "skipped"));
-    } catch { steps.push(warn("Cash module unavailable", "skipped")); }
+
+    const plBefore = m.computeProfitLoss();
+    const cashBefore = sales.getCashTxns().length;
+    const net = 2070 - 70;
+
+    // Mark collected (mirror what the page does)
+    m.setCodEntries(m.getCodEntries().map((c) =>
+      c.id === codId ? { ...c, collectedAmount: 2070, status: "Collected", collectionDate: today, paymentMethod: "Cash" } : c,
+    ));
+    sales.setCashTxns([...sales.getCashTxns(), {
+      id: m.genId("ctx"), company_id: "demo", bank_account_id: cashMod.BANK_CASH,
+      direction: "in", amount: net, txn_date: today,
+      category: "Ecommerce COD", notes: `${QA_TAG} COD ${id}`,
+      reference_type: "ecommerce_cod", reference_id: codId,
+      status: "posted", reversed_at: null, reversed_by: null,
+      created_at: new Date().toISOString(),
+    }]);
+    m.setPayments([...m.getPayments(), {
+      id: m.genId("pm"), orderId: id, type: "COD", amount: net, date: today,
+      reference: `${QA_TAG} COD`, notes: QA_TAG,
+    }]);
+    const expId = m.genId("ex");
+    m.setExpenses([...m.getExpenses(), {
+      id: expId, category: "Courier charge", amount: 70, date: today,
+      websiteId, orderId: id, courierId, notes: QA_TAG,
+    }]);
+
+    sales.getCashTxns().some((t) => t.reference_id === codId)
+      ? steps.push(pass("Cash/Bank txn posted", `+৳${net}`))
+      : steps.push(fail("Cash/Bank txn posted"));
+
+    m.getPayments().some((p) => p.orderId === id)
+      ? steps.push(pass("Ecommerce payment recorded"))
+      : steps.push(fail("Ecommerce payment recorded"));
+
     const pendingAfter = m.getCodEntries().filter((c) => c.status === "Pending").length;
     pendingAfter < pendingBefore
       ? steps.push(pass("COD pending decreased"))
       : steps.push(fail("COD pending decreased"));
+
+    const plAfter = m.computeProfitLoss();
+    plAfter.courierExpense >= plBefore.courierExpense + 70
+      ? steps.push(pass("Profit & Loss updated", `courier +৳70`))
+      : steps.push(fail("Profit & Loss updated", `before=${plBefore.courierExpense} after=${plAfter.courierExpense}`));
+
+    sales.getCashTxns().length > cashBefore
+      ? steps.push(pass("Cash ledger grew"))
+      : steps.push(fail("Cash ledger grew"));
+
+    // Cleanup
     m.setOrders(m.getOrders().filter((o) => o.id !== id));
     m.setCodEntries(m.getCodEntries().filter((c) => c.id !== codId));
-    try {
-      const cash = (await import("@/lib/demo/cash")) as unknown as {
-        getCashTxns?: () => Array<{ notes?: string }>;
-        setCashTxns?: (v: unknown[]) => void;
-      };
-      if (cash.getCashTxns && cash.setCashTxns) {
-        cash.setCashTxns(cash.getCashTxns().filter((t) => t.notes !== QA_TAG));
-      }
-    } catch { /* ignore */ }
+    m.setPayments(m.getPayments().filter((p) => p.notes !== QA_TAG));
+    m.setExpenses(m.getExpenses().filter((e) => e.id !== expId));
+    sales.setCashTxns(sales.getCashTxns().filter((t) => !(t.notes || "").includes(QA_TAG)));
     steps.push(pass("Cleanup"));
+    return steps;
+  });
     return steps;
   });
 
