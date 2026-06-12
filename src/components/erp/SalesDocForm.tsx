@@ -683,19 +683,8 @@ export function SalesDocForm({
   };
 
   const handleSaveInvoice = async () => {
-    // Immediate click feedback — proves the handler ran before any validation.
-    alert("SAVE_INVOICE_CLICKED");
     const validRows = rows.filter((r) => r.item_id && r.qty > 0);
     const customerDebug = party ? `${party.name} (${party.id})` : partyId || "—";
-    // eslint-disable-next-line no-console
-    console.log("SAVE_INVOICE_CLICKED", {
-      partyId,
-      customer: customerDebug,
-      itemsCount: validRows.length,
-      subTotal,
-      total,
-      received,
-    });
     setSaveDebug((d) => ({
       ...d,
       clicked: true,
