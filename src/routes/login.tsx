@@ -17,6 +17,7 @@ import {
   DEMO_USER_EMAIL,
   isDemoMode,
 } from "@/lib/demo/localStore";
+import { findUserByEmailOrMobile } from "@/lib/demo/localUsers";
 import { PWAInstallButton } from "@/components/erp/PWAInstallButton";
 
 export const Route = createFileRoute("/login")({
