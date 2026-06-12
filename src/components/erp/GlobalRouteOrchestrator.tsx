@@ -3,8 +3,6 @@ import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useRouteDecision } from "@/lib/use-route-decision";
 import { AppBootSplash } from "@/components/erp/AppBootSplash";
 import { RouteDebugPanel } from "@/components/erp/RouteDebugPanel";
-import { DEMO_COMPANY_ID, DEMO_USER_ID, isDemoMode, startDemoSession } from "@/lib/demo/localStore";
-import { setCurrentCompanyId } from "@/lib/use-company";
 
 /**
  * Root-level orchestrator. The ONLY component allowed to call navigate()
@@ -19,17 +17,6 @@ import { setCurrentCompanyId } from "@/lib/use-company";
  *    visible red debug banner with the exact reason.
  */
 export function GlobalRouteOrchestrator({ children }: { children: ReactNode }) {
-  const { pathname } = useLocation();
-  if (pathname.startsWith("/app") && typeof window !== "undefined") {
-    if (!isDemoMode()) startDemoSession();
-    if (!localStorage.getItem("erpovo:companyId")) setCurrentCompanyId(DEMO_COMPANY_ID, DEMO_USER_ID);
-    return <>{children}</>;
-  }
-
-  return <ManagedRouteOrchestrator>{children}</ManagedRouteOrchestrator>;
-}
-
-function ManagedRouteOrchestrator({ children }: { children: ReactNode }) {
   const decision = useRouteDecision();
   const { pathname } = useLocation();
   const navigate = useNavigate();

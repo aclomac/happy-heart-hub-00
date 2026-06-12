@@ -181,10 +181,6 @@ function useCompaniesCount(userId: string | null) {
  */
 export function useRouteDecision(): RouteDecision {
   const { pathname } = useLocation();
-  if (typeof window !== "undefined" && pathname.startsWith("/app") && !isDemoMode()) {
-    startDemoSession();
-    setCurrentCompanyId(DEMO_COMPANY_ID, DEMO_USER_ID);
-  }
   const auth = useAuthUser();
   const isAppRoute = pathname.startsWith("/app");
   const isCompaniesRoute = pathname.startsWith("/companies");
@@ -240,13 +236,6 @@ export function useRouteDecision(): RouteDecision {
     currentPath: pathname,
     redirectTarget: null,
   };
-
-  // Personal/local ERP mode: /app routes are fully unlocked and must not wait
-  // on subscription, device, company, or permission checks.
-  if (isAppRoute && isDemoMode()) {
-    if (!companyId) setCurrentCompanyId(DEMO_COMPANY_ID, auth.userId ?? DEMO_USER_ID);
-    return { status: "ready", target: null, debug };
-  }
 
   if (!auth.loading && auth.userId && (pathname === "/" || isLoginRoute)) {
     const target = "/app";
