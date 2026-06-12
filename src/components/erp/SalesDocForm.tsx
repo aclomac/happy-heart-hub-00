@@ -227,6 +227,14 @@ export function SalesDocForm({
   const [composerQty, setComposerQty] = useState<string>("1");
   const [composerRate, setComposerRate] = useState<string>("0");
   const [lastAddItemAt, setLastAddItemAt] = useState<string>("never");
+  // Visible Save Invoice debug panel state (per /app/sales/new spec).
+  const [saveDebug, setSaveDebug] = useState<{
+    clicked: boolean;
+    validation: string;
+    savedInvoiceId: string | null;
+    localSalesCount: number | null;
+    error: string | null;
+  }>({ clicked: false, validation: "—", savedInvoiceId: null, localSalesCount: null, error: null });
 
   // Debug capture removed — it was interfering with click handlers in some
   // builds. Buttons are now native <button type="button" onClick={...}>.
