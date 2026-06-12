@@ -17,6 +17,7 @@ import {
   DEMO_USER_EMAIL,
   isDemoMode,
 } from "@/lib/demo/localStore";
+import { findUserByEmailOrMobile } from "@/lib/demo/localUsers";
 import { PWAInstallButton } from "@/components/erp/PWAInstallButton";
 
 export const Route = createFileRoute("/login")({
@@ -72,6 +73,29 @@ function Login() {
       // Hard reload so the route orchestrator re-evaluates auth state
       // freshly with the new demo session active in localStorage.
       if (typeof window !== "undefined") {
+        window.location.replace("/app");
+        return;
+      }
+      nav({ to: "/app", replace: true });
+      return;
+    }
+
+    // Local user (created via /signup OTP flow) — match by email OR mobile.
+    const localUser = findUserByEmailOrMobile(useEmail);
+    if (localUser && localUser.password === usePass) {
+      try {
+        ensureDemoSeed();
+        startDemoSession();
+        setCurrentCompanyId(localUser.companyId ?? DEMO_COMPANY_ID, DEMO_USER_ID);
+        toast.success(`Welcome back, ${localUser.fullName}`);
+      } catch {
+        toast.error("Could not start local session");
+        setLoading(false);
+        return;
+      }
+      setLoading(false);
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("erpovo:cameFromLogin", "1");
         window.location.replace("/app");
         return;
       }

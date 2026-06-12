@@ -938,6 +938,72 @@ export const ALL_ECOMMERCE_WORKFLOWS = [
 // Back-compat alias for older callers.
 export const ecommerceWorkflow = ecoOrderLifecycleWorkflow;
 
+// ---------- Auth / Signup ----------
+export const signupWorkflow = () =>
+  run("wf-signup", "Signup + OTP + Login workflow", async () => {
+    const steps: WorkflowStep[] = [];
+    const {
+      generateOtp,
+      verifyOtp,
+      addLocalUser,
+      findUserByEmailOrMobile,
+      deleteLocalUser,
+      isValidBdMobile,
+      validatePassword,
+      clearOtp,
+    } = await import("@/lib/demo/localUsers");
+
+    const mobile = "01711000999";
+    const email = `qa+${Date.now()}@erpovo.local`;
+
+    if (!isValidBdMobile(mobile)) return [fail("BD mobile validator", "01711000999 rejected")];
+    if (!validatePassword("password123")) return [fail("Password validator", "8-char password rejected")];
+    steps.push(pass("Validators", "BD mobile + password length OK"));
+
+    const code = generateOtp(mobile);
+    if (!/^\d{6}$/.test(code)) {
+      steps.push(fail("OTP generation", `Got '${code}'`));
+      return steps;
+    }
+    steps.push(pass("OTP generation", `6-digit code generated (${code.length} digits)`));
+
+    if (!verifyOtp(mobile, code)) {
+      steps.push(fail("OTP verification", "Generated OTP did not verify"));
+      return steps;
+    }
+    if (verifyOtp(mobile, "000000")) {
+      steps.push(fail("OTP rejects wrong code", "000000 accepted"));
+      return steps;
+    }
+    steps.push(pass("OTP verification", "Correct accepted, wrong rejected"));
+
+    const user = addLocalUser({
+      fullName: "[QA] Signup User",
+      email,
+      mobile,
+      password: "password123",
+      mobileVerified: true,
+    });
+    steps.push(pass("Persist local user", `id=${user.id}`));
+
+    const byEmail = findUserByEmailOrMobile(email);
+    const byMobile = findUserByEmailOrMobile(mobile);
+    if (!byEmail || !byMobile || byEmail.id !== user.id) {
+      steps.push(fail("Lookup by email/mobile", "User not retrievable"));
+    } else if (byEmail.password !== "password123") {
+      steps.push(fail("Login credential check", "Password mismatch"));
+    } else {
+      steps.push(pass("Login by email + mobile", "Credentials match for both"));
+    }
+
+    // cleanup
+    deleteLocalUser(user.id);
+    clearOtp();
+    steps.push(pass("Cleanup", "[QA] user and OTP removed"));
+
+    return steps;
+  });
+
 export const ALL_WORKFLOWS = [
   itemsWorkflow,
   partiesWorkflow,
@@ -947,6 +1013,7 @@ export const ALL_WORKFLOWS = [
   purchaseWorkflow,
   expenseWorkflow,
   ...ALL_ECOMMERCE_WORKFLOWS,
+  signupWorkflow,
   verifyDataChecks,
   printPdfChecks,
   permissionCheck,
