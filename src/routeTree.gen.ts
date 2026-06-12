@@ -88,11 +88,15 @@ import { Route as SuperAdminDevicesIdRouteImport } from './routes/super-admin.de
 import { Route as SuperAdminCustomersUserIdRouteImport } from './routes/super-admin.customers.$userId'
 import { Route as SuperAdminCouponsIdRouteImport } from './routes/super-admin.coupons.$id'
 import { Route as SuperAdminCompaniesCompanyIdRouteImport } from './routes/super-admin.companies.$companyId'
+import { Route as AppUtilitiesVerifyDataRouteImport } from './routes/app.utilities.verify-data'
+import { Route as AppUtilitiesReferEarnRouteImport } from './routes/app.utilities.refer-earn'
+import { Route as AppUtilitiesRecycleBinRouteImport } from './routes/app.utilities.recycle-bin'
 import { Route as AppUtilitiesQaAuditRouteImport } from './routes/app.utilities.qa-audit'
 import { Route as AppUtilitiesPosSmokeTestRouteImport } from './routes/app.utilities.pos-smoke-test'
 import { Route as AppUtilitiesImportPartiesRouteImport } from './routes/app.utilities.import-parties'
 import { Route as AppUtilitiesImportItemsRouteImport } from './routes/app.utilities.import-items'
 import { Route as AppUtilitiesImportExportRouteImport } from './routes/app.utilities.import-export'
+import { Route as AppUtilitiesExportToTallyRouteImport } from './routes/app.utilities.export-to-tally'
 import { Route as AppUtilitiesExportItemsRouteImport } from './routes/app.utilities.export-items'
 import { Route as AppUtilitiesCloseFinancialYearRouteImport } from './routes/app.utilities.close-financial-year'
 import { Route as AppUtilitiesBulkUpdateItemsRouteImport } from './routes/app.utilities.bulk-update-items'
@@ -538,6 +542,21 @@ const SuperAdminCompaniesCompanyIdRoute =
     path: '/$companyId',
     getParentRoute: () => SuperAdminCompaniesRoute,
   } as any)
+const AppUtilitiesVerifyDataRoute = AppUtilitiesVerifyDataRouteImport.update({
+  id: '/verify-data',
+  path: '/verify-data',
+  getParentRoute: () => AppUtilitiesRoute,
+} as any)
+const AppUtilitiesReferEarnRoute = AppUtilitiesReferEarnRouteImport.update({
+  id: '/refer-earn',
+  path: '/refer-earn',
+  getParentRoute: () => AppUtilitiesRoute,
+} as any)
+const AppUtilitiesRecycleBinRoute = AppUtilitiesRecycleBinRouteImport.update({
+  id: '/recycle-bin',
+  path: '/recycle-bin',
+  getParentRoute: () => AppUtilitiesRoute,
+} as any)
 const AppUtilitiesQaAuditRoute = AppUtilitiesQaAuditRouteImport.update({
   id: '/qa-audit',
   path: '/qa-audit',
@@ -564,6 +583,12 @@ const AppUtilitiesImportExportRoute =
   AppUtilitiesImportExportRouteImport.update({
     id: '/import-export',
     path: '/import-export',
+    getParentRoute: () => AppUtilitiesRoute,
+  } as any)
+const AppUtilitiesExportToTallyRoute =
+  AppUtilitiesExportToTallyRouteImport.update({
+    id: '/export-to-tally',
+    path: '/export-to-tally',
     getParentRoute: () => AppUtilitiesRoute,
   } as any)
 const AppUtilitiesExportItemsRoute = AppUtilitiesExportItemsRouteImport.update({
@@ -890,11 +915,15 @@ export interface FileRoutesByFullPath {
   '/app/utilities/bulk-update-items': typeof AppUtilitiesBulkUpdateItemsRoute
   '/app/utilities/close-financial-year': typeof AppUtilitiesCloseFinancialYearRoute
   '/app/utilities/export-items': typeof AppUtilitiesExportItemsRoute
+  '/app/utilities/export-to-tally': typeof AppUtilitiesExportToTallyRoute
   '/app/utilities/import-export': typeof AppUtilitiesImportExportRoute
   '/app/utilities/import-items': typeof AppUtilitiesImportItemsRoute
   '/app/utilities/import-parties': typeof AppUtilitiesImportPartiesRoute
   '/app/utilities/pos-smoke-test': typeof AppUtilitiesPosSmokeTestRoute
   '/app/utilities/qa-audit': typeof AppUtilitiesQaAuditRoute
+  '/app/utilities/recycle-bin': typeof AppUtilitiesRecycleBinRoute
+  '/app/utilities/refer-earn': typeof AppUtilitiesReferEarnRoute
+  '/app/utilities/verify-data': typeof AppUtilitiesVerifyDataRoute
   '/super-admin/companies/$companyId': typeof SuperAdminCompaniesCompanyIdRoute
   '/super-admin/coupons/$id': typeof SuperAdminCouponsIdRoute
   '/super-admin/customers/$userId': typeof SuperAdminCustomersUserIdRoute
@@ -1017,11 +1046,15 @@ export interface FileRoutesByTo {
   '/app/utilities/bulk-update-items': typeof AppUtilitiesBulkUpdateItemsRoute
   '/app/utilities/close-financial-year': typeof AppUtilitiesCloseFinancialYearRoute
   '/app/utilities/export-items': typeof AppUtilitiesExportItemsRoute
+  '/app/utilities/export-to-tally': typeof AppUtilitiesExportToTallyRoute
   '/app/utilities/import-export': typeof AppUtilitiesImportExportRoute
   '/app/utilities/import-items': typeof AppUtilitiesImportItemsRoute
   '/app/utilities/import-parties': typeof AppUtilitiesImportPartiesRoute
   '/app/utilities/pos-smoke-test': typeof AppUtilitiesPosSmokeTestRoute
   '/app/utilities/qa-audit': typeof AppUtilitiesQaAuditRoute
+  '/app/utilities/recycle-bin': typeof AppUtilitiesRecycleBinRoute
+  '/app/utilities/refer-earn': typeof AppUtilitiesReferEarnRoute
+  '/app/utilities/verify-data': typeof AppUtilitiesVerifyDataRoute
   '/super-admin/companies/$companyId': typeof SuperAdminCompaniesCompanyIdRoute
   '/super-admin/coupons/$id': typeof SuperAdminCouponsIdRoute
   '/super-admin/customers/$userId': typeof SuperAdminCustomersUserIdRoute
@@ -1148,11 +1181,15 @@ export interface FileRoutesById {
   '/app/utilities/bulk-update-items': typeof AppUtilitiesBulkUpdateItemsRoute
   '/app/utilities/close-financial-year': typeof AppUtilitiesCloseFinancialYearRoute
   '/app/utilities/export-items': typeof AppUtilitiesExportItemsRoute
+  '/app/utilities/export-to-tally': typeof AppUtilitiesExportToTallyRoute
   '/app/utilities/import-export': typeof AppUtilitiesImportExportRoute
   '/app/utilities/import-items': typeof AppUtilitiesImportItemsRoute
   '/app/utilities/import-parties': typeof AppUtilitiesImportPartiesRoute
   '/app/utilities/pos-smoke-test': typeof AppUtilitiesPosSmokeTestRoute
   '/app/utilities/qa-audit': typeof AppUtilitiesQaAuditRoute
+  '/app/utilities/recycle-bin': typeof AppUtilitiesRecycleBinRoute
+  '/app/utilities/refer-earn': typeof AppUtilitiesReferEarnRoute
+  '/app/utilities/verify-data': typeof AppUtilitiesVerifyDataRoute
   '/super-admin/companies/$companyId': typeof SuperAdminCompaniesCompanyIdRoute
   '/super-admin/coupons/$id': typeof SuperAdminCouponsIdRoute
   '/super-admin/customers/$userId': typeof SuperAdminCustomersUserIdRoute
@@ -1280,11 +1317,15 @@ export interface FileRouteTypes {
     | '/app/utilities/bulk-update-items'
     | '/app/utilities/close-financial-year'
     | '/app/utilities/export-items'
+    | '/app/utilities/export-to-tally'
     | '/app/utilities/import-export'
     | '/app/utilities/import-items'
     | '/app/utilities/import-parties'
     | '/app/utilities/pos-smoke-test'
     | '/app/utilities/qa-audit'
+    | '/app/utilities/recycle-bin'
+    | '/app/utilities/refer-earn'
+    | '/app/utilities/verify-data'
     | '/super-admin/companies/$companyId'
     | '/super-admin/coupons/$id'
     | '/super-admin/customers/$userId'
@@ -1407,11 +1448,15 @@ export interface FileRouteTypes {
     | '/app/utilities/bulk-update-items'
     | '/app/utilities/close-financial-year'
     | '/app/utilities/export-items'
+    | '/app/utilities/export-to-tally'
     | '/app/utilities/import-export'
     | '/app/utilities/import-items'
     | '/app/utilities/import-parties'
     | '/app/utilities/pos-smoke-test'
     | '/app/utilities/qa-audit'
+    | '/app/utilities/recycle-bin'
+    | '/app/utilities/refer-earn'
+    | '/app/utilities/verify-data'
     | '/super-admin/companies/$companyId'
     | '/super-admin/coupons/$id'
     | '/super-admin/customers/$userId'
@@ -1537,11 +1582,15 @@ export interface FileRouteTypes {
     | '/app/utilities/bulk-update-items'
     | '/app/utilities/close-financial-year'
     | '/app/utilities/export-items'
+    | '/app/utilities/export-to-tally'
     | '/app/utilities/import-export'
     | '/app/utilities/import-items'
     | '/app/utilities/import-parties'
     | '/app/utilities/pos-smoke-test'
     | '/app/utilities/qa-audit'
+    | '/app/utilities/recycle-bin'
+    | '/app/utilities/refer-earn'
+    | '/app/utilities/verify-data'
     | '/super-admin/companies/$companyId'
     | '/super-admin/coupons/$id'
     | '/super-admin/customers/$userId'
@@ -2140,6 +2189,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SuperAdminCompaniesCompanyIdRouteImport
       parentRoute: typeof SuperAdminCompaniesRoute
     }
+    '/app/utilities/verify-data': {
+      id: '/app/utilities/verify-data'
+      path: '/verify-data'
+      fullPath: '/app/utilities/verify-data'
+      preLoaderRoute: typeof AppUtilitiesVerifyDataRouteImport
+      parentRoute: typeof AppUtilitiesRoute
+    }
+    '/app/utilities/refer-earn': {
+      id: '/app/utilities/refer-earn'
+      path: '/refer-earn'
+      fullPath: '/app/utilities/refer-earn'
+      preLoaderRoute: typeof AppUtilitiesReferEarnRouteImport
+      parentRoute: typeof AppUtilitiesRoute
+    }
+    '/app/utilities/recycle-bin': {
+      id: '/app/utilities/recycle-bin'
+      path: '/recycle-bin'
+      fullPath: '/app/utilities/recycle-bin'
+      preLoaderRoute: typeof AppUtilitiesRecycleBinRouteImport
+      parentRoute: typeof AppUtilitiesRoute
+    }
     '/app/utilities/qa-audit': {
       id: '/app/utilities/qa-audit'
       path: '/qa-audit'
@@ -2173,6 +2243,13 @@ declare module '@tanstack/react-router' {
       path: '/import-export'
       fullPath: '/app/utilities/import-export'
       preLoaderRoute: typeof AppUtilitiesImportExportRouteImport
+      parentRoute: typeof AppUtilitiesRoute
+    }
+    '/app/utilities/export-to-tally': {
+      id: '/app/utilities/export-to-tally'
+      path: '/export-to-tally'
+      fullPath: '/app/utilities/export-to-tally'
+      preLoaderRoute: typeof AppUtilitiesExportToTallyRouteImport
       parentRoute: typeof AppUtilitiesRoute
     }
     '/app/utilities/export-items': {
@@ -2746,11 +2823,15 @@ interface AppUtilitiesRouteChildren {
   AppUtilitiesBulkUpdateItemsRoute: typeof AppUtilitiesBulkUpdateItemsRoute
   AppUtilitiesCloseFinancialYearRoute: typeof AppUtilitiesCloseFinancialYearRoute
   AppUtilitiesExportItemsRoute: typeof AppUtilitiesExportItemsRoute
+  AppUtilitiesExportToTallyRoute: typeof AppUtilitiesExportToTallyRoute
   AppUtilitiesImportExportRoute: typeof AppUtilitiesImportExportRoute
   AppUtilitiesImportItemsRoute: typeof AppUtilitiesImportItemsRoute
   AppUtilitiesImportPartiesRoute: typeof AppUtilitiesImportPartiesRoute
   AppUtilitiesPosSmokeTestRoute: typeof AppUtilitiesPosSmokeTestRoute
   AppUtilitiesQaAuditRoute: typeof AppUtilitiesQaAuditRoute
+  AppUtilitiesRecycleBinRoute: typeof AppUtilitiesRecycleBinRoute
+  AppUtilitiesReferEarnRoute: typeof AppUtilitiesReferEarnRoute
+  AppUtilitiesVerifyDataRoute: typeof AppUtilitiesVerifyDataRoute
   AppUtilitiesIndexRoute: typeof AppUtilitiesIndexRoute
 }
 
@@ -2759,11 +2840,15 @@ const AppUtilitiesRouteChildren: AppUtilitiesRouteChildren = {
   AppUtilitiesBulkUpdateItemsRoute: AppUtilitiesBulkUpdateItemsRoute,
   AppUtilitiesCloseFinancialYearRoute: AppUtilitiesCloseFinancialYearRoute,
   AppUtilitiesExportItemsRoute: AppUtilitiesExportItemsRoute,
+  AppUtilitiesExportToTallyRoute: AppUtilitiesExportToTallyRoute,
   AppUtilitiesImportExportRoute: AppUtilitiesImportExportRoute,
   AppUtilitiesImportItemsRoute: AppUtilitiesImportItemsRoute,
   AppUtilitiesImportPartiesRoute: AppUtilitiesImportPartiesRoute,
   AppUtilitiesPosSmokeTestRoute: AppUtilitiesPosSmokeTestRoute,
   AppUtilitiesQaAuditRoute: AppUtilitiesQaAuditRoute,
+  AppUtilitiesRecycleBinRoute: AppUtilitiesRecycleBinRoute,
+  AppUtilitiesReferEarnRoute: AppUtilitiesReferEarnRoute,
+  AppUtilitiesVerifyDataRoute: AppUtilitiesVerifyDataRoute,
   AppUtilitiesIndexRoute: AppUtilitiesIndexRoute,
 }
 

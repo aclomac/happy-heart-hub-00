@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { toast } from "sonner";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -69,12 +69,8 @@ function CloseFinancialYear() {
           </Link>
           <Button
             variant="destructive"
-            disabled={confirmText !== REQUIRED_TEXT}
-            onClick={() =>
-              toast.info("Close Financial Year is not enabled yet.", {
-                description: "Please contact support to close a financial year safely.",
-              })
-            }
+            disabled
+            title="Close Financial Year will be available after accounting verification."
           >
             Close Year (disabled)
           </Button>

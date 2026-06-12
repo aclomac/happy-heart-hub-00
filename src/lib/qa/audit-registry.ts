@@ -117,12 +117,16 @@ export const AUDIT_REGISTRY: AuditEntry[] = [
 
   // 12. Utilities
   { id: "ut-index", module: "Utilities", label: "Utilities hub", route: "/app/utilities", status: "working" },
-  { id: "ut-imp-items", module: "Utilities", label: "Import items", route: "/app/utilities/import-items", status: "working" },
-  { id: "ut-imp-parties", module: "Utilities", label: "Import parties", route: "/app/utilities/import-parties", status: "working" },
-  { id: "ut-exp", module: "Utilities", label: "Export items", route: "/app/utilities/export-items", status: "working" },
-  { id: "ut-bulk", module: "Utilities", label: "Bulk update items", route: "/app/utilities/bulk-update-items", status: "working" },
-  { id: "ut-cfy", module: "Utilities", label: "Close financial year", route: "/app/utilities/close-financial-year", status: "working" },
-  { id: "ut-bin", module: "Utilities", label: "Recycle bin", route: "/app/recycle-bin", status: "working" },
+  { id: "ut-imp-items", module: "Utilities", label: "Import Items", route: "/app/utilities/import-items", status: "working" },
+  { id: "ut-barcode", module: "Utilities", label: "Barcode Generator", route: "/app/utilities/barcode-generator", status: "working" },
+  { id: "ut-refer", module: "Utilities", label: "Refer & Earn", route: "/app/utilities/refer-earn", status: "soon", note: "SaaS-only; placeholder page with disabled CTA in personal mode." },
+  { id: "ut-bulk", module: "Utilities", label: "Update Items In Bulk", route: "/app/utilities/bulk-update-items", status: "working" },
+  { id: "ut-imp-parties", module: "Utilities", label: "Import Parties", route: "/app/utilities/import-parties", status: "working" },
+  { id: "ut-tally", module: "Utilities", label: "Exports To Tally", route: "/app/utilities/export-to-tally", status: "partial", note: "CSV export works; Tally XML coming soon." },
+  { id: "ut-exp", module: "Utilities", label: "Export Items", route: "/app/utilities/export-items", status: "working" },
+  { id: "ut-verify", module: "Utilities", label: "Verify My Data", route: "/app/utilities/verify-data", status: "working", note: "Checks duplicate invoices, missing customers, negative stock." },
+  { id: "ut-bin", module: "Utilities", label: "Recycle Bin", route: "/app/utilities/recycle-bin", status: "working", note: "Redirects to /app/recycle-bin." },
+  { id: "ut-cfy", module: "Utilities", label: "Close Financial Year", route: "/app/utilities/close-financial-year", status: "soon", note: "Action disabled until bookkeeping module ships." },
   { id: "ut-ie", module: "Utilities", label: "Import / Export hub", route: "/app/utilities/import-export", status: "working" },
   { id: "ut-pos-smoke", module: "Utilities", label: "POS smoke test", route: "/app/utilities/pos-smoke-test", status: "working" },
 

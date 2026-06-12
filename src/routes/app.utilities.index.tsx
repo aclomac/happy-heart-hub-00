@@ -29,16 +29,14 @@ type Tile = {
 
 const tiles: Tile[] = [
   { i: Upload, n: "Import Items", d: "Upload CSV file", to: "/app/utilities/import-items" },
-  { i: Upload, n: "Import Parties", d: "Upload CSV file", to: "/app/utilities/import-parties" },
-  { i: FileCheck2, n: "Import / Export", d: "Vyapar backup & ERPOVO backup", to: "/app/utilities/import-export" },
-  { i: Download, n: "Export Items", d: "Download as CSV", to: "/app/utilities/export-items" },
-  { i: Download, n: "Export to Tally", d: "Tally XML export", comingSoon: true },
   { i: Barcode, n: "Barcode Generator", d: "Print labels", to: "/app/utilities/barcode-generator" },
-  { i: RefreshCw, n: "Bulk Update Items", d: "Edit items in bulk", to: "/app/utilities/bulk-update-items" },
-  { i: FileCheck2, n: "Verify My Data", d: "Run data & security checks", to: "/app/admin/security-tests" },
-  { i: FileCheck2, n: "POS Smoke Test", d: "Automated POS demo test", to: "/app/utilities/pos-smoke-test" },
-  { i: Gift, n: "Refer & Earn", d: "Invite & earn rewards", comingSoon: true },
-  { i: Trash2, n: "Recycle Bin", d: "Restore deleted records", to: "/app/recycle-bin" },
+  { i: Gift, n: "Refer & Earn", d: "Invite & earn rewards", to: "/app/utilities/refer-earn" },
+  { i: RefreshCw, n: "Update Items In Bulk", d: "Edit items in bulk", to: "/app/utilities/bulk-update-items" },
+  { i: Upload, n: "Import Parties", d: "Upload CSV file", to: "/app/utilities/import-parties" },
+  { i: Download, n: "Exports To Tally", d: "Tally-friendly CSV", to: "/app/utilities/export-to-tally" },
+  { i: Download, n: "Export Items", d: "Download as CSV", to: "/app/utilities/export-items" },
+  { i: FileCheck2, n: "Verify My Data", d: "Run data & integrity checks", to: "/app/utilities/verify-data" },
+  { i: Trash2, n: "Recycle Bin", d: "Restore deleted records", to: "/app/utilities/recycle-bin" },
   { i: CalendarX, n: "Close Financial Year", d: "Reset numbers, fresh start", to: "/app/utilities/close-financial-year" },
 ];
 
