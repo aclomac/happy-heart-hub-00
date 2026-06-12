@@ -186,7 +186,7 @@ export const AUDIT_REGISTRY: AuditEntry[] = [
   { id: "eco-courier", module: M.ecommerce, label: "Courier Management", kind: "submenu", route: "/app/ecommerce/courier", status: W, note: "Add/edit/delete couriers; live courier API disabled with tooltip." },
   { id: "eco-tracking", module: M.ecommerce, label: "Delivery Tracking", kind: "submenu", route: "/app/ecommerce/tracking", status: W, note: "Status select per delivery; persists to local store." },
   { id: "eco-returns", module: M.ecommerce, label: "Return / Exchange", kind: "submenu", route: "/app/ecommerce/returns", status: W, note: "Create / Approve / Complete; 'Add back to stock' increments matching ERP item by SKU on Complete." },
-  { id: "eco-cod", module: M.ecommerce, label: "COD Collection", kind: "submenu", route: "/app/ecommerce/cod", status: W, note: "Collect posts a real DemoCashTxn (in) to Cash/DBBL/bKash/Nagad account." },
+  { id: "eco-cod", module: M.ecommerce, label: "COD Collection", kind: "submenu", route: "/app/ecommerce/cod", status: W, note: "Collect posts cash txn + ecommerce payment + courier expense + sync log; status → Collected; P&L updates." },
   { id: "eco-dc", module: M.ecommerce, label: "Delivery Charge", kind: "submenu", route: "/app/ecommerce/delivery-charge", status: W },
   { id: "eco-customers", module: M.ecommerce, label: "Ecommerce Customers", kind: "submenu", route: "/app/ecommerce/customers", status: W, note: "Derived from orders; convert to Party works." },
   { id: "eco-payments", module: M.ecommerce, label: "Ecommerce Payments", kind: "submenu", route: "/app/ecommerce/payments", status: W, note: "Add payment + CSV export." },
