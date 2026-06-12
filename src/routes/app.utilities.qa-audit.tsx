@@ -390,10 +390,26 @@ function QaAuditPage() {
             <Button
               size="sm"
               variant="outline"
+              onClick={() => runWorkflows(ALL_ECOMMERCE_WORKFLOWS)}
+              disabled={running}
+            >
+              Test Ecommerce Workflows
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
               onClick={() => runWorkflows([printPdfChecks])}
               disabled={running}
             >
               Test Print/PDF/Export
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => runWorkflows([verifyDataChecks, permissionCheck])}
+              disabled={running}
+            >
+              Test Buttons
             </Button>
             <Button
               size="sm"
