@@ -961,6 +961,10 @@ export const signupWorkflow = () =>
     const priorSession = getDemoSession();
     const priorUser = getDemoUser();
 
+    const email = `qa+${Date.now()}@erpovo.local`;
+
+
+
 
     if (!isValidEmail(email)) return [fail("Email validator", `${email} rejected`)];
     if (!validatePassword("password123"))
