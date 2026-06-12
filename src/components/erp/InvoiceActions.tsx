@@ -93,10 +93,10 @@ export function InvoiceActionsMenu({
 }
 
 export async function printSaleReceiptNow(saleId: string, companyId: string) {
-  await withData(saleId, companyId, "TAX INVOICE", (d) => {
+  await withData(saleId, companyId, "INVOICE", (d) => {
     printPOSReceipt(d);
   });
 }
 export async function printSaleInvoiceNow(saleId: string, companyId: string) {
-  await withData(saleId, companyId, "TAX INVOICE", (d) => printInvoicePDF(d));
+  await withData(saleId, companyId, "INVOICE", (d) => printInvoicePDF(d));
 }
