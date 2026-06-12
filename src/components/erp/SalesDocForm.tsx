@@ -923,12 +923,8 @@ export function SalesDocForm({
                 <Label className="text-xs">{t("Customer")} *</Label>
                 <button
                   type="button"
-                  onClick={() => {
-                    alert("NEW_CUSTOMER_CLICKED");
-                    // eslint-disable-next-line no-console
-                    console.log("NEW_CUSTOMER_CLICKED");
-                    setAddCustomerOpen(true);
-                  }}
+                  onClick={() => setAddCustomerOpen(true)}
+
                   className="text-xs text-primary hover:underline inline-flex items-center gap-1"
                   data-testid="quick-add-customer-btn"
                 >
