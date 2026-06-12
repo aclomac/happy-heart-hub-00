@@ -82,8 +82,9 @@ export function userExists(email: string, mobile: string): boolean {
   );
 }
 
-export function addLocalUser(u: Omit<LocalUser, "id" | "createdAt" | "mobileVerified"> & {
+export function addLocalUser(u: Omit<LocalUser, "id" | "createdAt" | "mobileVerified" | "isDemoUser"> & {
   mobileVerified?: boolean;
+  isDemoUser?: boolean;
 }): LocalUser {
   const users = getLocalUsers();
   const user: LocalUser = {
@@ -107,54 +108,6 @@ export function addLocalUser(u: Omit<LocalUser, "id" | "createdAt" | "mobileVeri
 
 export function deleteLocalUser(id: string) {
   setLocalUsers(getLocalUsers().filter((u) => u.id !== id));
-}
-
-// ---------- OTP ----------
-
-type OtpRecord = { mobile: string; code: string; expiresAt: number };
-
-export function generateOtp(mobile: string): string {
-  const code = String(Math.floor(100000 + Math.random() * 900000));
-  const rec: OtpRecord = {
-    mobile: normalizeMobile(mobile),
-    code,
-    expiresAt: Date.now() + OTP_TTL_MS,
-  };
-  writeJSON(OTP_KEY, rec);
-  return code;
-}
-
-export function getCurrentOtp(): OtpRecord | null {
-  return readJSON<OtpRecord | null>(OTP_KEY, null);
-}
-
-export function verifyOtp(mobile: string, code: string): boolean {
-  if (code === FIXED_TEST_OTP) return true;
-  const rec = getCurrentOtp();
-  if (!rec) return false;
-  if (rec.mobile !== normalizeMobile(mobile)) return false;
-  if (Date.now() > rec.expiresAt) return false;
-  return rec.code === code;
-}
-
-export function clearOtp() {
-  if (!isBrowser()) return;
-  try {
-    localStorage.removeItem(OTP_KEY);
-  } catch {
-    /* ignore */
-  }
-}
-
-/**
- * Placeholder SMS sender. In local/demo mode this resolves without sending.
- * Wire this to a real SMS gateway in production.
- */
-export async function sendOtpSms(
-  _mobile: string,
-  _otp: string,
-): Promise<{ ok: true; demo: boolean }> {
-  return { ok: true, demo: true };
 }
 
 export function validatePassword(p: string): boolean {
