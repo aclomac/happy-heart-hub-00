@@ -154,7 +154,7 @@ export const AUDIT_REGISTRY: AuditEntry[] = [
   { id: "sub-ut-refer", module: M.utilities, label: "Refer & Earn", kind: "submenu", route: "/app/utilities/refer-earn", status: S, note: "SaaS-only; placeholder page with disabled CTA." },
   { id: "sub-ut-bulk", module: M.utilities, label: "Update Items In Bulk", kind: "submenu", route: "/app/utilities/bulk-update-items", status: W },
   { id: "sub-ut-imp-parties", module: M.utilities, label: "Import Parties", kind: "submenu", route: "/app/utilities/import-parties", status: W },
-  { id: "sub-ut-tally", module: M.utilities, label: "Exports To Tally", kind: "submenu", route: "/app/utilities/export-to-tally", status: P, note: "CSV export works; Tally XML coming soon.", fix: "Add Tally XML writer." },
+  { id: "sub-ut-tally", module: M.utilities, label: "Exports To Tally", kind: "submenu", route: "/app/utilities/export-to-tally", status: W, note: "CSV export for sales/purchases/receipts/payments/expenses/parties. Tally XML intentionally disabled." },
   { id: "sub-ut-exp", module: M.utilities, label: "Export Items", kind: "submenu", route: "/app/utilities/export-items", status: W },
   { id: "sub-ut-verify", module: M.utilities, label: "Verify My Data", kind: "submenu", route: "/app/utilities/verify-data", status: W },
   { id: "sub-ut-bin", module: M.utilities, label: "Recycle Bin", kind: "submenu", route: "/app/utilities/recycle-bin", status: W },
