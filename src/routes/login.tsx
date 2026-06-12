@@ -11,12 +11,14 @@ import { DEMO_EMAIL, DEMO_PASSWORD } from "@/lib/demo/constants";
 import { setCurrentCompanyId } from "@/lib/use-company";
 import {
   startDemoSession,
+  startLocalUserSession,
   ensureDemoSeed,
   DEMO_COMPANY_ID,
   DEMO_USER_ID,
   DEMO_USER_EMAIL,
   isDemoMode,
 } from "@/lib/demo/localStore";
+
 import { findUserByEmailOrMobile } from "@/lib/demo/localUsers";
 import { PWAInstallButton } from "@/components/erp/PWAInstallButton";
 
@@ -80,13 +82,17 @@ function Login() {
       return;
     }
 
-    // Local user (created via /signup OTP flow) — match by email OR mobile.
+    // Local user (created via /signup) — match by email OR mobile.
     const localUser = findUserByEmailOrMobile(useEmail);
     if (localUser && localUser.password === usePass) {
       try {
         ensureDemoSeed();
-        startDemoSession();
-        setCurrentCompanyId(localUser.companyId ?? DEMO_COMPANY_ID, DEMO_USER_ID);
+        startLocalUserSession({
+          id: localUser.id,
+          email: localUser.email,
+          name: localUser.fullName,
+        });
+        setCurrentCompanyId(localUser.companyId ?? DEMO_COMPANY_ID, localUser.id);
         toast.success(`Welcome back, ${localUser.fullName}`);
       } catch {
         toast.error("Could not start local session");
@@ -102,6 +108,7 @@ function Login() {
       nav({ to: "/app", replace: true });
       return;
     }
+
 
     const { error } = await supabase.auth.signInWithPassword({
       email: useEmail,

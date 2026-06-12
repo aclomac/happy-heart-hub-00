@@ -13,11 +13,11 @@ import {
   validatePassword,
 } from "@/lib/demo/localUsers";
 import {
-  startDemoSession,
   ensureDemoSeed,
-  DEMO_COMPANY_ID,
-  DEMO_USER_ID,
+  startLocalUserSession,
+  addDemoCompany,
 } from "@/lib/demo/localStore";
+
 import { setCurrentCompanyId } from "@/lib/use-company";
 
 export const Route = createFileRoute("/signup")({
@@ -78,17 +78,37 @@ function Signup() {
 
     setLoading(true);
     try {
-      addLocalUser({
+      ensureDemoSeed();
+      const newUser = addLocalUser({
         fullName: name.trim(),
         email: email.trim(),
         mobile: mobile ? normalizeMobile(mobile) : "",
         password: pass,
         mobileVerified: false,
-        companyId: DEMO_COMPANY_ID,
       });
-      ensureDemoSeed();
-      startDemoSession();
-      setCurrentCompanyId(DEMO_COMPANY_ID, DEMO_USER_ID);
+      // Create a personal company for this user so they don't share Chair King.
+      const company = addDemoCompany({
+        name: `${name.trim()}'s Business`,
+        owner_id: newUser.id,
+        email: newUser.email,
+      });
+      // Persist company id back onto the local user record.
+      try {
+        const { getLocalUsers, setLocalUsers } = await import("@/lib/demo/localUsers");
+        const all = getLocalUsers().map((u) =>
+          u.id === newUser.id ? { ...u, companyId: company.id } : u,
+        );
+        setLocalUsers(all);
+      } catch {
+        /* ignore */
+      }
+      startLocalUserSession({
+        id: newUser.id,
+        email: newUser.email,
+        name: newUser.fullName,
+      });
+      setCurrentCompanyId(company.id, newUser.id);
+
       toast.success("Account created successfully");
       if (typeof window !== "undefined") {
         window.location.replace("/app");
@@ -102,6 +122,7 @@ function Signup() {
       setLoading(false);
     }
   };
+
 
   return (
     <div

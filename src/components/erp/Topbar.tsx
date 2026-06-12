@@ -46,9 +46,11 @@ import { CompanySwitcher } from "@/components/erp/CompanySwitcher";
 import {
   isDemoMode,
   getDemoCompany,
+  getDemoUser,
   clearDemoStorage,
   endDemoSession,
 } from "@/lib/demo/localStore";
+
 
 export function ERPTopbar() {
   const { lang, setLang, t } = useI18n();
@@ -147,6 +149,17 @@ export function ERPTopbar() {
             <span className="truncate max-w-[200px]">{currentCompany?.name || t("Loading…")}</span>
             <ChevronDownIcon className="w-4 h-4 text-muted-foreground" />
           </Button>
+          {(() => {
+            const u = getDemoUser();
+            if (!u) return null;
+            return (
+              <div className="hidden md:flex flex-col leading-tight ml-2 text-xs">
+                <span className="font-medium text-foreground truncate max-w-[160px]">{u.name}</span>
+                <span className="text-muted-foreground truncate max-w-[160px]">{u.email}</span>
+              </div>
+            );
+          })()}
+
         </div>
         
 

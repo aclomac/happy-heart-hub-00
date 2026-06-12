@@ -949,8 +949,22 @@ export const signupWorkflow = () =>
       isValidEmail,
       validatePassword,
     } = await import("@/lib/demo/localUsers");
+    const {
+      startLocalUserSession,
+      getDemoSession,
+      getDemoUser,
+      endDemoSession,
+      DEMO_USER_ID,
+    } = await import("@/lib/demo/localStore");
+
+    // Snapshot existing session so cleanup restores the caller's auth state.
+    const priorSession = getDemoSession();
+    const priorUser = getDemoUser();
 
     const email = `qa+${Date.now()}@erpovo.local`;
+
+
+
 
     if (!isValidEmail(email)) return [fail("Email validator", `${email} rejected`)];
     if (!validatePassword("password123"))
@@ -968,6 +982,20 @@ export const signupWorkflow = () =>
     });
     steps.push(pass("Persist local user", `id=${user.id}`));
 
+    // Start the local session for the created user (not Demo User).
+    startLocalUserSession({ id: user.id, email: user.email, name: user.fullName });
+    const sess = getDemoSession();
+    const sessUser = getDemoUser();
+    if (!sess || sess.userId !== user.id) {
+      steps.push(fail("Active session userId", `expected ${user.id}, got ${sess?.userId}`));
+    } else if (sess.userId === DEMO_USER_ID) {
+      steps.push(fail("Active session not demo", "Session is demo user, not created user"));
+    } else if (sessUser?.isDemoUser !== false) {
+      steps.push(fail("isDemoUser flag", "Expected isDemoUser=false on active user"));
+    } else {
+      steps.push(pass("Active session = created user", `userId=${sess.userId}, isDemoUser=false`));
+    }
+
     const byEmail = findUserByEmailOrMobile(email);
     if (!byEmail || byEmail.id !== user.id) {
       steps.push(fail("Lookup by email", "User not retrievable"));
@@ -977,11 +1005,22 @@ export const signupWorkflow = () =>
       steps.push(pass("Login by email", "Credentials match"));
     }
 
+    endDemoSession();
+    if (priorSession && priorUser) {
+      startLocalUserSession({
+        id: priorUser.id,
+        email: priorUser.email,
+        name: priorUser.name,
+        role: priorUser.role,
+      });
+    }
     deleteLocalUser(user.id);
-    steps.push(pass("Cleanup", "[QA] user removed"));
+    steps.push(pass("Cleanup", "[QA] session restored + user removed"));
+
 
     return steps;
   });
+
 
 export const ALL_WORKFLOWS = [
   itemsWorkflow,

@@ -59,6 +59,7 @@ export type DemoUser = {
   email: string;
   role: "owner" | "admin" | "user";
   name: string;
+  isDemoUser?: boolean;
 };
 
 export type DemoSession = {
@@ -70,7 +71,9 @@ export type DemoSession = {
   startedAt: number;
   created_at: string;
   expires_at: string;
+  isDemoUser?: boolean;
 };
+
 
 export type DemoSettings = {
   dateFormat: string;
@@ -216,6 +219,44 @@ export function startDemoSession(): DemoSession {
   }
   return session;
 }
+
+/**
+ * Start a local session for a real signed-up user (not the Demo User).
+ * Writes the same session/user keys so local-mode flows work, but with
+ * the actual user's identity and `isDemoUser: false`.
+ */
+export function startLocalUserSession(input: {
+  id: string;
+  email: string;
+  name: string;
+  role?: "owner" | "admin" | "user";
+}): DemoSession {
+  const now = new Date();
+  const user: DemoUser = {
+    id: input.id,
+    email: input.email,
+    role: input.role ?? "owner",
+    name: input.name,
+    isDemoUser: false,
+  };
+  const session: DemoSession = {
+    isDemo: true,
+    access_token: `local-${input.id}`,
+    user,
+    email: input.email,
+    userId: input.id,
+    startedAt: now.getTime(),
+    created_at: now.toISOString(),
+    expires_at: "2099-12-31T23:59:59.000Z",
+    isDemoUser: false,
+  };
+  safeWrite(DEMO_SESSION_KEY, session);
+  safeWrite(DEMO_USER_KEY, user);
+  setDemoAuthCookies(user.email);
+  ensureDemoSeed();
+  return session;
+}
+
 
 export function getDemoUser(): DemoUser | null {
   return safeRead<DemoUser>(DEMO_USER_KEY);
