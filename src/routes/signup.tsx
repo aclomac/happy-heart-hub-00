@@ -79,25 +79,36 @@ function Signup() {
     setLoading(true);
     try {
       ensureDemoSeed();
-      // Create a personal company for this user so they don't share Chair King.
-      const company = addDemoCompany({
-        name: `${name.trim()}'s Business`,
-        owner_id: "pending",
-      });
       const newUser = addLocalUser({
         fullName: name.trim(),
         email: email.trim(),
         mobile: mobile ? normalizeMobile(mobile) : "",
         password: pass,
         mobileVerified: false,
-        companyId: company.id,
       });
+      // Create a personal company for this user so they don't share Chair King.
+      const company = addDemoCompany({
+        name: `${name.trim()}'s Business`,
+        owner_id: newUser.id,
+        email: newUser.email,
+      });
+      // Persist company id back onto the local user record.
+      try {
+        const { getLocalUsers, setLocalUsers } = await import("@/lib/demo/localUsers");
+        const all = getLocalUsers().map((u) =>
+          u.id === newUser.id ? { ...u, companyId: company.id } : u,
+        );
+        setLocalUsers(all);
+      } catch {
+        /* ignore */
+      }
       startLocalUserSession({
         id: newUser.id,
         email: newUser.email,
         name: newUser.fullName,
       });
       setCurrentCompanyId(company.id, newUser.id);
+
       toast.success("Account created successfully");
       if (typeof window !== "undefined") {
         window.location.replace("/app");
