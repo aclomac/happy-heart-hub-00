@@ -216,6 +216,8 @@ export function startDemoSession(): DemoSession {
   ensureDemoSeed();
   if (import.meta.env.DEV) {
     console.log("[demo-auth] demo localStorage + cookie session created");
+  }
+  return session;
 }
 
 /**
@@ -253,9 +255,8 @@ export function startLocalUserSession(input: {
   setDemoAuthCookies(user.email);
   ensureDemoSeed();
   return session;
-
-  return session;
 }
+
 
 export function getDemoUser(): DemoUser | null {
   return safeRead<DemoUser>(DEMO_USER_KEY);
