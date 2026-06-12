@@ -10,9 +10,22 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Search, Loader2, ArrowRightLeft, Receipt, Pencil } from "lucide-react";
+import {
+  MoreHorizontal,
+  Search,
+  Loader2,
+  ArrowRightLeft,
+  Receipt,
+  Pencil,
+  Eye,
+  Printer,
+  FileText,
+  Copy,
+  Trash2,
+} from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentCompanyId } from "@/lib/use-company";
@@ -20,6 +33,13 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/erp/ConfirmDialog";
 import { InvoiceActionsMenu } from "@/components/erp/InvoiceActions";
+import { buildInvoiceDataFromSale } from "@/lib/pdf/build-invoice";
+import {
+  previewInvoicePDF,
+  printInvoicePDF,
+  downloadInvoicePDF,
+} from "@/lib/pdf/invoice-pdf";
+import { labelsFor } from "@/lib/doc-kind-labels";
 import type { DocKind } from "./SalesDocForm";
 import { softDeleteWithUndo, type SoftDeleteModule } from "@/lib/soft-delete";
 
@@ -217,6 +237,82 @@ export function SalesDocList({ kind }: { kind: DocKind }) {
     }
   };
 
+  const duplicateDoc = async (r: Row) => {
+    try {
+      const { data: src, error: e1 } = await (supabase as any)
+        .from("sales")
+        .select("*")
+        .is("deleted_at", null)
+        .eq("id", r.id)
+        .single();
+      if (e1) throw e1;
+      const { data: srcItems, error: e2 } = await supabase
+        .from("sale_items")
+        .select("*")
+        .eq("sale_id", r.id);
+      if (e2) throw e2;
+
+      const { nextDocNumber } = await import("@/lib/doc-number");
+      const prefix = kind === "estimate" ? "EST" : kind === "sale_order" ? "SO" : "INV";
+      const newNo = await nextDocNumber(companyId!, "sales", prefix, kind);
+
+      const insert = { ...src };
+      delete insert.id;
+      delete insert.created_at;
+      delete insert.updated_at;
+      insert.invoice_no = newNo;
+      insert.invoice_date = new Date().toISOString().slice(0, 10);
+      insert.status = kind === "invoice" ? "unpaid" : "open";
+      insert.paid = 0;
+      insert.balance = src.total;
+
+      const { data: newSale, error: e3 } = await (supabase as any)
+        .from("sales")
+        .insert(insert)
+        .select("id")
+        .single();
+      if (e3) throw e3;
+
+      if (srcItems && srcItems.length) {
+        await supabase.from("sale_items").insert(
+          srcItems.map((it: any) => ({
+            sale_id: newSale.id,
+            item_id: it.item_id,
+            item_name: it.item_name,
+            description: it.description,
+            qty: it.qty,
+            unit: it.unit,
+            price: it.price,
+            discount_pct: it.discount_pct,
+            tax_pct: it.tax_pct,
+            amount: it.amount,
+          })),
+        );
+      }
+
+      toast.success(`Duplicated as ${newNo}`);
+      qc.invalidateQueries({ queryKey: ["sales"] });
+      if (kind === "estimate") {
+        navigate({ to: "/app/estimates/$id/edit", params: { id: newSale.id } });
+      }
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  };
+
+  const runPdfAction = async (
+    r: Row,
+    action: (d: Awaited<ReturnType<typeof buildInvoiceDataFromSale>>) => Promise<void> | void,
+  ) => {
+    try {
+      const title = labelsFor(kind).pdfTitle;
+      const data = await buildInvoiceDataFromSale(r.id, companyId!, { title });
+      await action(data);
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  };
+
   return (
     <div>
       <PageHeader
@@ -297,41 +393,22 @@ export function SalesDocList({ kind }: { kind: DocKind }) {
                     />
                   </td>
                   <td className="flex items-center gap-1">
-                    <InvoiceActionsMenu saleId={s.id} companyId={companyId} label="" kind={kind} />
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-7 w-7">
-                          <MoreHorizontal className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        {kind === "sale_order" && s.status !== "converted" && (
-                          <DropdownMenuItem
-                            onSelect={() =>
-                              navigate({
-                                to: "/app/sale-orders/$id/edit",
-                                params: { id: s.id },
-                              })
-                            }
+                    {kind === "estimate" ? (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            aria-label="Row actions"
                           >
-                            <Pencil className="w-3.5 h-3.5 mr-2" />
-                            Edit
-                          </DropdownMenuItem>
-                        )}
-                        {kind === "delivery_challan" && s.status !== "converted" && (
-                          <DropdownMenuItem
-                            onSelect={() =>
-                              navigate({
-                                to: "/app/delivery-challans/$id/edit",
-                                params: { id: s.id },
-                              })
-                            }
-                          >
-                            <Pencil className="w-3.5 h-3.5 mr-2" />
-                            Edit
-                          </DropdownMenuItem>
-                        )}
-                        {kind === "estimate" && s.status !== "converted" && (
+                            <MoreHorizontal className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                          align="end"
+                          className="w-56 bg-popover rounded-lg shadow-lg border"
+                        >
                           <DropdownMenuItem
                             onSelect={() =>
                               navigate({
@@ -341,34 +418,125 @@ export function SalesDocList({ kind }: { kind: DocKind }) {
                             }
                           >
                             <Pencil className="w-3.5 h-3.5 mr-2" />
-                            Edit
+                            View / Edit
                           </DropdownMenuItem>
-                        )}
-                        {meta.convertTo && s.status !== "converted" && (
-                          <DropdownMenuItem onSelect={() => convertToInvoice(s)}>
-                            <ArrowRightLeft className="w-3.5 h-3.5 mr-2" />
-                            Convert to Invoice
-                          </DropdownMenuItem>
-                        )}
-                        {kind === "invoice" && (
                           <DropdownMenuItem
-                            onSelect={() =>
-                              navigate({
-                                to: "/app/credit-notes/new",
-                                search: { source: s.id },
-                              } as any)
-                            }
+                            onSelect={() => runPdfAction(s, previewInvoicePDF)}
                           >
-                            <Receipt className="w-3.5 h-3.5 mr-2" />
-                            Create Credit Note
+                            <Eye className="w-3.5 h-3.5 mr-2" />
+                            Preview
                           </DropdownMenuItem>
-                        )}
-                        <DropdownMenuItem className="text-sale" onSelect={() => setDelOpen(s)}>
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                          <DropdownMenuItem
+                            onSelect={() => runPdfAction(s, previewInvoicePDF)}
+                          >
+                            <FileText className="w-3.5 h-3.5 mr-2" />
+                            Open PDF
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onSelect={() => runPdfAction(s, printInvoicePDF)}
+                          >
+                            <Printer className="w-3.5 h-3.5 mr-2" />
+                            Print
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onSelect={() => runPdfAction(s, downloadInvoicePDF)}
+                          >
+                            <FileText className="w-3.5 h-3.5 mr-2" />
+                            Download PDF
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onSelect={() => duplicateDoc(s)}>
+                            <Copy className="w-3.5 h-3.5 mr-2" />
+                            Duplicate
+                          </DropdownMenuItem>
+                          {s.status !== "converted" && (
+                            <DropdownMenuItem onSelect={() => convertToInvoice(s)}>
+                              <ArrowRightLeft className="w-3.5 h-3.5 mr-2" />
+                              Convert to Sale Invoice
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="text-sale focus:text-sale"
+                            onSelect={() => setDelOpen(s)}
+                          >
+                            <Trash2 className="w-3.5 h-3.5 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    ) : (
+                      <>
+                        <InvoiceActionsMenu
+                          saleId={s.id}
+                          companyId={companyId}
+                          label=""
+                          kind={kind}
+                        />
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-7 w-7">
+                              <MoreHorizontal className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {kind === "sale_order" && s.status !== "converted" && (
+                              <DropdownMenuItem
+                                onSelect={() =>
+                                  navigate({
+                                    to: "/app/sale-orders/$id/edit",
+                                    params: { id: s.id },
+                                  })
+                                }
+                              >
+                                <Pencil className="w-3.5 h-3.5 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                            )}
+                            {kind === "delivery_challan" && s.status !== "converted" && (
+                              <DropdownMenuItem
+                                onSelect={() =>
+                                  navigate({
+                                    to: "/app/delivery-challans/$id/edit",
+                                    params: { id: s.id },
+                                  })
+                                }
+                              >
+                                <Pencil className="w-3.5 h-3.5 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                            )}
+                            {meta.convertTo && s.status !== "converted" && (
+                              <DropdownMenuItem onSelect={() => convertToInvoice(s)}>
+                                <ArrowRightLeft className="w-3.5 h-3.5 mr-2" />
+                                Convert to Invoice
+                              </DropdownMenuItem>
+                            )}
+                            {kind === "invoice" && (
+                              <DropdownMenuItem
+                                onSelect={() =>
+                                  navigate({
+                                    to: "/app/credit-notes/new",
+                                    search: { source: s.id },
+                                  } as any)
+                                }
+                              >
+                                <Receipt className="w-3.5 h-3.5 mr-2" />
+                                Create Credit Note
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem
+                              className="text-sale"
+                              onSelect={() => setDelOpen(s)}
+                            >
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </>
+                    )}
                   </td>
+
                 </tr>
               ))}
             </tbody>
