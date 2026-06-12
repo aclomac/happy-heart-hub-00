@@ -28,7 +28,10 @@
     "build:web": "vite build",
     "dev:desktop": "concurrently -k -n vite,electron -c blue,magenta \"vite dev\" \"wait-on http://localhost:3000 && cross-env NODE_ENV=development electron .\"",
     "build:desktop": "vite build && electron .",
-    "package:windows": "vite build && electron-builder --win --x64 --config electron-builder.yml"
+    "package:windows": "vite build && electron-builder --win --x64 --config electron-builder.yml",
+    "qa:smoke": "bun run scripts/qa-smoke.ts",
+    "qa:build": "tsc --noEmit && vite build",
+    "qa:all": "bun run qa:build && bun run qa:smoke"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [
