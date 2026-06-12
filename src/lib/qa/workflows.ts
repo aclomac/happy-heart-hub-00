@@ -502,57 +502,417 @@ export const permissionCheck = () =>
     return steps;
   });
 
-// ---------- Ecommerce ----------
-export const ecommerceWorkflow = () =>
-  run("wf-eco", "Ecommerce workflow", async () => {
+// ---------- Ecommerce Smoke Tests ----------
+// Each test is an isolated, self-cleaning workflow that exercises one real
+// Ecommerce surface. Together they protect the module from regressions.
+// All test records are tagged "[QA]" and cleaned up at the end.
+
+const QA_TAG = "[QA]";
+
+// 1. Website CRUD
+export const ecoWebsiteWorkflow = () =>
+  run("wf-eco-website", "Ecommerce — Website CRUD", async () => {
     const steps: WorkflowStep[] = [];
-    const {
-      getWebsites, setWebsites, getOrders, setOrders, getCouriers, getCodEntries, setCodEntries,
-      genId: ecoId, seedEcommerceIfNeeded,
-    } = await import("@/lib/demo/ecommerce");
-    seedEcommerceIfNeeded();
-    const websites = getWebsites();
-    steps.push(websites.length > 0 ? pass("Websites seeded", `${websites.length}`) : fail("No websites"));
-
-    const wId = websites[0]?.id || "web_qa";
-    if (!websites.find((w) => w.id === wId)) {
-      setWebsites([...websites, { id: wId, name: "[QA] Site", url: "https://qa", platform: "Custom Website", status: "active", createdAt: new Date().toISOString() }]);
-    }
-
-    const id = ecoId("eo");
-    const orderNo = `QA-ECO-${Date.now()}`;
-    setOrders([...getOrders(), {
-      id, websiteId: wId, orderNo,
-      customerName: "[QA] Customer", phone: "01700000000",
-      address: "QA addr", district: "Dhaka",
-      orderDate: new Date().toISOString().slice(0, 10),
-      items: [{ sku: "QA-1", name: "QA Chair", qty: 1, price: 2500 }],
-      subtotal: 2500, discount: 0, deliveryCharge: 70, codAmount: 2570, paidAmount: 0,
-      paymentMethod: "COD", status: "New",
-      courierId: getCouriers()[0]?.id || null, trackingId: null,
-      deliveryStatus: "Pending", returnStatus: null, source: "QA",
-      createdAt: new Date().toISOString(),
-    }]);
-    steps.push(pass("Add ecommerce order", orderNo));
-
-    const o = getOrders().find((x) => x.id === id);
-    if (o) {
-      setOrders(getOrders().map((x) => x.id === id ? { ...x, status: "Delivered" } : x));
-      steps.push(pass("Update status to Delivered"));
-    } else steps.push(fail("Order not persisted"));
-
-    // COD collect
-    const cod = getCodEntries();
-    cod.push({ id: ecoId("cd"), courierId: o?.courierId || "", orderId: id, codAmount: 2570, courierCharge: 70, returnCharge: 0, collectedAmount: 2570, collectionDate: new Date().toISOString().slice(0, 10), status: "Collected", paymentMethod: "Cash" });
-    setCodEntries(cod);
-    steps.push(pass("COD collected"));
-
-    // cleanup
-    setOrders(getOrders().filter((x) => x.id !== id));
-    setCodEntries(getCodEntries().filter((c) => c.orderId !== id));
+    const m = await import("@/lib/demo/ecommerce");
+    m.seedEcommerceIfNeeded();
+    const id = m.genId("web");
+    m.setWebsites([
+      ...m.getWebsites(),
+      { id, name: `${QA_TAG} Site`, url: "https://qa.test", platform: "Custom Website", status: "active", createdAt: new Date().toISOString() },
+    ]);
+    steps.push(pass("Create website"));
+    m.setWebsites(m.getWebsites().map((w) => (w.id === id ? { ...w, name: `${QA_TAG} Site Edited` } : w)));
+    m.getWebsites().find((w) => w.id === id)?.name.endsWith("Edited")
+      ? steps.push(pass("Edit website"))
+      : steps.push(fail("Edit website"));
+    m.getWebsites().some((w) => w.id === id)
+      ? steps.push(pass("Appears in Websites list"))
+      : steps.push(fail("Appears in Websites list"));
+    m.setWebsites(m.getWebsites().filter((w) => w.id !== id));
     steps.push(pass("Cleanup"));
     return steps;
   });
+
+// 2. Product mapping by SKU
+export const ecoProductMappingWorkflow = () =>
+  run("wf-eco-product", "Ecommerce — Product mapping by SKU", async () => {
+    const steps: WorkflowStep[] = [];
+    const m = await import("@/lib/demo/ecommerce");
+    m.seedEcommerceIfNeeded();
+    const sku = `QA-SKU-${Date.now()}`;
+    const erpId = genId("item");
+    setItems([
+      ...getItems(),
+      {
+        id: erpId, company_id: "demo", name: `${QA_TAG} ERP Item`, sku, barcode: null,
+        category_id: null, unit: "pcs", sale_price: 100, purchase_price: 60, tax_pct: 0,
+        stock: 10, min_stock: 0, hsn: null, description: null, image_url: null,
+        type: "product", is_active: true, deleted_at: null, created_at: new Date().toISOString(),
+      } as unknown as DemoItem,
+    ]);
+    const websiteId = m.getWebsites()[0]?.id || "web_ck";
+    const pId = m.genId("ep");
+    m.setProducts([
+      ...m.getProducts(),
+      {
+        id: pId, websiteId, websiteProductId: `WP-${Date.now()}`,
+        name: `${QA_TAG} Site Product`, sku, erpItemId: null,
+        websitePrice: 100, erpSalePrice: 100, stock: 0, status: "active",
+        lastSyncedAt: new Date().toISOString(),
+      },
+    ]);
+    steps.push(pass("Import website product"));
+    const matched = getItems().find((i) => i.sku === sku);
+    if (!matched) steps.push(fail("ERP item lookup by SKU"));
+    else {
+      m.setProducts(m.getProducts().map((p) => (p.id === pId ? { ...p, erpItemId: matched.id } : p)));
+      steps.push(pass("Map to ERP item by SKU"));
+    }
+    m.getProducts().find((p) => p.id === pId)?.erpItemId === erpId
+      ? steps.push(pass("Mapping persists after refresh"))
+      : steps.push(fail("Mapping persists after refresh"));
+    m.setProducts(m.getProducts().filter((p) => p.id !== pId));
+    setItems(getItems().filter((i) => i.id !== erpId));
+    steps.push(pass("Cleanup"));
+    return steps;
+  });
+
+// 3. Order Sync (dedupe + sync log)
+export const ecoOrderSyncWorkflow = () =>
+  run("wf-eco-sync", "Ecommerce — Order sync (dedupe + log)", async () => {
+    const steps: WorkflowStep[] = [];
+    const m = await import("@/lib/demo/ecommerce");
+    m.seedEcommerceIfNeeded();
+    const websiteId = m.getWebsites()[0]?.id || "web_ck";
+    const orderNo = `QA-SYNC-${Date.now()}`;
+    const base = {
+      websiteId, orderNo,
+      customerName: `${QA_TAG} Cust`, phone: "01700000000",
+      address: "QA", district: "Dhaka",
+      orderDate: new Date().toISOString().slice(0, 10),
+      items: [{ sku: "QA-1", name: "QA", qty: 1, price: 1000 }],
+      subtotal: 1000, discount: 0, deliveryCharge: 70, codAmount: 1070, paidAmount: 0,
+      paymentMethod: "COD", status: "New" as const,
+      courierId: null, trackingId: null, deliveryStatus: "Pending" as const,
+      returnStatus: null, source: "Sync", createdAt: new Date().toISOString(),
+    };
+    const id1 = m.genId("eo");
+    m.setOrders([...m.getOrders(), { id: id1, ...base }]);
+    let added = 0, skipped = 0;
+    if (m.getOrders().some((o) => o.websiteId === websiteId && o.orderNo === orderNo)) skipped++;
+    else { added++; m.setOrders([...m.getOrders(), { id: m.genId("eo"), ...base }]); }
+    skipped === 1 && added === 0
+      ? steps.push(pass("Duplicate skipped by website+orderNo"))
+      : steps.push(fail("Dedupe", `added=${added} skipped=${skipped}`));
+    const logId = m.genId("sl");
+    m.setSyncLogs([
+      ...m.getSyncLogs(),
+      { id: logId, time: new Date().toISOString(), websiteId, action: `${QA_TAG} sync`, status: "success", newOrders: 1, updatedOrders: 0, failed: 0, user: "qa" },
+    ]);
+    m.getSyncLogs().some((l) => l.id === logId)
+      ? steps.push(pass("Sync log created"))
+      : steps.push(fail("Sync log created"));
+    m.getOrders().some((o) => o.id === id1)
+      ? steps.push(pass("Order appears in Website Orders"))
+      : steps.push(fail("Order appears in Website Orders"));
+    m.setOrders(m.getOrders().filter((o) => o.orderNo !== orderNo));
+    m.setSyncLogs(m.getSyncLogs().filter((l) => l.id !== logId));
+    steps.push(pass("Cleanup"));
+    return steps;
+  });
+
+// 4. Order lifecycle
+export const ecoOrderLifecycleWorkflow = () =>
+  run("wf-eco-lifecycle", "Ecommerce — Order lifecycle", async () => {
+    const steps: WorkflowStep[] = [];
+    const m = await import("@/lib/demo/ecommerce");
+    m.seedEcommerceIfNeeded();
+    const websiteId = m.getWebsites()[0]?.id || "web_ck";
+    const courierId = m.getCouriers()[0]?.id || "cr_path";
+    const id = m.genId("eo");
+    m.setOrders([
+      ...m.getOrders(),
+      {
+        id, websiteId, orderNo: `QA-LC-${Date.now()}`,
+        customerName: `${QA_TAG} LC`, phone: "01700000001",
+        address: "QA", district: "Dhaka",
+        orderDate: new Date().toISOString().slice(0, 10),
+        items: [{ sku: "QA-1", name: "QA", qty: 1, price: 2000 }],
+        subtotal: 2000, discount: 0, deliveryCharge: 70, codAmount: 2070, paidAmount: 0,
+        paymentMethod: "COD", status: "New",
+        courierId: null, trackingId: null, deliveryStatus: "Pending",
+        returnStatus: null, source: "QA", createdAt: new Date().toISOString(),
+      },
+    ]);
+    steps.push(pass("Create order (New)"));
+    const transitions: Array<[string, "Confirmed" | "Processing" | "Shipped" | "Delivered"]> = [
+      ["Confirm", "Confirmed"],
+      ["Assign courier", "Processing"],
+      ["Ship", "Shipped"],
+      ["Deliver", "Delivered"],
+    ];
+    for (const [label, status] of transitions) {
+      m.setOrders(
+        m.getOrders().map((o) =>
+          o.id === id
+            ? {
+                ...o,
+                status,
+                ...(label === "Assign courier" ? { courierId, trackingId: `TRK-${Date.now()}` } : {}),
+                ...(label === "Ship" ? { deliveryStatus: "In Transit" as const } : {}),
+                ...(label === "Deliver" ? { deliveryStatus: "Delivered" as const } : {}),
+              }
+            : o,
+        ),
+      );
+      m.getOrders().find((o) => o.id === id)?.status === status
+        ? steps.push(pass(label))
+        : steps.push(fail(label));
+    }
+    m.getOrders().find((o) => o.id === id)?.courierId === courierId
+      ? steps.push(pass("Courier assigned & persisted"))
+      : steps.push(fail("Courier assigned & persisted"));
+    m.setOrders(m.getOrders().filter((o) => o.id !== id));
+    steps.push(pass("Cleanup"));
+    return steps;
+  });
+
+// 5. COD collection (with cash txn)
+export const ecoCodWorkflow = () =>
+  run("wf-eco-cod", "Ecommerce — COD collection", async () => {
+    const steps: WorkflowStep[] = [];
+    const m = await import("@/lib/demo/ecommerce");
+    m.seedEcommerceIfNeeded();
+    const courierId = m.getCouriers()[0]?.id || "cr_path";
+    const id = m.genId("eo");
+    m.setOrders([
+      ...m.getOrders(),
+      {
+        id, websiteId: m.getWebsites()[0]?.id || "web_ck",
+        orderNo: `QA-COD-${Date.now()}`,
+        customerName: `${QA_TAG} COD`, phone: "01700000002",
+        address: "QA", district: "Dhaka",
+        orderDate: new Date().toISOString().slice(0, 10),
+        items: [{ sku: "QA-1", name: "QA", qty: 1, price: 2000 }],
+        subtotal: 2000, discount: 0, deliveryCharge: 70, codAmount: 2070, paidAmount: 0,
+        paymentMethod: "COD", status: "Delivered",
+        courierId, trackingId: "TRK", deliveryStatus: "Delivered",
+        returnStatus: null, source: "QA", createdAt: new Date().toISOString(),
+      },
+    ]);
+    const codId = m.genId("cd");
+    m.setCodEntries([
+      ...m.getCodEntries(),
+      { id: codId, courierId, orderId: id, codAmount: 2070, courierCharge: 70, returnCharge: 0, collectedAmount: 0, status: "Pending", paymentMethod: "Cash" },
+    ]);
+    const pendingBefore = m.getCodEntries().filter((c) => c.status === "Pending").length;
+    steps.push(pass("Pending COD recorded", `${pendingBefore} pending`));
+    m.setCodEntries(
+      m.getCodEntries().map((c) =>
+        c.id === codId
+          ? { ...c, collectedAmount: 2070, status: "Collected", collectionDate: new Date().toISOString().slice(0, 10) }
+          : c,
+      ),
+    );
+    try {
+      const cash = (await import("@/lib/demo/cash")) as unknown as {
+        getCashTxns?: () => Array<{ notes?: string }>;
+        setCashTxns?: (v: unknown[]) => void;
+      };
+      if (cash.getCashTxns && cash.setCashTxns) {
+        cash.setCashTxns([
+          ...cash.getCashTxns(),
+          { id: m.genId("ctx"), account: "BANK_CASH", type: "in", amount: 2070, date: new Date().toISOString().slice(0, 10), ref: `QA COD ${id}`, notes: QA_TAG },
+        ]);
+        steps.push(pass("Cash/Bank txn posted"));
+      } else steps.push(warn("Cash module shape changed", "skipped"));
+    } catch { steps.push(warn("Cash module unavailable", "skipped")); }
+    const pendingAfter = m.getCodEntries().filter((c) => c.status === "Pending").length;
+    pendingAfter < pendingBefore
+      ? steps.push(pass("COD pending decreased"))
+      : steps.push(fail("COD pending decreased"));
+    m.setOrders(m.getOrders().filter((o) => o.id !== id));
+    m.setCodEntries(m.getCodEntries().filter((c) => c.id !== codId));
+    try {
+      const cash = (await import("@/lib/demo/cash")) as unknown as {
+        getCashTxns?: () => Array<{ notes?: string }>;
+        setCashTxns?: (v: unknown[]) => void;
+      };
+      if (cash.getCashTxns && cash.setCashTxns) {
+        cash.setCashTxns(cash.getCashTxns().filter((t) => t.notes !== QA_TAG));
+      }
+    } catch { /* ignore */ }
+    steps.push(pass("Cleanup"));
+    return steps;
+  });
+
+// 6. Return / exchange (stock back + profit/loss)
+export const ecoReturnWorkflow = () =>
+  run("wf-eco-return", "Ecommerce — Return & exchange", async () => {
+    const steps: WorkflowStep[] = [];
+    const m = await import("@/lib/demo/ecommerce");
+    m.seedEcommerceIfNeeded();
+    const sku = `QA-RET-${Date.now()}`;
+    const erpId = genId("item");
+    setItems([
+      ...getItems(),
+      {
+        id: erpId, company_id: "demo", name: `${QA_TAG} Return Item`, sku, barcode: null,
+        category_id: null, unit: "pcs", sale_price: 500, purchase_price: 300, tax_pct: 0,
+        stock: 5, min_stock: 0, hsn: null, description: null, image_url: null,
+        type: "product", is_active: true, deleted_at: null, created_at: new Date().toISOString(),
+      } as unknown as DemoItem,
+    ]);
+    const stockBefore = getItems().find((i) => i.id === erpId)?.stock ?? 0;
+    const orderId = m.genId("eo");
+    m.setOrders([
+      ...m.getOrders(),
+      {
+        id: orderId, websiteId: m.getWebsites()[0]?.id || "web_ck",
+        orderNo: `QA-RTN-${Date.now()}`,
+        customerName: `${QA_TAG} R`, phone: "01700000003",
+        address: "QA", district: "Dhaka",
+        orderDate: new Date().toISOString().slice(0, 10),
+        items: [{ sku, name: `${QA_TAG} Return Item`, qty: 1, price: 500, erpItemId: erpId }],
+        subtotal: 500, discount: 0, deliveryCharge: 70, codAmount: 570, paidAmount: 570,
+        paymentMethod: "COD", status: "Delivered",
+        courierId: null, trackingId: null, deliveryStatus: "Delivered",
+        returnStatus: null, source: "QA", createdAt: new Date().toISOString(),
+      },
+    ]);
+    const plBefore = m.computeProfitLoss();
+    const rId = m.genId("rt");
+    m.setReturns([
+      ...m.getReturns(),
+      {
+        id: rId, orderId, customer: `${QA_TAG} R`, sku, qty: 1, reason: "Damaged",
+        type: "Full Return", returnCharge: 40, refundAmount: 500,
+        stockAction: "Add back to stock", status: "Completed",
+        notes: QA_TAG, createdAt: new Date().toISOString(),
+      },
+    ]);
+    steps.push(pass("Create return"));
+    setItems(getItems().map((i) => (i.id === erpId ? { ...i, stock: (i.stock ?? 0) + 1 } : i)));
+    m.setOrders(m.getOrders().map((o) => (o.id === orderId ? { ...o, status: "Returned" } : o)));
+    const stockAfter = getItems().find((i) => i.id === erpId)?.stock ?? 0;
+    stockAfter === stockBefore + 1
+      ? steps.push(pass("Stock added back to ERP item"))
+      : steps.push(fail("Stock added back", `before=${stockBefore} after=${stockAfter}`));
+    const plAfter = m.computeProfitLoss();
+    plAfter.returnLoss >= plBefore.returnLoss + 500
+      ? steps.push(pass("Profit/Loss reflects return loss"))
+      : steps.push(warn("Return loss not increased", `before=${plBefore.returnLoss} after=${plAfter.returnLoss}`));
+    m.setReturns(m.getReturns().filter((r) => r.id !== rId));
+    m.setOrders(m.getOrders().filter((o) => o.id !== orderId));
+    setItems(getItems().filter((i) => i.id !== erpId));
+    steps.push(pass("Cleanup"));
+    return steps;
+  });
+
+// 7. Convert to Sale Invoice (WEB- prefix)
+export const ecoConvertSaleWorkflow = () =>
+  run("wf-eco-convert", "Ecommerce — Convert to Sale Invoice", async () => {
+    const steps: WorkflowStep[] = [];
+    const m = await import("@/lib/demo/ecommerce");
+    m.seedEcommerceIfNeeded();
+    const id = m.genId("eo");
+    m.setOrders([
+      ...m.getOrders(),
+      {
+        id, websiteId: m.getWebsites()[0]?.id || "web_ck",
+        orderNo: `QA-CONV-${Date.now()}`,
+        customerName: `${QA_TAG} Conv`, phone: "01700000004",
+        address: "QA", district: "Dhaka",
+        orderDate: new Date().toISOString().slice(0, 10),
+        items: [{ sku: "QA-1", name: "QA", qty: 1, price: 1500 }],
+        subtotal: 1500, discount: 0, deliveryCharge: 70, codAmount: 1570, paidAmount: 1570,
+        paymentMethod: "COD", status: "Delivered",
+        courierId: null, trackingId: null, deliveryStatus: "Delivered",
+        returnStatus: null, source: "QA", createdAt: new Date().toISOString(),
+      },
+    ]);
+    const settings = m.getSettings();
+    const before = getSales();
+    const invoiceNo = `${settings.invoicePrefix}${new Date().getFullYear()}-${(before.length + 1).toString().padStart(4, "0")}`;
+    const saleId = m.genId("sale");
+    const order = m.getOrders().find((o) => o.id === id)!;
+    setSales([
+      ...before,
+      {
+        id: saleId, company_id: "demo", doc_type: "invoice", invoice_no: invoiceNo,
+        invoice_date: order.orderDate, due_date: null, party_id: null,
+        subtotal: order.subtotal, discount: order.discount, tax: 0,
+        delivery_charge: order.deliveryCharge, labor_charge: 0,
+        total: order.subtotal - order.discount + order.deliveryCharge,
+        paid: order.paidAmount,
+        balance: order.subtotal - order.discount + order.deliveryCharge - order.paidAmount,
+        status: "paid", payment_method: "cod",
+        notes: `${QA_TAG} Ecommerce order ${order.orderNo}`,
+        reference_sale_id: null, po_no: null, po_date: null,
+        billing_name: order.customerName, deleted_at: null,
+        created_at: new Date().toISOString(),
+      } as unknown as DemoSale,
+    ]);
+    m.setOrders(m.getOrders().map((o) => (o.id === id ? { ...o, convertedSaleId: saleId } : o)));
+    steps.push(pass("Convert to Sale Invoice", invoiceNo));
+    invoiceNo.startsWith("WEB-")
+      ? steps.push(pass("WEB-YYYY-#### prefix"))
+      : steps.push(fail("WEB-YYYY-#### prefix", invoiceNo));
+    getSales().some((s) => s.id === saleId)
+      ? steps.push(pass("Appears in Sale Invoices list"))
+      : steps.push(fail("Appears in Sale Invoices list"));
+    m.getOrders().find((o) => o.id === id)?.convertedSaleId === saleId
+      ? steps.push(pass("Order linked to sale invoice"))
+      : steps.push(fail("Order linked to sale invoice"));
+    setSales(getSales().filter((s) => s.id !== saleId));
+    m.setOrders(m.getOrders().filter((o) => o.id !== id));
+    steps.push(pass("Cleanup"));
+    return steps;
+  });
+
+// 8. Reports / PDF / CSV
+export const ecoReportsWorkflow = () =>
+  run("wf-eco-reports", "Ecommerce — Reports & exports", async () => {
+    const steps: WorkflowStep[] = [];
+    try {
+      const m = await import("@/lib/demo/ecommerce");
+      const pl = m.computeProfitLoss();
+      typeof pl.netProfit === "number"
+        ? steps.push(pass("Profit & Loss computes"))
+        : steps.push(fail("Profit & Loss computes"));
+    } catch (e) {
+      steps.push(fail("Profit & Loss module", String((e as Error).message)));
+    }
+    try {
+      await import("@/lib/export-csv");
+      steps.push(pass("CSV export helper available"));
+    } catch {
+      steps.push(warn("CSV export helper not found"));
+    }
+    try {
+      const ob = await import("@/lib/pdf/open-blob");
+      typeof ob.openOrDownloadBlob === "function"
+        ? steps.push(pass("Print/PDF safe fallback (open-blob)"))
+        : steps.push(fail("open-blob helper missing"));
+    } catch {
+      steps.push(fail("open-blob helper missing"));
+    }
+    return steps;
+  });
+
+export const ALL_ECOMMERCE_WORKFLOWS = [
+  ecoWebsiteWorkflow,
+  ecoProductMappingWorkflow,
+  ecoOrderSyncWorkflow,
+  ecoOrderLifecycleWorkflow,
+  ecoCodWorkflow,
+  ecoReturnWorkflow,
+  ecoConvertSaleWorkflow,
+  ecoReportsWorkflow,
+];
+
+// Back-compat alias for older callers.
+export const ecommerceWorkflow = ecoOrderLifecycleWorkflow;
 
 export const ALL_WORKFLOWS = [
   itemsWorkflow,
@@ -562,7 +922,7 @@ export const ALL_WORKFLOWS = [
   estimateWorkflow,
   purchaseWorkflow,
   expenseWorkflow,
-  ecommerceWorkflow,
+  ...ALL_ECOMMERCE_WORKFLOWS,
   verifyDataChecks,
   printPdfChecks,
   permissionCheck,

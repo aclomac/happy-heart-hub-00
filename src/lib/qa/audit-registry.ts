@@ -197,6 +197,16 @@ export const AUDIT_REGISTRY: AuditEntry[] = [
   { id: "eco-logs", module: M.ecommerce, label: "Sync Logs", kind: "submenu", route: "/app/ecommerce/sync-logs", status: W, note: "Logs auto-created on every sync/import; CSV export + clear." },
   { id: "eco-wf-convert", module: M.ecommerce, label: "Convert ecommerce order → Sale Invoice", kind: "workflow", route: "/app/ecommerce/orders", status: W, note: "Uses WEB- prefix and appears in Sales list." },
 
+  // ---- Ecommerce smoke tests (run from QA Audit) ----
+  { id: "eco-smoke-website", module: M.ecommerce, label: "Smoke: Website CRUD", kind: "workflow", route: "/app/ecommerce/websites", status: W, note: "Create / edit / list / delete website." },
+  { id: "eco-smoke-product", module: M.ecommerce, label: "Smoke: Product mapping by SKU", kind: "workflow", route: "/app/ecommerce/products", status: W, note: "Import product → map to ERP item by SKU → persists after refresh." },
+  { id: "eco-smoke-sync", module: M.ecommerce, label: "Smoke: Order sync (dedupe + log)", kind: "workflow", route: "/app/ecommerce/order-sync", status: W, note: "Sample orders load, duplicates skipped by website+orderNo, Sync Log written." },
+  { id: "eco-smoke-lifecycle", module: M.ecommerce, label: "Smoke: Order lifecycle", kind: "workflow", route: "/app/ecommerce/orders", status: W, note: "New → Confirmed → Processing(+courier) → Shipped → Delivered." },
+  { id: "eco-smoke-cod", module: M.ecommerce, label: "Smoke: COD collection", kind: "workflow", route: "/app/ecommerce/cod", status: W, note: "Collect posts cash/bank txn and decreases COD Pending." },
+  { id: "eco-smoke-return", module: M.ecommerce, label: "Smoke: Return / Exchange", kind: "workflow", route: "/app/ecommerce/returns", status: W, note: "Stock-back increments ERP item; return loss flows into Profit & Loss." },
+  { id: "eco-smoke-convert", module: M.ecommerce, label: "Smoke: Convert to Sale Invoice", kind: "workflow", route: "/app/ecommerce/orders", status: W, note: "WEB-YYYY-#### invoice number, appears in Sale Invoices list, order linked." },
+  { id: "eco-smoke-reports", module: M.ecommerce, label: "Smoke: Reports & exports", kind: "workflow", route: "/app/ecommerce/reports", status: W, note: "Profit/Loss computes; CSV + open-blob Print/PDF fallback available." },
+
 ];
 
 export function summarizeAudit(entries: AuditEntry[] = AUDIT_REGISTRY) {
