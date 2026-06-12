@@ -958,13 +958,19 @@ export function SalesDocForm({
         <div className="p-2 border-t">
           <button
             type="button"
-            onClick={() => setRows([...rows, emptyRow()])}
+            onClick={() => {
+              alert("ADD_ITEM_CLICKED");
+              // eslint-disable-next-line no-console
+              console.log("ADD_ITEM_CLICKED");
+              setRows((prev) => [...prev, emptyRow()]);
+            }}
             className="inline-flex h-8 items-center justify-center gap-2 rounded-md border border-input bg-background px-3 text-xs font-medium shadow-sm hover:bg-accent hover:text-accent-foreground"
             data-testid="add-invoice-row-btn"
           >
             <Plus className="w-3.5 h-3.5" />
-            Add Row
+            Add Item
           </button>
+
         </div>
       </div>
 
