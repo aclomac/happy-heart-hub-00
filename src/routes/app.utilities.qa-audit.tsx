@@ -411,14 +411,6 @@ function QaAuditPage() {
             >
               Test Buttons
             </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => runWorkflows([verifyDataChecks, permissionCheck])}
-              disabled={running}
-            >
-              Test Buttons
-            </Button>
             <Button size="sm" variant="outline" onClick={() => downloadReport("csv")}>
               <Download className="w-4 h-4 mr-1.5" />
               Export CSV
