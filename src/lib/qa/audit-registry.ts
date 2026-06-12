@@ -209,10 +209,10 @@ export const AUDIT_REGISTRY: AuditEntry[] = [
 
   // ---- Signup / Auth ----
   { id: "auth-signup-validation", module: "Auth", page: "Signup", label: "Signup form validation", kind: "button", route: "/signup", status: W, note: "Name/email/password length validated; toast on error." },
-  { id: "auth-signup-create", module: "Auth", page: "Signup", label: "Email account creation", kind: "button", route: "/signup", status: W, note: "Saves local user (email + password, mobile optional), starts demo session." },
+  { id: "auth-signup-create", module: "Auth", page: "Signup", label: "Email account creation", kind: "button", route: "/signup", status: W, note: "Saves a non-demo local user (email + password, mobile optional) and starts that user's session." },
   { id: "auth-signup-redirect", module: "Auth", page: "Signup", label: "Local session redirect", kind: "button", route: "/signup", status: W, note: "After create → redirects to /app with toast." },
   { id: "auth-signup-login", module: "Auth", page: "Login", label: "Login with created email account", kind: "button", route: "/login", status: W, note: "Created user can sign in with email + password." },
-  { id: "auth-smoke-signup", module: "Auth", page: "Signup", label: "Smoke: signup + login", kind: "workflow", route: "/signup", status: W, note: "Creates [QA] user via email, verifies persistence + login lookup, cleans up." },
+  { id: "auth-smoke-signup", module: "Auth", page: "Signup", label: "Smoke: signup + login", kind: "workflow", route: "/signup", status: W, note: "Creates [QA] user via email, verifies non-demo session + login lookup, cleans up." },
 ];
 
 export function summarizeAudit(entries: AuditEntry[] = AUDIT_REGISTRY) {
