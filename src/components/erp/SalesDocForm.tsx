@@ -673,7 +673,12 @@ export function SalesDocForm({
     ];
     localStorage.setItem("erpovo_demo_sales", JSON.stringify(nextSales));
     localStorage.setItem("erpovo_demo_sale_items", JSON.stringify(nextItems));
-    if (!payload.invoice_no) setInvoiceNo(finalInvoiceNo);
+    // Reflect the actually-saved number back into the form state so subsequent
+    // saves (or re-renders) don't reuse the stale default.
+    if (finalInvoiceNo !== payload.invoice_no) {
+      payload.invoice_no = finalInvoiceNo;
+    }
+    setInvoiceNo(finalInvoiceNo);
     return { id, invoiceNo: finalInvoiceNo, localSalesCount: nextSales.length };
   };
 
