@@ -117,6 +117,7 @@ import { Route as AppEstimatesNewRouteImport } from './routes/app.estimates.new'
 import { Route as AppEcommerceWebsitesRouteImport } from './routes/app.ecommerce.websites'
 import { Route as AppEcommerceTrackingRouteImport } from './routes/app.ecommerce.tracking'
 import { Route as AppEcommerceReturnsRouteImport } from './routes/app.ecommerce.returns'
+import { Route as AppEcommerceProfitLossRouteImport } from './routes/app.ecommerce.profit-loss'
 import { Route as AppEcommerceProductsRouteImport } from './routes/app.ecommerce.products'
 import { Route as AppEcommercePaymentsRouteImport } from './routes/app.ecommerce.payments'
 import { Route as AppEcommerceOrdersRouteImport } from './routes/app.ecommerce.orders'
@@ -708,6 +709,11 @@ const AppEcommerceReturnsRoute = AppEcommerceReturnsRouteImport.update({
   path: '/returns',
   getParentRoute: () => AppEcommerceRoute,
 } as any)
+const AppEcommerceProfitLossRoute = AppEcommerceProfitLossRouteImport.update({
+  id: '/profit-loss',
+  path: '/profit-loss',
+  getParentRoute: () => AppEcommerceRoute,
+} as any)
 const AppEcommerceProductsRoute = AppEcommerceProductsRouteImport.update({
   id: '/products',
   path: '/products',
@@ -995,6 +1001,7 @@ export interface FileRoutesByFullPath {
   '/app/ecommerce/orders': typeof AppEcommerceOrdersRoute
   '/app/ecommerce/payments': typeof AppEcommercePaymentsRoute
   '/app/ecommerce/products': typeof AppEcommerceProductsRoute
+  '/app/ecommerce/profit-loss': typeof AppEcommerceProfitLossRoute
   '/app/ecommerce/returns': typeof AppEcommerceReturnsRoute
   '/app/ecommerce/tracking': typeof AppEcommerceTrackingRoute
   '/app/ecommerce/websites': typeof AppEcommerceWebsitesRoute
@@ -1139,6 +1146,7 @@ export interface FileRoutesByTo {
   '/app/ecommerce/orders': typeof AppEcommerceOrdersRoute
   '/app/ecommerce/payments': typeof AppEcommercePaymentsRoute
   '/app/ecommerce/products': typeof AppEcommerceProductsRoute
+  '/app/ecommerce/profit-loss': typeof AppEcommerceProfitLossRoute
   '/app/ecommerce/returns': typeof AppEcommerceReturnsRoute
   '/app/ecommerce/tracking': typeof AppEcommerceTrackingRoute
   '/app/ecommerce/websites': typeof AppEcommerceWebsitesRoute
@@ -1288,6 +1296,7 @@ export interface FileRoutesById {
   '/app/ecommerce/orders': typeof AppEcommerceOrdersRoute
   '/app/ecommerce/payments': typeof AppEcommercePaymentsRoute
   '/app/ecommerce/products': typeof AppEcommerceProductsRoute
+  '/app/ecommerce/profit-loss': typeof AppEcommerceProfitLossRoute
   '/app/ecommerce/returns': typeof AppEcommerceReturnsRoute
   '/app/ecommerce/tracking': typeof AppEcommerceTrackingRoute
   '/app/ecommerce/websites': typeof AppEcommerceWebsitesRoute
@@ -1438,6 +1447,7 @@ export interface FileRouteTypes {
     | '/app/ecommerce/orders'
     | '/app/ecommerce/payments'
     | '/app/ecommerce/products'
+    | '/app/ecommerce/profit-loss'
     | '/app/ecommerce/returns'
     | '/app/ecommerce/tracking'
     | '/app/ecommerce/websites'
@@ -1582,6 +1592,7 @@ export interface FileRouteTypes {
     | '/app/ecommerce/orders'
     | '/app/ecommerce/payments'
     | '/app/ecommerce/products'
+    | '/app/ecommerce/profit-loss'
     | '/app/ecommerce/returns'
     | '/app/ecommerce/tracking'
     | '/app/ecommerce/websites'
@@ -1730,6 +1741,7 @@ export interface FileRouteTypes {
     | '/app/ecommerce/orders'
     | '/app/ecommerce/payments'
     | '/app/ecommerce/products'
+    | '/app/ecommerce/profit-loss'
     | '/app/ecommerce/returns'
     | '/app/ecommerce/tracking'
     | '/app/ecommerce/websites'
@@ -2559,6 +2571,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppEcommerceReturnsRouteImport
       parentRoute: typeof AppEcommerceRoute
     }
+    '/app/ecommerce/profit-loss': {
+      id: '/app/ecommerce/profit-loss'
+      path: '/profit-loss'
+      fullPath: '/app/ecommerce/profit-loss'
+      preLoaderRoute: typeof AppEcommerceProfitLossRouteImport
+      parentRoute: typeof AppEcommerceRoute
+    }
     '/app/ecommerce/products': {
       id: '/app/ecommerce/products'
       path: '/products'
@@ -2894,6 +2913,7 @@ interface AppEcommerceRouteChildren {
   AppEcommerceOrdersRoute: typeof AppEcommerceOrdersRoute
   AppEcommercePaymentsRoute: typeof AppEcommercePaymentsRoute
   AppEcommerceProductsRoute: typeof AppEcommerceProductsRoute
+  AppEcommerceProfitLossRoute: typeof AppEcommerceProfitLossRoute
   AppEcommerceReturnsRoute: typeof AppEcommerceReturnsRoute
   AppEcommerceTrackingRoute: typeof AppEcommerceTrackingRoute
   AppEcommerceWebsitesRoute: typeof AppEcommerceWebsitesRoute
@@ -2910,6 +2930,7 @@ const AppEcommerceRouteChildren: AppEcommerceRouteChildren = {
   AppEcommerceOrdersRoute: AppEcommerceOrdersRoute,
   AppEcommercePaymentsRoute: AppEcommercePaymentsRoute,
   AppEcommerceProductsRoute: AppEcommerceProductsRoute,
+  AppEcommerceProfitLossRoute: AppEcommerceProfitLossRoute,
   AppEcommerceReturnsRoute: AppEcommerceReturnsRoute,
   AppEcommerceTrackingRoute: AppEcommerceTrackingRoute,
   AppEcommerceWebsitesRoute: AppEcommerceWebsitesRoute,
