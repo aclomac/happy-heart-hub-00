@@ -69,12 +69,8 @@ function CloseFinancialYear() {
           </Link>
           <Button
             variant="destructive"
-            disabled={confirmText !== REQUIRED_TEXT}
-            onClick={() =>
-              toast.info("Close Financial Year is not enabled yet.", {
-                description: "Please contact support to close a financial year safely.",
-              })
-            }
+            disabled
+            title="Close Financial Year will be available after accounting verification."
           >
             Close Year (disabled)
           </Button>
