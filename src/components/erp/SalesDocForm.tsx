@@ -751,6 +751,23 @@ export function SalesDocForm({
         </div>
       </div>
 
+      <div
+        data-testid="save-invoice-debug-panel"
+        className="mb-3 rounded-md border bg-muted/40 px-3 py-2 text-[11px] font-mono text-muted-foreground grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-1"
+      >
+        <div>Save clicked: <b>{saveDebug.clicked ? "yes" : "no"}</b></div>
+        <div>Customer: <b>{partyId || "—"}</b></div>
+        <div>Items: <b>{rows.filter((r) => r.item_id && r.qty > 0).length}</b></div>
+        <div>Subtotal: <b>{subTotal}</b></div>
+        <div>Total: <b>{total}</b></div>
+        <div>Validation: <b>{saveDebug.validation}</b></div>
+        <div>Saved id: <b>{saveDebug.savedInvoiceId || "—"}</b></div>
+        <div>Local sales: <b>{saveDebug.localSalesCount ?? "—"}</b></div>
+        {saveDebug.error ? (
+          <div className="col-span-full text-destructive">Error: {saveDebug.error}</div>
+        ) : null}
+      </div>
+
       <PageHeader
         title={editingId ? `Edit ${invoiceNo || meta.title}` : meta.title}
         subtitle={meta.subtitle}
