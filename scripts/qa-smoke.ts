@@ -53,6 +53,17 @@ g.localStorage.setItem("erpovo_demo_session", "1");
 
 // --- Run workflows ---------------------------------------------------------
 async function main() {
+  // Seed demo repos so workflows that expect baseline data (e.g. a customer)
+  // can run identically to the in-browser audit.
+  const { ensurePartiesSeed } = await import("../src/lib/demo/parties");
+  const { ensureSalesSeed } = await import("../src/lib/demo/sales");
+  const { ensurePurchasesSeed } = await import("../src/lib/demo/purchases");
+  const { ensureExpensesSeed } = await import("../src/lib/demo/expenses");
+  ensurePartiesSeed();
+  ensureSalesSeed();
+  ensurePurchasesSeed();
+  ensureExpensesSeed();
+
   const { ALL_WORKFLOWS } = await import("../src/lib/qa/workflows");
 
   const C = {
