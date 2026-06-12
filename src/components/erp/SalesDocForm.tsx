@@ -435,21 +435,41 @@ export function SalesDocForm({
   };
 
   const save = async () => {
+    // Immediate click feedback — proves the handler ran before any validation.
+    // eslint-disable-next-line no-console
+    console.log("SAVE_INVOICE_CLICKED", {
+      partyId,
+      itemsCount: rows.filter((r) => r.item_id).length,
+      subTotal,
+      total,
+      received,
+    });
+    if (import.meta.env.DEV) {
+      toast(t("Save invoice clicked"));
+    }
     if (editingId && convertedBlocked) {
-      toast.error("This order has been locked and can no longer be edited.");
+      toast.error(t("This order has been locked and can no longer be edited."));
       return;
     }
     if (!partyId) {
-      toast.error("Select a customer");
+      toast.error(t("Please select a customer."));
+      // eslint-disable-next-line no-console
+      console.log("SAVE_INVOICE_VALIDATION_FAIL", { reason: "no_customer" });
+      return;
+    }
+    const hasBadLine = rows.some((r) => r.item_id && (r.qty <= 0 || r.price < 0));
+    if (hasBadLine) {
+      toast.error(t("Please check item quantity and rate."));
+      // eslint-disable-next-line no-console
+      console.log("SAVE_INVOICE_VALIDATION_FAIL", { reason: "bad_line" });
       return;
     }
     const validRows = rows.filter((r) => r.item_id && r.qty > 0);
-    // In edit mode, allow saving header-only changes when the existing record
-    // has no line items (legacy/demo data). This unblocks the Update button
-    // when the user only edits Notes / Billing Name / PO No / PO Date / etc.
     const headerOnlyEdit = !!editingId && validRows.length === 0;
     if (validRows.length === 0 && !headerOnlyEdit) {
-      toast.error("Add at least one line item");
+      toast.error(t("Please add at least one item before saving invoice."));
+      // eslint-disable-next-line no-console
+      console.log("SAVE_INVOICE_VALIDATION_FAIL", { reason: "no_items" });
       return;
     }
 
@@ -509,7 +529,11 @@ export function SalesDocForm({
         editingId ? { editingId, headerOnly: headerOnlyEdit } : { autoNumber: !invoiceNoManual },
       );
 
-      toast.success(editingId ? `${invoiceNo} updated` : t("Invoice Saved"));
+      // eslint-disable-next-line no-console
+      console.log("SAVE_INVOICE_SAVED", { id: newId, invoiceNo });
+      toast.success(
+        editingId ? `${invoiceNo} updated` : `${t("Sale invoice saved")}: ${invoiceNo}`,
+      );
       qc.invalidateQueries({ queryKey: ["sales", companyId] });
 
       // Phase 2 — flush pending attachments uploaded before the invoice existed.
@@ -593,7 +617,9 @@ export function SalesDocForm({
             <Button
               variant="sale"
               size="sm"
-              disabled={saving || convertedBlocked || isOffline}
+              type="button"
+              data-testid="save-invoice-btn"
+              disabled={saving || convertedBlocked}
               onClick={save}
             >
               <Save className="w-4 h-4" />
