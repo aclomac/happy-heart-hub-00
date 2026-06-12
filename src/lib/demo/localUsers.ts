@@ -63,12 +63,13 @@ export function isValidEmail(e: string): boolean {
 
 export function findUserByEmailOrMobile(emailOrMobile: string): LocalUser | null {
   const v = emailOrMobile.trim().toLowerCase();
+  const mobile = normalizeMobile(v);
   const users = getLocalUsers();
   return (
     users.find(
       (u) =>
         u.email.toLowerCase() === v ||
-        normalizeMobile(u.mobile) === normalizeMobile(v),
+        (!!mobile && normalizeMobile(u.mobile) === mobile),
     ) ?? null
   );
 }
