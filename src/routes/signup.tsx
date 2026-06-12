@@ -13,11 +13,11 @@ import {
   validatePassword,
 } from "@/lib/demo/localUsers";
 import {
-  startDemoSession,
   ensureDemoSeed,
-  DEMO_COMPANY_ID,
-  DEMO_USER_ID,
+  startLocalUserSession,
+  addDemoCompany,
 } from "@/lib/demo/localStore";
+
 import { setCurrentCompanyId } from "@/lib/use-company";
 
 export const Route = createFileRoute("/signup")({
