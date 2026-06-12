@@ -1097,6 +1097,30 @@ export function SalesDocForm({
         </div>
       </div>
 
+      {/* Sticky bottom action bar — guarantees Save Invoice is always visible,
+          even on long forms or small viewports. Wired to the same `save()`
+          handler as the top button. */}
+      <div className="sticky bottom-0 z-20 -mx-3 mt-4 border-t bg-card/95 backdrop-blur px-3 py-2 flex items-center justify-end gap-2">
+        <Link to={meta.listPath}>
+          <Button variant="outline" size="sm" type="button">
+            Cancel
+          </Button>
+        </Link>
+        <Button
+          variant="sale"
+          size="sm"
+          type="button"
+          data-testid="save-invoice-btn-bottom"
+          disabled={saving}
+          onClick={save}
+        >
+          <Save className="w-4 h-4" />
+          {saving ? "Saving…" : editingId ? "Update" : meta.saveLabel}
+        </Button>
+      </div>
+
+
+
       {editingId && kind === "invoice" && companyId ? (
         <SaleInvoiceTimeline
           saleId={editingId}
