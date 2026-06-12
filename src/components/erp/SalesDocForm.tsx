@@ -222,29 +222,9 @@ export function SalesDocForm({
   const [savedInvoiceNo, setSavedInvoiceNo] = useState<string>("");
   const [successOpen, setSuccessOpen] = useState(false);
   const [pdfBusy, setPdfBusy] = useState(false);
-  const [lastClickDebug, setLastClickDebug] = useState("No clicks captured yet");
+  // Debug capture removed — it was interfering with click handlers in some
+  // builds. Buttons are now native <button type="button" onClick={...}>.
 
-  useEffect(() => {
-    if (!import.meta.env.DEV && !isDemoMode()) return;
-    if (typeof document === "undefined") return;
-    const describe = (el: Element | null) => {
-      if (!el) return "none";
-      const text = (el.textContent || "").replace(/\s+/g, " ").trim().slice(0, 80);
-      return `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ""}${
-        el.className ? `.${String(el.className).replace(/\s+/g, ".").slice(0, 120)}` : ""
-      }${text ? ` · ${text}` : ""}`;
-    };
-    const onClickCapture = (event: MouseEvent) => {
-      const target = event.target instanceof Element ? event.target : null;
-      const top = document.elementFromPoint(event.clientX, event.clientY);
-      const message = `target=${describe(target)} | elementFromPoint=${describe(top)}`;
-      // eslint-disable-next-line no-console
-      console.log("SALES_DOC_CLICK_CAPTURE", message);
-      setLastClickDebug(message);
-    };
-    document.addEventListener("click", onClickCapture, true);
-    return () => document.removeEventListener("click", onClickCapture, true);
-  }, []);
 
   // Load per-company Sale Invoice customization toggles.
   const { data: settings = DEFAULT_SALE_INVOICE_SETTINGS } = useQuery({
@@ -633,10 +613,11 @@ export function SalesDocForm({
         >
           TEST CLICK
         </button>
-        <div className="min-w-0 truncate text-muted-foreground" data-testid="sales-click-debug-panel">
-          {lastClickDebug}
+        <div className="min-w-0 truncate text-muted-foreground">
+          Personal mode — all actions wired natively.
         </div>
       </div>
+
       <PageHeader
         title={editingId ? `Edit ${invoiceNo || meta.title}` : meta.title}
         subtitle={meta.subtitle}
@@ -650,13 +631,13 @@ export function SalesDocForm({
             <button
               type="button"
               data-testid="save-invoice-btn"
-              disabled={saving || convertedBlocked}
               onClick={handleSaveInvoice}
-              className="inline-flex h-8 items-center justify-center gap-2 rounded-md bg-sale px-3 text-xs font-medium text-sale-foreground shadow-sm hover:bg-sale/90 disabled:pointer-events-none disabled:opacity-50"
+              className="inline-flex h-8 items-center justify-center gap-2 rounded-md bg-sale px-3 text-xs font-medium text-sale-foreground shadow-sm hover:bg-sale/90"
             >
               <Save className="w-4 h-4" />
               {saving ? "Saving…" : editingId ? "Update" : meta.saveLabel}
             </button>
+
           </>
         }
       />
@@ -977,13 +958,19 @@ export function SalesDocForm({
         <div className="p-2 border-t">
           <button
             type="button"
-            onClick={() => setRows([...rows, emptyRow()])}
+            onClick={() => {
+              alert("ADD_ITEM_CLICKED");
+              // eslint-disable-next-line no-console
+              console.log("ADD_ITEM_CLICKED");
+              setRows((prev) => [...prev, emptyRow()]);
+            }}
             className="inline-flex h-8 items-center justify-center gap-2 rounded-md border border-input bg-background px-3 text-xs font-medium shadow-sm hover:bg-accent hover:text-accent-foreground"
             data-testid="add-invoice-row-btn"
           >
             <Plus className="w-3.5 h-3.5" />
-            Add Row
+            Add Item
           </button>
+
         </div>
       </div>
 
@@ -1135,13 +1122,13 @@ export function SalesDocForm({
         <button
           type="button"
           data-testid="save-invoice-btn-bottom"
-          disabled={saving}
           onClick={handleSaveInvoice}
-          className="inline-flex h-8 items-center justify-center gap-2 rounded-md bg-sale px-3 text-xs font-medium text-sale-foreground shadow-sm hover:bg-sale/90 disabled:pointer-events-none disabled:opacity-50"
+          className="inline-flex h-8 items-center justify-center gap-2 rounded-md bg-sale px-3 text-xs font-medium text-sale-foreground shadow-sm hover:bg-sale/90"
         >
           <Save className="w-4 h-4" />
           {saving ? "Saving…" : editingId ? "Update" : meta.saveLabel}
         </button>
+
       </div>
 
 
