@@ -90,6 +90,7 @@ function Login() {
           id: localUser.id,
           email: localUser.email,
           name: localUser.fullName,
+          fullName: localUser.fullName,
         });
         setCurrentCompanyId(localUser.companyId ?? DEMO_COMPANY_ID, localUser.id);
         toast.success(`Welcome back, ${localUser.fullName}`);
