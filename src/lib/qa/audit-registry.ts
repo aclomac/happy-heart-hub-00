@@ -42,6 +42,7 @@ const M = {
   reports: "Reports",
   payroll: "Payroll",
   grow: "Grow Your Business",
+  ecommerce: "Ecommerce",
   utilities: "Utilities",
   settings: "Settings",
   support: "Support",
@@ -175,6 +176,26 @@ export const AUDIT_REGISTRY: AuditEntry[] = [
   // ============== SUPPORT / SYNC ==============
   { id: "nav-support", module: M.support, label: "Support", kind: "submenu", route: "/app/support", status: W },
   { id: "nav-sync", module: M.sync, label: "Sync, Share & Backup", kind: "submenu", route: "/app/sync", status: W },
+
+  // ============== ECOMMERCE ==============
+  { id: "eco-dash", module: M.ecommerce, label: "Ecommerce Dashboard", kind: "menu", route: "/app/ecommerce", status: W },
+  { id: "eco-websites", module: M.ecommerce, label: "Websites / Stores", kind: "submenu", route: "/app/ecommerce/websites", status: W, expected: "Add/edit/delete websites; live API test disabled in local mode." },
+  { id: "eco-products", module: M.ecommerce, label: "Website Products", kind: "submenu", route: "/app/ecommerce/products", status: W, note: "Auto-map by SKU; CSV export." },
+  { id: "eco-orders", module: M.ecommerce, label: "Website Orders", kind: "submenu", route: "/app/ecommerce/orders", status: W, expected: "Row action menu: confirm, pack, ship, deliver, return, cancel, duplicate, delete, convert to Sale Invoice." },
+  { id: "eco-sync", module: M.ecommerce, label: "Order Sync (CSV/sample)", kind: "submenu", route: "/app/ecommerce/order-sync", status: W, note: "Live website API & webhook receive intentionally disabled; CSV import + sample sync work." },
+  { id: "eco-courier", module: M.ecommerce, label: "Courier Management", kind: "submenu", route: "/app/ecommerce/courier", status: W, note: "Live courier API disabled with tooltip; manual courier fully usable." },
+  { id: "eco-tracking", module: M.ecommerce, label: "Delivery Tracking", kind: "submenu", route: "/app/ecommerce/tracking", status: W },
+  { id: "eco-returns", module: M.ecommerce, label: "Return / Exchange", kind: "submenu", route: "/app/ecommerce/returns", status: W },
+  { id: "eco-cod", module: M.ecommerce, label: "COD Collection", kind: "submenu", route: "/app/ecommerce/cod", status: W },
+  { id: "eco-dc", module: M.ecommerce, label: "Delivery Charge", kind: "submenu", route: "/app/ecommerce/delivery-charge", status: W },
+  { id: "eco-customers", module: M.ecommerce, label: "Ecommerce Customers", kind: "submenu", route: "/app/ecommerce/customers", status: W, note: "Derived from orders; can convert to Party." },
+  { id: "eco-payments", module: M.ecommerce, label: "Ecommerce Payments", kind: "submenu", route: "/app/ecommerce/payments", status: W },
+  { id: "eco-expenses", module: M.ecommerce, label: "Ecommerce Expenses", kind: "submenu", route: "/app/ecommerce/expenses", status: W },
+  { id: "eco-pl", module: M.ecommerce, label: "Profit & Loss", kind: "submenu", route: "/app/ecommerce/profit-loss", status: W },
+  { id: "eco-reports", module: M.ecommerce, label: "Reports (CSV export)", kind: "submenu", route: "/app/ecommerce/reports", status: W },
+  { id: "eco-settings", module: M.ecommerce, label: "Integration Settings", kind: "submenu", route: "/app/ecommerce/settings", status: W, note: "Webhooks / scheduled sync / live gateway intentionally disabled." },
+  { id: "eco-logs", module: M.ecommerce, label: "Sync Logs", kind: "submenu", route: "/app/ecommerce/sync-logs", status: W },
+  { id: "eco-wf-convert", module: M.ecommerce, label: "Convert ecommerce order → Sale Invoice", kind: "workflow", route: "/app/ecommerce/orders", status: W },
 ];
 
 export function summarizeAudit(entries: AuditEntry[] = AUDIT_REGISTRY) {

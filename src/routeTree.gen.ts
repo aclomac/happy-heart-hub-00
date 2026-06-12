@@ -75,6 +75,7 @@ import { Route as AppExpensesRouteImport } from './routes/app.expenses'
 import { Route as AppExpenseCategoriesRouteImport } from './routes/app.expense-categories'
 import { Route as AppEstimatesRouteImport } from './routes/app.estimates'
 import { Route as AppEmployeesRouteImport } from './routes/app.employees'
+import { Route as AppEcommerceRouteImport } from './routes/app.ecommerce'
 import { Route as AppDeviceLimitRouteImport } from './routes/app.device-limit'
 import { Route as AppDeliveryChallansRouteImport } from './routes/app.delivery-challans'
 import { Route as AppDebitNotesRouteImport } from './routes/app.debit-notes'
@@ -83,6 +84,7 @@ import { Route as AppCashRouteImport } from './routes/app.cash'
 import { Route as AppAuditRouteImport } from './routes/app.audit'
 import { Route as AppAttendanceRouteImport } from './routes/app.attendance'
 import { Route as AppUtilitiesIndexRouteImport } from './routes/app.utilities.index'
+import { Route as AppEcommerceIndexRouteImport } from './routes/app.ecommerce.index'
 import { Route as SuperAdminPaymentsIdRouteImport } from './routes/super-admin.payments.$id'
 import { Route as SuperAdminDevicesIdRouteImport } from './routes/super-admin.devices.$id'
 import { Route as SuperAdminCustomersUserIdRouteImport } from './routes/super-admin.customers.$userId'
@@ -112,6 +114,22 @@ import { Route as AppPaymentOutNewRouteImport } from './routes/app.payment-out.n
 import { Route as AppPartiesIdRouteImport } from './routes/app.parties.$id'
 import { Route as AppExpensesNewRouteImport } from './routes/app.expenses.new'
 import { Route as AppEstimatesNewRouteImport } from './routes/app.estimates.new'
+import { Route as AppEcommerceWebsitesRouteImport } from './routes/app.ecommerce.websites'
+import { Route as AppEcommerceTrackingRouteImport } from './routes/app.ecommerce.tracking'
+import { Route as AppEcommerceSyncLogsRouteImport } from './routes/app.ecommerce.sync-logs'
+import { Route as AppEcommerceSettingsRouteImport } from './routes/app.ecommerce.settings'
+import { Route as AppEcommerceReturnsRouteImport } from './routes/app.ecommerce.returns'
+import { Route as AppEcommerceReportsRouteImport } from './routes/app.ecommerce.reports'
+import { Route as AppEcommerceProfitLossRouteImport } from './routes/app.ecommerce.profit-loss'
+import { Route as AppEcommerceProductsRouteImport } from './routes/app.ecommerce.products'
+import { Route as AppEcommercePaymentsRouteImport } from './routes/app.ecommerce.payments'
+import { Route as AppEcommerceOrdersRouteImport } from './routes/app.ecommerce.orders'
+import { Route as AppEcommerceOrderSyncRouteImport } from './routes/app.ecommerce.order-sync'
+import { Route as AppEcommerceExpensesRouteImport } from './routes/app.ecommerce.expenses'
+import { Route as AppEcommerceDeliveryChargeRouteImport } from './routes/app.ecommerce.delivery-charge'
+import { Route as AppEcommerceCustomersRouteImport } from './routes/app.ecommerce.customers'
+import { Route as AppEcommerceCourierRouteImport } from './routes/app.ecommerce.courier'
+import { Route as AppEcommerceCodRouteImport } from './routes/app.ecommerce.cod'
 import { Route as AppDeliveryChallansNewRouteImport } from './routes/app.delivery-challans.new'
 import { Route as AppDebitNotesNewRouteImport } from './routes/app.debit-notes.new'
 import { Route as AppCreditNotesNewRouteImport } from './routes/app.credit-notes.new'
@@ -475,6 +493,11 @@ const AppEmployeesRoute = AppEmployeesRouteImport.update({
   path: '/employees',
   getParentRoute: () => AppRoute,
 } as any)
+const AppEcommerceRoute = AppEcommerceRouteImport.update({
+  id: '/ecommerce',
+  path: '/ecommerce',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppDeviceLimitRoute = AppDeviceLimitRouteImport.update({
   id: '/device-limit',
   path: '/device-limit',
@@ -514,6 +537,11 @@ const AppUtilitiesIndexRoute = AppUtilitiesIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AppUtilitiesRoute,
+} as any)
+const AppEcommerceIndexRoute = AppEcommerceIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppEcommerceRoute,
 } as any)
 const SuperAdminPaymentsIdRoute = SuperAdminPaymentsIdRouteImport.update({
   id: '/$id',
@@ -668,6 +696,87 @@ const AppEstimatesNewRoute = AppEstimatesNewRouteImport.update({
   id: '/new',
   path: '/new',
   getParentRoute: () => AppEstimatesRoute,
+} as any)
+const AppEcommerceWebsitesRoute = AppEcommerceWebsitesRouteImport.update({
+  id: '/websites',
+  path: '/websites',
+  getParentRoute: () => AppEcommerceRoute,
+} as any)
+const AppEcommerceTrackingRoute = AppEcommerceTrackingRouteImport.update({
+  id: '/tracking',
+  path: '/tracking',
+  getParentRoute: () => AppEcommerceRoute,
+} as any)
+const AppEcommerceSyncLogsRoute = AppEcommerceSyncLogsRouteImport.update({
+  id: '/sync-logs',
+  path: '/sync-logs',
+  getParentRoute: () => AppEcommerceRoute,
+} as any)
+const AppEcommerceSettingsRoute = AppEcommerceSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AppEcommerceRoute,
+} as any)
+const AppEcommerceReturnsRoute = AppEcommerceReturnsRouteImport.update({
+  id: '/returns',
+  path: '/returns',
+  getParentRoute: () => AppEcommerceRoute,
+} as any)
+const AppEcommerceReportsRoute = AppEcommerceReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AppEcommerceRoute,
+} as any)
+const AppEcommerceProfitLossRoute = AppEcommerceProfitLossRouteImport.update({
+  id: '/profit-loss',
+  path: '/profit-loss',
+  getParentRoute: () => AppEcommerceRoute,
+} as any)
+const AppEcommerceProductsRoute = AppEcommerceProductsRouteImport.update({
+  id: '/products',
+  path: '/products',
+  getParentRoute: () => AppEcommerceRoute,
+} as any)
+const AppEcommercePaymentsRoute = AppEcommercePaymentsRouteImport.update({
+  id: '/payments',
+  path: '/payments',
+  getParentRoute: () => AppEcommerceRoute,
+} as any)
+const AppEcommerceOrdersRoute = AppEcommerceOrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => AppEcommerceRoute,
+} as any)
+const AppEcommerceOrderSyncRoute = AppEcommerceOrderSyncRouteImport.update({
+  id: '/order-sync',
+  path: '/order-sync',
+  getParentRoute: () => AppEcommerceRoute,
+} as any)
+const AppEcommerceExpensesRoute = AppEcommerceExpensesRouteImport.update({
+  id: '/expenses',
+  path: '/expenses',
+  getParentRoute: () => AppEcommerceRoute,
+} as any)
+const AppEcommerceDeliveryChargeRoute =
+  AppEcommerceDeliveryChargeRouteImport.update({
+    id: '/delivery-charge',
+    path: '/delivery-charge',
+    getParentRoute: () => AppEcommerceRoute,
+  } as any)
+const AppEcommerceCustomersRoute = AppEcommerceCustomersRouteImport.update({
+  id: '/customers',
+  path: '/customers',
+  getParentRoute: () => AppEcommerceRoute,
+} as any)
+const AppEcommerceCourierRoute = AppEcommerceCourierRouteImport.update({
+  id: '/courier',
+  path: '/courier',
+  getParentRoute: () => AppEcommerceRoute,
+} as any)
+const AppEcommerceCodRoute = AppEcommerceCodRouteImport.update({
+  id: '/cod',
+  path: '/cod',
+  getParentRoute: () => AppEcommerceRoute,
 } as any)
 const AppDeliveryChallansNewRoute = AppDeliveryChallansNewRouteImport.update({
   id: '/new',
@@ -836,6 +945,7 @@ export interface FileRoutesByFullPath {
   '/app/debit-notes': typeof AppDebitNotesRouteWithChildren
   '/app/delivery-challans': typeof AppDeliveryChallansRouteWithChildren
   '/app/device-limit': typeof AppDeviceLimitRoute
+  '/app/ecommerce': typeof AppEcommerceRouteWithChildren
   '/app/employees': typeof AppEmployeesRoute
   '/app/estimates': typeof AppEstimatesRouteWithChildren
   '/app/expense-categories': typeof AppExpenseCategoriesRoute
@@ -900,6 +1010,22 @@ export interface FileRoutesByFullPath {
   '/app/credit-notes/new': typeof AppCreditNotesNewRoute
   '/app/debit-notes/new': typeof AppDebitNotesNewRoute
   '/app/delivery-challans/new': typeof AppDeliveryChallansNewRoute
+  '/app/ecommerce/cod': typeof AppEcommerceCodRoute
+  '/app/ecommerce/courier': typeof AppEcommerceCourierRoute
+  '/app/ecommerce/customers': typeof AppEcommerceCustomersRoute
+  '/app/ecommerce/delivery-charge': typeof AppEcommerceDeliveryChargeRoute
+  '/app/ecommerce/expenses': typeof AppEcommerceExpensesRoute
+  '/app/ecommerce/order-sync': typeof AppEcommerceOrderSyncRoute
+  '/app/ecommerce/orders': typeof AppEcommerceOrdersRoute
+  '/app/ecommerce/payments': typeof AppEcommercePaymentsRoute
+  '/app/ecommerce/products': typeof AppEcommerceProductsRoute
+  '/app/ecommerce/profit-loss': typeof AppEcommerceProfitLossRoute
+  '/app/ecommerce/reports': typeof AppEcommerceReportsRoute
+  '/app/ecommerce/returns': typeof AppEcommerceReturnsRoute
+  '/app/ecommerce/settings': typeof AppEcommerceSettingsRoute
+  '/app/ecommerce/sync-logs': typeof AppEcommerceSyncLogsRoute
+  '/app/ecommerce/tracking': typeof AppEcommerceTrackingRoute
+  '/app/ecommerce/websites': typeof AppEcommerceWebsitesRoute
   '/app/estimates/new': typeof AppEstimatesNewRoute
   '/app/expenses/new': typeof AppExpensesNewRoute
   '/app/parties/$id': typeof AppPartiesIdRoute
@@ -929,6 +1055,7 @@ export interface FileRoutesByFullPath {
   '/super-admin/customers/$userId': typeof SuperAdminCustomersUserIdRoute
   '/super-admin/devices/$id': typeof SuperAdminDevicesIdRoute
   '/super-admin/payments/$id': typeof SuperAdminPaymentsIdRoute
+  '/app/ecommerce/': typeof AppEcommerceIndexRoute
   '/app/utilities/': typeof AppUtilitiesIndexRoute
   '/app/cash/cheques/$id': typeof AppCashChequesIdRoute
   '/app/cash/loan-payments/$id': typeof AppCashLoanPaymentsIdRoute
@@ -1031,6 +1158,22 @@ export interface FileRoutesByTo {
   '/app/credit-notes/new': typeof AppCreditNotesNewRoute
   '/app/debit-notes/new': typeof AppDebitNotesNewRoute
   '/app/delivery-challans/new': typeof AppDeliveryChallansNewRoute
+  '/app/ecommerce/cod': typeof AppEcommerceCodRoute
+  '/app/ecommerce/courier': typeof AppEcommerceCourierRoute
+  '/app/ecommerce/customers': typeof AppEcommerceCustomersRoute
+  '/app/ecommerce/delivery-charge': typeof AppEcommerceDeliveryChargeRoute
+  '/app/ecommerce/expenses': typeof AppEcommerceExpensesRoute
+  '/app/ecommerce/order-sync': typeof AppEcommerceOrderSyncRoute
+  '/app/ecommerce/orders': typeof AppEcommerceOrdersRoute
+  '/app/ecommerce/payments': typeof AppEcommercePaymentsRoute
+  '/app/ecommerce/products': typeof AppEcommerceProductsRoute
+  '/app/ecommerce/profit-loss': typeof AppEcommerceProfitLossRoute
+  '/app/ecommerce/reports': typeof AppEcommerceReportsRoute
+  '/app/ecommerce/returns': typeof AppEcommerceReturnsRoute
+  '/app/ecommerce/settings': typeof AppEcommerceSettingsRoute
+  '/app/ecommerce/sync-logs': typeof AppEcommerceSyncLogsRoute
+  '/app/ecommerce/tracking': typeof AppEcommerceTrackingRoute
+  '/app/ecommerce/websites': typeof AppEcommerceWebsitesRoute
   '/app/estimates/new': typeof AppEstimatesNewRoute
   '/app/expenses/new': typeof AppExpensesNewRoute
   '/app/parties/$id': typeof AppPartiesIdRoute
@@ -1060,6 +1203,7 @@ export interface FileRoutesByTo {
   '/super-admin/customers/$userId': typeof SuperAdminCustomersUserIdRoute
   '/super-admin/devices/$id': typeof SuperAdminDevicesIdRoute
   '/super-admin/payments/$id': typeof SuperAdminPaymentsIdRoute
+  '/app/ecommerce': typeof AppEcommerceIndexRoute
   '/app/utilities': typeof AppUtilitiesIndexRoute
   '/app/cash/cheques/$id': typeof AppCashChequesIdRoute
   '/app/cash/loan-payments/$id': typeof AppCashLoanPaymentsIdRoute
@@ -1102,6 +1246,7 @@ export interface FileRoutesById {
   '/app/debit-notes': typeof AppDebitNotesRouteWithChildren
   '/app/delivery-challans': typeof AppDeliveryChallansRouteWithChildren
   '/app/device-limit': typeof AppDeviceLimitRoute
+  '/app/ecommerce': typeof AppEcommerceRouteWithChildren
   '/app/employees': typeof AppEmployeesRoute
   '/app/estimates': typeof AppEstimatesRouteWithChildren
   '/app/expense-categories': typeof AppExpenseCategoriesRoute
@@ -1166,6 +1311,22 @@ export interface FileRoutesById {
   '/app/credit-notes/new': typeof AppCreditNotesNewRoute
   '/app/debit-notes/new': typeof AppDebitNotesNewRoute
   '/app/delivery-challans/new': typeof AppDeliveryChallansNewRoute
+  '/app/ecommerce/cod': typeof AppEcommerceCodRoute
+  '/app/ecommerce/courier': typeof AppEcommerceCourierRoute
+  '/app/ecommerce/customers': typeof AppEcommerceCustomersRoute
+  '/app/ecommerce/delivery-charge': typeof AppEcommerceDeliveryChargeRoute
+  '/app/ecommerce/expenses': typeof AppEcommerceExpensesRoute
+  '/app/ecommerce/order-sync': typeof AppEcommerceOrderSyncRoute
+  '/app/ecommerce/orders': typeof AppEcommerceOrdersRoute
+  '/app/ecommerce/payments': typeof AppEcommercePaymentsRoute
+  '/app/ecommerce/products': typeof AppEcommerceProductsRoute
+  '/app/ecommerce/profit-loss': typeof AppEcommerceProfitLossRoute
+  '/app/ecommerce/reports': typeof AppEcommerceReportsRoute
+  '/app/ecommerce/returns': typeof AppEcommerceReturnsRoute
+  '/app/ecommerce/settings': typeof AppEcommerceSettingsRoute
+  '/app/ecommerce/sync-logs': typeof AppEcommerceSyncLogsRoute
+  '/app/ecommerce/tracking': typeof AppEcommerceTrackingRoute
+  '/app/ecommerce/websites': typeof AppEcommerceWebsitesRoute
   '/app/estimates/new': typeof AppEstimatesNewRoute
   '/app/expenses/new': typeof AppExpensesNewRoute
   '/app/parties/$id': typeof AppPartiesIdRoute
@@ -1195,6 +1356,7 @@ export interface FileRoutesById {
   '/super-admin/customers/$userId': typeof SuperAdminCustomersUserIdRoute
   '/super-admin/devices/$id': typeof SuperAdminDevicesIdRoute
   '/super-admin/payments/$id': typeof SuperAdminPaymentsIdRoute
+  '/app/ecommerce/': typeof AppEcommerceIndexRoute
   '/app/utilities/': typeof AppUtilitiesIndexRoute
   '/app/cash/cheques/$id': typeof AppCashChequesIdRoute
   '/app/cash/loan-payments/$id': typeof AppCashLoanPaymentsIdRoute
@@ -1238,6 +1400,7 @@ export interface FileRouteTypes {
     | '/app/debit-notes'
     | '/app/delivery-challans'
     | '/app/device-limit'
+    | '/app/ecommerce'
     | '/app/employees'
     | '/app/estimates'
     | '/app/expense-categories'
@@ -1302,6 +1465,22 @@ export interface FileRouteTypes {
     | '/app/credit-notes/new'
     | '/app/debit-notes/new'
     | '/app/delivery-challans/new'
+    | '/app/ecommerce/cod'
+    | '/app/ecommerce/courier'
+    | '/app/ecommerce/customers'
+    | '/app/ecommerce/delivery-charge'
+    | '/app/ecommerce/expenses'
+    | '/app/ecommerce/order-sync'
+    | '/app/ecommerce/orders'
+    | '/app/ecommerce/payments'
+    | '/app/ecommerce/products'
+    | '/app/ecommerce/profit-loss'
+    | '/app/ecommerce/reports'
+    | '/app/ecommerce/returns'
+    | '/app/ecommerce/settings'
+    | '/app/ecommerce/sync-logs'
+    | '/app/ecommerce/tracking'
+    | '/app/ecommerce/websites'
     | '/app/estimates/new'
     | '/app/expenses/new'
     | '/app/parties/$id'
@@ -1331,6 +1510,7 @@ export interface FileRouteTypes {
     | '/super-admin/customers/$userId'
     | '/super-admin/devices/$id'
     | '/super-admin/payments/$id'
+    | '/app/ecommerce/'
     | '/app/utilities/'
     | '/app/cash/cheques/$id'
     | '/app/cash/loan-payments/$id'
@@ -1433,6 +1613,22 @@ export interface FileRouteTypes {
     | '/app/credit-notes/new'
     | '/app/debit-notes/new'
     | '/app/delivery-challans/new'
+    | '/app/ecommerce/cod'
+    | '/app/ecommerce/courier'
+    | '/app/ecommerce/customers'
+    | '/app/ecommerce/delivery-charge'
+    | '/app/ecommerce/expenses'
+    | '/app/ecommerce/order-sync'
+    | '/app/ecommerce/orders'
+    | '/app/ecommerce/payments'
+    | '/app/ecommerce/products'
+    | '/app/ecommerce/profit-loss'
+    | '/app/ecommerce/reports'
+    | '/app/ecommerce/returns'
+    | '/app/ecommerce/settings'
+    | '/app/ecommerce/sync-logs'
+    | '/app/ecommerce/tracking'
+    | '/app/ecommerce/websites'
     | '/app/estimates/new'
     | '/app/expenses/new'
     | '/app/parties/$id'
@@ -1462,6 +1658,7 @@ export interface FileRouteTypes {
     | '/super-admin/customers/$userId'
     | '/super-admin/devices/$id'
     | '/super-admin/payments/$id'
+    | '/app/ecommerce'
     | '/app/utilities'
     | '/app/cash/cheques/$id'
     | '/app/cash/loan-payments/$id'
@@ -1503,6 +1700,7 @@ export interface FileRouteTypes {
     | '/app/debit-notes'
     | '/app/delivery-challans'
     | '/app/device-limit'
+    | '/app/ecommerce'
     | '/app/employees'
     | '/app/estimates'
     | '/app/expense-categories'
@@ -1567,6 +1765,22 @@ export interface FileRouteTypes {
     | '/app/credit-notes/new'
     | '/app/debit-notes/new'
     | '/app/delivery-challans/new'
+    | '/app/ecommerce/cod'
+    | '/app/ecommerce/courier'
+    | '/app/ecommerce/customers'
+    | '/app/ecommerce/delivery-charge'
+    | '/app/ecommerce/expenses'
+    | '/app/ecommerce/order-sync'
+    | '/app/ecommerce/orders'
+    | '/app/ecommerce/payments'
+    | '/app/ecommerce/products'
+    | '/app/ecommerce/profit-loss'
+    | '/app/ecommerce/reports'
+    | '/app/ecommerce/returns'
+    | '/app/ecommerce/settings'
+    | '/app/ecommerce/sync-logs'
+    | '/app/ecommerce/tracking'
+    | '/app/ecommerce/websites'
     | '/app/estimates/new'
     | '/app/expenses/new'
     | '/app/parties/$id'
@@ -1596,6 +1810,7 @@ export interface FileRouteTypes {
     | '/super-admin/customers/$userId'
     | '/super-admin/devices/$id'
     | '/super-admin/payments/$id'
+    | '/app/ecommerce/'
     | '/app/utilities/'
     | '/app/cash/cheques/$id'
     | '/app/cash/loan-payments/$id'
@@ -2098,6 +2313,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppEmployeesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/ecommerce': {
+      id: '/app/ecommerce'
+      path: '/ecommerce'
+      fullPath: '/app/ecommerce'
+      preLoaderRoute: typeof AppEcommerceRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/device-limit': {
       id: '/app/device-limit'
       path: '/device-limit'
@@ -2153,6 +2375,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/utilities/'
       preLoaderRoute: typeof AppUtilitiesIndexRouteImport
       parentRoute: typeof AppUtilitiesRoute
+    }
+    '/app/ecommerce/': {
+      id: '/app/ecommerce/'
+      path: '/'
+      fullPath: '/app/ecommerce/'
+      preLoaderRoute: typeof AppEcommerceIndexRouteImport
+      parentRoute: typeof AppEcommerceRoute
     }
     '/super-admin/payments/$id': {
       id: '/super-admin/payments/$id'
@@ -2356,6 +2585,118 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/estimates/new'
       preLoaderRoute: typeof AppEstimatesNewRouteImport
       parentRoute: typeof AppEstimatesRoute
+    }
+    '/app/ecommerce/websites': {
+      id: '/app/ecommerce/websites'
+      path: '/websites'
+      fullPath: '/app/ecommerce/websites'
+      preLoaderRoute: typeof AppEcommerceWebsitesRouteImport
+      parentRoute: typeof AppEcommerceRoute
+    }
+    '/app/ecommerce/tracking': {
+      id: '/app/ecommerce/tracking'
+      path: '/tracking'
+      fullPath: '/app/ecommerce/tracking'
+      preLoaderRoute: typeof AppEcommerceTrackingRouteImport
+      parentRoute: typeof AppEcommerceRoute
+    }
+    '/app/ecommerce/sync-logs': {
+      id: '/app/ecommerce/sync-logs'
+      path: '/sync-logs'
+      fullPath: '/app/ecommerce/sync-logs'
+      preLoaderRoute: typeof AppEcommerceSyncLogsRouteImport
+      parentRoute: typeof AppEcommerceRoute
+    }
+    '/app/ecommerce/settings': {
+      id: '/app/ecommerce/settings'
+      path: '/settings'
+      fullPath: '/app/ecommerce/settings'
+      preLoaderRoute: typeof AppEcommerceSettingsRouteImport
+      parentRoute: typeof AppEcommerceRoute
+    }
+    '/app/ecommerce/returns': {
+      id: '/app/ecommerce/returns'
+      path: '/returns'
+      fullPath: '/app/ecommerce/returns'
+      preLoaderRoute: typeof AppEcommerceReturnsRouteImport
+      parentRoute: typeof AppEcommerceRoute
+    }
+    '/app/ecommerce/reports': {
+      id: '/app/ecommerce/reports'
+      path: '/reports'
+      fullPath: '/app/ecommerce/reports'
+      preLoaderRoute: typeof AppEcommerceReportsRouteImport
+      parentRoute: typeof AppEcommerceRoute
+    }
+    '/app/ecommerce/profit-loss': {
+      id: '/app/ecommerce/profit-loss'
+      path: '/profit-loss'
+      fullPath: '/app/ecommerce/profit-loss'
+      preLoaderRoute: typeof AppEcommerceProfitLossRouteImport
+      parentRoute: typeof AppEcommerceRoute
+    }
+    '/app/ecommerce/products': {
+      id: '/app/ecommerce/products'
+      path: '/products'
+      fullPath: '/app/ecommerce/products'
+      preLoaderRoute: typeof AppEcommerceProductsRouteImport
+      parentRoute: typeof AppEcommerceRoute
+    }
+    '/app/ecommerce/payments': {
+      id: '/app/ecommerce/payments'
+      path: '/payments'
+      fullPath: '/app/ecommerce/payments'
+      preLoaderRoute: typeof AppEcommercePaymentsRouteImport
+      parentRoute: typeof AppEcommerceRoute
+    }
+    '/app/ecommerce/orders': {
+      id: '/app/ecommerce/orders'
+      path: '/orders'
+      fullPath: '/app/ecommerce/orders'
+      preLoaderRoute: typeof AppEcommerceOrdersRouteImport
+      parentRoute: typeof AppEcommerceRoute
+    }
+    '/app/ecommerce/order-sync': {
+      id: '/app/ecommerce/order-sync'
+      path: '/order-sync'
+      fullPath: '/app/ecommerce/order-sync'
+      preLoaderRoute: typeof AppEcommerceOrderSyncRouteImport
+      parentRoute: typeof AppEcommerceRoute
+    }
+    '/app/ecommerce/expenses': {
+      id: '/app/ecommerce/expenses'
+      path: '/expenses'
+      fullPath: '/app/ecommerce/expenses'
+      preLoaderRoute: typeof AppEcommerceExpensesRouteImport
+      parentRoute: typeof AppEcommerceRoute
+    }
+    '/app/ecommerce/delivery-charge': {
+      id: '/app/ecommerce/delivery-charge'
+      path: '/delivery-charge'
+      fullPath: '/app/ecommerce/delivery-charge'
+      preLoaderRoute: typeof AppEcommerceDeliveryChargeRouteImport
+      parentRoute: typeof AppEcommerceRoute
+    }
+    '/app/ecommerce/customers': {
+      id: '/app/ecommerce/customers'
+      path: '/customers'
+      fullPath: '/app/ecommerce/customers'
+      preLoaderRoute: typeof AppEcommerceCustomersRouteImport
+      parentRoute: typeof AppEcommerceRoute
+    }
+    '/app/ecommerce/courier': {
+      id: '/app/ecommerce/courier'
+      path: '/courier'
+      fullPath: '/app/ecommerce/courier'
+      preLoaderRoute: typeof AppEcommerceCourierRouteImport
+      parentRoute: typeof AppEcommerceRoute
+    }
+    '/app/ecommerce/cod': {
+      id: '/app/ecommerce/cod'
+      path: '/cod'
+      fullPath: '/app/ecommerce/cod'
+      preLoaderRoute: typeof AppEcommerceCodRouteImport
+      parentRoute: typeof AppEcommerceRoute
     }
     '/app/delivery-challans/new': {
       id: '/app/delivery-challans/new'
@@ -2619,6 +2960,50 @@ const AppDeliveryChallansRouteChildren: AppDeliveryChallansRouteChildren = {
 const AppDeliveryChallansRouteWithChildren =
   AppDeliveryChallansRoute._addFileChildren(AppDeliveryChallansRouteChildren)
 
+interface AppEcommerceRouteChildren {
+  AppEcommerceCodRoute: typeof AppEcommerceCodRoute
+  AppEcommerceCourierRoute: typeof AppEcommerceCourierRoute
+  AppEcommerceCustomersRoute: typeof AppEcommerceCustomersRoute
+  AppEcommerceDeliveryChargeRoute: typeof AppEcommerceDeliveryChargeRoute
+  AppEcommerceExpensesRoute: typeof AppEcommerceExpensesRoute
+  AppEcommerceOrderSyncRoute: typeof AppEcommerceOrderSyncRoute
+  AppEcommerceOrdersRoute: typeof AppEcommerceOrdersRoute
+  AppEcommercePaymentsRoute: typeof AppEcommercePaymentsRoute
+  AppEcommerceProductsRoute: typeof AppEcommerceProductsRoute
+  AppEcommerceProfitLossRoute: typeof AppEcommerceProfitLossRoute
+  AppEcommerceReportsRoute: typeof AppEcommerceReportsRoute
+  AppEcommerceReturnsRoute: typeof AppEcommerceReturnsRoute
+  AppEcommerceSettingsRoute: typeof AppEcommerceSettingsRoute
+  AppEcommerceSyncLogsRoute: typeof AppEcommerceSyncLogsRoute
+  AppEcommerceTrackingRoute: typeof AppEcommerceTrackingRoute
+  AppEcommerceWebsitesRoute: typeof AppEcommerceWebsitesRoute
+  AppEcommerceIndexRoute: typeof AppEcommerceIndexRoute
+}
+
+const AppEcommerceRouteChildren: AppEcommerceRouteChildren = {
+  AppEcommerceCodRoute: AppEcommerceCodRoute,
+  AppEcommerceCourierRoute: AppEcommerceCourierRoute,
+  AppEcommerceCustomersRoute: AppEcommerceCustomersRoute,
+  AppEcommerceDeliveryChargeRoute: AppEcommerceDeliveryChargeRoute,
+  AppEcommerceExpensesRoute: AppEcommerceExpensesRoute,
+  AppEcommerceOrderSyncRoute: AppEcommerceOrderSyncRoute,
+  AppEcommerceOrdersRoute: AppEcommerceOrdersRoute,
+  AppEcommercePaymentsRoute: AppEcommercePaymentsRoute,
+  AppEcommerceProductsRoute: AppEcommerceProductsRoute,
+  AppEcommerceProfitLossRoute: AppEcommerceProfitLossRoute,
+  AppEcommerceReportsRoute: AppEcommerceReportsRoute,
+  AppEcommerceReturnsRoute: AppEcommerceReturnsRoute,
+  AppEcommerceSettingsRoute: AppEcommerceSettingsRoute,
+  AppEcommerceSyncLogsRoute: AppEcommerceSyncLogsRoute,
+  AppEcommerceTrackingRoute: AppEcommerceTrackingRoute,
+  AppEcommerceWebsitesRoute: AppEcommerceWebsitesRoute,
+  AppEcommerceIndexRoute: AppEcommerceIndexRoute,
+}
+
+const AppEcommerceRouteWithChildren = AppEcommerceRoute._addFileChildren(
+  AppEcommerceRouteChildren,
+)
+
 interface AppEstimatesRouteChildren {
   AppEstimatesNewRoute: typeof AppEstimatesNewRoute
   AppEstimatesIdEditRoute: typeof AppEstimatesIdEditRoute
@@ -2864,6 +3249,7 @@ interface AppRouteChildren {
   AppDebitNotesRoute: typeof AppDebitNotesRouteWithChildren
   AppDeliveryChallansRoute: typeof AppDeliveryChallansRouteWithChildren
   AppDeviceLimitRoute: typeof AppDeviceLimitRoute
+  AppEcommerceRoute: typeof AppEcommerceRouteWithChildren
   AppEmployeesRoute: typeof AppEmployeesRoute
   AppEstimatesRoute: typeof AppEstimatesRouteWithChildren
   AppExpenseCategoriesRoute: typeof AppExpenseCategoriesRoute
@@ -2919,6 +3305,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppDebitNotesRoute: AppDebitNotesRouteWithChildren,
   AppDeliveryChallansRoute: AppDeliveryChallansRouteWithChildren,
   AppDeviceLimitRoute: AppDeviceLimitRoute,
+  AppEcommerceRoute: AppEcommerceRouteWithChildren,
   AppEmployeesRoute: AppEmployeesRoute,
   AppEstimatesRoute: AppEstimatesRouteWithChildren,
   AppExpenseCategoriesRoute: AppExpenseCategoriesRoute,

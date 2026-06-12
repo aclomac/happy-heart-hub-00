@@ -502,6 +502,58 @@ export const permissionCheck = () =>
     return steps;
   });
 
+// ---------- Ecommerce ----------
+export const ecommerceWorkflow = () =>
+  run("wf-eco", "Ecommerce workflow", async () => {
+    const steps: WorkflowStep[] = [];
+    const {
+      getWebsites, setWebsites, getOrders, setOrders, getCouriers, getCodEntries, setCodEntries,
+      genId: ecoId, seedEcommerceIfNeeded,
+    } = await import("@/lib/demo/ecommerce");
+    seedEcommerceIfNeeded();
+    const websites = getWebsites();
+    steps.push(websites.length > 0 ? pass("Websites seeded", `${websites.length}`) : fail("No websites"));
+
+    const wId = websites[0]?.id || "web_qa";
+    if (!websites.find((w) => w.id === wId)) {
+      setWebsites([...websites, { id: wId, name: "[QA] Site", url: "https://qa", platform: "Custom Website", status: "active", createdAt: new Date().toISOString() }]);
+    }
+
+    const id = ecoId("eo");
+    const orderNo = `QA-ECO-${Date.now()}`;
+    setOrders([...getOrders(), {
+      id, websiteId: wId, orderNo,
+      customerName: "[QA] Customer", phone: "01700000000",
+      address: "QA addr", district: "Dhaka",
+      orderDate: new Date().toISOString().slice(0, 10),
+      items: [{ sku: "QA-1", name: "QA Chair", qty: 1, price: 2500 }],
+      subtotal: 2500, discount: 0, deliveryCharge: 70, codAmount: 2570, paidAmount: 0,
+      paymentMethod: "COD", status: "New",
+      courierId: getCouriers()[0]?.id || null, trackingId: null,
+      deliveryStatus: "Pending", returnStatus: null, source: "QA",
+      createdAt: new Date().toISOString(),
+    }]);
+    steps.push(pass("Add ecommerce order", orderNo));
+
+    const o = getOrders().find((x) => x.id === id);
+    if (o) {
+      setOrders(getOrders().map((x) => x.id === id ? { ...x, status: "Delivered" } : x));
+      steps.push(pass("Update status to Delivered"));
+    } else steps.push(fail("Order not persisted"));
+
+    // COD collect
+    const cod = getCodEntries();
+    cod.push({ id: ecoId("cd"), courierId: o?.courierId || "", orderId: id, codAmount: 2570, courierCharge: 70, returnCharge: 0, collectedAmount: 2570, collectionDate: new Date().toISOString().slice(0, 10), status: "Collected", paymentMethod: "Cash" });
+    setCodEntries(cod);
+    steps.push(pass("COD collected"));
+
+    // cleanup
+    setOrders(getOrders().filter((x) => x.id !== id));
+    setCodEntries(getCodEntries().filter((c) => c.orderId !== id));
+    steps.push(pass("Cleanup"));
+    return steps;
+  });
+
 export const ALL_WORKFLOWS = [
   itemsWorkflow,
   partiesWorkflow,
@@ -510,6 +562,7 @@ export const ALL_WORKFLOWS = [
   estimateWorkflow,
   purchaseWorkflow,
   expenseWorkflow,
+  ecommerceWorkflow,
   verifyDataChecks,
   printPdfChecks,
   permissionCheck,
