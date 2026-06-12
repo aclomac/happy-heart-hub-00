@@ -816,7 +816,7 @@ export function SalesDocForm({
         localSalesCount,
         error: null,
       }));
-      toast.success(editingId ? `${finalInvoiceNo} updated` : `Sale invoice saved: ${finalInvoiceNo}`);
+      toast.success(editingId ? `${finalInvoiceNo} updated` : docLabels.savedToast(finalInvoiceNo));
       qc.invalidateQueries({ queryKey: ["sales", companyId] });
 
       // Phase 2 — flush pending attachments uploaded before the invoice existed.
