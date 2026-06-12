@@ -42,6 +42,7 @@ const M = {
   reports: "Reports",
   payroll: "Payroll",
   grow: "Grow Your Business",
+  ecommerce: "Ecommerce",
   utilities: "Utilities",
   settings: "Settings",
   support: "Support",
