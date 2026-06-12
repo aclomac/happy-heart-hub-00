@@ -98,6 +98,18 @@ export async function printInvoicePDF(data: InvoiceData) {
   openOrDownloadBlob(blob, filename);
 }
 
+export async function previewInvoicePDF(data: InvoiceData) {
+  const { isDesktop, openOrDownloadBlob } = await import("./open-blob");
+  const doc = await generateInvoicePDF(data);
+  const filename = `${data.number || "invoice"}.pdf`;
+  if (isDesktop()) {
+    doc.save(filename);
+    return;
+  }
+  const blob = doc.output("blob");
+  openOrDownloadBlob(blob, filename);
+}
+
 export async function shareInvoicePDF(data: InvoiceData) {
   const { isDesktop, downloadBlob, openOrDownloadBlob } = await import("./open-blob");
   const doc = await generateInvoicePDF(data);
