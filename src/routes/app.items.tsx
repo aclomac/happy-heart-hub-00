@@ -572,9 +572,9 @@ function Items() {
                           <Link to="/app/items/$id" params={{ id: i.id }}>
                             <DropdownMenuItem>View Details</DropdownMenuItem>
                           </Link>
-                          <Link to="/app/items/$id/edit" params={{ id: i.id }}>
-                            <DropdownMenuItem>Edit Item</DropdownMenuItem>
-                          </Link>
+                          <DropdownMenuItem onSelect={() => setEditingId(i.id)}>
+                            Edit Item
+                          </DropdownMenuItem>
                           <Link to="/app/stock-adjustments">
                             <DropdownMenuItem>Adjust Stock</DropdownMenuItem>
                           </Link>
