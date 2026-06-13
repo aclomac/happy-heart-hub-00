@@ -112,24 +112,24 @@ function OrderSyncPage() {
   const testWoo = async () => {
     if (!websiteId) { toast.error("Select a WooCommerce website first"); return; }
     const settings = getSettings();
-    const cfg = wooConfigForWebsiteId(websiteId);
     setBusy(true);
-    const r = await woocommerceService.testConnection(cfg, settings.integrationMode);
+    const r = await testWooCommerceConnection({ websiteId, mode: settings.integrationMode });
     setBusy(false);
-    r.status === "success" ? toast.success(r.message) : toast.error(r.message);
+    r.success ? toast.success(r.message) : toast.error(r.message);
   };
 
   const syncWoo = async () => {
     if (!websiteId) { toast.error("Select a website first"); return; }
     const settings = getSettings();
-    const cfg = wooConfigForWebsiteId(websiteId);
     setBusy(true);
-    const r = await woocommerceService.syncOrders(cfg, websiteId, settings.integrationMode, {
-      from: from || undefined, to: to || undefined, status: wooStatus,
-    });
+    const r = await syncWooCommerceOrders(
+      { websiteId, mode: settings.integrationMode },
+      { from: from || undefined, to: to || undefined, status: wooStatus },
+    );
     setBusy(false);
-    setSummary({ added: r.newOrders, skipped: r.skipped, failed: r.failed });
-    r.status === "success" ? toast.success(r.message) : toast.error(r.message);
+    const counts = r.data || { newOrders: 0, skipped: 0, failed: 0 };
+    setSummary({ added: counts.newOrders, skipped: counts.skipped, failed: counts.failed });
+    r.success ? toast.success(r.message) : toast.error(r.message);
   };
 
   return (
