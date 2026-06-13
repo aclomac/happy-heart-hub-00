@@ -235,6 +235,7 @@ function OrdersPage() {
         actions={
           <>
             <Link to="/app/ecommerce"><Button variant="outline" size="sm">Back</Button></Link>
+            <Button size="sm" variant="outline" onClick={refreshItemImages}><ImageIcon className="w-4 h-4 mr-1" /> Refresh Order Item Images</Button>
             <Button size="sm" variant="outline" onClick={() => setCreateOpen(true)}><Plus className="w-4 h-4 mr-1" /> New Order</Button>
             <Link to="/app/ecommerce/order-sync"><Button size="sm">Sync / Import Orders</Button></Link>
           </>
