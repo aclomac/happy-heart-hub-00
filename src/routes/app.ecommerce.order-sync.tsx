@@ -14,7 +14,8 @@ import {
   getWebsites, getOrders, setOrders, getSyncLogs, setSyncLogs, getSettings, genId,
   type EcoOrderStatus,
 } from "@/lib/demo/ecommerce";
-import { wooConfigForWebsiteId, woocommerceService } from "@/lib/integrations/woocommerce";
+import { wooConfigForWebsiteId } from "@/lib/integrations/woocommerce";
+import { testWooCommerceConnection, syncWooCommerceOrders } from "@/lib/integrations/integrationClient";
 import { Upload, Sparkles, Plug, RefreshCw } from "lucide-react";
 
 export const Route = createFileRoute("/app/ecommerce/order-sync")({ component: OrderSyncPage });
