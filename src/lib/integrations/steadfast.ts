@@ -190,11 +190,19 @@ export const steadfastService = {
         } as EcoCourier;
         couriers.push(sfCourier); setCouriers(couriers);
       }
+      const trackingUrl = trackingCode ? `https://steadfast.com.bd/t/${encodeURIComponent(trackingCode)}` : null;
       const orders = getOrders();
+      const nowIso = new Date().toISOString();
       const next = orders.map((o) => o.id === order.id ? {
         ...o,
         courierId: sfCourier!.id,
+        courierName: sfCourier!.name,
+        courierProvider: "Steadfast",
+        consignmentId,
         trackingId: trackingCode || consignmentId,
+        trackingCode: trackingCode || consignmentId,
+        trackingUrl,
+        courierLastSyncedAt: nowIso,
         deliveryStatus,
         notes: `${o.notes ?? ""}\nSteadfast cid=${consignmentId} tracking=${trackingCode} (${source})`.trim(),
       } : o);
@@ -207,13 +215,13 @@ export const steadfastService = {
           dispatchDate: new Date().toISOString().slice(0, 10), deliveredDate: null, returnDate: null,
           deliveryCharge: sfCourier!.defaultDeliveryCharge, returnCharge: sfCourier!.returnCharge,
           codAmount: order.codAmount, codCollected: 0, courierPaid: 0,
-          notes: `Steadfast ${source}`,
+          notes: `Steadfast ${source} url=${trackingUrl ?? ""}`,
         });
         setDeliveries(deliveries);
       }
       const logs = getSyncLogs();
       logs.unshift({
-        id: genId("sl"), time: new Date().toISOString(), websiteId: order.websiteId,
+        id: genId("sl"), time: nowIso, websiteId: order.websiteId,
         action: `Steadfast create_consignment (${source})`, status: "success",
         newOrders: 0, updatedOrders: 1, failed: 0,
       });

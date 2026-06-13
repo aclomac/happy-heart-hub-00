@@ -114,7 +114,9 @@ export interface EcoOrder {
   orderNo: string;
   customerName: string;
   phone: string;
+  email?: string;
   address: string;
+  shippingAddress?: string;
   district: string;
   orderDate: string;
   items: EcoOrderItem[];
@@ -126,9 +128,17 @@ export interface EcoOrder {
   paymentMethod: string;
   status: EcoOrderStatus;
   courierId?: string | null;
+  courierName?: string | null;
+  courierProvider?: string | null;
+  consignmentId?: string | null;
   trackingId?: string | null;
+  trackingCode?: string | null;
+  trackingUrl?: string | null;
+  courierLastSyncedAt?: string | null;
   deliveryStatus?: EcoDeliveryStatus | null;
   returnStatus?: string | null;
+  returnDate?: string | null;
+  returnCharge?: number | null;
   source?: string;
   convertedSaleId?: string | null;
   notes?: string;
