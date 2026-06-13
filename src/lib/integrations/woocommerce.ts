@@ -449,4 +449,42 @@ export const woocommerceService = {
       return wrap({ status: "failed", errorKind: cls.kind, message: cls.message });
     }
   },
+
+  async previewOrders(
+    c: WooConfig,
+    mode: IntegrationMode,
+    limit = 5,
+  ): Promise<{ ok: boolean; status: number; message: string; items: Array<Record<string, unknown>>; url: string; errorKind: DiagnosticResult["errorKind"] }> {
+    const invalid = validateWoo(c);
+    if (invalid) return { ok: false, status: 0, message: invalid, items: [], url: wooBaseEndpoint(c) + "/orders", errorKind: "validation" };
+    if (mode === "local-demo") return { ok: false, status: 0, message: "Local Demo Mode — switch Integration Mode to fetch live preview.", items: [], url: wooBaseEndpoint(c) + "/orders", errorKind: "mode_disabled" };
+    try {
+      const { ok, status, data, finalUrl, errorText } = await callWoo(c, mode, "/orders", { per_page: String(limit), orderby: "date", order: "desc" });
+      if (ok) return { ok: true, status, message: `Fetched ${(data as unknown[])?.length ?? 0} order(s).`, items: (data as Array<Record<string, unknown>>) || [], url: finalUrl, errorKind: "none" };
+      const kind: DiagnosticResult["errorKind"] = status === 401 || status === 403 ? "auth" : status === 404 ? "not_found" : status >= 500 ? "server" : "unknown";
+      return { ok: false, status, message: `HTTP ${status} ${errorText || ""}`.trim(), items: [], url: finalUrl, errorKind: kind };
+    } catch (e) {
+      const cls = classifyFetchError(e);
+      return { ok: false, status: 0, message: cls.message, items: [], url: wooBaseEndpoint(c) + "/orders", errorKind: cls.kind };
+    }
+  },
+
+  async previewProducts(
+    c: WooConfig,
+    mode: IntegrationMode,
+    limit = 5,
+  ): Promise<{ ok: boolean; status: number; message: string; items: Array<Record<string, unknown>>; url: string; errorKind: DiagnosticResult["errorKind"] }> {
+    const invalid = validateWoo(c);
+    if (invalid) return { ok: false, status: 0, message: invalid, items: [], url: wooBaseEndpoint(c) + "/products", errorKind: "validation" };
+    if (mode === "local-demo") return { ok: false, status: 0, message: "Local Demo Mode — switch Integration Mode to fetch live preview.", items: [], url: wooBaseEndpoint(c) + "/products", errorKind: "mode_disabled" };
+    try {
+      const { ok, status, data, finalUrl, errorText } = await callWoo(c, mode, "/products", { per_page: String(limit) });
+      if (ok) return { ok: true, status, message: `Fetched ${(data as unknown[])?.length ?? 0} product(s).`, items: (data as Array<Record<string, unknown>>) || [], url: finalUrl, errorKind: "none" };
+      const kind: DiagnosticResult["errorKind"] = status === 401 || status === 403 ? "auth" : status === 404 ? "not_found" : status >= 500 ? "server" : "unknown";
+      return { ok: false, status, message: `HTTP ${status} ${errorText || ""}`.trim(), items: [], url: finalUrl, errorKind: kind };
+    } catch (e) {
+      const cls = classifyFetchError(e);
+      return { ok: false, status: 0, message: cls.message, items: [], url: wooBaseEndpoint(c) + "/products", errorKind: cls.kind };
+    }
+  },
 };
