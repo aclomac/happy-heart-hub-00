@@ -483,7 +483,16 @@ function Items() {
                       {low && <AlertTriangle className="inline w-3 h-3 mr-1" />}
                       {i.is_service ? "—" : `${Number(i.stock)} ${i.unit}`}
                     </td>
+                    <td className="text-center">
+                      <Link to="/app/items/$id" params={{ id: i.id }}>
+                        <Button variant="outline" size="sm" className="h-7 gap-1">
+                          <Eye className="w-3.5 h-3.5" />
+                          View
+                        </Button>
+                      </Link>
+                    </td>
                     <td>
+
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon" className="h-7 w-7">
