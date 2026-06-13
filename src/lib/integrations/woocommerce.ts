@@ -14,6 +14,7 @@ import {
   type DiagnosticResult,
   type IntegrationMode,
 } from "./diagnostics";
+import { httpRequest, TransportError } from "./transport";
 import { genId, getOrders, setOrders, getSyncLogs, setSyncLogs, getWebsites, type EcoOrder, type EcoWebsite } from "@/lib/demo/ecommerce";
 
 export interface WooConfig {

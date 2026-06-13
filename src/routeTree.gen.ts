@@ -137,6 +137,7 @@ import { Route as AppAdminSecurityTestsRouteImport } from './routes/app.admin.se
 import { Route as AppAdminPaymentsRouteImport } from './routes/app.admin.payments'
 import { Route as AppAdminPaymentSettingsRouteImport } from './routes/app.admin.payment-settings'
 import { Route as AppAdminAccessMatrixRouteImport } from './routes/app.admin.access-matrix'
+import { Route as ApiIntegrationsProxyRouteImport } from './routes/api.integrations.proxy'
 import { Route as AppSubscriptionReceiptIdRouteImport } from './routes/app.subscription.receipt.$id'
 import { Route as AppStockTransfersIdEditRouteImport } from './routes/app.stock-transfers.$id.edit'
 import { Route as AppStockAdjustmentsIdEditRouteImport } from './routes/app.stock-adjustments.$id.edit'
@@ -813,6 +814,11 @@ const AppAdminAccessMatrixRoute = AppAdminAccessMatrixRouteImport.update({
   path: '/admin/access-matrix',
   getParentRoute: () => AppRoute,
 } as any)
+const ApiIntegrationsProxyRoute = ApiIntegrationsProxyRouteImport.update({
+  id: '/api/integrations/proxy',
+  path: '/api/integrations/proxy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppSubscriptionReceiptIdRoute =
   AppSubscriptionReceiptIdRouteImport.update({
     id: '/receipt/$id',
@@ -1003,6 +1009,7 @@ export interface FileRoutesByFullPath {
   '/super-admin/support': typeof SuperAdminSupportRoute
   '/app/': typeof AppIndexRoute
   '/super-admin/': typeof SuperAdminIndexRoute
+  '/api/integrations/proxy': typeof ApiIntegrationsProxyRoute
   '/app/admin/access-matrix': typeof AppAdminAccessMatrixRoute
   '/app/admin/payment-settings': typeof AppAdminPaymentSettingsRoute
   '/app/admin/payments': typeof AppAdminPaymentsRoute
@@ -1151,6 +1158,7 @@ export interface FileRoutesByTo {
   '/super-admin/support': typeof SuperAdminSupportRoute
   '/app': typeof AppIndexRoute
   '/super-admin': typeof SuperAdminIndexRoute
+  '/api/integrations/proxy': typeof ApiIntegrationsProxyRoute
   '/app/admin/access-matrix': typeof AppAdminAccessMatrixRoute
   '/app/admin/payment-settings': typeof AppAdminPaymentSettingsRoute
   '/app/admin/payments': typeof AppAdminPaymentsRoute
@@ -1304,6 +1312,7 @@ export interface FileRoutesById {
   '/super-admin/support': typeof SuperAdminSupportRoute
   '/app/': typeof AppIndexRoute
   '/super-admin/': typeof SuperAdminIndexRoute
+  '/api/integrations/proxy': typeof ApiIntegrationsProxyRoute
   '/app/admin/access-matrix': typeof AppAdminAccessMatrixRoute
   '/app/admin/payment-settings': typeof AppAdminPaymentSettingsRoute
   '/app/admin/payments': typeof AppAdminPaymentsRoute
@@ -1458,6 +1467,7 @@ export interface FileRouteTypes {
     | '/super-admin/support'
     | '/app/'
     | '/super-admin/'
+    | '/api/integrations/proxy'
     | '/app/admin/access-matrix'
     | '/app/admin/payment-settings'
     | '/app/admin/payments'
@@ -1606,6 +1616,7 @@ export interface FileRouteTypes {
     | '/super-admin/support'
     | '/app'
     | '/super-admin'
+    | '/api/integrations/proxy'
     | '/app/admin/access-matrix'
     | '/app/admin/payment-settings'
     | '/app/admin/payments'
@@ -1758,6 +1769,7 @@ export interface FileRouteTypes {
     | '/super-admin/support'
     | '/app/'
     | '/super-admin/'
+    | '/api/integrations/proxy'
     | '/app/admin/access-matrix'
     | '/app/admin/payment-settings'
     | '/app/admin/payments'
@@ -1847,6 +1859,7 @@ export interface RootRouteChildren {
   SignupRoute: typeof SignupRoute
   SuperAdminRoute: typeof SuperAdminRouteWithChildren
   StoreSlugRoute: typeof StoreSlugRoute
+  ApiIntegrationsProxyRoute: typeof ApiIntegrationsProxyRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -2747,6 +2760,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminAccessMatrixRouteImport
       parentRoute: typeof AppRoute
     }
+    '/api/integrations/proxy': {
+      id: '/api/integrations/proxy'
+      path: '/api/integrations/proxy'
+      fullPath: '/api/integrations/proxy'
+      preLoaderRoute: typeof ApiIntegrationsProxyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app/subscription/receipt/$id': {
       id: '/app/subscription/receipt/$id'
       path: '/receipt/$id'
@@ -3463,6 +3483,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignupRoute: SignupRoute,
   SuperAdminRoute: SuperAdminRouteWithChildren,
   StoreSlugRoute: StoreSlugRoute,
+  ApiIntegrationsProxyRoute: ApiIntegrationsProxyRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
