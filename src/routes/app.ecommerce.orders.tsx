@@ -455,6 +455,127 @@ function OrdersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Order Details */}
+      <Dialog open={!!viewing} onOpenChange={(o) => !o && setViewing(null)}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Order {viewing?.orderNo}</DialogTitle>
+            <DialogDescription>Full order, customer, payment and courier information.</DialogDescription>
+          </DialogHeader>
+          {viewing && (() => {
+            const w = websites.find((x) => x.id === viewing.websiteId);
+            const cr = couriers.find((c) => c.id === viewing.courierId);
+            const courierLabel = viewing.courierName || cr?.name || viewing.courierProvider || "—";
+            const trackCode = viewing.trackingCode || viewing.trackingId;
+            const total = viewing.subtotal - viewing.discount + viewing.deliveryCharge;
+            const due = Math.max(0, total - viewing.paidAmount);
+            return (
+              <div className="space-y-4 text-sm">
+                {/* Header */}
+                <section className="grid grid-cols-2 md:grid-cols-3 gap-3 p-3 rounded-md bg-muted/40">
+                  <div><div className="text-xs text-muted-foreground">Order No</div><div className="font-mono">{viewing.orderNo}</div></div>
+                  <div><div className="text-xs text-muted-foreground">Website / Source</div><div>{w?.name || "—"} {viewing.source ? `· ${viewing.source}` : ""}</div></div>
+                  <div><div className="text-xs text-muted-foreground">Woo Order Ref</div><div className="text-xs">{viewing.notes || "—"}</div></div>
+                  <div><div className="text-xs text-muted-foreground">Status</div><StatusBadge status={viewing.status} /></div>
+                  <div><div className="text-xs text-muted-foreground">Delivery Status</div><div>{viewing.deliveryStatus || "—"}</div></div>
+                  <div><div className="text-xs text-muted-foreground">Order Date</div><div>{viewing.orderDate}</div></div>
+                </section>
+
+                {/* Customer */}
+                <section>
+                  <div className="font-semibold mb-2">Customer</div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div><div className="text-xs text-muted-foreground">Name</div><div>{viewing.customerName}</div></div>
+                    <div><div className="text-xs text-muted-foreground">Phone</div><div>{viewing.phone}</div></div>
+                    <div><div className="text-xs text-muted-foreground">Email</div><div>{viewing.email || "—"}</div></div>
+                    <div><div className="text-xs text-muted-foreground">District / Area</div><div>{viewing.district}</div></div>
+                    <div className="col-span-2"><div className="text-xs text-muted-foreground">Billing Address</div><div>{viewing.address || "—"}</div></div>
+                    <div className="col-span-2"><div className="text-xs text-muted-foreground">Shipping Address</div><div>{viewing.shippingAddress || viewing.address || "—"}</div></div>
+                  </div>
+                </section>
+
+                {/* Items */}
+                <section>
+                  <div className="font-semibold mb-2">Items</div>
+                  <div className="overflow-x-auto border rounded-md">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="text-left text-xs uppercase text-muted-foreground border-b">
+                          <th className="py-2 px-2 w-14">Image</th><th>Product</th><th>SKU</th><th>Qty</th><th>Unit</th><th>Discount</th><th>Total</th><th>ERP</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {viewing.items.map((it, idx) => (
+                          <tr key={idx} className="border-b last:border-0">
+                            <td className="py-2 px-2"><ItemImageThumb src={it.thumbnailUrl || it.imageUrl || null} alt={it.name} className="w-10 h-10 rounded border" /></td>
+                            <td>{it.name}</td>
+                            <td className="font-mono text-xs">{it.sku || "—"}</td>
+                            <td>{it.qty}</td>
+                            <td>৳{it.price.toLocaleString()}</td>
+                            <td>৳{(it.discount ?? 0).toLocaleString()}</td>
+                            <td>৳{(it.total ?? it.qty * it.price).toLocaleString()}</td>
+                            <td className="text-xs">{it.erpItemId || it.mappedErpItemId ? <span className="text-emerald-600">Mapped</span> : <span className="text-rose-600">Unmapped</span>}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+
+                {/* Payment */}
+                <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div><div className="text-xs text-muted-foreground">Subtotal</div><div>৳{viewing.subtotal.toLocaleString()}</div></div>
+                  <div><div className="text-xs text-muted-foreground">Discount</div><div>৳{viewing.discount.toLocaleString()}</div></div>
+                  <div><div className="text-xs text-muted-foreground">Delivery</div><div>৳{viewing.deliveryCharge.toLocaleString()}</div></div>
+                  <div><div className="text-xs text-muted-foreground">COD</div><div>৳{viewing.codAmount.toLocaleString()}</div></div>
+                  <div><div className="text-xs text-muted-foreground">Paid</div><div>৳{viewing.paidAmount.toLocaleString()}</div></div>
+                  <div><div className="text-xs text-muted-foreground">Due</div><div>৳{due.toLocaleString()}</div></div>
+                  <div><div className="text-xs text-muted-foreground">Method</div><div>{viewing.paymentMethod}</div></div>
+                  <div><div className="text-xs text-muted-foreground">Total</div><div className="font-semibold">৳{total.toLocaleString()}</div></div>
+                </section>
+
+                {/* Courier */}
+                <section>
+                  <div className="font-semibold mb-2">Courier</div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    <div><div className="text-xs text-muted-foreground">Provider</div><div>{courierLabel}</div></div>
+                    <div><div className="text-xs text-muted-foreground">Consignment ID</div><div className="font-mono text-xs">{viewing.consignmentId || "—"}</div></div>
+                    <div><div className="text-xs text-muted-foreground">Tracking Code</div><div className="font-mono text-xs">{trackCode || "—"}</div></div>
+                    <div className="col-span-2 md:col-span-3">
+                      <div className="text-xs text-muted-foreground">Tracking URL</div>
+                      {viewing.trackingUrl ? (
+                        <a href={viewing.trackingUrl} target="_blank" rel="noreferrer" className="text-blue-600 underline inline-flex items-center gap-1">
+                          {viewing.trackingUrl}<ExternalLink className="w-3 h-3" />
+                        </a>
+                      ) : <span>—</span>}
+                    </div>
+                    <div><div className="text-xs text-muted-foreground">Last Synced</div><div className="text-xs">{viewing.courierLastSyncedAt ? new Date(viewing.courierLastSyncedAt).toLocaleString() : "—"}</div></div>
+                    <div><div className="text-xs text-muted-foreground">Return Date</div><div className="text-xs">{viewing.returnDate || "—"}</div></div>
+                    <div><div className="text-xs text-muted-foreground">Return Charge</div><div className="text-xs">৳{(viewing.returnCharge ?? 0).toLocaleString()}</div></div>
+                  </div>
+                </section>
+
+                {/* Actions */}
+                <section className="flex flex-wrap gap-2 pt-2 border-t">
+                  <Button size="sm" variant="outline" onClick={() => { setViewing(null); setEditing(viewing); }}><Pencil className="w-3 h-3 mr-1" /> Edit Order</Button>
+                  <Button size="sm" variant="outline" onClick={() => sendSteadfast(viewing)}><Send className="w-3 h-3 mr-1" /> Send to Courier</Button>
+                  <Button size="sm" variant="outline" onClick={() => trackSteadfast(viewing)}><Navigation className="w-3 h-3 mr-1" /> Track Parcel</Button>
+                  <Button size="sm" variant="outline" onClick={() => updateStatus(viewing.id, "Delivered")}>Mark Delivered</Button>
+                  <Button size="sm" variant="outline" onClick={() => updateStatus(viewing.id, "Returned")}>Mark Returned</Button>
+                  <Button size="sm" variant="outline" onClick={() => convertToSale(viewing)}><FileText className="w-3 h-3 mr-1" /> Convert to Sale Invoice</Button>
+                  <Button size="sm" variant="outline" onClick={() => window.print()}><Printer className="w-3 h-3 mr-1" /> Print Invoice</Button>
+                  <Button size="sm" variant="outline" onClick={() => window.print()}><Printer className="w-3 h-3 mr-1" /> Print Packing Slip</Button>
+                  <Button size="sm" variant="outline" onClick={() => window.print()}><Printer className="w-3 h-3 mr-1" /> Print Courier Label</Button>
+                </section>
+              </div>
+            );
+          })()}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewing(null)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
