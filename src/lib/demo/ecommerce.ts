@@ -267,6 +267,12 @@ export interface EcoSyncLog {
   user?: string;
 }
 
+export type IntegrationModeKey =
+  | "local-demo"
+  | "direct-browser"
+  | "backend-proxy"
+  | "electron-proxy";
+
 export interface EcoSettings {
   autoCreateInvoiceOnDelivered: boolean;
   reduceStockOn: "Confirmed" | "Shipped" | "Delivered";
@@ -279,6 +285,7 @@ export interface EcoSettings {
   returnStockRule: "Add back to stock" | "Damaged stock";
   invoicePrefix: string;
   orderPrefix: string;
+  integrationMode: IntegrationModeKey;
 }
 
 // ---------- Repo getters/setters ----------
@@ -317,6 +324,7 @@ const DEFAULT_SETTINGS: EcoSettings = {
   returnStockRule: "Add back to stock",
   invoicePrefix: "WEB-",
   orderPrefix: "ECO-",
+  integrationMode: "local-demo",
 };
 export const getSettings = (): EcoSettings => ({ ...DEFAULT_SETTINGS, ...read<Partial<EcoSettings>>(K.settings, {}) });
 export const setSettings = (v: EcoSettings) => write(K.settings, v);

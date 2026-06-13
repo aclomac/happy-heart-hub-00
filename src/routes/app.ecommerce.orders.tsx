@@ -14,11 +14,12 @@ import {
 import { StatusBadge } from "@/components/erp/ecommerce/EcommerceUI";
 import {
   getOrders, setOrders, getWebsites, getCouriers, getSettings,
-  type EcoOrder, type EcoOrderStatus,
+  type EcoOrder, type EcoOrderStatus, type EcoDeliveryStatus,
 } from "@/lib/demo/ecommerce";
 import { getSales, setSales } from "@/lib/demo/sales";
 import { genId } from "@/lib/demo/inventory";
-import { MoreVertical, Truck, FileText, Copy, Trash2, Plus } from "lucide-react";
+import { getSteadfastConfig, steadfastService } from "@/lib/integrations/steadfast";
+import { MoreVertical, Truck, FileText, Copy, Trash2, Plus, Send, Navigation } from "lucide-react";
 
 export const Route = createFileRoute("/app/ecommerce/orders")({ component: OrdersPage });
 
@@ -139,6 +140,25 @@ function OrdersPage() {
     toast.success(`Converted → ${invoiceNo}`);
   };
 
+  const sendSteadfast = async (o: EcoOrder) => {
+    const settings = getSettings();
+    const r = await steadfastService.createConsignment(getSteadfastConfig(), settings.integrationMode, o);
+    setList(getOrders());
+    r.status === "success" || r.status === "skipped" ? toast.success(r.message) : toast.error(r.message);
+  };
+
+  const trackSteadfast = async (o: EcoOrder) => {
+    if (!o.trackingId) { toast.error("No tracking code on this order"); return; }
+    const settings = getSettings();
+    const r = await steadfastService.trackParcel(getSteadfastConfig(), settings.integrationMode, o.trackingId);
+    if (r.deliveryStatus) {
+      const next = list.map((x) => x.id === o.id ? { ...x, deliveryStatus: r.deliveryStatus as EcoDeliveryStatus } : x);
+      setList(next); setOrders(next);
+    }
+    r.status === "success" || r.status === "skipped" ? toast.success(r.message) : toast.error(r.message);
+  };
+
+
   return (
     <div>
       <PageHeader
@@ -211,6 +231,9 @@ function OrdersPage() {
                           <DropdownMenuItem onClick={() => updateStatus(o.id, "Delivered")}>Mark Delivered</DropdownMenuItem>
                           <DropdownMenuItem onClick={() => updateStatus(o.id, "Returned")}>Mark Returned</DropdownMenuItem>
                           <DropdownMenuItem onClick={() => updateStatus(o.id, "Cancelled")}>Cancel Order</DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => sendSteadfast(o)}><Send className="w-3 h-3 mr-1" /> Send to Steadfast</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => trackSteadfast(o)}><Navigation className="w-3 h-3 mr-1" /> Track Steadfast Parcel</DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => convertToSale(o)}><FileText className="w-3 h-3 mr-1" /> Convert to Sale Invoice</DropdownMenuItem>
                           <DropdownMenuItem onClick={() => duplicate(o)}><Copy className="w-3 h-3 mr-1" /> Duplicate</DropdownMenuItem>

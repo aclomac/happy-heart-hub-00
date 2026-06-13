@@ -9,7 +9,9 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DisabledLiveButton, StatusBadge } from "@/components/erp/ecommerce/EcommerceUI";
-import { getCouriers, setCouriers, genId, type EcoCourier, type CourierType } from "@/lib/demo/ecommerce";
+import { DiagnosticsPanel } from "@/components/erp/ecommerce/DiagnosticsPanel";
+import { getCouriers, setCouriers, getSettings, genId, type EcoCourier, type CourierType } from "@/lib/demo/ecommerce";
+import { getSteadfastConfig, steadfastService } from "@/lib/integrations/steadfast";
 import { Pencil, Trash2, Plus, Plug } from "lucide-react";
 
 export const Route = createFileRoute("/app/ecommerce/courier")({ component: CourierPage });
@@ -62,6 +64,7 @@ function CourierPage() {
           </>
         }
       />
+      <DiagnosticsPanel providers={["steadfast", "steadfast_consignment", "steadfast_track"]} title="Steadfast Diagnostics" />
       <Card>
         <CardContent className="pt-4 overflow-x-auto">
           <table className="w-full text-sm">
@@ -77,7 +80,14 @@ function CourierPage() {
                   <td><StatusBadge status={c.status} /></td>
                   <td className="text-right">
                     <div className="flex items-center justify-end gap-1">
-                      <DisabledLiveButton reason="Live courier API requires credentials."><Plug className="w-3 h-3 mr-1" /> Test API</DisabledLiveButton>
+                      {c.type === "Steadfast" ? (
+                        <Button variant="outline" size="sm" onClick={async () => {
+                          const r = await steadfastService.testConnection(getSteadfastConfig(), getSettings().integrationMode);
+                          r.status === "success" ? toast.success(r.message) : toast.error(r.message);
+                        }}><Plug className="w-3 h-3 mr-1" /> Test API</Button>
+                      ) : (
+                        <DisabledLiveButton reason="Live courier API requires credentials for this provider."><Plug className="w-3 h-3 mr-1" /> Test API</DisabledLiveButton>
+                      )}
                       <Button variant="ghost" size="sm" onClick={() => { setEditing(c); setForm(c); setOpen(true); }}><Pencil className="w-3 h-3" /></Button>
                       <Button variant="ghost" size="sm" onClick={() => del(c.id)}><Trash2 className="w-3 h-3 text-rose-600" /></Button>
                     </div>
