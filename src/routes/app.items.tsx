@@ -746,6 +746,12 @@ function Items() {
               <Input type="number" value={form.low_stock_alert} onChange={(e) => setForm({ ...form, low_stock_alert: e.target.value })} />
             </div>
             <div className="col-span-2">
+              <ItemImagePicker
+                value={form.image_url}
+                onChange={(v) => setForm({ ...form, image_url: v })}
+              />
+            </div>
+            <div className="col-span-2">
               <Label>Description</Label>
               <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
             </div>
