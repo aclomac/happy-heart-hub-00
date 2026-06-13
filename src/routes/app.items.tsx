@@ -121,6 +121,7 @@ function Items() {
     stock: "",
     low_stock_alert: "",
     description: "",
+    image_url: "",
   });
   const resetForm = () =>
     setForm({
@@ -133,6 +134,7 @@ function Items() {
       stock: "",
       low_stock_alert: "",
       description: "",
+      image_url: "",
     });
   const handleCreateItem = async () => {
     if (!form.name.trim()) {
