@@ -321,8 +321,20 @@ export function endDemoSession(): void {
 
 /** Returns the seeded demo company list. Auto-seeds Chair King on first call. */
 export function getDemoCompanies(): DemoCompany[] {
-  ensureDemoSeed();
   return safeRead<DemoCompany[]>(DEMO_COMPANIES_KEY) ?? [];
+}
+
+export function getVisibleDemoCompanies(userId = getActiveLocalUserId()): DemoCompany[] {
+  if (isExplicitDemoMode()) {
+    ensureDemoSeed();
+  }
+  const list = getDemoCompanies();
+  if (isExplicitDemoMode()) return list.filter((c) => c.isDemoCompany === true || c.owner_id === DEMO_USER_ID);
+  if (!userId) return [];
+  return list.filter((c) => {
+    const owner = c.ownerUserId ?? c.owner_id;
+    return owner === userId || (c.sharedWithUserIds ?? []).includes(userId);
+  });
 }
 
 export function setDemoCompanies(list: DemoCompany[]): void {
@@ -346,6 +358,9 @@ export function addDemoCompany(
         : `demo-${Date.now()}-${Math.floor(Math.random() * 1e6)}`),
     name: input.name,
     owner_id: input.owner_id ?? DEMO_USER_ID,
+    ownerUserId: input.ownerUserId ?? input.owner_id ?? DEMO_USER_ID,
+    sharedWithUserIds: input.sharedWithUserIds ?? [],
+    isDemoCompany: input.isDemoCompany ?? (input.owner_id ?? DEMO_USER_ID) === DEMO_USER_ID,
     business_type: input.business_type ?? "retail",
     currency: input.currency ?? "BDT",
     phone: input.phone ?? null,
@@ -408,6 +423,9 @@ export function ensureDemoSeed(): void {
       id: DEMO_COMPANY_ID,
       name: "Chair King",
       owner_id: DEMO_USER_ID,
+      ownerUserId: DEMO_USER_ID,
+      sharedWithUserIds: [],
+      isDemoCompany: true,
       business_type: "furniture",
       currency: "BDT",
       phone: "01700000000",
