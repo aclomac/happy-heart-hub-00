@@ -727,6 +727,15 @@ function ItemDetailPage() {
       <Button variant="outline" size="sm" onClick={exportLedger}>
         <Download className="w-4 h-4 mr-1" /> Export Ledger
       </Button>
+      <Button
+        variant={orphanCount > 0 ? "default" : "outline"}
+        size="sm"
+        onClick={rebuildLedger}
+        disabled={rebuilding}
+      >
+        <RefreshCw className={`w-4 h-4 mr-1 ${rebuilding ? "animate-spin" : ""}`} />
+        Rebuild Item Ledger
+      </Button>
     </div>
   );
 
