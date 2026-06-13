@@ -84,7 +84,7 @@ export function userExists(email: string, mobile: string): boolean {
   );
 }
 
-export function addLocalUser(u: Omit<LocalUser, "id" | "createdAt" | "mobileVerified" | "isDemoUser"> & {
+export function addLocalUser(u: Omit<LocalUser, "id" | "createdAt" | "mobileVerified" | "emailVerified" | "isDemoUser"> & {
   mobileVerified?: boolean;
   emailVerified?: boolean;
   isDemoUser?: boolean;
