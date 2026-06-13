@@ -22,7 +22,7 @@ import {
 import { getItems } from "@/lib/demo/inventory";
 import { parseCSV, readFileAsText } from "@/lib/csv-parse";
 import { woocommerceService, wooConfigForWebsiteId } from "@/lib/integrations/woocommerce";
-import { Download, Link2, Trash2, Pencil, RefreshCw, Upload, MoreVertical, Plus } from "lucide-react";
+import { Download, Link2, Trash2, Pencil, RefreshCw, Upload, MoreVertical } from "lucide-react";
 
 export const Route = createFileRoute("/app/ecommerce/products")({ component: ProductsPage });
 
