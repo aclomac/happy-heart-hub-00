@@ -69,7 +69,7 @@ export function wooConfigFromWebsite(website: EcoWebsite | undefined | null, bas
   return {
     ...base,
     storeName: website.name || base.storeName,
-    websiteUrl: website.url || base.apiBaseUrl || base.websiteUrl,
+    websiteUrl: website.url || base.websiteUrl,
     consumerKey: website.apiKey || base.consumerKey,
     consumerSecret: website.apiSecret || base.consumerSecret,
     status: (website.status === "active" ? "active" : base.status),
