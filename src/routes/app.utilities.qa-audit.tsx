@@ -359,19 +359,19 @@ function QaAuditPage() {
             Release
           </Badge>
           <div className="font-semibold text-sm">
-            ERPOVO Ecommerce Integration Stable
+            ERPOVO Live Integration Wizard Stable
           </div>
           <span className="text-xs text-muted-foreground">2026-06-13</span>
         </div>
         <ul className="text-xs text-muted-foreground grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-1 list-disc pl-5">
+          <li>Live Integration Wizard working</li>
+          <li>WooCommerce product/order preview ready</li>
+          <li>Steadfast courier send preview ready</li>
+          <li>Tracking link saved &amp; clickable</li>
           <li>Core ERP working</li>
-          <li>Signup / Login working</li>
           <li>Ecommerce working</li>
-          <li>WooCommerce / Steadfast proxy ready</li>
-          <li>Manual ecommerce flow working</li>
-          <li>Product images working</li>
-          <li>Order details working</li>
-          <li>Courier tracking link working</li>
+          <li>Signup / Login working</li>
+          <li>QA passed (20/20 workflows)</li>
         </ul>
       </div>
 
@@ -388,8 +388,12 @@ function QaAuditPage() {
           <li>Export QA report as JSON (use Export JSON button below)</li>
           <li>Download full project ZIP from Lovable (GitHub / Download Code)</li>
           <li>
-            Save WooCommerce &amp; Steadfast credentials separately — do not rely
-            only on browser storage
+            Save WooCommerce &amp; Steadfast API credentials separately — do not
+            rely only on browser storage
+          </li>
+          <li>
+            Test real API with 1–5 orders first before importing/sending all
+            orders
           </li>
           <li>Run Full QA Audit before adding any new feature</li>
           <li>Keep this stable build tagged before further changes</li>
