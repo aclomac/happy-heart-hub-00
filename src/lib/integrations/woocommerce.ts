@@ -58,6 +58,31 @@ export function resetWooConfig() {
   localStorage.removeItem(WC_KEY);
 }
 
+/**
+ * Merge a saved EcoWebsite (from Websites/Stores) into the global WooConfig.
+ * Website-level URL/keys take precedence so each store can have its own
+ * credentials. Falls back to the global config for shared fields like
+ * apiVersion, authMode, and status.
+ */
+export function wooConfigFromWebsite(website: EcoWebsite | undefined | null, base: WooConfig = getWooConfig()): WooConfig {
+  if (!website) return base;
+  return {
+    ...base,
+    storeName: website.name || base.storeName,
+    websiteUrl: website.url || base.apiBaseUrl || base.websiteUrl,
+    consumerKey: website.apiKey || base.consumerKey,
+    consumerSecret: website.apiSecret || base.consumerSecret,
+    status: (website.status === "active" ? "active" : base.status),
+  };
+}
+
+export function wooConfigForWebsiteId(websiteId: string | undefined | null): WooConfig {
+  const base = getWooConfig();
+  if (!websiteId) return base;
+  const w = getWebsites().find((x) => x.id === websiteId);
+  return wooConfigFromWebsite(w, base);
+}
+
 export function normalizeWooUrl(u: string): string {
   return (u || "").trim().replace(/\/+$/, "");
 }
