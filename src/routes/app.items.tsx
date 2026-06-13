@@ -18,7 +18,9 @@ import {
   Wallet,
   FolderOpen,
   Trash2,
+  Eye,
 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -419,8 +421,10 @@ function Items() {
                 <th className="text-right">{t("Purchase")} ৳</th>
                 <th className="text-right">{t("Sale")} ৳</th>
                 <th className="text-right">{t("Stock")}</th>
+                <th className="text-center">Details</th>
                 <th></th>
               </tr>
+
             </thead>
             <tbody>
               {filtered.map((i) => {
@@ -428,7 +432,7 @@ function Items() {
                   i.low_stock_alert != null && Number(i.stock) <= Number(i.low_stock_alert);
                 const cat = cats.find((c) => c.id === i.category_id);
                 return (
-                  <tr key={i.id}>
+                  <tr key={i.id} className="hover:bg-muted/50 cursor-pointer">
                     <td>
                       <ItemImageThumb
                         src={i.image_url}
@@ -440,7 +444,7 @@ function Items() {
                       <Link
                         to="/app/items/$id"
                         params={{ id: i.id }}
-                        className="hover:underline text-primary"
+                        className="text-primary underline-offset-2 hover:underline font-semibold"
                       >
                         {i.name}
                       </Link>
@@ -450,6 +454,7 @@ function Items() {
                         </span>
                       )}
                     </td>
+
                     <td className="text-muted-foreground font-mono text-xs">{i.sku || "—"}</td>
                     <td>
                       {cat ? (
@@ -478,7 +483,16 @@ function Items() {
                       {low && <AlertTriangle className="inline w-3 h-3 mr-1" />}
                       {i.is_service ? "—" : `${Number(i.stock)} ${i.unit}`}
                     </td>
+                    <td className="text-center">
+                      <Link to="/app/items/$id" params={{ id: i.id }}>
+                        <Button variant="outline" size="sm" className="h-7 gap-1">
+                          <Eye className="w-3.5 h-3.5" />
+                          View
+                        </Button>
+                      </Link>
+                    </td>
                     <td>
+
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon" className="h-7 w-7">
