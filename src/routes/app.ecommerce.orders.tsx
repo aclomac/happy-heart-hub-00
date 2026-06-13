@@ -17,12 +17,14 @@ import {
 import { StatusBadge } from "@/components/erp/ecommerce/EcommerceUI";
 import {
   getOrders, setOrders, getWebsites, getCouriers, getSettings,
+  refreshOrderItemImages,
   type EcoOrder, type EcoOrderStatus,
 } from "@/lib/demo/ecommerce";
 import { getSales, setSales } from "@/lib/demo/sales";
 import { genId } from "@/lib/demo/inventory";
 import { createSteadfastConsignment, trackSteadfastParcel } from "@/lib/integrations/integrationClient";
-import { MoreVertical, Truck, FileText, Copy, Trash2, Plus, Send, Navigation, Pencil, ExternalLink } from "lucide-react";
+import { ItemImageThumb } from "@/components/erp/ItemImageThumb";
+import { MoreVertical, Truck, FileText, Copy, Trash2, Plus, Send, Navigation, Pencil, ExternalLink, Eye, ImageIcon, Printer } from "lucide-react";
 
 export const Route = createFileRoute("/app/ecommerce/orders")({ component: OrdersPage });
 
