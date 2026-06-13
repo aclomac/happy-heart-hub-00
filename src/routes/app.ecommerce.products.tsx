@@ -185,6 +185,7 @@ function ProductsPage() {
           <>
             <Link to="/app/ecommerce"><Button variant="outline" size="sm">Back</Button></Link>
             <Button size="sm" variant="outline" onClick={autoMap}><Link2 className="w-4 h-4 mr-1" /> Auto-map by SKU</Button>
+            <Button size="sm" variant="outline" onClick={refreshImages}><ImageIcon className="w-4 h-4 mr-1" /> Refresh Product Images</Button>
             <Button size="sm" variant="outline" onClick={exportCsv}><Download className="w-4 h-4 mr-1" /> Export CSV</Button>
           </>
         }
