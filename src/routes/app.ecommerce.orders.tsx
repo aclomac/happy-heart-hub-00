@@ -293,7 +293,9 @@ function OrdersPage() {
                 return (
                   <tr key={o.id} className="border-b last:border-0">
                     <td><Checkbox checked={selected.has(o.id)} onCheckedChange={(v) => toggleOne(o.id, !!v)} /></td>
-                    <td className="py-2 font-mono text-xs">{o.orderNo}</td>
+                    <td className="py-2 font-mono text-xs">
+                      <button type="button" onClick={() => openView(o.id)} className="text-blue-600 hover:underline">{o.orderNo}</button>
+                    </td>
                     <td>{o.orderDate}</td>
                     <td>{w}</td>
                     <td>{o.customerName}<div className="text-xs text-muted-foreground">{o.phone}</div></td>
