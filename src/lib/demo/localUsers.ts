@@ -10,6 +10,7 @@ export type LocalUser = {
   mobile: string;
   password: string; // local demo only
   mobileVerified: boolean;
+  emailVerified: boolean;
   isDemoUser: boolean;
   createdAt: string;
   companyId?: string;
@@ -85,6 +86,7 @@ export function userExists(email: string, mobile: string): boolean {
 
 export function addLocalUser(u: Omit<LocalUser, "id" | "createdAt" | "mobileVerified" | "isDemoUser"> & {
   mobileVerified?: boolean;
+  emailVerified?: boolean;
   isDemoUser?: boolean;
 }): LocalUser {
   const users = getLocalUsers();
@@ -98,6 +100,7 @@ export function addLocalUser(u: Omit<LocalUser, "id" | "createdAt" | "mobileVeri
     mobile: normalizeMobile(u.mobile),
     password: u.password,
     mobileVerified: u.mobileVerified ?? true,
+    emailVerified: u.emailVerified ?? true,
     isDemoUser: u.isDemoUser ?? false,
     createdAt: new Date().toISOString(),
     companyId: u.companyId,
