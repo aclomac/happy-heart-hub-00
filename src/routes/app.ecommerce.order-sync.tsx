@@ -109,9 +109,11 @@ function OrderSyncPage() {
   };
 
   const testWoo = async () => {
+    if (!websiteId) { toast.error("Select a WooCommerce website first"); return; }
     const settings = getSettings();
+    const cfg = wooConfigForWebsiteId(websiteId);
     setBusy(true);
-    const r = await woocommerceService.testConnection(getWooConfig(), settings.integrationMode);
+    const r = await woocommerceService.testConnection(cfg, settings.integrationMode);
     setBusy(false);
     r.status === "success" ? toast.success(r.message) : toast.error(r.message);
   };
@@ -119,8 +121,9 @@ function OrderSyncPage() {
   const syncWoo = async () => {
     if (!websiteId) { toast.error("Select a website first"); return; }
     const settings = getSettings();
+    const cfg = wooConfigForWebsiteId(websiteId);
     setBusy(true);
-    const r = await woocommerceService.syncOrders(getWooConfig(), websiteId, settings.integrationMode, {
+    const r = await woocommerceService.syncOrders(cfg, websiteId, settings.integrationMode, {
       from: from || undefined, to: to || undefined, status: wooStatus,
     });
     setBusy(false);
