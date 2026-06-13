@@ -12,11 +12,12 @@ import { DisabledLiveButton } from "@/components/erp/ecommerce/EcommerceUI";
 import { DiagnosticsPanel } from "@/components/erp/ecommerce/DiagnosticsPanel";
 import { getSettings, setSettings, getCouriers, getWebsites, setWebsites, type EcoSettings } from "@/lib/demo/ecommerce";
 import {
-  getWooConfig, setWooConfig, resetWooConfig, woocommerceService, wooConfigFromWebsite, type WooConfig,
+  getWooConfig, setWooConfig, resetWooConfig, wooConfigFromWebsite, type WooConfig,
 } from "@/lib/integrations/woocommerce";
 import {
-  getSteadfastConfig, setSteadfastConfig, resetSteadfastConfig, steadfastService, type SteadfastConfig,
+  getSteadfastConfig, setSteadfastConfig, resetSteadfastConfig, type SteadfastConfig,
 } from "@/lib/integrations/steadfast";
+import { testWooCommerceConnection, testSteadfastConnection, describeMode } from "@/lib/integrations/integrationClient";
 
 export const Route = createFileRoute("/app/ecommerce/settings")({ component: SettingsPage });
 
