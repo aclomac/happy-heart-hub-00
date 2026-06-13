@@ -715,10 +715,8 @@ function ItemDetailPage() {
           <ShoppingCart className="w-4 h-4 mr-1" /> Add Purchase
         </Link>
       </Button>
-      <Button asChild variant="outline" size="sm">
-        <Link to="/app/items/$id/edit" params={{ id: it.id }}>
-          <Edit3 className="w-4 h-4 mr-1" /> Edit
-        </Link>
+      <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+        <Edit3 className="w-4 h-4 mr-1" /> Edit
       </Button>
       <Button asChild variant="outline" size="sm">
         <Link to="/app/stock-adjustments">
