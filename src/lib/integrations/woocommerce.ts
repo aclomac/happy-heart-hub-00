@@ -127,21 +127,22 @@ function buildUrl(base: string, path: string, c: WooConfig, extra?: Record<strin
 
 async function callWoo(
   c: WooConfig,
+  mode: IntegrationMode,
   path: string,
   extra: Record<string, string> = {},
 ): Promise<{ ok: boolean; status: number; data?: unknown; errorText?: string; finalUrl: string }> {
   const base = wooBaseEndpoint(c);
   const finalUrl = buildUrl(base, path, c, extra);
-  const res = await fetch(finalUrl, { method: "GET", headers: buildHeaders(c) });
+  const res = await httpRequest(mode, finalUrl, { method: "GET", headers: buildHeaders(c) as Record<string, string> });
+  const text = res.text;
   let data: unknown;
   let errorText: string | undefined;
-  const text = await res.text();
   try {
     data = text ? JSON.parse(text) : undefined;
   } catch {
     errorText = text.slice(0, 300);
   }
-  return { ok: res.ok, status: res.status, data, errorText, finalUrl };
+  return { ok: res.ok, status: res.status, data, errorText, finalUrl: res.finalUrl };
 }
 
 function mapWooStatusToErpovo(woo: string): EcoOrder["status"] {
