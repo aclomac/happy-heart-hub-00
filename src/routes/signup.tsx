@@ -2,10 +2,16 @@ import { createFileRoute, Link, useNavigate, redirect } from "@tanstack/react-ro
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { createLocalSignupAccount, validateSignupInput } from "@/lib/demo/signup";
+import {
+  createLocalSignupAccount,
+  DEMO_EMAIL_VERIFICATION_CODE,
+  validateSignupInput,
+  type SignupInput,
+} from "@/lib/demo/signup";
+import { userExists } from "@/lib/demo/localUsers";
 
 export const Route = createFileRoute("/signup")({
   beforeLoad: async () => {
@@ -41,8 +47,10 @@ function Signup() {
   const [pass, setPass] = useState("");
   const [loading, setLoading] = useState(false);
   const [errs, setErrs] = useState<Record<string, string>>({});
+  const [pendingSignup, setPendingSignup] = useState<SignupInput | null>(null);
+  const [verificationCode, setVerificationCode] = useState("");
 
-  const onCreateAccount = async (e?: React.FormEvent) => {
+  const onCreateAccount = async (e?: FormEvent) => {
     e?.preventDefault?.();
     const next = validateSignupInput({ fullName: name, email, mobile, password: pass });
     setErrs(next);
@@ -51,14 +59,28 @@ function Signup() {
       return;
     }
 
+    if (userExists(email, "")) {
+      const reason = "Account already exists. Please sign in.";
+      setErrs({ email: reason });
+      toast.error(reason);
+      return;
+    }
+
+    setPendingSignup({ fullName: name, email, mobile, password: pass });
+    setVerificationCode("");
+    toast.success("Verification code ready");
+  };
+
+  const onVerifyEmail = (e?: FormEvent) => {
+    e?.preventDefault?.();
+    if (!pendingSignup) return;
+    if (verificationCode.trim() !== DEMO_EMAIL_VERIFICATION_CODE) {
+      toast.error("Invalid verification code");
+      return;
+    }
     setLoading(true);
     try {
-      createLocalSignupAccount({
-        fullName: name,
-        email,
-        mobile,
-        password: pass,
-      });
+      createLocalSignupAccount(pendingSignup);
       toast.success("Account created successfully");
       if (typeof window !== "undefined") {
         window.location.replace("/app");
