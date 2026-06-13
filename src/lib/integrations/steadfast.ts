@@ -131,16 +131,11 @@ export const steadfastService = {
         message: "Local Demo Mode — live Steadfast API not called. Switch Integration Mode to Direct Browser API to test.",
       });
     }
-    if (mode === "backend-proxy" || mode === "electron-proxy") {
-      return persist("steadfast", {
-        ...d, status: "blocked", errorKind: "config",
-        message: `${mode === "backend-proxy" ? "Backend" : "Electron"} proxy is not yet configured. Forward this call through a server route.`,
-      });
-    }
+    // backend-proxy / electron-proxy dispatched via httpRequest below.
 
     try {
-      const res = await fetch(url, { method: "GET", headers: headers(c) });
-      const text = await res.text();
+      const res = await httpRequest(mode, url, { method: "GET", headers: headers(c) as Record<string, string> });
+      const text = res.text;
       let data: unknown; try { data = text ? JSON.parse(text) : undefined; } catch { data = text.slice(0, 300); }
       if (res.ok) {
         return persist("steadfast", { ...d, status: "success", errorKind: "none", httpStatus: res.status, message: "Connected.", rawSafe: data });
