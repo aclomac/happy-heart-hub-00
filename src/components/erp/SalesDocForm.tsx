@@ -48,11 +48,7 @@ import {
   parseSaleMeta,
   type SaleInvoiceInput,
 } from "@/lib/sale-invoices";
-import {
-  repairSaleStockPosting,
-  verifySaleInventoryPosting,
-  type RepairResult,
-} from "@/lib/inventory-posting-doctor";
+import { verifySaleInventoryPosting } from "@/lib/inventory-posting-doctor";
 import { buildInvoiceDataFromSale } from "@/lib/pdf/build-invoice";
 import { downloadInvoicePDF, printInvoicePDF } from "@/lib/pdf/invoice-pdf";
 import {
@@ -813,16 +809,17 @@ export function SalesDocForm({
 
       let inventoryPosting = "No stock impact for this document.";
       if (newId && payload.affect_stock !== 0 && kind === "invoice") {
-        const repair: RepairResult = await repairSaleStockPosting(companyId, newId);
+        // Single source of truth: saveSaleInvoice() already posted stock via
+        // applyStockDelta(). We only VERIFY here — never re-post — to avoid
+        // double deduction. Use the Inventory Posting Doctor on /app/items
+        // if a missing movement needs repair.
         const verify = await verifySaleInventoryPosting(companyId, newId);
-        if (repair.errors.length > 0 || !verify.ok) {
-          inventoryPosting = `Sale invoice saved but stock posting failed: ${[...repair.errors, ...verify.errors].join("; ") || "movement not verified"}`;
+        if (!verify.ok) {
+          inventoryPosting = `Sale invoice saved but stock posting failed: ${verify.errors.join("; ") || "movement not verified"}`;
           toast.error(inventoryPosting);
-        } else if (repair.postings.length > 0) {
-          inventoryPosting = `Inventory posted: ${repair.postings.map((p) => `${p.itemName} -${p.qty} PCS, stock ${p.before} → ${p.after}`).join("; ")}, movement created`;
-          toast.success(inventoryPosting);
         } else if (verify.lines[0]) {
-          inventoryPosting = `Inventory posted: ${verify.lines[0].itemName} -${verify.lines[0].qty} ${verify.lines[0].unit}, movement already verified`;
+          const line = verify.lines[0];
+          inventoryPosting = `Inventory posted: ${line.itemName} -${line.qty} ${line.unit}, movement verified`;
           toast.success(inventoryPosting);
         }
       }
