@@ -55,17 +55,17 @@ function SettingsPage() {
   const saveWc = () => { setWooConfig(wc); toast.success("WooCommerce credentials saved"); };
   const testWc = async () => {
     setBusy(true);
-    const r = await woocommerceService.testConnection(wc, s.integrationMode);
+    const r = await testWooCommerceConnection({ config: wc, mode: s.integrationMode });
     setBusy(false);
-    r.status === "success" ? toast.success(r.message) : toast.error(r.message);
+    r.success ? toast.success(r.message) : toast.error(r.message);
   };
 
   const saveSf = () => { setSteadfastConfig(sf); toast.success("Steadfast credentials saved"); };
   const testSf = async () => {
     setBusy(true);
-    const r = await steadfastService.testConnection(sf, s.integrationMode);
+    const r = await testSteadfastConnection({ config: sf, mode: s.integrationMode });
     setBusy(false);
-    r.status === "success" ? toast.success(r.message) : toast.error(r.message);
+    r.success ? toast.success(r.message) : toast.error(r.message);
   };
 
   return (
