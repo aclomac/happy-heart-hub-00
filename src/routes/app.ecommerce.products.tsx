@@ -327,5 +327,3 @@ function ProductsPage() {
   );
 }
 
-// Unused but kept for parity with earlier API
-export const __unused = Plus;
