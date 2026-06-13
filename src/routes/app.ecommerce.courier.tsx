@@ -9,7 +9,9 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DisabledLiveButton, StatusBadge } from "@/components/erp/ecommerce/EcommerceUI";
-import { getCouriers, setCouriers, genId, type EcoCourier, type CourierType } from "@/lib/demo/ecommerce";
+import { DiagnosticsPanel } from "@/components/erp/ecommerce/DiagnosticsPanel";
+import { getCouriers, setCouriers, getSettings, genId, type EcoCourier, type CourierType } from "@/lib/demo/ecommerce";
+import { getSteadfastConfig, steadfastService } from "@/lib/integrations/steadfast";
 import { Pencil, Trash2, Plus, Plug } from "lucide-react";
 
 export const Route = createFileRoute("/app/ecommerce/courier")({ component: CourierPage });
