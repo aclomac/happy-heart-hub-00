@@ -239,6 +239,7 @@ function ProductsPage() {
             <thead>
               <tr className="text-left text-xs uppercase text-muted-foreground border-b">
                 <th className="py-2 w-8"><Checkbox checked={allOnPageSelected} onCheckedChange={(v) => toggleAll(!!v)} /></th>
+                <th className="w-14">Image</th>
                 <th>Website</th><th>SKU</th><th>Name</th><th>Price</th><th>ERP Item</th><th>Stock</th><th>Status</th><th>Last Synced</th><th></th>
               </tr>
             </thead>
@@ -249,6 +250,13 @@ function ProductsPage() {
                 return (
                   <tr key={p.id} className="border-b last:border-0">
                     <td><Checkbox checked={selected.has(p.id)} onCheckedChange={(v) => toggleOne(p.id, !!v)} /></td>
+                    <td className="py-2">
+                      <ItemImageThumb
+                        src={p.thumbnailUrl || p.imageUrl || null}
+                        alt={p.imageAlt || p.name}
+                        className="w-10 h-10 rounded border"
+                      />
+                    </td>
                     <td className="py-2">{w}</td>
                     <td className="font-mono text-xs">{p.sku}</td>
                     <td>{p.name}</td>
@@ -269,7 +277,7 @@ function ProductsPage() {
                   </tr>
                 );
               })}
-              {pageItems.length === 0 && <tr><td colSpan={10} className="py-8 text-center text-muted-foreground">No products. Use <b>Sync from WooCommerce</b> or <b>Import CSV</b>.</td></tr>}
+              {pageItems.length === 0 && <tr><td colSpan={11} className="py-8 text-center text-muted-foreground">No products. Use <b>Sync from WooCommerce</b> or <b>Import CSV</b>.</td></tr>}
             </tbody>
           </table>
 
