@@ -103,6 +103,7 @@ function Items() {
   const [lowOnly, setLowOnly] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [addOpen, setAddOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [doctorOpen, setDoctorOpen] = useState(false);
   const [doctorItem, setDoctorItem] = useState("Bar Stool");
   const [doctorBusy, setDoctorBusy] = useState(false);
