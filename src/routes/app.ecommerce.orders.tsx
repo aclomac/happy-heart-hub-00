@@ -21,7 +21,7 @@ import {
 } from "@/lib/demo/ecommerce";
 import { getSales, setSales } from "@/lib/demo/sales";
 import { genId } from "@/lib/demo/inventory";
-import { getSteadfastConfig, steadfastService } from "@/lib/integrations/steadfast";
+import { createSteadfastConsignment, trackSteadfastParcel } from "@/lib/integrations/integrationClient";
 import { MoreVertical, Truck, FileText, Copy, Trash2, Plus, Send, Navigation, Pencil, ExternalLink } from "lucide-react";
 
 export const Route = createFileRoute("/app/ecommerce/orders")({ component: OrdersPage });
