@@ -213,6 +213,18 @@ export const AUDIT_REGISTRY: AuditEntry[] = [
   { id: "auth-signup-redirect", module: "Auth", page: "Signup", label: "Local session redirect", kind: "button", route: "/signup", status: W, note: "After create → redirects to /app with toast." },
   { id: "auth-signup-login", module: "Auth", page: "Login", label: "Login with created email account", kind: "button", route: "/login", status: W, note: "Created user can sign in with email + password." },
   { id: "auth-smoke-signup", module: "Auth", page: "Signup", label: "Smoke: signup + login", kind: "workflow", route: "/signup", status: W, note: "Creates [QA] user via email, verifies non-demo session + login lookup, cleans up." },
+
+  // ---- Live API integrations ----
+  { id: "eco-wc-save", module: M.ecommerce, page: "Settings", label: "WooCommerce settings save", kind: "button", route: "/app/ecommerce/settings", status: W, note: "Credentials persisted to localStorage; masked in diagnostics." },
+  { id: "eco-wc-test", module: M.ecommerce, page: "Settings", label: "WooCommerce Test Connection (diagnostic)", kind: "button", route: "/app/ecommerce/settings", status: W, note: "Returns explicit success/validation/auth/CORS error; never silent. Live call only in Direct Browser API mode." },
+  { id: "eco-wc-sample-sync", module: M.ecommerce, page: "Order Sync", label: "WooCommerce sample sync fallback", kind: "button", route: "/app/ecommerce/order-sync", status: W, note: "Local-demo mode keeps Load Sample Orders + CSV import working when live API is disabled." },
+  { id: "eco-wc-import-map", module: M.ecommerce, page: "Order Sync", label: "WooCommerce order import mapping", kind: "workflow", route: "/app/ecommerce/order-sync", status: W, note: "Paginated /orders fetch, dedupe by websiteId+orderNo, sync log written; SKU left unmapped if no ERP item match." },
+  { id: "eco-sf-save", module: M.ecommerce, page: "Settings", label: "Steadfast settings save", kind: "button", route: "/app/ecommerce/settings", status: W },
+  { id: "eco-sf-test", module: M.ecommerce, page: "Settings", label: "Steadfast Test Connection (diagnostic)", kind: "button", route: "/app/ecommerce/settings", status: W, note: "Explicit auth/CORS/validation error; never silent." },
+  { id: "eco-sf-consign", module: M.ecommerce, page: "Orders", label: "Steadfast create consignment (local fallback)", kind: "button", route: "/app/ecommerce/orders", status: W, note: "Local-demo simulates LOCAL-* consignment; live mode hits /create_order." },
+  { id: "eco-sf-track", module: M.ecommerce, page: "Orders", label: "Steadfast tracking diagnostic", kind: "button", route: "/app/ecommerce/orders", status: W },
+  { id: "eco-integration-errors", module: M.ecommerce, label: "Integration error handling", kind: "workflow", route: "/app/ecommerce/settings", status: W, note: "Service layer classifies CORS / auth / 404 / validation; QA marks live-blocked as Needs Proxy, not Broken." },
+  { id: "eco-smoke-integrations", module: M.ecommerce, label: "Smoke: WooCommerce + Steadfast integration diagnostics", kind: "workflow", route: "/app/ecommerce/settings", status: W, note: "Saves fake credentials, runs test connection, simulates consignment + tracking, cleans up." },
 ];
 
 export function summarizeAudit(entries: AuditEntry[] = AUDIT_REGISTRY) {
