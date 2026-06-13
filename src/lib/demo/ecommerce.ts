@@ -84,6 +84,12 @@ export interface EcoProduct {
   stock: number;
   status: "active" | "inactive";
   lastSyncedAt?: string | null;
+  // Image fields (imported from WooCommerce / set manually)
+  imageUrl?: string | null;
+  thumbnailUrl?: string | null;
+  imageAlt?: string | null;
+  galleryImages?: string[];
+  wooImageId?: string | null;
 }
 
 export type EcoOrderStatus =
@@ -106,6 +112,14 @@ export interface EcoOrderItem {
   qty: number;
   price: number;
   erpItemId?: string | null;
+  // Optional richer fields populated when importing from WooCommerce
+  productId?: string | null;
+  variationId?: string | null;
+  discount?: number;
+  total?: number;
+  imageUrl?: string | null;
+  thumbnailUrl?: string | null;
+  mappedErpItemId?: string | null;
 }
 
 export interface EcoOrder {
