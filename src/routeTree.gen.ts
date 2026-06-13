@@ -163,6 +163,7 @@ import { Route as AppCashChequesIdRouteImport } from './routes/app.cash.cheques.
 import { Route as ApiIntegrationsWoocommerceTestRouteImport } from './routes/api.integrations.woocommerce.test'
 import { Route as ApiIntegrationsWoocommerceProductsRouteImport } from './routes/api.integrations.woocommerce.products'
 import { Route as ApiIntegrationsWoocommerceOrdersRouteImport } from './routes/api.integrations.woocommerce.orders'
+import { Route as ApiIntegrationsSteadfastTestRouteImport } from './routes/api.integrations.steadfast.test'
 
 const SuperAdminRoute = SuperAdminRouteImport.update({
   id: '/super-admin',
@@ -954,6 +955,12 @@ const ApiIntegrationsWoocommerceOrdersRoute =
     path: '/api/integrations/woocommerce/orders',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiIntegrationsSteadfastTestRoute =
+  ApiIntegrationsSteadfastTestRouteImport.update({
+    id: '/api/integrations/steadfast/test',
+    path: '/api/integrations/steadfast/test',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -1085,6 +1092,7 @@ export interface FileRoutesByFullPath {
   '/super-admin/payments/$id': typeof SuperAdminPaymentsIdRoute
   '/app/ecommerce/': typeof AppEcommerceIndexRoute
   '/app/utilities/': typeof AppUtilitiesIndexRoute
+  '/api/integrations/steadfast/test': typeof ApiIntegrationsSteadfastTestRoute
   '/api/integrations/woocommerce/orders': typeof ApiIntegrationsWoocommerceOrdersRoute
   '/api/integrations/woocommerce/products': typeof ApiIntegrationsWoocommerceProductsRoute
   '/api/integrations/woocommerce/test': typeof ApiIntegrationsWoocommerceTestRoute
@@ -1237,6 +1245,7 @@ export interface FileRoutesByTo {
   '/super-admin/payments/$id': typeof SuperAdminPaymentsIdRoute
   '/app/ecommerce': typeof AppEcommerceIndexRoute
   '/app/utilities': typeof AppUtilitiesIndexRoute
+  '/api/integrations/steadfast/test': typeof ApiIntegrationsSteadfastTestRoute
   '/api/integrations/woocommerce/orders': typeof ApiIntegrationsWoocommerceOrdersRoute
   '/api/integrations/woocommerce/products': typeof ApiIntegrationsWoocommerceProductsRoute
   '/api/integrations/woocommerce/test': typeof ApiIntegrationsWoocommerceTestRoute
@@ -1394,6 +1403,7 @@ export interface FileRoutesById {
   '/super-admin/payments/$id': typeof SuperAdminPaymentsIdRoute
   '/app/ecommerce/': typeof AppEcommerceIndexRoute
   '/app/utilities/': typeof AppUtilitiesIndexRoute
+  '/api/integrations/steadfast/test': typeof ApiIntegrationsSteadfastTestRoute
   '/api/integrations/woocommerce/orders': typeof ApiIntegrationsWoocommerceOrdersRoute
   '/api/integrations/woocommerce/products': typeof ApiIntegrationsWoocommerceProductsRoute
   '/api/integrations/woocommerce/test': typeof ApiIntegrationsWoocommerceTestRoute
@@ -1552,6 +1562,7 @@ export interface FileRouteTypes {
     | '/super-admin/payments/$id'
     | '/app/ecommerce/'
     | '/app/utilities/'
+    | '/api/integrations/steadfast/test'
     | '/api/integrations/woocommerce/orders'
     | '/api/integrations/woocommerce/products'
     | '/api/integrations/woocommerce/test'
@@ -1704,6 +1715,7 @@ export interface FileRouteTypes {
     | '/super-admin/payments/$id'
     | '/app/ecommerce'
     | '/app/utilities'
+    | '/api/integrations/steadfast/test'
     | '/api/integrations/woocommerce/orders'
     | '/api/integrations/woocommerce/products'
     | '/api/integrations/woocommerce/test'
@@ -1860,6 +1872,7 @@ export interface FileRouteTypes {
     | '/super-admin/payments/$id'
     | '/app/ecommerce/'
     | '/app/utilities/'
+    | '/api/integrations/steadfast/test'
     | '/api/integrations/woocommerce/orders'
     | '/api/integrations/woocommerce/products'
     | '/api/integrations/woocommerce/test'
@@ -1899,6 +1912,7 @@ export interface RootRouteChildren {
   SuperAdminRoute: typeof SuperAdminRouteWithChildren
   StoreSlugRoute: typeof StoreSlugRoute
   ApiIntegrationsProxyRoute: typeof ApiIntegrationsProxyRoute
+  ApiIntegrationsSteadfastTestRoute: typeof ApiIntegrationsSteadfastTestRoute
   ApiIntegrationsWoocommerceOrdersRoute: typeof ApiIntegrationsWoocommerceOrdersRoute
   ApiIntegrationsWoocommerceProductsRoute: typeof ApiIntegrationsWoocommerceProductsRoute
   ApiIntegrationsWoocommerceTestRoute: typeof ApiIntegrationsWoocommerceTestRoute
@@ -2984,6 +2998,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiIntegrationsWoocommerceOrdersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/integrations/steadfast/test': {
+      id: '/api/integrations/steadfast/test'
+      path: '/api/integrations/steadfast/test'
+      fullPath: '/api/integrations/steadfast/test'
+      preLoaderRoute: typeof ApiIntegrationsSteadfastTestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -3547,6 +3568,7 @@ const rootRouteChildren: RootRouteChildren = {
   SuperAdminRoute: SuperAdminRouteWithChildren,
   StoreSlugRoute: StoreSlugRoute,
   ApiIntegrationsProxyRoute: ApiIntegrationsProxyRoute,
+  ApiIntegrationsSteadfastTestRoute: ApiIntegrationsSteadfastTestRoute,
   ApiIntegrationsWoocommerceOrdersRoute: ApiIntegrationsWoocommerceOrdersRoute,
   ApiIntegrationsWoocommerceProductsRoute:
     ApiIntegrationsWoocommerceProductsRoute,
