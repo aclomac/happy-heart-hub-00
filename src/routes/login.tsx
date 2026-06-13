@@ -150,11 +150,16 @@ function Login() {
       return;
     }
 
-
-    const { error } = await supabase.auth.signInWithPassword({
-      email: trimmedEmail,
-      password: usePass,
-    });
+    let error: { message?: string } | null = null;
+    try {
+      const result = await supabase.auth.signInWithPassword({
+        email: trimmedEmail,
+        password: usePass,
+      });
+      error = result.error;
+    } catch {
+      error = { message: "Invalid email or password" };
+    }
 
     if (error) {
       setLoading(false);
