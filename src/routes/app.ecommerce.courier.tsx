@@ -10,8 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DisabledLiveButton, StatusBadge } from "@/components/erp/ecommerce/EcommerceUI";
 import { DiagnosticsPanel } from "@/components/erp/ecommerce/DiagnosticsPanel";
-import { getCouriers, setCouriers, getSettings, genId, type EcoCourier, type CourierType } from "@/lib/demo/ecommerce";
-import { getSteadfastConfig, steadfastService } from "@/lib/integrations/steadfast";
+import { getCouriers, setCouriers, genId, type EcoCourier, type CourierType } from "@/lib/demo/ecommerce";
+import { testSteadfastConnection } from "@/lib/integrations/integrationClient";
 import { Pencil, Trash2, Plus, Plug } from "lucide-react";
 
 export const Route = createFileRoute("/app/ecommerce/courier")({ component: CourierPage });
