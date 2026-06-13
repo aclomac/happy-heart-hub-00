@@ -134,19 +134,27 @@ function WooWizardDialog({ onClose }: { onClose: () => void }) {
     setBusy(false);
   };
 
-  const importOrders = async () => {
+  const importOrders = async (all: boolean) => {
     if (!websiteId) { toast.error("Select a target website to import into."); return; }
+    if (all && !window.confirm("Import ALL orders from WooCommerce into the selected website? This may take a while.")) return;
     setBusy(true);
     const r = await syncWooCommerceOrders({ websiteId });
     setBusy(false);
     r.success ? toast.success(r.message) : toast.error(r.message);
   };
-  const importProducts = async () => {
+  const importProducts = async (all: boolean) => {
     if (!websiteId) { toast.error("Select a target website to import into."); return; }
+    if (all && !window.confirm("Import ALL products from WooCommerce into the selected website?")) return;
     setBusy(true);
     const r = await syncWooCommerceProducts({ websiteId });
     setBusy(false);
     r.success ? toast.success(r.message) : toast.error(r.message);
+  };
+  const copyErrors = async () => {
+    const errs = steps.filter((s) => s.state === "error" || s.state === "warn").map((s) => `${s.label}: ${s.message ?? ""}`).join("\n");
+    if (!errs) { toast.info("No errors to copy"); return; }
+    try { await navigator.clipboard.writeText(errs); toast.success("Errors copied"); }
+    catch { toast.error("Clipboard unavailable"); }
   };
 
   return (
