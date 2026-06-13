@@ -26,6 +26,27 @@ function SettingsPage() {
   const [sf, setSf] = useState<SteadfastConfig>(() => getSteadfastConfig());
   const [busy, setBusy] = useState(false);
   const couriers = getCouriers();
+  const [websites, setWebsitesState] = useState(() => getWebsites());
+  const [linkedWebsiteId, setLinkedWebsiteId] = useState<string>("");
+
+  const loadFromWebsite = (id: string) => {
+    setLinkedWebsiteId(id);
+    if (!id) return;
+    const w = websites.find((x) => x.id === id);
+    if (!w) return;
+    setWc((prev) => wooConfigFromWebsite(w, prev));
+    toast.success(`Loaded credentials from ${w.name}`);
+  };
+
+  const saveBackToWebsite = () => {
+    if (!linkedWebsiteId) { toast.error("Select a saved Website first"); return; }
+    const next = websites.map((w) => w.id === linkedWebsiteId ? {
+      ...w, url: wc.websiteUrl, apiKey: wc.consumerKey, apiSecret: wc.consumerSecret,
+      platform: w.platform === "WooCommerce" ? w.platform : "WooCommerce",
+    } : w);
+    setWebsites(next); setWebsitesState(next);
+    toast.success("Saved credentials back to website");
+  };
 
   const save = () => { setSettings(s); toast.success("Settings saved"); };
   const u = <K extends keyof EcoSettings>(k: K, v: EcoSettings[K]) => setS((p) => ({ ...p, [k]: v }));
