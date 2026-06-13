@@ -1037,6 +1037,12 @@ function ItemDetailPage() {
           </div>
         </TabsContent>
       </Tabs>
+      <ItemEditDialog
+        itemId={it.id}
+        companyId={companyId}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+      />
     </div>
   );
 }
