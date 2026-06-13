@@ -64,6 +64,7 @@ function CourierPage() {
           </>
         }
       />
+      <DiagnosticsPanel providers={["steadfast", "steadfast_consignment", "steadfast_track"]} title="Steadfast Diagnostics" />
       <Card>
         <CardContent className="pt-4 overflow-x-auto">
           <table className="w-full text-sm">
