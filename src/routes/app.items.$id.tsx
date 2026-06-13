@@ -481,22 +481,22 @@ function ItemDetailPage() {
   ];
 
   const exportLedger = () => {
-    downloadCSV(`item-ledger-${it.sku || it.name}.csv`, [
-      ["Date", "Type", "Ref No", "Party", "Warehouse", "In", "Out", "Balance", "Price", "Amount", "Payment"],
-      ...filteredLedger.map((r) => [
-        r.date,
-        r.type,
-        r.refNo,
-        r.party,
-        r.warehouse,
-        String(r.qtyIn || ""),
-        String(r.qtyOut || ""),
-        String(r.balance),
-        String(r.price || ""),
-        String(r.amount || ""),
-        r.paymentStatus,
-      ]),
-    ]);
+    downloadCSV(
+      `item-ledger-${it.sku || it.name}.csv`,
+      filteredLedger.map((r) => ({
+        Date: r.date,
+        Type: r.type,
+        "Ref No": r.refNo,
+        Party: r.party,
+        Warehouse: r.warehouse,
+        In: r.qtyIn || "",
+        Out: r.qtyOut || "",
+        Balance: r.balance,
+        Price: r.price || "",
+        Amount: r.amount || "",
+        Payment: r.paymentStatus,
+      })),
+    );
   };
 
   const actions = (
