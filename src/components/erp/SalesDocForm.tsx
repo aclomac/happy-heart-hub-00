@@ -49,7 +49,6 @@ import {
   type SaleInvoiceInput,
 } from "@/lib/sale-invoices";
 import { verifySaleInventoryPosting } from "@/lib/inventory-posting-doctor";
-import { supabase } from "@/integrations/supabase/client";
 import { buildInvoiceDataFromSale } from "@/lib/pdf/build-invoice";
 import { downloadInvoicePDF, printInvoicePDF } from "@/lib/pdf/invoice-pdf";
 import {
