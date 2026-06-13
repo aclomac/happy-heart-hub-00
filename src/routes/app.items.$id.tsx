@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
   Loader2,
@@ -11,7 +11,11 @@ import {
   Printer,
   Download,
   AlertTriangle,
+  Plus,
+  ShoppingCart,
+  ArrowRight,
 } from "lucide-react";
+
 import { PageHeader } from "@/components/erp/PageHeader";
 import { SummaryCards, type SummaryItem } from "@/components/erp/SummaryCards";
 import { Button } from "@/components/ui/button";
