@@ -128,11 +128,10 @@ function ProductsPage() {
   const syncWoo = async () => {
     if (!syncWebsiteId) { toast.error("Select a website"); return; }
     setBusy(true);
-    const cfg = wooConfigForWebsiteId(syncWebsiteId);
-    const r = await woocommerceService.syncProducts(cfg, syncWebsiteId, getSettings().integrationMode);
+    const r = await syncWooCommerceProducts({ websiteId: syncWebsiteId, mode: getSettings().integrationMode });
     setBusy(false);
     setList(getProducts());
-    r.status === "success" || r.status === "skipped" ? toast.success(r.message) : toast.error(r.message);
+    r.success || r.errorKind === "mode_disabled" ? toast.success(r.message) : toast.error(r.message);
   };
 
   const confirmDelete = (ids: string[]) => setConfirmOpen({ ids });
