@@ -104,6 +104,11 @@ function Login() {
         toast.error("Invalid email or password");
         return;
       }
+      if (localUser.emailVerified === false) {
+        setLoading(false);
+        toast.error("Please verify your email before signing in.");
+        return;
+      }
       try {
         // Ensure the user's company still exists (logout/clear may have wiped it).
         let companyId = localUser.companyId ?? null;
@@ -120,11 +125,6 @@ function Login() {
           setLocalUsers(
             getLocalUsers().map((u) => (u.id === localUser.id ? { ...u, companyId: fresh.id } : u)),
           );
-        }
-        if (localUser.emailVerified === false) {
-          setLoading(false);
-          toast.error("Please verify your email before signing in.");
-          return;
         }
         startLocalUserSession({
           id: localUser.id,
