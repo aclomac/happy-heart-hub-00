@@ -252,9 +252,7 @@ export const woocommerceService = {
     if (mode === "local-demo") {
       return wrap({ status: "skipped", errorKind: "mode_disabled", message: "Local Demo Mode — use 'Load Sample Orders' or switch Integration Mode to call the live API." });
     }
-    if (mode !== "direct-browser") {
-      return wrap({ status: "blocked", errorKind: "config", message: "Backend / Electron proxy required for production sync." });
-    }
+    // backend-proxy / electron-proxy use the same code path; httpRequest dispatches.
 
     try {
       const existing = getOrders();
@@ -265,7 +263,7 @@ export const woocommerceService = {
         if (opts.status && opts.status !== "any") extra.status = opts.status;
         if (opts.from) extra.after = `${opts.from}T00:00:00`;
         if (opts.to) extra.before = `${opts.to}T23:59:59`;
-        const { ok, status, data, finalUrl, errorText } = await callWoo(c, "/orders", extra);
+        const { ok, status, data, finalUrl, errorText } = await callWoo(c, mode, "/orders", extra);
         if (!ok) {
           return wrap({
             status: "failed", httpStatus: status, url: finalUrl,
