@@ -379,7 +379,7 @@ export function ERPSidebar() {
         key={n.to + n.key}
         to={linkPath as never}
         hash={hash as never}
-        className="flex items-center gap-3 py-2 transition-colors"
+        className={`flex items-center gap-3 py-2 transition-colors ${opts.nested ? "font-normal" : "font-semibold"}`}
         style={{
           background: active ? "var(--color-sidebar-active)" : "transparent",
           color: active ? "#fff" : "var(--color-sidebar-fg)",
