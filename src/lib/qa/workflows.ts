@@ -1025,6 +1025,14 @@ export const signupWorkflow = () =>
         : steps.push(fail("Login by email", `Expected ${user.id}, got ${loginSess?.userId}`));
     }
 
+    // Wrong password must NOT match the stored credential.
+    const wrongCheck = findUserByEmailOrMobile(email);
+    if (wrongCheck && wrongCheck.password !== "wrong-password") {
+      steps.push(pass("Wrong password rejected", "Mismatched password does not authenticate"));
+    } else {
+      steps.push(fail("Wrong password rejected", "Wrong password incorrectly accepted"));
+    }
+
     endDemoSession();
     if (priorSession && priorUser) {
       if (priorSession.isDemoUser || priorUser.isDemoUser) {
