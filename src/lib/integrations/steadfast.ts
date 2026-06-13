@@ -236,13 +236,11 @@ export const steadfastService = {
         rawSafe: { consignment_id: cid, tracking_code: cid, payload },
       });
     }
-    if (mode !== "direct-browser") {
-      return persist("steadfast_consignment", { ...d, status: "blocked", errorKind: "config", message: "Backend / Electron proxy required for live consignment.", rawSafe: payload });
-    }
+    // backend-proxy / electron-proxy use httpRequest below.
 
     try {
-      const res = await fetch(url, { method: "POST", headers: headers(c), body: JSON.stringify(payload) });
-      const text = await res.text();
+      const res = await httpRequest(mode, url, { method: "POST", headers: headers(c) as Record<string, string>, body: JSON.stringify(payload) });
+      const text = res.text;
       let data: { consignment?: { consignment_id?: string; tracking_code?: string; status?: string }; message?: string } | string = text;
       try { data = JSON.parse(text); } catch { /* keep text */ }
       if (res.ok && typeof data === "object" && data.consignment) {
