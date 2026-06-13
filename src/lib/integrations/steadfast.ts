@@ -288,13 +288,11 @@ export const steadfastService = {
       });
       return { ...out, deliveryStatus: next };
     }
-    if (mode !== "direct-browser") {
-      return { ...persist("steadfast_track", { ...d, status: "blocked", errorKind: "config", message: "Proxy not configured for tracking." }) };
-    }
+    // backend-proxy / electron-proxy dispatched via httpRequest below.
 
     try {
-      const res = await fetch(trackUrl, { method: "GET", headers: headers(c) });
-      const text = await res.text();
+      const res = await httpRequest(mode, trackUrl, { method: "GET", headers: headers(c) as Record<string, string> });
+      const text = res.text;
       let data: { delivery_status?: string; status?: string; message?: string } | string = text;
       try { data = JSON.parse(text); } catch { /* keep */ }
       if (res.ok && typeof data === "object") {
