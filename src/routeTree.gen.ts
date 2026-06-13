@@ -160,6 +160,7 @@ import { Route as AppCreditNotesIdEditRouteImport } from './routes/app.credit-no
 import { Route as AppCashTransfersIdRouteImport } from './routes/app.cash.transfers.$id'
 import { Route as AppCashLoanPaymentsIdRouteImport } from './routes/app.cash.loan-payments.$id'
 import { Route as AppCashChequesIdRouteImport } from './routes/app.cash.cheques.$id'
+import { Route as ApiIntegrationsWoocommerceTestRouteImport } from './routes/api.integrations.woocommerce.test'
 
 const SuperAdminRoute = SuperAdminRouteImport.update({
   id: '/super-admin',
@@ -933,6 +934,12 @@ const AppCashChequesIdRoute = AppCashChequesIdRouteImport.update({
   path: '/cheques/$id',
   getParentRoute: () => AppCashRoute,
 } as any)
+const ApiIntegrationsWoocommerceTestRoute =
+  ApiIntegrationsWoocommerceTestRouteImport.update({
+    id: '/api/integrations/woocommerce/test',
+    path: '/api/integrations/woocommerce/test',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -1064,6 +1071,7 @@ export interface FileRoutesByFullPath {
   '/super-admin/payments/$id': typeof SuperAdminPaymentsIdRoute
   '/app/ecommerce/': typeof AppEcommerceIndexRoute
   '/app/utilities/': typeof AppUtilitiesIndexRoute
+  '/api/integrations/woocommerce/test': typeof ApiIntegrationsWoocommerceTestRoute
   '/app/cash/cheques/$id': typeof AppCashChequesIdRoute
   '/app/cash/loan-payments/$id': typeof AppCashLoanPaymentsIdRoute
   '/app/cash/transfers/$id': typeof AppCashTransfersIdRoute
@@ -1213,6 +1221,7 @@ export interface FileRoutesByTo {
   '/super-admin/payments/$id': typeof SuperAdminPaymentsIdRoute
   '/app/ecommerce': typeof AppEcommerceIndexRoute
   '/app/utilities': typeof AppUtilitiesIndexRoute
+  '/api/integrations/woocommerce/test': typeof ApiIntegrationsWoocommerceTestRoute
   '/app/cash/cheques/$id': typeof AppCashChequesIdRoute
   '/app/cash/loan-payments/$id': typeof AppCashLoanPaymentsIdRoute
   '/app/cash/transfers/$id': typeof AppCashTransfersIdRoute
@@ -1367,6 +1376,7 @@ export interface FileRoutesById {
   '/super-admin/payments/$id': typeof SuperAdminPaymentsIdRoute
   '/app/ecommerce/': typeof AppEcommerceIndexRoute
   '/app/utilities/': typeof AppUtilitiesIndexRoute
+  '/api/integrations/woocommerce/test': typeof ApiIntegrationsWoocommerceTestRoute
   '/app/cash/cheques/$id': typeof AppCashChequesIdRoute
   '/app/cash/loan-payments/$id': typeof AppCashLoanPaymentsIdRoute
   '/app/cash/transfers/$id': typeof AppCashTransfersIdRoute
@@ -1522,6 +1532,7 @@ export interface FileRouteTypes {
     | '/super-admin/payments/$id'
     | '/app/ecommerce/'
     | '/app/utilities/'
+    | '/api/integrations/woocommerce/test'
     | '/app/cash/cheques/$id'
     | '/app/cash/loan-payments/$id'
     | '/app/cash/transfers/$id'
@@ -1671,6 +1682,7 @@ export interface FileRouteTypes {
     | '/super-admin/payments/$id'
     | '/app/ecommerce'
     | '/app/utilities'
+    | '/api/integrations/woocommerce/test'
     | '/app/cash/cheques/$id'
     | '/app/cash/loan-payments/$id'
     | '/app/cash/transfers/$id'
@@ -1824,6 +1836,7 @@ export interface FileRouteTypes {
     | '/super-admin/payments/$id'
     | '/app/ecommerce/'
     | '/app/utilities/'
+    | '/api/integrations/woocommerce/test'
     | '/app/cash/cheques/$id'
     | '/app/cash/loan-payments/$id'
     | '/app/cash/transfers/$id'
@@ -1860,6 +1873,7 @@ export interface RootRouteChildren {
   SuperAdminRoute: typeof SuperAdminRouteWithChildren
   StoreSlugRoute: typeof StoreSlugRoute
   ApiIntegrationsProxyRoute: typeof ApiIntegrationsProxyRoute
+  ApiIntegrationsWoocommerceTestRoute: typeof ApiIntegrationsWoocommerceTestRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -2921,6 +2935,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCashChequesIdRouteImport
       parentRoute: typeof AppCashRoute
     }
+    '/api/integrations/woocommerce/test': {
+      id: '/api/integrations/woocommerce/test'
+      path: '/api/integrations/woocommerce/test'
+      fullPath: '/api/integrations/woocommerce/test'
+      preLoaderRoute: typeof ApiIntegrationsWoocommerceTestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -3484,6 +3505,7 @@ const rootRouteChildren: RootRouteChildren = {
   SuperAdminRoute: SuperAdminRouteWithChildren,
   StoreSlugRoute: StoreSlugRoute,
   ApiIntegrationsProxyRoute: ApiIntegrationsProxyRoute,
+  ApiIntegrationsWoocommerceTestRoute: ApiIntegrationsWoocommerceTestRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
