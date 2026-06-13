@@ -225,6 +225,12 @@ export const AUDIT_REGISTRY: AuditEntry[] = [
   { id: "eco-sf-track", module: M.ecommerce, page: "Orders", label: "Steadfast tracking diagnostic", kind: "button", route: "/app/ecommerce/orders", status: W },
   { id: "eco-integration-errors", module: M.ecommerce, label: "Integration error handling", kind: "workflow", route: "/app/ecommerce/settings", status: W, note: "Service layer classifies CORS / auth / 404 / validation; QA marks live-blocked as Needs Proxy, not Broken." },
   { id: "eco-smoke-integrations", module: M.ecommerce, label: "Smoke: WooCommerce + Steadfast integration diagnostics", kind: "workflow", route: "/app/ecommerce/settings", status: W, note: "Saves fake credentials, runs test connection, simulates consignment + tracking, cleans up." },
+  { id: "eco-wc-product-images", module: M.ecommerce, page: "Products", label: "WooCommerce product image import", kind: "workflow", route: "/app/ecommerce/products", status: W, note: "Maps product.images[0].src -> imageUrl/thumbnailUrl/imageAlt/galleryImages/wooImageId." },
+  { id: "eco-wc-product-thumb", module: M.ecommerce, page: "Products", label: "Product thumbnail column", kind: "button", route: "/app/ecommerce/products", status: W, note: "ItemImageThumb fallback when image missing; lazy-loaded." },
+  { id: "eco-order-item-images", module: M.ecommerce, page: "Orders", label: "Order item image mapping", kind: "workflow", route: "/app/ecommerce/orders", status: W, note: "Order sync resolves line item image from product cache by productId/SKU." },
+  { id: "eco-order-refresh-images", module: M.ecommerce, page: "Orders", label: "Refresh Order Item Images", kind: "button", route: "/app/ecommerce/orders", status: W, note: "refreshOrderItemImages() updates missing images from product cache." },
+  { id: "eco-order-view-details", module: M.ecommerce, page: "Orders", label: "Website Order Details view", kind: "button", route: "/app/ecommerce/orders", status: W, note: "Order# link + View Details menu open full drawer (customer/items/payment/courier/actions)." },
+  { id: "eco-order-tracking-link", module: M.ecommerce, page: "Orders", label: "Courier tracking link in order details", kind: "button", route: "/app/ecommerce/orders", status: W, note: "Tracking URL clickable in row + details modal." },
 ];
 
 export function summarizeAudit(entries: AuditEntry[] = AUDIT_REGISTRY) {
