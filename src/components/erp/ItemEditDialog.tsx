@@ -240,11 +240,9 @@ export function ItemEditDialog({
               />
             </div>
             <div className="col-span-2">
-              <Label>Image URL</Label>
-              <Input
+              <ItemImagePicker
                 value={form.image_url}
-                onChange={(e) => setForm({ ...form, image_url: e.target.value })}
-                placeholder="https://…"
+                onChange={(v) => setForm({ ...form, image_url: v })}
               />
             </div>
             <div className="col-span-2">
