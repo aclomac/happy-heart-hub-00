@@ -99,9 +99,9 @@ export function maskedWooCreds(c: WooConfig) {
 }
 
 function validateWoo(c: WooConfig): string | null {
-  if (!c.websiteUrl) return "Website URL is required";
-  if (!c.consumerKey) return "Consumer Key is required";
-  if (!c.consumerSecret) return "Consumer Secret is required";
+  if (!c.websiteUrl) return "Please configure WooCommerce API in Integration Settings first. (Website URL missing)";
+  if (!c.consumerKey) return "Please configure WooCommerce API in Integration Settings first. (Consumer Key missing)";
+  if (!c.consumerSecret) return "Please configure WooCommerce API in Integration Settings first. (Consumer Secret missing)";
   if (!/^https?:\/\//i.test(c.websiteUrl)) return "Website URL must start with http(s)://";
   return null;
 }
