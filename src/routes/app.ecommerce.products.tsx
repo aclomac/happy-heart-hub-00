@@ -133,8 +133,20 @@ function ProductsPage() {
     const r = await syncWooCommerceProducts({ websiteId: syncWebsiteId, mode: getSettings().integrationMode });
     setBusy(false);
     setList(getProducts());
-    r.success || r.errorKind === "mode_disabled" ? toast.success(r.message) : toast.error(r.message);
+    // After product sync, propagate any new images into existing order items.
+    const refresh = refreshOrderItemImages();
+    const stats = productImageStats();
+    const withImageMsg = ` (${stats.withImage}/${stats.total} with images, ${refresh.updated} order items updated)`;
+    r.success || r.errorKind === "mode_disabled" ? toast.success(r.message + withImageMsg) : toast.error(r.message);
   };
+
+  const refreshImages = () => {
+    const stats = productImageStats();
+    const refresh = refreshOrderItemImages();
+    toast.success(`Products with images: ${stats.withImage}/${stats.total}. Order items refreshed — updated ${refresh.updated}, missing ${refresh.missing}, failed ${refresh.failed}.`);
+  };
+
+
 
   const confirmDelete = (ids: string[]) => setConfirmOpen({ ids });
   const doDelete = () => {
