@@ -14,7 +14,7 @@ import {
 import { StatusBadge } from "@/components/erp/ecommerce/EcommerceUI";
 import {
   getOrders, setOrders, getWebsites, getCouriers, getSettings,
-  type EcoOrder, type EcoOrderStatus,
+  type EcoOrder, type EcoOrderStatus, type EcoDeliveryStatus,
 } from "@/lib/demo/ecommerce";
 import { getSales, setSales } from "@/lib/demo/sales";
 import { genId } from "@/lib/demo/inventory";
