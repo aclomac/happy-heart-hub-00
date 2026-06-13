@@ -379,15 +379,18 @@ export function ERPSidebar() {
         key={n.to + n.key}
         to={linkPath as never}
         hash={hash as never}
-        className={`flex items-center gap-3 py-2 transition-colors ${opts.nested ? "font-normal" : "font-semibold"}`}
+        className={`flex items-center gap-3 transition-colors ${
+          opts.nested
+            ? "font-normal text-[13px] py-1.5 leading-6 text-slate-300"
+            : "font-bold text-[15px] py-2.5 text-slate-100"
+        }`}
         style={{
           background: active ? "var(--color-sidebar-active)" : "transparent",
-          color: active ? "#fff" : "var(--color-sidebar-fg)",
+          color: active ? "#fff" : undefined,
           borderLeft: active ? "3px solid #fff" : "3px solid transparent",
           opacity: locked ? 0.55 : 1,
-          paddingLeft: opts.nested ? 36 : 16,
+          paddingLeft: opts.nested ? 52 : 16,
           paddingRight: 16,
-          fontSize: opts.nested ? 12 : 13,
         }}
       >
         {!opts.nested && <Icon className="w-4 h-4" />}
