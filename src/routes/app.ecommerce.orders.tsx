@@ -140,6 +140,25 @@ function OrdersPage() {
     toast.success(`Converted → ${invoiceNo}`);
   };
 
+  const sendSteadfast = async (o: EcoOrder) => {
+    const settings = getSettings();
+    const r = await steadfastService.createConsignment(getSteadfastConfig(), settings.integrationMode, o);
+    setList(getOrders());
+    r.status === "success" || r.status === "skipped" ? toast.success(r.message) : toast.error(r.message);
+  };
+
+  const trackSteadfast = async (o: EcoOrder) => {
+    if (!o.trackingId) { toast.error("No tracking code on this order"); return; }
+    const settings = getSettings();
+    const r = await steadfastService.trackParcel(getSteadfastConfig(), settings.integrationMode, o.trackingId);
+    if (r.deliveryStatus) {
+      const next = list.map((x) => x.id === o.id ? { ...x, deliveryStatus: r.deliveryStatus as EcoDeliveryStatus } : x);
+      setList(next); setOrders(next);
+    }
+    r.status === "success" || r.status === "skipped" ? toast.success(r.message) : toast.error(r.message);
+  };
+
+
   return (
     <div>
       <PageHeader
