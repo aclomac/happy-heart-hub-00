@@ -14,7 +14,7 @@ import {
   type DiagnosticResult,
   type IntegrationMode,
 } from "./diagnostics";
-import { genId, getOrders, setOrders, getSyncLogs, setSyncLogs, type EcoOrder } from "@/lib/demo/ecommerce";
+import { genId, getOrders, setOrders, getSyncLogs, setSyncLogs, getWebsites, type EcoOrder, type EcoWebsite } from "@/lib/demo/ecommerce";
 
 export interface WooConfig {
   storeName: string;
