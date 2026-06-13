@@ -408,15 +408,33 @@ export const woocommerceService = {
             const price = Number(w.price ?? w.regular_price ?? 0);
             const stock = Number(w.stock_quantity ?? 0);
             const status: "active" | "inactive" = (w.status === "publish") ? "active" : "inactive";
+            // ---- Image mapping (main + gallery) ----
+            const images = Array.isArray(w.images) ? (w.images as Array<Record<string, unknown>>) : [];
+            const firstImg = images[0] as { src?: string; alt?: string; id?: number | string } | undefined;
+            const imageUrl = firstImg?.src ? String(firstImg.src) : null;
+            const imageAlt = firstImg?.alt ? String(firstImg.alt) : null;
+            const galleryImages = images.map((im) => String((im as { src?: string }).src ?? "")).filter(Boolean);
+            const wooImageId = firstImg?.id != null ? String(firstImg.id) : null;
             const key: `${string}:${string}` = `${websiteId}:${wpId}`;
             const prev = byKey.get(key);
             if (prev) {
-              Object.assign(prev, { name, sku, websitePrice: price, stock, status, lastSyncedAt: new Date().toISOString() });
+              Object.assign(prev, {
+                name, sku, websitePrice: price, stock, status,
+                imageUrl: imageUrl || prev.imageUrl || null,
+                thumbnailUrl: imageUrl || prev.thumbnailUrl || null,
+                imageAlt: imageAlt ?? prev.imageAlt ?? null,
+                galleryImages: galleryImages.length ? galleryImages : prev.galleryImages,
+                wooImageId: wooImageId ?? prev.wooImageId ?? null,
+                lastSyncedAt: new Date().toISOString(),
+              });
               updated++;
             } else {
               existing.push({
                 id: genId("ep"), websiteId, websiteProductId: wpId, name, sku,
-                erpItemId: null, websitePrice: price, stock, status, lastSyncedAt: new Date().toISOString(),
+                erpItemId: null, websitePrice: price, stock, status,
+                imageUrl, thumbnailUrl: imageUrl, imageAlt,
+                galleryImages, wooImageId,
+                lastSyncedAt: new Date().toISOString(),
               });
               added++;
             }
