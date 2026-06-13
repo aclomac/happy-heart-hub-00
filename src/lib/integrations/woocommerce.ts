@@ -364,15 +364,13 @@ export const woocommerceService = {
       setProducts(existing);
       return wrap({ status: "skipped", errorKind: "mode_disabled", message: `Local Demo — added ${added} sample products. Switch to Direct Browser API for live sync.` }, { added, updated: 0, failed: 0 });
     }
-    if (mode !== "direct-browser") {
-      return wrap({ status: "blocked", errorKind: "config", message: "Backend/Electron proxy required." });
-    }
+    // backend-proxy / electron-proxy go through httpRequest below.
     try {
       const existing = getProducts();
       const byKey = new Map(existing.map((p) => [`${p.websiteId}:${p.websiteProductId}`, p] as const));
       let added = 0, updated = 0, failed = 0;
       for (let page = 1; page <= 20; page++) {
-        const { ok, status, data, finalUrl, errorText } = await callWoo(c, "/products", { per_page: "100", page: String(page) });
+        const { ok, status, data, finalUrl, errorText } = await callWoo(c, mode, "/products", { per_page: "100", page: String(page) });
         if (!ok) {
           return wrap({
             status: "failed", httpStatus: status, url: finalUrl,
