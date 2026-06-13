@@ -794,17 +794,11 @@ export function SalesDocForm({
         } catch (primaryErr) {
           const msg = (primaryErr as Error).message || "";
           if (msg === "Duplicate invoice number") throw primaryErr;
-          console.error("saveSaleInvoice failed, using localStorage fallback:", primaryErr);
-          try {
-            const saved = saveInvoiceFallback(payload);
-            newId = saved.id;
-            finalInvoiceNo = saved.invoiceNo;
-            localSalesCount = saved.localSalesCount;
-          } catch (fbErr) {
-            throw new Error(
-              `Invoice save failed: ${(primaryErr as Error).message}; fallback also failed: ${(fbErr as Error).message}`,
-            );
-          }
+          // Don't silently fall back to localStorage in normal (non-demo)
+          // mode — that hides stock posting failures and leaves the user
+          // believing the invoice + ledger were saved. Surface the error.
+          console.error("saveSaleInvoice failed:", primaryErr);
+          throw new Error(`Sale invoice failed: ${msg || "save error"}`);
         }
       }
 

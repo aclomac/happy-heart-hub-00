@@ -106,21 +106,79 @@ export type SaleInvoiceInput = {
   items: SaleItemInput[];
 };
 
-async function getDefaultWarehouseId(companyId: string): Promise<string | null> {
-  const { data } = await supabase
+async function resolveWarehouseId(companyId: string): Promise<string | null> {
+  // 1. Configured default warehouse.
+  const { data: def } = await supabase
     .from("warehouses")
     .select("id")
     .eq("company_id", companyId)
     .eq("is_default", true)
     .is("deleted_at", null)
     .maybeSingle();
-  return (data?.id as string | null) ?? null;
+  if (def?.id) return def.id as string;
+
+  // 2. Any active warehouse — so stock posting never silently skips just
+  //    because no warehouse was flagged as default.
+  const { data: any1 } = await supabase
+    .from("warehouses")
+    .select("id")
+    .eq("company_id", companyId)
+    .is("deleted_at", null)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (any1?.id) return any1.id as string;
+
+  // 3. Auto-provision a "Main Store" default so the first sale invoice on a
+  //    fresh company still posts a complete ledger row.
+  const { data: created } = await supabase
+    .from("warehouses")
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .insert({ company_id: companyId, name: "Main Store", is_default: true } as any)
+    .select("id")
+    .single();
+  return (created?.id as string | null) ?? null;
+}
+
+/** Upsert the per-store stock cache (`item_store_stock`) so store-wise
+ * stock stays consistent with `items.stock` and the ledger.
+ */
+async function adjustStoreStock(
+  companyId: string,
+  itemId: string,
+  warehouseId: string,
+  signedQty: number,
+) {
+  if (!signedQty) return;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sb = supabase as any;
+  const { data: row } = await sb
+    .from("item_store_stock")
+    .select("id,qty")
+    .eq("company_id", companyId)
+    .eq("item_id", itemId)
+    .eq("warehouse_id", warehouseId)
+    .maybeSingle();
+  if (row?.id) {
+    await sb
+      .from("item_store_stock")
+      .update({ qty: Number(row.qty || 0) + signedQty })
+      .eq("id", row.id);
+  } else {
+    await sb.from("item_store_stock").insert({
+      company_id: companyId,
+      item_id: itemId,
+      warehouse_id: warehouseId,
+      qty: signedQty,
+      opening_stock: 0,
+    });
+  }
 }
 
 /**
- * Insert ledger movements + adjust items.stock for the given line items.
- * direction=+1 increases stock, -1 decreases. No-op when sign is 0 or when
- * the line item is a service / missing item_id.
+ * Insert ledger movements + adjust items.stock + item_store_stock for the
+ * given line items. direction=+1 increases stock, -1 decreases. No-op
+ * when sign is 0 or when the line item is a service / missing item_id.
  */
 async function applyStockDelta(
   companyId: string,
@@ -131,12 +189,13 @@ async function applyStockDelta(
   movementKind: "sale" | "sale_reversal" | "credit_note" | "credit_note_reversal" | "delivery",
 ) {
   if (direction === 0) return;
-  const warehouseId = await getDefaultWarehouseId(companyId);
+  const warehouseId = await resolveWarehouseId(companyId);
   for (const r of items) {
     if (!r.item_id) continue;
     const qty = Math.abs(Number(r.qty || 0));
     if (qty <= 0) continue;
 
+    let isService = false;
     if (r.variant_id) {
       const { data: v } = await supabase.from("item_variants").select("stock").eq("id", r.variant_id).single();
       if (v) {
@@ -144,12 +203,18 @@ async function applyStockDelta(
       }
     } else {
       const { data: it } = await supabase.from("items").select("id,stock,is_service").eq("id", r.item_id).maybeSingle();
-      if (it && !it.is_service) {
-        await supabase.from("items").update({ stock: Number(it.stock) + direction * qty }).eq("id", r.item_id);
+      if (it) {
+        isService = !!it.is_service;
+        if (!isService) {
+          await supabase.from("items").update({ stock: Number(it.stock) + direction * qty }).eq("id", r.item_id);
+        }
       }
     }
 
     if (!warehouseId) continue;
+    if (!isService) {
+      await adjustStoreStock(companyId, r.item_id, warehouseId, direction * qty);
+    }
     await supabase.from("stock_movements").insert({
       company_id: companyId,
       item_id: r.item_id,
