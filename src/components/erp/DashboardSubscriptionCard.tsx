@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubscription, useDeviceGuard, PLAN_LIMITS } from "@/lib/use-subscription";
 import { PlanStatusBadge } from "@/components/erp/PlanStatusBadge";
-import { isDemoMode, getDemoCompanies } from "@/lib/demo/localStore";
+import { isDemoMode, getVisibleDemoCompanies } from "@/lib/demo/localStore";
 
 export function DashboardSubscriptionCard() {
   const { data: sub } = useSubscription();
@@ -15,7 +15,7 @@ export function DashboardSubscriptionCard() {
     queryKey: ["company-count", sub?.subscription?.owner_id, isDemoMode() ? "demo" : "live"],
     enabled: !!sub?.subscription?.owner_id,
     queryFn: async () => {
-      if (isDemoMode()) return getDemoCompanies().length;
+      if (isDemoMode()) return getVisibleDemoCompanies().length;
       const { count, error } = await supabase
         .from("companies")
         .select("id", { count: "exact", head: true })
