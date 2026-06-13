@@ -726,7 +726,7 @@ function ItemDetailPage() {
         </Link>
       </Button>
       <Button asChild variant="outline" size="sm">
-        <Link to="/app/stock-transfers">
+        <Link to="/app/stock-transfers" search={{}}>
           <ArrowLeftRight className="w-4 h-4 mr-1" /> Transfer
         </Link>
       </Button>
