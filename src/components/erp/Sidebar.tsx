@@ -379,7 +379,7 @@ export function ERPSidebar() {
         key={n.to + n.key}
         to={linkPath as never}
         hash={hash as never}
-        className="flex items-center gap-3 py-2 transition-colors"
+        className={`flex items-center gap-3 py-2 transition-colors ${opts.nested ? "font-normal" : "font-semibold"}`}
         style={{
           background: active ? "var(--color-sidebar-active)" : "transparent",
           color: active ? "#fff" : "var(--color-sidebar-fg)",
@@ -410,7 +410,7 @@ export function ERPSidebar() {
         <button
           type="button"
           onClick={() => setOpenGroups((s) => ({ ...s, [g.key]: !s[g.key] }))}
-          className="w-full flex items-center gap-3 px-4 py-2 text-[13px] transition-colors text-left"
+          className="w-full flex items-center gap-3 px-4 py-2 text-[13px] font-semibold transition-colors text-left"
           style={{
             background: childActive ? "var(--color-sidebar-active)" : "transparent",
             color: childActive ? "#fff" : "var(--color-sidebar-fg)",
