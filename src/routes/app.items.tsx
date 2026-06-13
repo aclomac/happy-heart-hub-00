@@ -759,6 +759,14 @@ function Items() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ItemEditDialog
+        itemId={editingId}
+        companyId={companyId}
+        open={!!editingId}
+        onOpenChange={(o) => { if (!o) setEditingId(null); }}
+        onSaved={() => qc.invalidateQueries({ queryKey: ["items", companyId] })}
+      />
     </div>
   );
 }
