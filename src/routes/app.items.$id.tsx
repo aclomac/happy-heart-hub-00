@@ -1,0 +1,843 @@
+import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+import {
+  ArrowLeft,
+  Loader2,
+  Package,
+  Edit3,
+  ArrowLeftRight,
+  Sliders,
+  Printer,
+  Download,
+  AlertTriangle,
+} from "lucide-react";
+import { PageHeader } from "@/components/erp/PageHeader";
+import { SummaryCards, type SummaryItem } from "@/components/erp/SummaryCards";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { supabase } from "@/integrations/supabase/client";
+import { useCurrentCompanyId } from "@/lib/use-company";
+import { downloadCSV } from "@/lib/csv";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const sb = supabase as any;
+
+export const Route = createFileRoute("/app/items/$id")({ component: ItemDetailPage });
+
+type Item = {
+  id: string;
+  name: string;
+  sku: string | null;
+  barcode: string | null;
+  category: string | null;
+  unit: string;
+  sale_price: number;
+  purchase_price: number;
+  stock: number;
+  low_stock_alert: number | null;
+  is_active: boolean;
+  is_service: boolean;
+  image_url: string | null;
+  updated_at: string | null;
+};
+
+type Movement = {
+  id: string;
+  movement_date: string;
+  created_at: string;
+  direction: "in" | "out";
+  qty: number;
+  reference_type: string;
+  reference_id: string | null;
+  reference_no: string | null;
+  warehouse_id: string;
+  note: string | null;
+};
+
+type Warehouse = { id: string; name: string };
+
+const SALE_TYPES = new Set(["sale", "delivery", "pos"]);
+const SALE_RETURN_TYPES = new Set(["credit_note", "sale_reversal"]);
+const PURCHASE_TYPES = new Set(["purchase"]);
+const PURCHASE_RETURN_TYPES = new Set(["debit_note"]);
+
+function typeLabel(t: string) {
+  return t.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+function fmtMoney(n: number) {
+  return Number(n || 0).toLocaleString(undefined, { maximumFractionDigits: 2 });
+}
+
+function ItemDetailPage() {
+  const { id } = useParams({ from: "/app/items/$id" });
+  const companyId = useCurrentCompanyId();
+  const [search, setSearch] = useState("");
+
+  const itemQ = useQuery({
+    queryKey: ["item-detail-full", id, companyId],
+    enabled: !!companyId,
+    queryFn: async () => {
+      const { data, error } = await sb
+        .from("items")
+        .select("*")
+        .eq("id", id)
+        .is("deleted_at", null)
+        .maybeSingle();
+      if (error) throw error;
+      return data as Item | null;
+    },
+  });
+
+  const movementsQ = useQuery({
+    queryKey: ["item-movements", id, companyId],
+    enabled: !!companyId,
+    queryFn: async () => {
+      const { data, error } = await sb
+        .from("stock_movements")
+        .select(
+          "id,movement_date,created_at,direction,qty,reference_type,reference_id,reference_no,warehouse_id,note",
+        )
+        .eq("company_id", companyId)
+        .eq("item_id", id)
+        .order("movement_date", { ascending: true })
+        .order("created_at", { ascending: true })
+        .limit(5000);
+      if (error) throw error;
+      return (data ?? []) as Movement[];
+    },
+  });
+
+  const warehousesQ = useQuery({
+    queryKey: ["warehouses-min-detail", companyId],
+    enabled: !!companyId,
+    queryFn: async () => {
+      const { data } = await sb
+        .from("warehouses")
+        .select("id,name")
+        .eq("company_id", companyId)
+        .is("deleted_at", null)
+        .order("name");
+      return (data ?? []) as Warehouse[];
+    },
+  });
+
+  const movements = movementsQ.data ?? [];
+  const saleIds = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          movements
+            .filter((m) => m.reference_id && SALE_TYPES.has(m.reference_type))
+            .map((m) => m.reference_id as string),
+        ),
+      ),
+    [movements],
+  );
+  const purchaseIds = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          movements
+            .filter((m) => m.reference_id && PURCHASE_TYPES.has(m.reference_type))
+            .map((m) => m.reference_id as string),
+        ),
+      ),
+    [movements],
+  );
+
+  const salesQ = useQuery({
+    queryKey: ["item-sale-refs", id, saleIds.join(",")],
+    enabled: !!companyId && saleIds.length > 0,
+    queryFn: async () => {
+      const { data } = await sb
+        .from("sales")
+        .select("id,invoice_no,party_id,party_name,payment_status,total,sale_date")
+        .in("id", saleIds);
+      return (data ?? []) as Array<{
+        id: string;
+        invoice_no: string | null;
+        party_id: string | null;
+        party_name: string | null;
+        payment_status: string | null;
+        total: number | null;
+        sale_date: string | null;
+      }>;
+    },
+  });
+  const saleItemsQ = useQuery({
+    queryKey: ["item-sale-items", id, saleIds.join(",")],
+    enabled: !!companyId && saleIds.length > 0,
+    queryFn: async () => {
+      const { data } = await sb
+        .from("sale_items")
+        .select("sale_id,item_id,qty,price,amount,discount_pct")
+        .eq("item_id", id)
+        .in("sale_id", saleIds);
+      return (data ?? []) as Array<{
+        sale_id: string;
+        item_id: string;
+        qty: number;
+        price: number;
+        amount: number;
+        discount_pct: number | null;
+      }>;
+    },
+  });
+
+  const purchasesQ = useQuery({
+    queryKey: ["item-purchase-refs", id, purchaseIds.join(",")],
+    enabled: !!companyId && purchaseIds.length > 0,
+    queryFn: async () => {
+      const { data } = await sb
+        .from("purchases")
+        .select("id,invoice_no,party_id,party_name,payment_status,total,purchase_date")
+        .in("id", purchaseIds);
+      return (data ?? []) as Array<{
+        id: string;
+        invoice_no: string | null;
+        party_id: string | null;
+        party_name: string | null;
+        payment_status: string | null;
+        total: number | null;
+        purchase_date: string | null;
+      }>;
+    },
+  });
+  const purchaseItemsQ = useQuery({
+    queryKey: ["item-purchase-items", id, purchaseIds.join(",")],
+    enabled: !!companyId && purchaseIds.length > 0,
+    queryFn: async () => {
+      const { data } = await sb
+        .from("purchase_items")
+        .select("purchase_id,item_id,qty,price,amount")
+        .eq("item_id", id)
+        .in("purchase_id", purchaseIds);
+      return (data ?? []) as Array<{
+        purchase_id: string;
+        item_id: string;
+        qty: number;
+        price: number;
+        amount: number;
+      }>;
+    },
+  });
+
+  const whMap = useMemo(
+    () => new Map((warehousesQ.data ?? []).map((w) => [w.id, w.name])),
+    [warehousesQ.data],
+  );
+  const saleMap = useMemo(
+    () => new Map((salesQ.data ?? []).map((s) => [s.id, s])),
+    [salesQ.data],
+  );
+  const saleItemMap = useMemo(() => {
+    const m = new Map<string, { qty: number; price: number; amount: number }>();
+    for (const r of saleItemsQ.data ?? []) {
+      const cur = m.get(r.sale_id) ?? { qty: 0, price: 0, amount: 0 };
+      cur.qty += Number(r.qty || 0);
+      cur.amount += Number(r.amount || 0);
+      cur.price = Number(r.price || cur.price);
+      m.set(r.sale_id, cur);
+    }
+    return m;
+  }, [saleItemsQ.data]);
+  const purchaseMap = useMemo(
+    () => new Map((purchasesQ.data ?? []).map((p) => [p.id, p])),
+    [purchasesQ.data],
+  );
+  const purchaseItemMap = useMemo(() => {
+    const m = new Map<string, { qty: number; price: number; amount: number }>();
+    for (const r of purchaseItemsQ.data ?? []) {
+      const cur = m.get(r.purchase_id) ?? { qty: 0, price: 0, amount: 0 };
+      cur.qty += Number(r.qty || 0);
+      cur.amount += Number(r.amount || 0);
+      cur.price = Number(r.price || cur.price);
+      m.set(r.purchase_id, cur);
+    }
+    return m;
+  }, [purchaseItemsQ.data]);
+
+  // Build ledger with running balance
+  type LedgerRow = {
+    id: string;
+    date: string;
+    type: string;
+    refNo: string;
+    refId: string | null;
+    party: string;
+    warehouse: string;
+    qtyIn: number;
+    qtyOut: number;
+    balance: number;
+    price: number;
+    amount: number;
+    paymentStatus: string;
+  };
+
+  const ledger: LedgerRow[] = useMemo(() => {
+    let bal = 0;
+    return movements.map((m) => {
+      const qtyIn = m.direction === "in" ? Number(m.qty) : 0;
+      const qtyOut = m.direction === "out" ? Number(m.qty) : 0;
+      bal += qtyIn - qtyOut;
+      let party = "—";
+      let price = 0;
+      let amount = 0;
+      let paymentStatus = "—";
+      let refNo = m.reference_no || "—";
+      if (SALE_TYPES.has(m.reference_type) && m.reference_id) {
+        const s = saleMap.get(m.reference_id);
+        const li = saleItemMap.get(m.reference_id);
+        if (s) {
+          party = s.party_name || "—";
+          paymentStatus = s.payment_status || "—";
+          refNo = s.invoice_no || refNo;
+        }
+        if (li) {
+          price = li.price;
+          amount = li.amount;
+        }
+      } else if (PURCHASE_TYPES.has(m.reference_type) && m.reference_id) {
+        const p = purchaseMap.get(m.reference_id);
+        const li = purchaseItemMap.get(m.reference_id);
+        if (p) {
+          party = p.party_name || "—";
+          paymentStatus = p.payment_status || "—";
+          refNo = p.invoice_no || refNo;
+        }
+        if (li) {
+          price = li.price;
+          amount = li.amount;
+        }
+      }
+      return {
+        id: m.id,
+        date: m.movement_date,
+        type: typeLabel(m.reference_type),
+        refNo,
+        refId: m.reference_id,
+        party,
+        warehouse: whMap.get(m.warehouse_id) || "—",
+        qtyIn,
+        qtyOut,
+        balance: bal,
+        price,
+        amount,
+        paymentStatus,
+      };
+    });
+  }, [movements, saleMap, saleItemMap, purchaseMap, purchaseItemMap, whMap]);
+
+  const filteredLedger = useMemo(() => {
+    const s = search.trim().toLowerCase();
+    const rows = [...ledger].reverse();
+    if (!s) return rows;
+    return rows.filter(
+      (r) =>
+        r.refNo.toLowerCase().includes(s) ||
+        r.party.toLowerCase().includes(s) ||
+        r.type.toLowerCase().includes(s) ||
+        r.warehouse.toLowerCase().includes(s),
+    );
+  }, [ledger, search]);
+
+  // Aggregates
+  const totals = useMemo(() => {
+    let soldQty = 0,
+      soldAmount = 0,
+      purchasedQty = 0,
+      purchasedAmount = 0,
+      returnedSaleQty = 0,
+      returnedPurchaseQty = 0,
+      damagedAdjusted = 0,
+      lastSale: string | null = null,
+      lastPurchase: string | null = null;
+    for (const m of movements) {
+      const q = Number(m.qty);
+      if (SALE_TYPES.has(m.reference_type)) {
+        soldQty += q;
+        const li = m.reference_id ? saleItemMap.get(m.reference_id) : null;
+        if (li) soldAmount += li.amount;
+        if (!lastSale || m.movement_date > lastSale) lastSale = m.movement_date;
+      } else if (SALE_RETURN_TYPES.has(m.reference_type)) {
+        returnedSaleQty += q;
+      } else if (PURCHASE_TYPES.has(m.reference_type)) {
+        purchasedQty += q;
+        const li = m.reference_id ? purchaseItemMap.get(m.reference_id) : null;
+        if (li) purchasedAmount += li.amount;
+        if (!lastPurchase || m.movement_date > lastPurchase) lastPurchase = m.movement_date;
+      } else if (PURCHASE_RETURN_TYPES.has(m.reference_type)) {
+        returnedPurchaseQty += q;
+      } else if (m.reference_type === "damage" || m.reference_type === "adjustment") {
+        damagedAdjusted += m.direction === "out" ? q : -q;
+      }
+    }
+    return {
+      soldQty,
+      soldAmount,
+      purchasedQty,
+      purchasedAmount,
+      returnedSaleQty,
+      returnedPurchaseQty,
+      damagedAdjusted,
+      lastSale,
+      lastPurchase,
+      avgSale: soldQty > 0 ? soldAmount / soldQty : 0,
+      avgCost: purchasedQty > 0 ? purchasedAmount / purchasedQty : 0,
+      profit: soldAmount - (purchasedQty > 0 ? (purchasedAmount / purchasedQty) * soldQty : 0),
+    };
+  }, [movements, saleItemMap, purchaseItemMap]);
+
+  // Store-wise stock
+  const storeStock = useMemo(() => {
+    const map = new Map<
+      string,
+      {
+        warehouse: string;
+        purchased: number;
+        sold: number;
+        returnedIn: number;
+        transferIn: number;
+        transferOut: number;
+        adjusted: number;
+        current: number;
+      }
+    >();
+    for (const m of movements) {
+      const wid = m.warehouse_id;
+      if (!map.has(wid)) {
+        map.set(wid, {
+          warehouse: whMap.get(wid) || wid,
+          purchased: 0,
+          sold: 0,
+          returnedIn: 0,
+          transferIn: 0,
+          transferOut: 0,
+          adjusted: 0,
+          current: 0,
+        });
+      }
+      const row = map.get(wid)!;
+      const q = Number(m.qty);
+      const signed = m.direction === "in" ? q : -q;
+      row.current += signed;
+      if (PURCHASE_TYPES.has(m.reference_type)) row.purchased += q;
+      else if (SALE_TYPES.has(m.reference_type)) row.sold += q;
+      else if (SALE_RETURN_TYPES.has(m.reference_type)) row.returnedIn += q;
+      else if (m.reference_type === "transfer_in") row.transferIn += q;
+      else if (m.reference_type === "transfer_out") row.transferOut += q;
+      else if (m.reference_type === "adjustment" || m.reference_type === "damage")
+        row.adjusted += signed;
+    }
+    return Array.from(map.values()).sort((a, b) => a.warehouse.localeCompare(b.warehouse));
+  }, [movements, whMap]);
+
+  if (itemQ.isLoading) {
+    return (
+      <div>
+        <PageHeader
+          title="Item"
+          actions={
+            <Button asChild variant="outline" size="sm">
+              <Link to="/app/items">
+                <ArrowLeft className="w-4 h-4 mr-1" /> Back
+              </Link>
+            </Button>
+          }
+        />
+        <div className="p-8 text-center text-muted-foreground">
+          <Loader2 className="w-5 h-5 animate-spin inline mr-2" /> Loading…
+        </div>
+      </div>
+    );
+  }
+  if (!itemQ.data) {
+    return (
+      <div>
+        <PageHeader title="Item not found" />
+        <div className="p-8 text-center text-sale">
+          This item does not exist or has been deleted.
+        </div>
+      </div>
+    );
+  }
+
+  const it = itemQ.data;
+  const stockValue = Number(it.stock) * Number(it.purchase_price || 0);
+  const low =
+    it.low_stock_alert != null && Number(it.stock) <= Number(it.low_stock_alert) && !it.is_service;
+
+  const summary: SummaryItem[] = [
+    { label: "Current Stock", value: `${Number(it.stock)} ${it.unit}`, tone: low ? "warning" : "primary", icon: Package },
+    { label: "Total Sold", value: `${totals.soldQty} ${it.unit}`, tone: "sale" },
+    { label: "Sales Amount", value: fmtMoney(totals.soldAmount), tone: "sale" },
+    { label: "Total Purchased", value: `${totals.purchasedQty} ${it.unit}`, tone: "primary" },
+    { label: "Purchase Amount", value: fmtMoney(totals.purchasedAmount), tone: "primary" },
+    { label: "Stock Value", value: fmtMoney(stockValue), tone: "success" },
+    { label: "Gross Profit", value: fmtMoney(totals.profit), tone: "success" },
+    { label: "Avg Sale Price", value: fmtMoney(totals.avgSale), tone: "muted" },
+  ];
+
+  const exportLedger = () => {
+    downloadCSV(`item-ledger-${it.sku || it.name}.csv`, [
+      ["Date", "Type", "Ref No", "Party", "Warehouse", "In", "Out", "Balance", "Price", "Amount", "Payment"],
+      ...filteredLedger.map((r) => [
+        r.date,
+        r.type,
+        r.refNo,
+        r.party,
+        r.warehouse,
+        String(r.qtyIn || ""),
+        String(r.qtyOut || ""),
+        String(r.balance),
+        String(r.price || ""),
+        String(r.amount || ""),
+        r.paymentStatus,
+      ]),
+    ]);
+  };
+
+  const actions = (
+    <div className="flex gap-2 flex-wrap">
+      <Button asChild variant="outline" size="sm">
+        <Link to="/app/items">
+          <ArrowLeft className="w-4 h-4 mr-1" /> Back
+        </Link>
+      </Button>
+      <Button asChild variant="outline" size="sm">
+        <Link to="/app/items/$id/edit" params={{ id: it.id }}>
+          <Edit3 className="w-4 h-4 mr-1" /> Edit
+        </Link>
+      </Button>
+      <Button asChild variant="outline" size="sm">
+        <Link to="/app/stock-adjustments">
+          <Sliders className="w-4 h-4 mr-1" /> Adjust Stock
+        </Link>
+      </Button>
+      <Button asChild variant="outline" size="sm">
+        <Link to="/app/stock-transfers">
+          <ArrowLeftRight className="w-4 h-4 mr-1" /> Transfer
+        </Link>
+      </Button>
+      <Button variant="outline" size="sm" onClick={() => window.print()}>
+        <Printer className="w-4 h-4 mr-1" /> Print
+      </Button>
+      <Button variant="outline" size="sm" onClick={exportLedger}>
+        <Download className="w-4 h-4 mr-1" /> Export Ledger
+      </Button>
+    </div>
+  );
+
+  return (
+    <div>
+      <PageHeader title={it.name} subtitle={it.sku ? `SKU: ${it.sku}` : undefined} actions={actions} />
+
+      <div className="rounded-lg border bg-card p-4 mb-4 flex gap-4">
+        <div className="w-20 h-20 rounded-md border bg-muted flex items-center justify-center overflow-hidden shrink-0">
+          {it.image_url ? (
+            <img src={it.image_url} alt={it.name} className="object-cover w-full h-full" />
+          ) : (
+            <Package className="w-8 h-8 text-muted-foreground" />
+          )}
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm flex-1">
+          <Field label="Category" value={it.category || "—"} />
+          <Field label="Unit" value={it.unit} />
+          <Field label="Sale Price" value={fmtMoney(it.sale_price)} />
+          <Field label="Purchase Price" value={fmtMoney(it.purchase_price)} />
+          <Field label="Status" value={it.is_active ? "Active" : "Inactive"} />
+          <Field label="Low Stock Alert" value={it.low_stock_alert ?? "—"} />
+          <Field label="Last Sale" value={totals.lastSale || "—"} />
+          <Field label="Last Purchase" value={totals.lastPurchase || "—"} />
+        </div>
+      </div>
+
+      {low && (
+        <div className="mb-4 rounded-md border border-yellow-200 bg-yellow-50 text-yellow-900 px-3 py-2 text-sm flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4" /> Low stock: current {it.stock} ≤ alert {it.low_stock_alert}.
+        </div>
+      )}
+
+      <SummaryCards items={summary} />
+
+      <Tabs defaultValue="ledger" className="mt-4">
+        <TabsList className="flex-wrap h-auto">
+          <TabsTrigger value="ledger">Transactions</TabsTrigger>
+          <TabsTrigger value="sales">Sales</TabsTrigger>
+          <TabsTrigger value="purchases">Purchases</TabsTrigger>
+          <TabsTrigger value="movement">Stock Movement</TabsTrigger>
+          <TabsTrigger value="stores">Store-wise Stock</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="ledger">
+          <div className="flex gap-2 mb-2">
+            <Input
+              placeholder="Search invoice/party/type…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="max-w-xs"
+            />
+          </div>
+          <LedgerTable rows={filteredLedger} loading={movementsQ.isLoading} />
+        </TabsContent>
+
+        <TabsContent value="sales">
+          <SalesTable rows={filteredLedger.filter((r) => /sale|delivery|pos/i.test(r.type))} />
+        </TabsContent>
+
+        <TabsContent value="purchases">
+          <PurchasesTable rows={filteredLedger.filter((r) => /purchase|debit/i.test(r.type))} />
+        </TabsContent>
+
+        <TabsContent value="movement">
+          <LedgerTable rows={filteredLedger} loading={movementsQ.isLoading} compact />
+        </TabsContent>
+
+        <TabsContent value="stores">
+          <div className="rounded-md border overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-muted">
+                <tr>
+                  <th className="text-left px-3 py-2">Warehouse</th>
+                  <th className="text-right px-3 py-2">Purchased</th>
+                  <th className="text-right px-3 py-2">Sold</th>
+                  <th className="text-right px-3 py-2">Returned In</th>
+                  <th className="text-right px-3 py-2">Transfer In</th>
+                  <th className="text-right px-3 py-2">Transfer Out</th>
+                  <th className="text-right px-3 py-2">Adjusted</th>
+                  <th className="text-right px-3 py-2">Current</th>
+                </tr>
+              </thead>
+              <tbody>
+                {storeStock.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="px-3 py-6 text-center text-muted-foreground">
+                      No store activity yet.
+                    </td>
+                  </tr>
+                ) : (
+                  storeStock.map((r) => (
+                    <tr key={r.warehouse} className="border-t">
+                      <td className="px-3 py-2">{r.warehouse}</td>
+                      <td className="px-3 py-2 text-right">{r.purchased}</td>
+                      <td className="px-3 py-2 text-right">{r.sold}</td>
+                      <td className="px-3 py-2 text-right">{r.returnedIn}</td>
+                      <td className="px-3 py-2 text-right">{r.transferIn}</td>
+                      <td className="px-3 py-2 text-right">{r.transferOut}</td>
+                      <td className="px-3 py-2 text-right">{r.adjusted}</td>
+                      <td className="px-3 py-2 text-right font-semibold">{r.current}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+function Field({ label, value }: { label: string; value: string | number | null | undefined }) {
+  return (
+    <div>
+      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className="font-medium break-all">{value ?? "—"}</div>
+    </div>
+  );
+}
+
+type LedgerRow = {
+  id: string;
+  date: string;
+  type: string;
+  refNo: string;
+  refId: string | null;
+  party: string;
+  warehouse: string;
+  qtyIn: number;
+  qtyOut: number;
+  balance: number;
+  price: number;
+  amount: number;
+  paymentStatus: string;
+};
+
+function LedgerTable({
+  rows,
+  loading,
+  compact,
+}: {
+  rows: LedgerRow[];
+  loading?: boolean;
+  compact?: boolean;
+}) {
+  if (loading)
+    return (
+      <div className="p-6 text-center text-muted-foreground">
+        <Loader2 className="w-5 h-5 animate-spin inline mr-2" /> Loading…
+      </div>
+    );
+  return (
+    <div className="rounded-md border overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead className="bg-muted">
+          <tr>
+            <th className="text-left px-3 py-2">Date</th>
+            <th className="text-left px-3 py-2">Type</th>
+            <th className="text-left px-3 py-2">Ref</th>
+            {!compact && <th className="text-left px-3 py-2">Party</th>}
+            <th className="text-left px-3 py-2">Warehouse</th>
+            <th className="text-right px-3 py-2">In</th>
+            <th className="text-right px-3 py-2">Out</th>
+            <th className="text-right px-3 py-2">Balance</th>
+            {!compact && <th className="text-right px-3 py-2">Price</th>}
+            {!compact && <th className="text-right px-3 py-2">Amount</th>}
+            {!compact && <th className="text-left px-3 py-2">Payment</th>}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.length === 0 ? (
+            <tr>
+              <td colSpan={11} className="px-3 py-6 text-center text-muted-foreground">
+                No transactions.
+              </td>
+            </tr>
+          ) : (
+            rows.map((r) => (
+              <tr key={r.id} className="border-t">
+                <td className="px-3 py-2">{r.date}</td>
+                <td className="px-3 py-2">{r.type}</td>
+                <td className="px-3 py-2">{r.refNo}</td>
+                {!compact && <td className="px-3 py-2">{r.party}</td>}
+                <td className="px-3 py-2">{r.warehouse}</td>
+                <td className="px-3 py-2 text-right text-success">{r.qtyIn || ""}</td>
+                <td className="px-3 py-2 text-right text-sale">{r.qtyOut || ""}</td>
+                <td className="px-3 py-2 text-right font-semibold">{r.balance}</td>
+                {!compact && <td className="px-3 py-2 text-right">{r.price ? fmtMoney(r.price) : ""}</td>}
+                {!compact && <td className="px-3 py-2 text-right">{r.amount ? fmtMoney(r.amount) : ""}</td>}
+                {!compact && <td className="px-3 py-2 capitalize">{r.paymentStatus}</td>}
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function SalesTable({ rows }: { rows: LedgerRow[] }) {
+  return (
+    <div className="rounded-md border overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead className="bg-muted">
+          <tr>
+            <th className="text-left px-3 py-2">Date</th>
+            <th className="text-left px-3 py-2">Invoice</th>
+            <th className="text-left px-3 py-2">Customer</th>
+            <th className="text-left px-3 py-2">Store</th>
+            <th className="text-right px-3 py-2">Qty</th>
+            <th className="text-right px-3 py-2">Rate</th>
+            <th className="text-right px-3 py-2">Total</th>
+            <th className="text-left px-3 py-2">Payment</th>
+            <th className="text-right px-3 py-2">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.length === 0 ? (
+            <tr>
+              <td colSpan={9} className="px-3 py-6 text-center text-muted-foreground">
+                No sales yet.
+              </td>
+            </tr>
+          ) : (
+            rows.map((r) => (
+              <tr key={r.id} className="border-t">
+                <td className="px-3 py-2">{r.date}</td>
+                <td className="px-3 py-2">{r.refNo}</td>
+                <td className="px-3 py-2">{r.party}</td>
+                <td className="px-3 py-2">{r.warehouse}</td>
+                <td className="px-3 py-2 text-right">{r.qtyOut || r.qtyIn}</td>
+                <td className="px-3 py-2 text-right">{r.price ? fmtMoney(r.price) : "—"}</td>
+                <td className="px-3 py-2 text-right">{r.amount ? fmtMoney(r.amount) : "—"}</td>
+                <td className="px-3 py-2 capitalize">{r.paymentStatus}</td>
+                <td className="px-3 py-2 text-right">
+                  {r.refId ? (
+                    <Link
+                      to="/app/sales/$id/edit"
+                      params={{ id: r.refId }}
+                      className="text-primary hover:underline"
+                    >
+                      View
+                    </Link>
+                  ) : (
+                    "—"
+                  )}
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function PurchasesTable({ rows }: { rows: LedgerRow[] }) {
+  return (
+    <div className="rounded-md border overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead className="bg-muted">
+          <tr>
+            <th className="text-left px-3 py-2">Date</th>
+            <th className="text-left px-3 py-2">Bill No</th>
+            <th className="text-left px-3 py-2">Supplier</th>
+            <th className="text-left px-3 py-2">Store</th>
+            <th className="text-right px-3 py-2">Qty</th>
+            <th className="text-right px-3 py-2">Rate</th>
+            <th className="text-right px-3 py-2">Total</th>
+            <th className="text-left px-3 py-2">Payment</th>
+            <th className="text-right px-3 py-2">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.length === 0 ? (
+            <tr>
+              <td colSpan={9} className="px-3 py-6 text-center text-muted-foreground">
+                No purchases yet.
+              </td>
+            </tr>
+          ) : (
+            rows.map((r) => (
+              <tr key={r.id} className="border-t">
+                <td className="px-3 py-2">{r.date}</td>
+                <td className="px-3 py-2">{r.refNo}</td>
+                <td className="px-3 py-2">{r.party}</td>
+                <td className="px-3 py-2">{r.warehouse}</td>
+                <td className="px-3 py-2 text-right">{r.qtyIn || r.qtyOut}</td>
+                <td className="px-3 py-2 text-right">{r.price ? fmtMoney(r.price) : "—"}</td>
+                <td className="px-3 py-2 text-right">{r.amount ? fmtMoney(r.amount) : "—"}</td>
+                <td className="px-3 py-2 capitalize">{r.paymentStatus}</td>
+                <td className="px-3 py-2 text-right">
+                  {r.refId ? (
+                    <Link
+                      to="/app/purchases/$id/edit"
+                      params={{ id: r.refId }}
+                      className="text-primary hover:underline"
+                    >
+                      View
+                    </Link>
+                  ) : (
+                    "—"
+                  )}
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
