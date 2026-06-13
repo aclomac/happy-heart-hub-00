@@ -794,6 +794,21 @@ function ItemDetailPage() {
         </div>
       )}
 
+      {orphanCount > 0 && (
+        <div className="mb-4 rounded-md border border-orange-300 bg-orange-50 text-orange-900 px-3 py-2 text-sm flex items-center gap-2 flex-wrap">
+          <AlertTriangle className="w-4 h-4 shrink-0" />
+          <span>
+            {orphanCount} transaction{orphanCount === 1 ? "" : "s"} not posted to stock ledger
+            ({orphanSales.length} sales, {orphanPurchases.length} purchases). Totals include
+            them, but warehouse balances will be off until you rebuild.
+          </span>
+          <Button size="sm" variant="default" onClick={rebuildLedger} disabled={rebuilding} className="ml-auto">
+            <RefreshCw className={`w-3.5 h-3.5 mr-1 ${rebuilding ? "animate-spin" : ""}`} />
+            Rebuild Item Ledger
+          </Button>
+        </div>
+      )}
+
       <SummaryCards items={summary} />
 
       <Tabs value={tab} onValueChange={setTab} className="mt-4">
