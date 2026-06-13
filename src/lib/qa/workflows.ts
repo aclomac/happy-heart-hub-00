@@ -957,6 +957,7 @@ export const signupWorkflow = () =>
       DEMO_COMPANY_ID,
       deleteDemoCompany,
       getVisibleDemoCompanies,
+      isExplicitDemoMode,
     } = await import("@/lib/demo/localStore");
 
     // Snapshot existing session so cleanup restores the caller's auth state.
@@ -1016,6 +1017,12 @@ export const signupWorkflow = () =>
       steps.push(fail("Session fullName", `Expected ${user.fullName}, got ${sess.fullName}`));
     } else {
       steps.push(pass("Active session = created user", `userId=${sess.userId}, isDemoUser=false`));
+    }
+
+    if (isExplicitDemoMode()) {
+      steps.push(fail("Dashboard not demo seeded", "QA user is still in explicit demo mode"));
+    } else {
+      steps.push(pass("Dashboard not demo seeded", "Normal local user starts outside explicit demo mode"));
     }
 
     try {
