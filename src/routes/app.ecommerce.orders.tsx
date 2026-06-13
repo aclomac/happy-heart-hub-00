@@ -200,6 +200,19 @@ function OrdersPage() {
     setEditing(null); toast.success("Order updated");
   };
 
+  const openView = (id: string) => {
+    const o = getOrders().find((x) => x.id === id);
+    if (!o) { toast.error("Order not found"); return; }
+    setViewing(o);
+  };
+
+  const refreshItemImages = () => {
+    const r = refreshOrderItemImages();
+    setList(getOrders());
+    toast.success(`Order item images — updated ${r.updated}, missing ${r.missing}, failed ${r.failed}`);
+  };
+
+
   const toggleAll = (check: boolean) => {
     if (check) setSelected(new Set([...selected, ...pageItems.map((o) => o.id)]));
     else { const next = new Set(selected); pageItems.forEach((o) => next.delete(o.id)); setSelected(next); }
