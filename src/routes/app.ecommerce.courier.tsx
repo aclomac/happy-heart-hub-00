@@ -82,8 +82,8 @@ function CourierPage() {
                     <div className="flex items-center justify-end gap-1">
                       {c.type === "Steadfast" ? (
                         <Button variant="outline" size="sm" onClick={async () => {
-                          const r = await steadfastService.testConnection(getSteadfastConfig(), getSettings().integrationMode);
-                          r.status === "success" ? toast.success(r.message) : toast.error(r.message);
+                          const r = await testSteadfastConnection();
+                          r.success ? toast.success(r.message) : toast.error(r.message);
                         }}><Plug className="w-3 h-3 mr-1" /> Test API</Button>
                       ) : (
                         <DisabledLiveButton reason="Live courier API requires credentials for this provider."><Plug className="w-3 h-3 mr-1" /> Test API</DisabledLiveButton>
