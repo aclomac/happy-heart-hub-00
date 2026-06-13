@@ -938,6 +938,117 @@ export const ALL_ECOMMERCE_WORKFLOWS = [
 // Back-compat alias for older callers.
 export const ecommerceWorkflow = ecoOrderLifecycleWorkflow;
 
+// ---------- Live integrations (WooCommerce + Steadfast) ----------
+export const integrationsWorkflow = () =>
+  run("wf-integrations", "Integration diagnostics (WooCommerce + Steadfast)", async () => {
+    const steps: WorkflowStep[] = [];
+    const wc = await import("@/lib/integrations/woocommerce");
+    const sf = await import("@/lib/integrations/steadfast");
+    const eco = await import("@/lib/demo/ecommerce");
+    const diag = await import("@/lib/integrations/diagnostics");
+
+    const prevSettings = eco.getSettings();
+    const prevWc = wc.getWooConfig();
+    const prevSf = sf.getSteadfastConfig();
+
+    // Force local-demo mode for the smoke test.
+    eco.setSettings({ ...prevSettings, integrationMode: "local-demo" });
+
+    // ---- WooCommerce save + test (validation path) ----
+    const fakeWc: typeof prevWc = {
+      storeName: "[QA] Store",
+      websiteUrl: "https://qa.example.com",
+      consumerKey: "ck_qa1234567890abcdef",
+      consumerSecret: "cs_qaabcdef1234567890",
+      apiVersion: "wc/v3", authMode: "basic", status: "active",
+    };
+    wc.setWooConfig(fakeWc);
+    const wcGot = wc.getWooConfig();
+    wcGot.consumerKey === fakeWc.consumerKey
+      ? steps.push(pass("WooCommerce credentials saved"))
+      : steps.push(fail("WooCommerce credentials saved", "Round-trip mismatch"));
+
+    const wcTest = await wc.woocommerceService.testConnection(fakeWc, "local-demo");
+    wcTest.status === "skipped" && wcTest.errorKind === "mode_disabled"
+      ? steps.push(pass("WooCommerce test connection — clear diagnostic", wcTest.message))
+      : steps.push(fail("WooCommerce test connection — clear diagnostic", `unexpected ${wcTest.status}/${wcTest.errorKind}`));
+
+    // Confirm masking never leaks the secret.
+    const masked = diag.maskSecret(fakeWc.consumerSecret);
+    !masked.includes(fakeWc.consumerSecret) && masked.includes("*")
+      ? steps.push(pass("Secret masked", masked))
+      : steps.push(fail("Secret masked", `Got ${masked}`));
+
+    // ---- WooCommerce sample sync fallback (uses sample, not live API) ----
+    const websites = eco.getWebsites();
+    const websiteId = websites[0]?.id ?? "";
+    const beforeOrders = eco.getOrders().length;
+    const syncResult = await wc.woocommerceService.syncOrders(fakeWc, websiteId, "local-demo");
+    syncResult.status === "skipped"
+      ? steps.push(pass("WooCommerce sync in local-demo returns diagnostic, not silent", syncResult.message))
+      : steps.push(fail("WooCommerce sync diagnostic", `unexpected ${syncResult.status}`));
+    eco.setOrders(eco.getOrders().slice(0, beforeOrders)); // ensure no leak from sync
+
+    // ---- Steadfast save + test ----
+    const fakeSf: typeof prevSf = {
+      baseUrl: "https://portal.packzy.com/api/v1",
+      apiKey: "qa_api_key_xxxxxxxxxxxxxxxx",
+      secretKey: "qa_secret_key_yyyyyyyyyyyyyyyy",
+      status: "active",
+      pickupAddress: "[QA] Pickup",
+      defaultDeliveryType: "0",
+      defaultNote: "[QA]",
+    };
+    sf.setSteadfastConfig(fakeSf);
+    sf.getSteadfastConfig().apiKey === fakeSf.apiKey
+      ? steps.push(pass("Steadfast credentials saved"))
+      : steps.push(fail("Steadfast credentials saved", "Round-trip mismatch"));
+
+    const sfTest = await sf.steadfastService.testConnection(fakeSf, "local-demo");
+    sfTest.status === "skipped" && sfTest.errorKind === "mode_disabled"
+      ? steps.push(pass("Steadfast test connection — clear diagnostic", sfTest.message))
+      : steps.push(fail("Steadfast test connection — clear diagnostic", `unexpected ${sfTest.status}`));
+
+    // ---- Steadfast consignment + tracking local fallback ----
+    const qaOrder: import("@/lib/demo/ecommerce").EcoOrder = {
+      id: eco.genId("eo"), websiteId: websiteId || "qa-site", orderNo: `QA-SF-${Date.now()}`,
+      customerName: "[QA] Customer", phone: "01700000000", address: "QA Addr", district: "Dhaka",
+      orderDate: new Date().toISOString().slice(0, 10),
+      items: [{ sku: "QA-SKU", name: "QA Item", qty: 1, price: 100 }],
+      subtotal: 100, discount: 0, deliveryCharge: 70, codAmount: 170, paidAmount: 0,
+      paymentMethod: "COD", status: "Confirmed",
+      courierId: null, trackingId: null, deliveryStatus: "Pending", returnStatus: null,
+      source: "[QA]", createdAt: new Date().toISOString(),
+    };
+    const beforeAll = eco.getOrders();
+    eco.setOrders([...beforeAll, qaOrder]);
+    const consign = await sf.steadfastService.createConsignment(fakeSf, "local-demo", qaOrder);
+    const updated = eco.getOrders().find((o) => o.id === qaOrder.id);
+    consign.status === "skipped" && updated?.trackingId && updated.courierId
+      ? steps.push(pass("Steadfast create consignment (local fallback)", `tracking=${updated.trackingId}`))
+      : steps.push(fail("Steadfast create consignment (local fallback)", `status=${consign.status} tracking=${updated?.trackingId ?? "—"}`));
+
+    const track = await sf.steadfastService.trackParcel(fakeSf, "local-demo", updated?.trackingId || "");
+    track.deliveryStatus
+      ? steps.push(pass("Steadfast tracking returns status", track.deliveryStatus))
+      : steps.push(fail("Steadfast tracking", track.message));
+
+    // ---- Cleanup ----
+    eco.setOrders(beforeAll);
+    wc.setWooConfig(prevWc);
+    sf.setSteadfastConfig(prevSf);
+    eco.setSettings(prevSettings);
+    diag.clearDiagnostic("woocommerce");
+    diag.clearDiagnostic("woocommerce_sync");
+    diag.clearDiagnostic("steadfast");
+    diag.clearDiagnostic("steadfast_consignment");
+    diag.clearDiagnostic("steadfast_track");
+    steps.push(pass("Cleanup", "Credentials, settings, diagnostics, and QA order removed"));
+
+    return steps;
+  });
+
+
 // ---------- Auth / Signup ----------
 export const signupWorkflow = () =>
   run("wf-signup", "Signup + Login workflow", async () => {
