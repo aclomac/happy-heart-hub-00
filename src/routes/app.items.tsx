@@ -444,7 +444,7 @@ function Items() {
                       <Link
                         to="/app/items/$id"
                         params={{ id: i.id }}
-                        className="hover:underline text-primary"
+                        className="text-primary underline-offset-2 hover:underline font-semibold"
                       >
                         {i.name}
                       </Link>
@@ -454,6 +454,7 @@ function Items() {
                         </span>
                       )}
                     </td>
+
                     <td className="text-muted-foreground font-mono text-xs">{i.sku || "—"}</td>
                     <td>
                       {cat ? (
