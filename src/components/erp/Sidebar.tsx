@@ -416,7 +416,7 @@ export function ERPSidebar() {
           className="w-full flex items-center gap-3 px-4 py-2.5 text-[15px] font-bold text-slate-100 transition-colors text-left"
           style={{
             background: childActive ? "var(--color-sidebar-active)" : "transparent",
-            color: childActive ? "#fff" : "var(--color-sidebar-fg)",
+            color: childActive ? "#fff" : undefined,
             borderLeft: childActive ? "3px solid #fff" : "3px solid transparent",
             opacity: planLocked ? 0.55 : 1,
           }}
