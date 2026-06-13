@@ -840,6 +840,16 @@ function Field({ label, value }: { label: string; value: string | number | null 
   );
 }
 
+function Mini({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="min-w-0">
+      <dt className="text-[11px] text-muted-foreground uppercase tracking-wide">{label}</dt>
+      <dd className="font-semibold text-sm truncate">{value}</dd>
+    </div>
+  );
+}
+
+
 type LedgerRow = {
   id: string;
   date: string;
