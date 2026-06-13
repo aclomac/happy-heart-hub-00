@@ -65,6 +65,7 @@ import {
   type RepairResult,
 } from "@/lib/inventory-posting-doctor";
 import { ItemEditDialog } from "@/components/erp/ItemEditDialog";
+import { ItemImagePicker } from "@/components/erp/ItemImagePicker";
 
 export const Route = createFileRoute("/app/items")({ component: ItemsShell });
 
