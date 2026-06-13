@@ -432,7 +432,7 @@ function Items() {
                   i.low_stock_alert != null && Number(i.stock) <= Number(i.low_stock_alert);
                 const cat = cats.find((c) => c.id === i.category_id);
                 return (
-                  <tr key={i.id}>
+                  <tr key={i.id} className="hover:bg-muted/50 cursor-pointer">
                     <td>
                       <ItemImageThumb
                         src={i.image_url}
