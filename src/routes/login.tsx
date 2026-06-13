@@ -16,9 +16,12 @@ import {
   DEMO_USER_ID,
   DEMO_USER_EMAIL,
   isDemoMode,
+  getDemoCompanies,
+  addDemoCompany,
 } from "@/lib/demo/localStore";
 
-import { findUserByEmailOrMobile } from "@/lib/demo/localUsers";
+
+import { findUserByEmailOrMobile, getLocalUsers, setLocalUsers } from "@/lib/demo/localUsers";
 import { PWAInstallButton } from "@/components/erp/PWAInstallButton";
 
 export const Route = createFileRoute("/login")({
@@ -82,19 +85,51 @@ function Login() {
     }
 
     // Local user (created via /signup) — match by email OR mobile.
-    const localUser = findUserByEmailOrMobile(useEmail);
-    if (localUser && localUser.password === usePass) {
+    const trimmedEmail = useEmail.trim();
+    if (!trimmedEmail || !usePass) {
+      setLoading(false);
+      toast.error("Email and password are required");
+      return;
+    }
+
+    const allUsers = getLocalUsers();
+    const localUser = findUserByEmailOrMobile(trimmedEmail);
+    if (import.meta.env.DEV) {
+      console.log("[login] local users:", allUsers.length, "matched:", !!localUser, "pwd ok:", !!localUser && localUser.password === usePass);
+    }
+
+    if (localUser) {
+      if (localUser.password !== usePass) {
+        setLoading(false);
+        toast.error("Invalid email or password");
+        return;
+      }
       try {
         ensureDemoSeed();
+        // Ensure the user's company still exists (logout/clear may have wiped it).
+        let companyId = localUser.companyId ?? null;
+        const companies = getDemoCompanies();
+        if (!companyId || !companies.some((c) => c.id === companyId)) {
+          const fresh = addDemoCompany({
+            name: `${localUser.fullName}'s Business`,
+            owner_id: localUser.id,
+            email: localUser.email,
+          });
+          companyId = fresh.id;
+          setLocalUsers(
+            getLocalUsers().map((u) => (u.id === localUser.id ? { ...u, companyId: fresh.id } : u)),
+          );
+        }
         startLocalUserSession({
           id: localUser.id,
           email: localUser.email,
           name: localUser.fullName,
           fullName: localUser.fullName,
         });
-        setCurrentCompanyId(localUser.companyId ?? DEMO_COMPANY_ID, localUser.id);
-        toast.success(`Welcome back, ${localUser.fullName}`);
-      } catch {
+        setCurrentCompanyId(companyId, localUser.id);
+        toast.success("Signed in successfully");
+      } catch (err) {
+        if (import.meta.env.DEV) console.error("[login] local session error", err);
         toast.error("Could not start local session");
         setLoading(false);
         return;
@@ -111,23 +146,25 @@ function Login() {
 
 
     const { error } = await supabase.auth.signInWithPassword({
-      email: useEmail,
+      email: trimmedEmail,
       password: usePass,
     });
 
     if (error) {
       setLoading(false);
-      toast.error(error.message);
+      toast.error("Invalid email or password");
       return;
     }
 
     setLoading(false);
+    toast.success("Signed in successfully");
     if (typeof window !== "undefined") {
       sessionStorage.setItem("erpovo:cameFromLogin", "1");
       sessionStorage.removeItem("erpovo:adminLandedOnce");
     }
     nav({ to: "/app", replace: true });
   };
+
 
 
   const handleDemoLogin = async () => {
