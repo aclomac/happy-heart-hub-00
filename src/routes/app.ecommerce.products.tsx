@@ -17,12 +17,14 @@ import {
 import { StatusBadge } from "@/components/erp/ecommerce/EcommerceUI";
 import { DiagnosticsPanel } from "@/components/erp/ecommerce/DiagnosticsPanel";
 import {
-  getProducts, setProducts, getWebsites, getSettings, genId, type EcoProduct,
+  getProducts, setProducts, getWebsites, getSettings, genId,
+  productImageStats, refreshOrderItemImages, type EcoProduct,
 } from "@/lib/demo/ecommerce";
 import { getItems } from "@/lib/demo/inventory";
 import { parseCSV, readFileAsText } from "@/lib/csv-parse";
 import { syncWooCommerceProducts } from "@/lib/integrations/integrationClient";
-import { Download, Link2, Trash2, Pencil, RefreshCw, Upload, MoreVertical } from "lucide-react";
+import { ItemImageThumb } from "@/components/erp/ItemImageThumb";
+import { Download, Link2, Trash2, Pencil, RefreshCw, Upload, MoreVertical, ImageIcon } from "lucide-react";
 
 export const Route = createFileRoute("/app/ecommerce/products")({ component: ProductsPage });
 
