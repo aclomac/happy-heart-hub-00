@@ -45,6 +45,9 @@ export type DemoCompany = {
   id: string;
   name: string;
   owner_id: string;
+  ownerUserId?: string;
+  sharedWithUserIds?: string[];
+  isDemoCompany?: boolean;
   business_type: string | null;
   currency: string;
   phone: string | null;
@@ -187,6 +190,15 @@ export function isDemoMode(): boolean {
   }
 }
 
+export function isExplicitDemoMode(): boolean {
+  const session = getDemoSession();
+  return session?.userId === DEMO_USER_ID || session?.user?.isDemoUser === true;
+}
+
+export function getActiveLocalUserId(): string | null {
+  return getDemoSession()?.userId ?? null;
+}
+
 export function getDemoSession(): DemoSession | null {
   return (
     safeRead<DemoSession>(DEMO_SESSION_KEY) ??
@@ -282,8 +294,7 @@ export function startLocalUserSession(input: {
   };
   safeWrite(DEMO_SESSION_KEY, session);
   safeWrite(DEMO_USER_KEY, user);
-  setDemoAuthCookies(user.email);
-  ensureDemoSeed();
+  clearDemoAuthCookies();
   return session;
 }
 
@@ -310,8 +321,20 @@ export function endDemoSession(): void {
 
 /** Returns the seeded demo company list. Auto-seeds Chair King on first call. */
 export function getDemoCompanies(): DemoCompany[] {
-  ensureDemoSeed();
   return safeRead<DemoCompany[]>(DEMO_COMPANIES_KEY) ?? [];
+}
+
+export function getVisibleDemoCompanies(userId = getActiveLocalUserId()): DemoCompany[] {
+  if (isExplicitDemoMode()) {
+    ensureDemoSeed();
+  }
+  const list = getDemoCompanies();
+  if (isExplicitDemoMode()) return list.filter((c) => c.isDemoCompany === true || c.owner_id === DEMO_USER_ID);
+  if (!userId) return [];
+  return list.filter((c) => {
+    const owner = c.ownerUserId ?? c.owner_id;
+    return owner === userId || (c.sharedWithUserIds ?? []).includes(userId);
+  });
 }
 
 export function setDemoCompanies(list: DemoCompany[]): void {
@@ -335,6 +358,9 @@ export function addDemoCompany(
         : `demo-${Date.now()}-${Math.floor(Math.random() * 1e6)}`),
     name: input.name,
     owner_id: input.owner_id ?? DEMO_USER_ID,
+    ownerUserId: input.ownerUserId ?? input.owner_id ?? DEMO_USER_ID,
+    sharedWithUserIds: input.sharedWithUserIds ?? [],
+    isDemoCompany: input.isDemoCompany ?? (input.owner_id ?? DEMO_USER_ID) === DEMO_USER_ID,
     business_type: input.business_type ?? "retail",
     currency: input.currency ?? "BDT",
     phone: input.phone ?? null,
@@ -392,11 +418,14 @@ export function setDemoSettings(settings: Partial<DemoSettings>): void {
 export function ensureDemoSeed(): void {
   if (!isBrowser()) return;
   const existing = safeRead<DemoCompany[]>(DEMO_COMPANIES_KEY);
-  if (!existing || existing.length === 0) {
+  if (!existing || !existing.some((c) => c.id === DEMO_COMPANY_ID)) {
     const seed: DemoCompany = {
       id: DEMO_COMPANY_ID,
       name: "Chair King",
       owner_id: DEMO_USER_ID,
+      ownerUserId: DEMO_USER_ID,
+      sharedWithUserIds: [],
+      isDemoCompany: true,
       business_type: "furniture",
       currency: "BDT",
       phone: "01700000000",
@@ -405,7 +434,7 @@ export function ensureDemoSeed(): void {
       tin_bin: null,
       created_at: new Date().toISOString(),
     };
-    safeWrite(DEMO_COMPANIES_KEY, [seed]);
+    safeWrite(DEMO_COMPANIES_KEY, [seed, ...(existing ?? [])]);
   }
   if (!safeRead<DemoSettings>(DEMO_SETTINGS_KEY)) {
     safeWrite(DEMO_SETTINGS_KEY, {
@@ -510,9 +539,7 @@ export function clearDemoStorage(): void {
     [
       DEMO_SESSION_KEY,
       DEMO_USER_KEY,
-      DEMO_COMPANIES_KEY,
       DEMO_CURRENT_COMPANY_KEY,
-      DEMO_SETTINGS_KEY,
       LEGACY_SESSION_KEY,
       "erpovo:companyId",
     ].forEach((k) => localStorage.removeItem(k));

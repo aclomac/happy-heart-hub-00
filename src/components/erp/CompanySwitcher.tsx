@@ -47,10 +47,10 @@ import { useNavigate } from "@tanstack/react-router";
 import { logAudit } from "@/lib/audit";
 import {
   isDemoMode,
-  getDemoCompanies,
+  getDemoUser,
+  getVisibleDemoCompanies,
   addDemoCompany,
   renameDemoCompany,
-  DEMO_USER_ID,
 } from "@/lib/demo/localStore";
 
 type CompanyInfo = {
@@ -91,7 +91,8 @@ export function CompanySwitcher({
     queryFn: async () => {
       // Demo mode: serve from localStorage; never touch Supabase.
       if (isDemoMode()) {
-        return getDemoCompanies().map((c) => ({ ...c, role: "owner" }));
+        const userId = getDemoUser()?.id ?? null;
+        return getVisibleDemoCompanies(userId).map((c) => ({ ...c, role: "owner" }));
       }
       try {
         const {
@@ -147,7 +148,7 @@ export function CompanySwitcher({
     try {
       let userId: string | undefined;
       if (isDemoMode()) {
-        userId = DEMO_USER_ID;
+        userId = getDemoUser()?.id;
       } else {
         const {
           data: { user },
@@ -203,10 +204,14 @@ export function CompanySwitcher({
     mutationFn: async (data: any) => {
       // Demo mode: write to localStorage only.
       if (isDemoMode()) {
+        const ownerId = getDemoUser()?.id;
         const created = addDemoCompany({
           name: data.name,
           business_type: data.business_type ?? null,
           phone: data.phone ?? null,
+          owner_id: ownerId,
+          ownerUserId: ownerId,
+          isDemoCompany: false,
         });
         return created;
       }

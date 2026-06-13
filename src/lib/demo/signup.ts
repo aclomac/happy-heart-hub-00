@@ -16,6 +16,8 @@ import {
   type DemoSession,
 } from "@/lib/demo/localStore";
 
+export const DEMO_EMAIL_VERIFICATION_CODE = "123456";
+
 export type SignupInput = {
   fullName: string;
   email: string;
@@ -58,12 +60,15 @@ export function createLocalSignupAccount(input: SignupInput): {
     mobile,
     password: input.password,
     mobileVerified: false,
+    emailVerified: true,
     isDemoUser: false,
   });
 
   const company = addDemoCompany({
     name: `${fullName}'s Business`,
     owner_id: created.id,
+    ownerUserId: created.id,
+    isDemoCompany: false,
     email: created.email,
   });
 

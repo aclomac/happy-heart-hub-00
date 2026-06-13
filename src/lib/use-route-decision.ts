@@ -12,7 +12,7 @@ import {
 import {
   isDemoMode,
   getDemoSession,
-  getDemoCompanies,
+  getVisibleDemoCompanies,
   DEMO_SESSION_KEY,
   hasRestorableDemoCookie,
   startDemoSession,
@@ -155,7 +155,7 @@ function useCompaniesCount(userId: string | null) {
     queryFn: async () => {
       // Demo mode: read entirely from localStorage.
       if (isDemoMode()) {
-        const list = getDemoCompanies();
+        const list = getVisibleDemoCompanies(userId ?? undefined);
         return { count: list.length, firstId: list[0]?.id ?? null };
       }
       try {
@@ -196,11 +196,13 @@ export function useRouteDecision(): RouteDecision {
 
   useEffect(() => {
     const companies = companiesQ.data;
-    if (auth.userId && !companyId && companies?.count && companies.count > 0) {
+    const visibleLocalCompanies = isDemoMode() && auth.userId ? getVisibleDemoCompanies(auth.userId) : [];
+    const selectedLocalCompanyValid = !isDemoMode() || !companyId || visibleLocalCompanies.some((c) => c.id === companyId);
+    if (auth.userId && (!companyId || !selectedLocalCompanyValid) && companies?.count && companies.count > 0) {
       // Demo mode: pick Chair King (or first local company) without hitting Supabase.
       if (isDemoMode()) {
-        const list = getDemoCompanies();
-        const pick = list.find((c) => c.id === DEMO_COMPANY_ID) ?? list[0];
+        const list = visibleLocalCompanies;
+        const pick = auth.userId === DEMO_USER_ID ? (list.find((c) => c.id === DEMO_COMPANY_ID) ?? list[0]) : list[0];
         if (pick) setCurrentCompanyId(pick.id, auth.userId);
         return;
       }
@@ -317,7 +319,10 @@ export function useRouteDecision(): RouteDecision {
 
   // 8) Inside /app/* but no valid company selected → /companies.
   if (isAppRoute && !inAppEscapeHatch(pathname)) {
-    const companySelectionValid = !!companyId && companiesCount > 0;
+    const companySelectionValid =
+      !!companyId &&
+      companiesCount > 0 &&
+      (!isDemoMode() || getVisibleDemoCompanies(auth.userId).some((c) => c.id === companyId));
     if (!companySelectionValid) {
       const target = "/companies";
       return { status: "ready", target, debug: { ...debug, redirectTarget: target } };

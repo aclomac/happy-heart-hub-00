@@ -16,7 +16,7 @@ import {
   DEMO_USER_ID,
   DEMO_USER_EMAIL,
   isDemoMode,
-  getDemoCompanies,
+  getVisibleDemoCompanies,
   addDemoCompany,
 } from "@/lib/demo/localStore";
 
@@ -42,7 +42,7 @@ function Login() {
   const [pass, setPass] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (overrideEmail?: string, overridePass?: string) => {
+  const handleLogin = async (overrideEmail?: string, overridePass?: string, allowDemo = false) => {
     const useEmail = overrideEmail ?? email;
     const usePass = overridePass ?? pass;
     setLoading(true);
@@ -52,7 +52,7 @@ function Login() {
 
     // Demo login is fully local — skip Supabase, seed Chair King, pre-select it
     // so the orchestrator doesn't bounce through /companies.
-    if (isDemo) {
+    if (isDemo && allowDemo) {
       try {
         ensureDemoSeed();
         startDemoSession();
@@ -104,15 +104,21 @@ function Login() {
         toast.error("Invalid email or password");
         return;
       }
+      if (localUser.emailVerified === false) {
+        setLoading(false);
+        toast.error("Please verify your email before signing in.");
+        return;
+      }
       try {
-        ensureDemoSeed();
         // Ensure the user's company still exists (logout/clear may have wiped it).
         let companyId = localUser.companyId ?? null;
-        const companies = getDemoCompanies();
+        const companies = getVisibleDemoCompanies(localUser.id);
         if (!companyId || !companies.some((c) => c.id === companyId)) {
           const fresh = addDemoCompany({
             name: `${localUser.fullName}'s Business`,
             owner_id: localUser.id,
+            ownerUserId: localUser.id,
+            isDemoCompany: false,
             email: localUser.email,
           });
           companyId = fresh.id;
@@ -144,11 +150,16 @@ function Login() {
       return;
     }
 
-
-    const { error } = await supabase.auth.signInWithPassword({
-      email: trimmedEmail,
-      password: usePass,
-    });
+    let error: { message?: string } | null = null;
+    try {
+      const result = await supabase.auth.signInWithPassword({
+        email: trimmedEmail,
+        password: usePass,
+      });
+      error = result.error;
+    } catch {
+      error = { message: "Invalid email or password" };
+    }
 
     if (error) {
       setLoading(false);
@@ -170,7 +181,7 @@ function Login() {
   const handleDemoLogin = async () => {
     setEmail(DEMO_EMAIL);
     setPass(DEMO_PASSWORD);
-    await handleLogin(DEMO_EMAIL, DEMO_PASSWORD);
+    await handleLogin(DEMO_EMAIL, DEMO_PASSWORD, true);
   };
 
   // demo button removed — real auth required

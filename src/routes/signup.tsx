@@ -2,10 +2,16 @@ import { createFileRoute, Link, useNavigate, redirect } from "@tanstack/react-ro
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { createLocalSignupAccount, validateSignupInput } from "@/lib/demo/signup";
+import {
+  createLocalSignupAccount,
+  DEMO_EMAIL_VERIFICATION_CODE,
+  validateSignupInput,
+  type SignupInput,
+} from "@/lib/demo/signup";
+import { userExists } from "@/lib/demo/localUsers";
 
 export const Route = createFileRoute("/signup")({
   beforeLoad: async () => {
@@ -41,8 +47,10 @@ function Signup() {
   const [pass, setPass] = useState("");
   const [loading, setLoading] = useState(false);
   const [errs, setErrs] = useState<Record<string, string>>({});
+  const [pendingSignup, setPendingSignup] = useState<SignupInput | null>(null);
+  const [verificationCode, setVerificationCode] = useState("");
 
-  const onCreateAccount = async (e?: React.FormEvent) => {
+  const onCreateAccount = async (e?: FormEvent) => {
     e?.preventDefault?.();
     const next = validateSignupInput({ fullName: name, email, mobile, password: pass });
     setErrs(next);
@@ -51,14 +59,28 @@ function Signup() {
       return;
     }
 
+    if (userExists(email, "")) {
+      const reason = "Account already exists. Please sign in.";
+      setErrs({ email: reason });
+      toast.error(reason);
+      return;
+    }
+
+    setPendingSignup({ fullName: name, email, mobile, password: pass });
+    setVerificationCode("");
+    toast.success("Verification code ready");
+  };
+
+  const onVerifyEmail = (e?: FormEvent) => {
+    e?.preventDefault?.();
+    if (!pendingSignup) return;
+    if (verificationCode.trim() !== DEMO_EMAIL_VERIFICATION_CODE) {
+      toast.error("Invalid verification code");
+      return;
+    }
     setLoading(true);
     try {
-      createLocalSignupAccount({
-        fullName: name,
-        email,
-        mobile,
-        password: pass,
-      });
+      createLocalSignupAccount(pendingSignup);
       toast.success("Account created successfully");
       if (typeof window !== "undefined") {
         window.location.replace("/app");
@@ -132,6 +154,44 @@ function Signup() {
                 Personal ERP account for your business
               </p>
 
+              {pendingSignup ? (
+                <form className="space-y-3" onSubmit={onVerifyEmail} noValidate>
+                  <div>
+                    <h3 className="text-xl font-semibold">Verify Email</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Enter the verification code sent to your email
+                    </p>
+                  </div>
+                  <div className="rounded-md border bg-muted/40 px-3 py-2 text-sm">
+                    Demo verification code: <span className="font-semibold">123456</span>
+                  </div>
+                  <div>
+                    <Label className="text-xs">Verification Code</Label>
+                    <Input
+                      value={verificationCode}
+                      onChange={(e) => setVerificationCode(e.target.value)}
+                      placeholder="123456"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                    />
+                  </div>
+                  <Button type="submit" variant="default" className="w-full" disabled={loading}>
+                    {loading ? "Verifying…" : "Verify Email"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    disabled={loading}
+                    onClick={() => setPendingSignup(null)}
+                  >
+                    Back to signup
+                  </Button>
+                  <p className="text-[11px] text-muted-foreground text-center">
+                    Real email sending requires email API/SMTP integration. Local mode verifies with demo code.
+                  </p>
+                </form>
+              ) : (
               <form className="space-y-3" onSubmit={onCreateAccount} noValidate>
                 <div>
                   <Label className="text-xs">Full Name</Label>
@@ -185,9 +245,10 @@ function Signup() {
                   {loading ? "Creating account..." : "Create Account"}
                 </Button>
                 <p className="text-[11px] text-muted-foreground text-center">
-                  Local account stored on this device. No email verification required.
+                  Local account stored on this device after email verification.
                 </p>
               </form>
+              )}
               <div className="mt-6 text-sm text-center">
                 Already have an account?{" "}
                 <Link to="/login" className="text-primary font-medium hover:underline">

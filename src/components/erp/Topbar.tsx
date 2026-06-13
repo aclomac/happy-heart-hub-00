@@ -98,7 +98,6 @@ export function ERPTopbar() {
       Object.keys(localStorage).forEach((key) => {
         if (
           key.startsWith("erpovo:") ||
-          key.startsWith("erpovo_demo_") ||
           key === "erpovo.lang" ||
           key.includes("announcements")
         ) {

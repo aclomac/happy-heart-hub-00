@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { FlaskConical } from "lucide-react";
-import { isDemoMode } from "@/lib/demo/localStore";
+import { isDemoMode, isExplicitDemoMode } from "@/lib/demo/localStore";
 
 /**
  * Slim, unobtrusive banner shown above the app shell whenever the
@@ -8,10 +8,15 @@ import { isDemoMode } from "@/lib/demo/localStore";
  */
 export function DemoModeBanner() {
   const [show, setShow] = useState(false);
+  const [demo, setDemo] = useState(false);
 
   useEffect(() => {
-    setShow(isDemoMode());
-    const onChange = () => setShow(isDemoMode());
+    const sync = () => {
+      setShow(isDemoMode());
+      setDemo(isExplicitDemoMode());
+    };
+    sync();
+    const onChange = () => sync();
     window.addEventListener("storage", onChange);
     return () => window.removeEventListener("storage", onChange);
   }, []);
@@ -20,8 +25,10 @@ export function DemoModeBanner() {
   return (
     <div className="w-full border-b border-amber-500/30 bg-amber-50 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200 px-4 py-1.5 text-xs flex items-center gap-2">
       <FlaskConical className="w-3.5 h-3.5" />
-      <span className="font-medium">Demo Mode</span>
-      <span className="opacity-80">— Local data only. Nothing is sent to a server.</span>
+      <span className="font-medium">{demo ? "Demo Mode" : "Local Mode"}</span>
+      <span className="opacity-80">
+        — {demo ? "Local demo data only. Nothing is sent to a server." : "data stored on this device"}
+      </span>
     </div>
   );
 }
