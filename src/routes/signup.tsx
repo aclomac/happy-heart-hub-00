@@ -154,6 +154,44 @@ function Signup() {
                 Personal ERP account for your business
               </p>
 
+              {pendingSignup ? (
+                <form className="space-y-3" onSubmit={onVerifyEmail} noValidate>
+                  <div>
+                    <h3 className="text-xl font-semibold">Verify Email</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Enter the verification code sent to your email
+                    </p>
+                  </div>
+                  <div className="rounded-md border bg-muted/40 px-3 py-2 text-sm">
+                    Demo verification code: <span className="font-semibold">123456</span>
+                  </div>
+                  <div>
+                    <Label className="text-xs">Verification Code</Label>
+                    <Input
+                      value={verificationCode}
+                      onChange={(e) => setVerificationCode(e.target.value)}
+                      placeholder="123456"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                    />
+                  </div>
+                  <Button type="submit" variant="default" className="w-full" disabled={loading}>
+                    {loading ? "Verifying…" : "Verify Email"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    disabled={loading}
+                    onClick={() => setPendingSignup(null)}
+                  >
+                    Back to signup
+                  </Button>
+                  <p className="text-[11px] text-muted-foreground text-center">
+                    Real email sending requires email API/SMTP integration. Local mode verifies with demo code.
+                  </p>
+                </form>
+              ) : (
               <form className="space-y-3" onSubmit={onCreateAccount} noValidate>
                 <div>
                   <Label className="text-xs">Full Name</Label>
@@ -210,6 +248,7 @@ function Signup() {
                   Local account stored on this device. No email verification required.
                 </p>
               </form>
+              )}
               <div className="mt-6 text-sm text-center">
                 Already have an account?{" "}
                 <Link to="/login" className="text-primary font-medium hover:underline">
