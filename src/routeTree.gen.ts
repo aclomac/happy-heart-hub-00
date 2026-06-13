@@ -163,6 +163,7 @@ import { Route as AppCashChequesIdRouteImport } from './routes/app.cash.cheques.
 import { Route as ApiIntegrationsWoocommerceTestRouteImport } from './routes/api.integrations.woocommerce.test'
 import { Route as ApiIntegrationsWoocommerceProductsRouteImport } from './routes/api.integrations.woocommerce.products'
 import { Route as ApiIntegrationsWoocommerceOrdersRouteImport } from './routes/api.integrations.woocommerce.orders'
+import { Route as ApiIntegrationsSteadfastTrackRouteImport } from './routes/api.integrations.steadfast.track'
 import { Route as ApiIntegrationsSteadfastTestRouteImport } from './routes/api.integrations.steadfast.test'
 import { Route as ApiIntegrationsSteadfastCreateConsignmentRouteImport } from './routes/api.integrations.steadfast.create-consignment'
 
@@ -956,6 +957,12 @@ const ApiIntegrationsWoocommerceOrdersRoute =
     path: '/api/integrations/woocommerce/orders',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiIntegrationsSteadfastTrackRoute =
+  ApiIntegrationsSteadfastTrackRouteImport.update({
+    id: '/api/integrations/steadfast/track',
+    path: '/api/integrations/steadfast/track',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiIntegrationsSteadfastTestRoute =
   ApiIntegrationsSteadfastTestRouteImport.update({
     id: '/api/integrations/steadfast/test',
@@ -1101,6 +1108,7 @@ export interface FileRoutesByFullPath {
   '/app/utilities/': typeof AppUtilitiesIndexRoute
   '/api/integrations/steadfast/create-consignment': typeof ApiIntegrationsSteadfastCreateConsignmentRoute
   '/api/integrations/steadfast/test': typeof ApiIntegrationsSteadfastTestRoute
+  '/api/integrations/steadfast/track': typeof ApiIntegrationsSteadfastTrackRoute
   '/api/integrations/woocommerce/orders': typeof ApiIntegrationsWoocommerceOrdersRoute
   '/api/integrations/woocommerce/products': typeof ApiIntegrationsWoocommerceProductsRoute
   '/api/integrations/woocommerce/test': typeof ApiIntegrationsWoocommerceTestRoute
@@ -1255,6 +1263,7 @@ export interface FileRoutesByTo {
   '/app/utilities': typeof AppUtilitiesIndexRoute
   '/api/integrations/steadfast/create-consignment': typeof ApiIntegrationsSteadfastCreateConsignmentRoute
   '/api/integrations/steadfast/test': typeof ApiIntegrationsSteadfastTestRoute
+  '/api/integrations/steadfast/track': typeof ApiIntegrationsSteadfastTrackRoute
   '/api/integrations/woocommerce/orders': typeof ApiIntegrationsWoocommerceOrdersRoute
   '/api/integrations/woocommerce/products': typeof ApiIntegrationsWoocommerceProductsRoute
   '/api/integrations/woocommerce/test': typeof ApiIntegrationsWoocommerceTestRoute
@@ -1414,6 +1423,7 @@ export interface FileRoutesById {
   '/app/utilities/': typeof AppUtilitiesIndexRoute
   '/api/integrations/steadfast/create-consignment': typeof ApiIntegrationsSteadfastCreateConsignmentRoute
   '/api/integrations/steadfast/test': typeof ApiIntegrationsSteadfastTestRoute
+  '/api/integrations/steadfast/track': typeof ApiIntegrationsSteadfastTrackRoute
   '/api/integrations/woocommerce/orders': typeof ApiIntegrationsWoocommerceOrdersRoute
   '/api/integrations/woocommerce/products': typeof ApiIntegrationsWoocommerceProductsRoute
   '/api/integrations/woocommerce/test': typeof ApiIntegrationsWoocommerceTestRoute
@@ -1574,6 +1584,7 @@ export interface FileRouteTypes {
     | '/app/utilities/'
     | '/api/integrations/steadfast/create-consignment'
     | '/api/integrations/steadfast/test'
+    | '/api/integrations/steadfast/track'
     | '/api/integrations/woocommerce/orders'
     | '/api/integrations/woocommerce/products'
     | '/api/integrations/woocommerce/test'
@@ -1728,6 +1739,7 @@ export interface FileRouteTypes {
     | '/app/utilities'
     | '/api/integrations/steadfast/create-consignment'
     | '/api/integrations/steadfast/test'
+    | '/api/integrations/steadfast/track'
     | '/api/integrations/woocommerce/orders'
     | '/api/integrations/woocommerce/products'
     | '/api/integrations/woocommerce/test'
@@ -1886,6 +1898,7 @@ export interface FileRouteTypes {
     | '/app/utilities/'
     | '/api/integrations/steadfast/create-consignment'
     | '/api/integrations/steadfast/test'
+    | '/api/integrations/steadfast/track'
     | '/api/integrations/woocommerce/orders'
     | '/api/integrations/woocommerce/products'
     | '/api/integrations/woocommerce/test'
@@ -1927,6 +1940,7 @@ export interface RootRouteChildren {
   ApiIntegrationsProxyRoute: typeof ApiIntegrationsProxyRoute
   ApiIntegrationsSteadfastCreateConsignmentRoute: typeof ApiIntegrationsSteadfastCreateConsignmentRoute
   ApiIntegrationsSteadfastTestRoute: typeof ApiIntegrationsSteadfastTestRoute
+  ApiIntegrationsSteadfastTrackRoute: typeof ApiIntegrationsSteadfastTrackRoute
   ApiIntegrationsWoocommerceOrdersRoute: typeof ApiIntegrationsWoocommerceOrdersRoute
   ApiIntegrationsWoocommerceProductsRoute: typeof ApiIntegrationsWoocommerceProductsRoute
   ApiIntegrationsWoocommerceTestRoute: typeof ApiIntegrationsWoocommerceTestRoute
@@ -3012,6 +3026,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiIntegrationsWoocommerceOrdersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/integrations/steadfast/track': {
+      id: '/api/integrations/steadfast/track'
+      path: '/api/integrations/steadfast/track'
+      fullPath: '/api/integrations/steadfast/track'
+      preLoaderRoute: typeof ApiIntegrationsSteadfastTrackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/integrations/steadfast/test': {
       id: '/api/integrations/steadfast/test'
       path: '/api/integrations/steadfast/test'
@@ -3592,6 +3613,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiIntegrationsSteadfastCreateConsignmentRoute:
     ApiIntegrationsSteadfastCreateConsignmentRoute,
   ApiIntegrationsSteadfastTestRoute: ApiIntegrationsSteadfastTestRoute,
+  ApiIntegrationsSteadfastTrackRoute: ApiIntegrationsSteadfastTrackRoute,
   ApiIntegrationsWoocommerceOrdersRoute: ApiIntegrationsWoocommerceOrdersRoute,
   ApiIntegrationsWoocommerceProductsRoute:
     ApiIntegrationsWoocommerceProductsRoute,
