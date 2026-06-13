@@ -146,10 +146,9 @@ function WebsitesPage() {
                 <SelectContent><SelectItem value="active">Active</SelectItem><SelectItem value="inactive">Inactive</SelectItem></SelectContent>
               </Select>
             </div>
-            <div><Label>API Base URL</Label><Input value={form.apiBaseUrl || ""} onChange={(e) => setForm((f) => ({ ...f, apiBaseUrl: e.target.value }))} /></div>
-            <div><Label>API Key</Label><Input value={form.apiKey || ""} onChange={(e) => setForm((f) => ({ ...f, apiKey: e.target.value }))} /></div>
-            <div><Label>API Secret</Label><Input value={form.apiSecret || ""} onChange={(e) => setForm((f) => ({ ...f, apiSecret: e.target.value }))} /></div>
-            <div><Label>Webhook Secret</Label><Input value={form.webhookSecret || ""} onChange={(e) => setForm((f) => ({ ...f, webhookSecret: e.target.value }))} /></div>
+            <div className="col-span-2 text-xs text-muted-foreground border rounded p-2 bg-muted/30">
+              API Key / Secret are managed only in <Link to="/app/ecommerce/settings" className="underline">Integration Settings</Link>. This keeps credentials in one place.
+            </div>
             <div><Label>Default Warehouse</Label><Input value={form.defaultWarehouse || ""} onChange={(e) => setForm((f) => ({ ...f, defaultWarehouse: e.target.value }))} /></div>
             <div><Label>Default Courier</Label><Input value={form.defaultCourier || ""} onChange={(e) => setForm((f) => ({ ...f, defaultCourier: e.target.value }))} /></div>
             <div><Label>Default Payment Method</Label><Input value={form.defaultPaymentMethod || ""} onChange={(e) => setForm((f) => ({ ...f, defaultPaymentMethod: e.target.value }))} /></div>
