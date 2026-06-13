@@ -122,9 +122,9 @@ function CourierPage() {
             <div><Label>Delivery Charge</Label><Input type="number" value={form.defaultDeliveryCharge || 0} onChange={(e) => setForm((f) => ({ ...f, defaultDeliveryCharge: Number(e.target.value) }))} /></div>
             <div><Label>Return Charge</Label><Input type="number" value={form.returnCharge || 0} onChange={(e) => setForm((f) => ({ ...f, returnCharge: Number(e.target.value) }))} /></div>
             <div><Label>COD Charge %</Label><Input type="number" value={form.codChargePct || 0} onChange={(e) => setForm((f) => ({ ...f, codChargePct: Number(e.target.value) }))} /></div>
-            <div><Label>Base URL</Label><Input value={form.baseUrl || ""} onChange={(e) => setForm((f) => ({ ...f, baseUrl: e.target.value }))} /></div>
-            <div><Label>API Key</Label><Input value={form.apiKey || ""} onChange={(e) => setForm((f) => ({ ...f, apiKey: e.target.value }))} /></div>
-            <div><Label>API Secret</Label><Input value={form.apiSecret || ""} onChange={(e) => setForm((f) => ({ ...f, apiSecret: e.target.value }))} /></div>
+            <div className="col-span-2 text-xs text-muted-foreground border rounded p-2 bg-muted/30">
+              Courier API Key / Secret / Base URL are managed only in <Link to="/app/ecommerce/settings" className="underline">Integration Settings</Link>.
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
