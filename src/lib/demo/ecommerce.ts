@@ -679,3 +679,47 @@ export function clearEcommerce() {
   if (typeof window === "undefined") return;
   Object.values(K).forEach((k) => localStorage.removeItem(k));
 }
+
+/**
+ * Refresh order line-item images by looking up the cached website product
+ * (matched by productId on same website, or globally by SKU). Returns counts.
+ */
+export function refreshOrderItemImages(filter?: { orderId?: string }): { updated: number; missing: number; failed: number } {
+  const products = getProducts();
+  const orders = getOrders();
+  let updated = 0, missing = 0, failed = 0;
+  const byKey = new Map<string, EcoProduct>();
+  for (const p of products) {
+    if (p.websiteProductId) byKey.set(`pid:${p.websiteId}:${p.websiteProductId}`, p);
+    if (p.sku) byKey.set(`sku:${p.sku.toLowerCase()}`, p);
+  }
+  for (const o of orders) {
+    if (filter?.orderId && o.id !== filter.orderId) continue;
+    for (const it of o.items) {
+      if (it.imageUrl) continue;
+      try {
+        const match =
+          (it.productId && byKey.get(`pid:${o.websiteId}:${it.productId}`)) ||
+          (it.sku && byKey.get(`sku:${it.sku.toLowerCase()}`));
+        if (match?.imageUrl) {
+          it.imageUrl = match.imageUrl;
+          it.thumbnailUrl = match.thumbnailUrl || match.imageUrl;
+          updated++;
+        } else {
+          missing++;
+        }
+      } catch {
+        failed++;
+      }
+    }
+  }
+  setOrders(orders);
+  return { updated, missing, failed };
+}
+
+/** Count of products that currently have an imageUrl. */
+export function productImageStats(): { withImage: number; missing: number; total: number } {
+  const products = getProducts();
+  const withImage = products.filter((p) => !!p.imageUrl).length;
+  return { withImage, missing: products.length - withImage, total: products.length };
+}
