@@ -42,7 +42,7 @@ function Login() {
   const [pass, setPass] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (overrideEmail?: string, overridePass?: string) => {
+  const handleLogin = async (overrideEmail?: string, overridePass?: string, allowDemo = false) => {
     const useEmail = overrideEmail ?? email;
     const usePass = overridePass ?? pass;
     setLoading(true);
@@ -52,7 +52,7 @@ function Login() {
 
     // Demo login is fully local — skip Supabase, seed Chair King, pre-select it
     // so the orchestrator doesn't bounce through /companies.
-    if (isDemo) {
+    if (isDemo && allowDemo) {
       try {
         ensureDemoSeed();
         startDemoSession();
@@ -181,7 +181,7 @@ function Login() {
   const handleDemoLogin = async () => {
     setEmail(DEMO_EMAIL);
     setPass(DEMO_PASSWORD);
-    await handleLogin(DEMO_EMAIL, DEMO_PASSWORD);
+    await handleLogin(DEMO_EMAIL, DEMO_PASSWORD, true);
   };
 
   // demo button removed — real auth required
