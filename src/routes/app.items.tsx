@@ -421,8 +421,10 @@ function Items() {
                 <th className="text-right">{t("Purchase")} ৳</th>
                 <th className="text-right">{t("Sale")} ৳</th>
                 <th className="text-right">{t("Stock")}</th>
+                <th className="text-center">Details</th>
                 <th></th>
               </tr>
+
             </thead>
             <tbody>
               {filtered.map((i) => {
