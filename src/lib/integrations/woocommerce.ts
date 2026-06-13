@@ -332,4 +332,94 @@ export const woocommerceService = {
       return wrap({ status: "failed", errorKind: cls.kind, message: cls.message });
     }
   },
+
+  async syncProducts(
+    c: WooConfig,
+    websiteId: string,
+    mode: IntegrationMode,
+  ): Promise<DiagnosticResult & { added: number; updated: number; failed: number }> {
+    const { getProducts, setProducts } = await import("@/lib/demo/ecommerce");
+    const base: DiagnosticResult = {
+      provider: "WooCommerce", action: "Sync Products",
+      url: wooBaseEndpoint(c) + "/products",
+      maskedCreds: maskedWooCreds(c),
+      at: new Date().toISOString(),
+      status: "failed", errorKind: "unknown", message: "",
+    };
+    const wrap = (extra: Partial<DiagnosticResult>, counts = { added: 0, updated: 0, failed: 0 }) => {
+      const d = { ...base, ...extra };
+      saveDiagnostic("woocommerce_products", d);
+      return { ...d, ...counts };
+    };
+    const invalid = validateWoo(c);
+    if (invalid) return wrap({ status: "failed", errorKind: "validation", message: invalid });
+    if (!websiteId) return wrap({ status: "failed", errorKind: "validation", message: "Select a target website" });
+    if (mode === "local-demo") {
+      // Simulate a small sample sync so users see something.
+      const existing = getProducts();
+      let added = 0;
+      for (let i = 0; i < 5; i++) {
+        const sku = `WOO-SAMP-${i + 1}`;
+        if (existing.some((p) => p.websiteId === websiteId && p.sku === sku)) continue;
+        existing.push({
+          id: genId("ep"), websiteId, websiteProductId: `WP-SAMP-${i + 1}`,
+          name: `Sample Woo Product ${i + 1}`, sku,
+          erpItemId: null, websitePrice: 1500 + i * 200, stock: 10 + i,
+          status: "active", lastSyncedAt: new Date().toISOString(),
+        });
+        added++;
+      }
+      setProducts(existing);
+      return wrap({ status: "skipped", errorKind: "mode_disabled", message: `Local Demo — added ${added} sample products. Switch to Direct Browser API for live sync.` }, { added, updated: 0, failed: 0 });
+    }
+    if (mode !== "direct-browser") {
+      return wrap({ status: "blocked", errorKind: "config", message: "Backend/Electron proxy required." });
+    }
+    try {
+      const existing = getProducts();
+      const byKey = new Map(existing.map((p) => [`${p.websiteId}:${p.websiteProductId}`, p] as const));
+      let added = 0, updated = 0, failed = 0;
+      for (let page = 1; page <= 20; page++) {
+        const { ok, status, data, finalUrl, errorText } = await callWoo(c, "/products", { per_page: "100", page: String(page) });
+        if (!ok) {
+          return wrap({
+            status: "failed", httpStatus: status, url: finalUrl,
+            errorKind: status === 401 || status === 403 ? "auth" : status === 404 ? "not_found" : "server",
+            message: `HTTP ${status} ${errorText || ""}`.trim(),
+          }, { added, updated, failed });
+        }
+        const list = Array.isArray(data) ? (data as Array<Record<string, unknown>>) : [];
+        if (list.length === 0) break;
+        for (const w of list) {
+          try {
+            const wpId = String(w.id ?? "");
+            if (!wpId) { failed++; continue; }
+            const sku = String(w.sku ?? "") || `WP-${wpId}`;
+            const name = String(w.name ?? "Untitled");
+            const price = Number(w.price ?? w.regular_price ?? 0);
+            const stock = Number(w.stock_quantity ?? 0);
+            const status: "active" | "inactive" = (w.status === "publish") ? "active" : "inactive";
+            const key = `${websiteId}:${wpId}`;
+            const prev = byKey.get(key);
+            if (prev) {
+              Object.assign(prev, { name, sku, websitePrice: price, stock, status, lastSyncedAt: new Date().toISOString() });
+              updated++;
+            } else {
+              existing.push({
+                id: genId("ep"), websiteId, websiteProductId: wpId, name, sku,
+                erpItemId: null, websitePrice: price, stock, status, lastSyncedAt: new Date().toISOString(),
+              });
+              added++;
+            }
+          } catch { failed++; }
+        }
+        setProducts(existing);
+        if (list.length < 100) break;
+      }
+      return wrap({ status: "success", errorKind: "none", message: `Imported ${added} new, updated ${updated}, ${failed} failed.` }, { added, updated, failed });
+    } catch (e) {
+      const cls = classifyFetchError(e);
+      return wrap({ status: "failed", errorKind: cls.kind, message: cls.message });
+    }
+  },
 };
