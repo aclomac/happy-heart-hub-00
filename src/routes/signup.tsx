@@ -245,7 +245,7 @@ function Signup() {
                   {loading ? "Creating account..." : "Create Account"}
                 </Button>
                 <p className="text-[11px] text-muted-foreground text-center">
-                  Local account stored on this device. No email verification required.
+                  Local account stored on this device after email verification.
                 </p>
               </form>
               )}
