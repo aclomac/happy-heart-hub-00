@@ -189,17 +189,9 @@ export const woocommerceService = {
       });
       saveDiagnostic("woocommerce", d); return d;
     }
-    if (mode === "backend-proxy" || mode === "electron-proxy") {
-      const d = r({
-        status: "blocked",
-        errorKind: "config",
-        message: `${mode === "backend-proxy" ? "Backend" : "Electron"} proxy is not yet configured. Add a proxy endpoint that forwards to ${wooBaseEndpoint(c)} with the stored credentials.`,
-      });
-      saveDiagnostic("woocommerce", d); return d;
-    }
 
     try {
-      const { ok, status, data, errorText, finalUrl } = await callWoo(c, "/orders", { per_page: "1" });
+      const { ok, status, data, errorText, finalUrl } = await callWoo(c, mode, "/orders", { per_page: "1" });
       if (ok) {
         const d = r({
           status: "success", errorKind: "none", httpStatus: status, url: finalUrl,
