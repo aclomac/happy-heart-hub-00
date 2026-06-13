@@ -156,6 +156,20 @@ function SettingsPage() {
               {wc.status === "active" ? "Active" : "Inactive"}
             </span>
           </div>
+          <div className="flex flex-wrap items-end gap-2 border rounded p-2 bg-muted/30">
+            <div className="flex-1 min-w-[220px]">
+              <Label className="text-xs">Load credentials from saved Website</Label>
+              <Select value={linkedWebsiteId || "_none"} onValueChange={(v) => loadFromWebsite(v === "_none" ? "" : v)}>
+                <SelectTrigger><SelectValue placeholder="Select website" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_none">— None (manual entry) —</SelectItem>
+                  {websites.map((w) => <SelectItem key={w.id} value={w.id}>{w.name} ({w.platform})</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button size="sm" variant="outline" disabled={!linkedWebsiteId} onClick={saveBackToWebsite}>Save back to website</Button>
+            <Link to="/app/ecommerce/websites"><Button size="sm" variant="ghost">Manage Websites</Button></Link>
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <div><Label>Store Name</Label><Input value={wc.storeName} onChange={(e) => setWc({ ...wc, storeName: e.target.value })} /></div>
             <div><Label>Website URL (https://store.com)</Label><Input value={wc.websiteUrl} onChange={(e) => setWc({ ...wc, websiteUrl: e.target.value })} placeholder="https://example.com" /></div>
