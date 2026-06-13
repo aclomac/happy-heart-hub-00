@@ -18,7 +18,8 @@ import {
 } from "@/lib/demo/ecommerce";
 import { getSales, setSales } from "@/lib/demo/sales";
 import { genId } from "@/lib/demo/inventory";
-import { MoreVertical, Truck, FileText, Copy, Trash2, Plus } from "lucide-react";
+import { getSteadfastConfig, steadfastService } from "@/lib/integrations/steadfast";
+import { MoreVertical, Truck, FileText, Copy, Trash2, Plus, Send, Navigation } from "lucide-react";
 
 export const Route = createFileRoute("/app/ecommerce/orders")({ component: OrdersPage });
 
