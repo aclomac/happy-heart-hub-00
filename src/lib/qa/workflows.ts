@@ -946,7 +946,7 @@ export const signupWorkflow = () =>
       findUserByEmailOrMobile,
       deleteLocalUser,
     } = await import("@/lib/demo/localUsers");
-    const { createLocalSignupAccount, validateSignupInput } = await import("@/lib/demo/signup");
+    const { createLocalSignupAccount, DEMO_EMAIL_VERIFICATION_CODE, validateSignupInput } = await import("@/lib/demo/signup");
     const {
       startLocalUserSession,
       startDemoSession,
@@ -954,7 +954,9 @@ export const signupWorkflow = () =>
       getDemoUser,
       endDemoSession,
       DEMO_USER_ID,
+      DEMO_COMPANY_ID,
       deleteDemoCompany,
+      getVisibleDemoCompanies,
     } = await import("@/lib/demo/localStore");
 
     // Snapshot existing session so cleanup restores the caller's auth state.
@@ -969,16 +971,37 @@ export const signupWorkflow = () =>
     }
     steps.push(pass("Invalid form errors", "Name/email/password show errors"));
 
+    if (DEMO_EMAIL_VERIFICATION_CODE !== "123456") {
+      steps.push(fail("Demo email verification code", "Expected fixed code 123456"));
+    } else {
+      steps.push(pass("Demo email verification code", "123456 accepted"));
+    }
+
     const { user, company } = createLocalSignupAccount({
       fullName: "[QA] Signup User",
       email,
       mobile: "",
       password: "password123",
     });
-    if (user.isDemoUser || user.mobileVerified) {
-      steps.push(fail("Created non-demo user", "Expected isDemoUser=false and mobileVerified=false"));
+    if (user.isDemoUser || !user.emailVerified) {
+      steps.push(fail("Created verified non-demo user", "Expected isDemoUser=false and emailVerified=true"));
     } else {
-      steps.push(pass("Created non-demo user", `id=${user.id}`));
+      steps.push(pass("Created verified non-demo user", `id=${user.id}`));
+    }
+
+    if ((company.ownerUserId ?? company.owner_id) !== user.id || company.isDemoCompany !== false) {
+      steps.push(fail("Company owner isolation", `Expected owner ${user.id}, got ${company.ownerUserId ?? company.owner_id}`));
+    } else {
+      steps.push(pass("Company owner isolation", `ownerUserId=${user.id}`));
+    }
+
+    const visibleCompanies = getVisibleDemoCompanies(user.id);
+    if (visibleCompanies.some((c) => c.id === DEMO_COMPANY_ID || c.name === "Chair King")) {
+      steps.push(fail("Demo company hidden", "Chair King visible to QA user"));
+    } else if (!visibleCompanies.some((c) => c.id === company.id)) {
+      steps.push(fail("Signup company visible", "Created company missing from user's company list"));
+    } else {
+      steps.push(pass("Demo company hidden", "Only QA user's company is visible"));
     }
 
     const sess = getDemoSession();
