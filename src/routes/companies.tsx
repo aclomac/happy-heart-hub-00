@@ -34,7 +34,14 @@ import { PlanStatusBadge } from "@/components/erp/PlanStatusBadge";
 import { setCurrentCompanyId } from "@/lib/use-company";
 import { useIsPlatformAdmin } from "@/lib/use-platform-admin";
 import { ShieldCheck } from "lucide-react";
-import { clearDemoStorage, endDemoSession, isDemoMode } from "@/lib/demo/localStore";
+import {
+  addDemoCompany,
+  clearDemoStorage,
+  endDemoSession,
+  getDemoUser,
+  getVisibleDemoCompanies,
+  isDemoMode,
+} from "@/lib/demo/localStore";
 
 export const Route = createFileRoute("/companies")({
   component: Companies,
@@ -58,12 +65,25 @@ function Companies() {
   const { data: isPlatformAdmin } = useIsPlatformAdmin();
 
   useEffect(() => {
+    if (isDemoMode()) {
+      setUserEmail(getDemoUser()?.email ?? "");
+      return;
+    }
     supabase.auth.getUser().then(({ data }) => setUserEmail(data.user?.email ?? ""));
   }, []);
 
   const { data: companies = [], isLoading } = useQuery({
     queryKey: ["companies"],
     queryFn: async () => {
+      if (isDemoMode()) {
+        return getVisibleDemoCompanies().map((c) => ({
+          id: c.id,
+          name: c.name,
+          business_type: c.business_type,
+          currency: c.currency,
+          created_at: c.created_at,
+        })) as Company[];
+      }
       const { data, error } = await supabase
         .from("companies")
         .select("id,name,business_type,currency,created_at")
@@ -83,6 +103,11 @@ function Companies() {
   };
 
   const openCompany = async (id: string) => {
+    if (isDemoMode()) {
+      setCurrentCompanyId(id, getDemoUser()?.id);
+      nav({ to: "/app" });
+      return;
+    }
     const {
       data: { user },
     } = await supabase.auth.getUser();
