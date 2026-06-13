@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import {
   ArrowLeft,
   Loader2,
@@ -14,6 +15,7 @@ import {
   Plus,
   ShoppingCart,
   ArrowRight,
+  RefreshCw,
 } from "lucide-react";
 
 import { PageHeader } from "@/components/erp/PageHeader";
@@ -135,143 +137,227 @@ function ItemDetailPage() {
     },
   });
 
+  const queryClient = useQueryClient();
   const movements = movementsQ.data ?? [];
-  const saleIds = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          movements
-            .filter((m) => m.reference_id && SALE_TYPES.has(m.reference_type))
-            .map((m) => m.reference_id as string),
-        ),
-      ),
-    [movements],
-  );
-  const purchaseIds = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          movements
-            .filter((m) => m.reference_id && PURCHASE_TYPES.has(m.reference_type))
-            .map((m) => m.reference_id as string),
-        ),
-      ),
-    [movements],
-  );
 
-  const salesQ = useQuery({
-    queryKey: ["item-sale-refs", id, saleIds.join(",")],
-    enabled: !!companyId && saleIds.length > 0,
+  // ---- Primary sources: sale_items / purchase_items by item_id ----
+  // This is the canonical source for "Total Sold / Sales Amount / Sales tab".
+  // stock_movements is only used for warehouse-aware running balance and
+  // store-wise stock. If a sale invoice was saved but its stock movement
+  // wasn't posted (legacy data, service item, missing warehouse), we still
+  // count it here and surface a Rebuild banner.
+  const saleLinesQ = useQuery({
+    queryKey: ["item-sale-lines", id, companyId],
+    enabled: !!companyId && !!id,
     queryFn: async () => {
-      const { data } = await sb
-        .from("sales")
-        .select("id,invoice_no,party_id,party_name,payment_status,total,sale_date")
-        .in("id", saleIds);
+      const { data, error } = await sb
+        .from("sale_items")
+        .select(
+          "id,sale_id,qty,price,amount,discount_pct,sales!inner(id,invoice_no,invoice_date,party_id,status,balance,paid,total,doc_type,payment_method,deleted_at,company_id)",
+        )
+        .eq("item_id", id)
+        .is("sales.deleted_at", null)
+        .eq("sales.company_id", companyId);
+      if (error) throw error;
       return (data ?? []) as Array<{
         id: string;
-        invoice_no: string | null;
-        party_id: string | null;
-        party_name: string | null;
-        payment_status: string | null;
-        total: number | null;
-        sale_date: string | null;
-      }>;
-    },
-  });
-  const saleItemsQ = useQuery({
-    queryKey: ["item-sale-items", id, saleIds.join(",")],
-    enabled: !!companyId && saleIds.length > 0,
-    queryFn: async () => {
-      const { data } = await sb
-        .from("sale_items")
-        .select("sale_id,item_id,qty,price,amount,discount_pct")
-        .eq("item_id", id)
-        .in("sale_id", saleIds);
-      return (data ?? []) as Array<{
         sale_id: string;
-        item_id: string;
         qty: number;
         price: number;
         amount: number;
         discount_pct: number | null;
+        sales: {
+          id: string;
+          invoice_no: string | null;
+          invoice_date: string | null;
+          party_id: string | null;
+          status: string | null;
+          balance: number | null;
+          paid: number | null;
+          total: number | null;
+          doc_type: string | null;
+          payment_method: string | null;
+        };
       }>;
     },
   });
 
-  const purchasesQ = useQuery({
-    queryKey: ["item-purchase-refs", id, purchaseIds.join(",")],
-    enabled: !!companyId && purchaseIds.length > 0,
+  const purchaseLinesQ = useQuery({
+    queryKey: ["item-purchase-lines", id, companyId],
+    enabled: !!companyId && !!id,
     queryFn: async () => {
-      const { data } = await sb
-        .from("purchases")
-        .select("id,invoice_no,party_id,party_name,payment_status,total,purchase_date")
-        .in("id", purchaseIds);
+      const { data, error } = await sb
+        .from("purchase_items")
+        .select(
+          "id,purchase_id,qty,price,amount,purchases!inner(id,bill_no,bill_date,party_id,status,balance,paid,total,doc_type,deleted_at,company_id)",
+        )
+        .eq("item_id", id)
+        .is("purchases.deleted_at", null)
+        .eq("purchases.company_id", companyId);
+      if (error) throw error;
       return (data ?? []) as Array<{
         id: string;
-        invoice_no: string | null;
-        party_id: string | null;
-        party_name: string | null;
-        payment_status: string | null;
-        total: number | null;
-        purchase_date: string | null;
-      }>;
-    },
-  });
-  const purchaseItemsQ = useQuery({
-    queryKey: ["item-purchase-items", id, purchaseIds.join(",")],
-    enabled: !!companyId && purchaseIds.length > 0,
-    queryFn: async () => {
-      const { data } = await sb
-        .from("purchase_items")
-        .select("purchase_id,item_id,qty,price,amount")
-        .eq("item_id", id)
-        .in("purchase_id", purchaseIds);
-      return (data ?? []) as Array<{
         purchase_id: string;
-        item_id: string;
         qty: number;
         price: number;
         amount: number;
+        purchases: {
+          id: string;
+          bill_no: string | null;
+          bill_date: string | null;
+          party_id: string | null;
+          status: string | null;
+          balance: number | null;
+          paid: number | null;
+          total: number | null;
+          doc_type: string | null;
+        };
       }>;
     },
   });
+
+  const partyIds = useMemo(() => {
+    const s = new Set<string>();
+    for (const r of saleLinesQ.data ?? []) if (r.sales?.party_id) s.add(r.sales.party_id);
+    for (const r of purchaseLinesQ.data ?? []) if (r.purchases?.party_id) s.add(r.purchases.party_id);
+    return Array.from(s);
+  }, [saleLinesQ.data, purchaseLinesQ.data]);
+
+  const partiesQ = useQuery({
+    queryKey: ["item-detail-parties", id, partyIds.join(",")],
+    enabled: !!companyId && partyIds.length > 0,
+    queryFn: async () => {
+      const { data } = await sb.from("parties").select("id,name").in("id", partyIds);
+      return (data ?? []) as Array<{ id: string; name: string }>;
+    },
+  });
+  const partyMap = useMemo(
+    () => new Map((partiesQ.data ?? []).map((p) => [p.id, p.name])),
+    [partiesQ.data],
+  );
 
   const whMap = useMemo(
     () => new Map((warehousesQ.data ?? []).map((w) => [w.id, w.name])),
     [warehousesQ.data],
   );
-  const saleMap = useMemo(
-    () => new Map((salesQ.data ?? []).map((s) => [s.id, s])),
-    [salesQ.data],
-  );
-  const saleItemMap = useMemo(() => {
-    const m = new Map<string, { qty: number; price: number; amount: number }>();
-    for (const r of saleItemsQ.data ?? []) {
-      const cur = m.get(r.sale_id) ?? { qty: 0, price: 0, amount: 0 };
+
+  function paymentStatusOf(total: number | null, paid: number | null, balance: number | null) {
+    const t = Number(total || 0);
+    const p = Number(paid || 0);
+    const b = balance != null ? Number(balance) : t - p;
+    if (t <= 0) return "—";
+    if (b <= 0.0001) return "Paid";
+    if (p > 0) return "Partial";
+    return "Unpaid";
+  }
+
+  // Aggregate sale line rows by sale_id (one row per invoice for this item).
+  type SaleAgg = {
+    saleId: string;
+    invoiceNo: string;
+    date: string;
+    party: string;
+    qty: number;
+    price: number;
+    amount: number;
+    paymentStatus: string;
+    docType: string;
+  };
+  const salesAgg: SaleAgg[] = useMemo(() => {
+    const m = new Map<string, SaleAgg>();
+    for (const r of saleLinesQ.data ?? []) {
+      const s = r.sales;
+      if (!s) continue;
+      const cur = m.get(r.sale_id) ?? {
+        saleId: r.sale_id,
+        invoiceNo: s.invoice_no || "—",
+        date: s.invoice_date || "",
+        party: partyMap.get(s.party_id || "") || "—",
+        qty: 0,
+        price: 0,
+        amount: 0,
+        paymentStatus: paymentStatusOf(s.total, s.paid, s.balance),
+        docType: s.doc_type || "invoice",
+      };
       cur.qty += Number(r.qty || 0);
       cur.amount += Number(r.amount || 0);
       cur.price = Number(r.price || cur.price);
       m.set(r.sale_id, cur);
     }
-    return m;
-  }, [saleItemsQ.data]);
-  const purchaseMap = useMemo(
-    () => new Map((purchasesQ.data ?? []).map((p) => [p.id, p])),
-    [purchasesQ.data],
-  );
-  const purchaseItemMap = useMemo(() => {
-    const m = new Map<string, { qty: number; price: number; amount: number }>();
-    for (const r of purchaseItemsQ.data ?? []) {
-      const cur = m.get(r.purchase_id) ?? { qty: 0, price: 0, amount: 0 };
+    return Array.from(m.values()).sort((a, b) => (a.date < b.date ? 1 : -1));
+  }, [saleLinesQ.data, partyMap]);
+
+  type PurchaseAgg = {
+    purchaseId: string;
+    billNo: string;
+    date: string;
+    party: string;
+    qty: number;
+    price: number;
+    amount: number;
+    paymentStatus: string;
+  };
+  const purchasesAgg: PurchaseAgg[] = useMemo(() => {
+    const m = new Map<string, PurchaseAgg>();
+    for (const r of purchaseLinesQ.data ?? []) {
+      const p = r.purchases;
+      if (!p) continue;
+      const cur = m.get(r.purchase_id) ?? {
+        purchaseId: r.purchase_id,
+        billNo: p.bill_no || "—",
+        date: p.bill_date || "",
+        party: partyMap.get(p.party_id || "") || "—",
+        qty: 0,
+        price: 0,
+        amount: 0,
+        paymentStatus: paymentStatusOf(p.total, p.paid, p.balance),
+      };
       cur.qty += Number(r.qty || 0);
       cur.amount += Number(r.amount || 0);
       cur.price = Number(r.price || cur.price);
       m.set(r.purchase_id, cur);
     }
-    return m;
-  }, [purchaseItemsQ.data]);
+    return Array.from(m.values()).sort((a, b) => (a.date < b.date ? 1 : -1));
+  }, [purchaseLinesQ.data, partyMap]);
 
-  // Build ledger with running balance
+  // Lookups used while building the ledger.
+  const saleAggById = useMemo(() => new Map(salesAgg.map((s) => [s.saleId, s])), [salesAgg]);
+  const purchaseAggById = useMemo(
+    () => new Map(purchasesAgg.map((p) => [p.purchaseId, p])),
+    [purchasesAgg],
+  );
+
+  // Orphan detection: sales/purchases without a matching stock_movement row.
+  const movedSaleIds = useMemo(
+    () =>
+      new Set(
+        movements
+          .filter((m) => SALE_TYPES.has(m.reference_type) && m.reference_id)
+          .map((m) => m.reference_id as string),
+      ),
+    [movements],
+  );
+  const movedPurchaseIds = useMemo(
+    () =>
+      new Set(
+        movements
+          .filter((m) => PURCHASE_TYPES.has(m.reference_type) && m.reference_id)
+          .map((m) => m.reference_id as string),
+      ),
+    [movements],
+  );
+  const orphanSales = useMemo(
+    () => salesAgg.filter((s) => !movedSaleIds.has(s.saleId)),
+    [salesAgg, movedSaleIds],
+  );
+  const orphanPurchases = useMemo(
+    () => purchasesAgg.filter((p) => !movedPurchaseIds.has(p.purchaseId)),
+    [purchasesAgg, movedPurchaseIds],
+  );
+  const orphanCount = orphanSales.length + orphanPurchases.length;
+
+  // Build ledger rows: real movements first, then synthetic rows for orphan
+  // sales/purchases so balances + Transactions tab stay correct until rebuild.
   type LedgerRow = {
     id: string;
     date: string;
@@ -286,45 +372,41 @@ function ItemDetailPage() {
     price: number;
     amount: number;
     paymentStatus: string;
+    synthetic?: boolean;
   };
 
   const ledger: LedgerRow[] = useMemo(() => {
-    let bal = 0;
-    return movements.map((m) => {
+    type Tmp = Omit<LedgerRow, "balance">;
+    const rows: Tmp[] = [];
+
+    for (const m of movements) {
       const qtyIn = m.direction === "in" ? Number(m.qty) : 0;
       const qtyOut = m.direction === "out" ? Number(m.qty) : 0;
-      bal += qtyIn - qtyOut;
       let party = "—";
       let price = 0;
       let amount = 0;
       let paymentStatus = "—";
       let refNo = m.reference_no || "—";
       if (SALE_TYPES.has(m.reference_type) && m.reference_id) {
-        const s = saleMap.get(m.reference_id);
-        const li = saleItemMap.get(m.reference_id);
+        const s = saleAggById.get(m.reference_id);
         if (s) {
-          party = s.party_name || "—";
-          paymentStatus = s.payment_status || "—";
-          refNo = s.invoice_no || refNo;
-        }
-        if (li) {
-          price = li.price;
-          amount = li.amount;
+          party = s.party;
+          paymentStatus = s.paymentStatus;
+          refNo = s.invoiceNo || refNo;
+          price = s.price;
+          amount = s.amount;
         }
       } else if (PURCHASE_TYPES.has(m.reference_type) && m.reference_id) {
-        const p = purchaseMap.get(m.reference_id);
-        const li = purchaseItemMap.get(m.reference_id);
+        const p = purchaseAggById.get(m.reference_id);
         if (p) {
-          party = p.party_name || "—";
-          paymentStatus = p.payment_status || "—";
-          refNo = p.invoice_no || refNo;
-        }
-        if (li) {
-          price = li.price;
-          amount = li.amount;
+          party = p.party;
+          paymentStatus = p.paymentStatus;
+          refNo = p.billNo || refNo;
+          price = p.price;
+          amount = p.amount;
         }
       }
-      return {
+      rows.push({
         id: m.id,
         date: m.movement_date,
         type: typeLabel(m.reference_type),
@@ -334,13 +416,54 @@ function ItemDetailPage() {
         warehouse: whMap.get(m.warehouse_id) || "—",
         qtyIn,
         qtyOut,
-        balance: bal,
         price,
         amount,
         paymentStatus,
-      };
+      });
+    }
+
+    for (const s of orphanSales) {
+      rows.push({
+        id: `synthetic-sale-${s.saleId}`,
+        date: s.date,
+        type: "Sale (unposted)",
+        refNo: s.invoiceNo,
+        refId: s.saleId,
+        party: s.party,
+        warehouse: "—",
+        qtyIn: 0,
+        qtyOut: s.qty,
+        price: s.price,
+        amount: s.amount,
+        paymentStatus: s.paymentStatus,
+        synthetic: true,
+      });
+    }
+    for (const p of orphanPurchases) {
+      rows.push({
+        id: `synthetic-purchase-${p.purchaseId}`,
+        date: p.date,
+        type: "Purchase (unposted)",
+        refNo: p.billNo,
+        refId: p.purchaseId,
+        party: p.party,
+        warehouse: "—",
+        qtyIn: p.qty,
+        qtyOut: 0,
+        price: p.price,
+        amount: p.amount,
+        paymentStatus: p.paymentStatus,
+        synthetic: true,
+      });
+    }
+
+    rows.sort((a, b) => (a.date === b.date ? 0 : a.date < b.date ? -1 : 1));
+    let bal = 0;
+    return rows.map((r) => {
+      bal += r.qtyIn - r.qtyOut;
+      return { ...r, balance: bal };
     });
-  }, [movements, saleMap, saleItemMap, purchaseMap, purchaseItemMap, whMap]);
+  }, [movements, saleAggById, purchaseAggById, whMap, orphanSales, orphanPurchases]);
 
   const filteredLedger = useMemo(() => {
     const s = search.trim().toLowerCase();
@@ -355,37 +478,26 @@ function ItemDetailPage() {
     );
   }, [ledger, search]);
 
-  // Aggregates
+  // ---- Totals: canonical aggregates come from salesAgg / purchasesAgg ----
   const totals = useMemo(() => {
-    let soldQty = 0,
-      soldAmount = 0,
-      purchasedQty = 0,
-      purchasedAmount = 0,
-      returnedSaleQty = 0,
-      returnedPurchaseQty = 0,
-      damagedAdjusted = 0,
-      lastSale: string | null = null,
-      lastPurchase: string | null = null;
+    const soldQty = salesAgg.reduce((s, r) => s + r.qty, 0);
+    const soldAmount = salesAgg.reduce((s, r) => s + r.amount, 0);
+    const purchasedQty = purchasesAgg.reduce((s, r) => s + r.qty, 0);
+    const purchasedAmount = purchasesAgg.reduce((s, r) => s + r.amount, 0);
+    const lastSale = salesAgg[0]?.date || null;
+    const lastPurchase = purchasesAgg[0]?.date || null;
+
+    let returnedSaleQty = 0;
+    let returnedPurchaseQty = 0;
+    let damagedAdjusted = 0;
     for (const m of movements) {
       const q = Number(m.qty);
-      if (SALE_TYPES.has(m.reference_type)) {
-        soldQty += q;
-        const li = m.reference_id ? saleItemMap.get(m.reference_id) : null;
-        if (li) soldAmount += li.amount;
-        if (!lastSale || m.movement_date > lastSale) lastSale = m.movement_date;
-      } else if (SALE_RETURN_TYPES.has(m.reference_type)) {
-        returnedSaleQty += q;
-      } else if (PURCHASE_TYPES.has(m.reference_type)) {
-        purchasedQty += q;
-        const li = m.reference_id ? purchaseItemMap.get(m.reference_id) : null;
-        if (li) purchasedAmount += li.amount;
-        if (!lastPurchase || m.movement_date > lastPurchase) lastPurchase = m.movement_date;
-      } else if (PURCHASE_RETURN_TYPES.has(m.reference_type)) {
-        returnedPurchaseQty += q;
-      } else if (m.reference_type === "damage" || m.reference_type === "adjustment") {
+      if (SALE_RETURN_TYPES.has(m.reference_type)) returnedSaleQty += q;
+      else if (PURCHASE_RETURN_TYPES.has(m.reference_type)) returnedPurchaseQty += q;
+      else if (m.reference_type === "damage" || m.reference_type === "adjustment")
         damagedAdjusted += m.direction === "out" ? q : -q;
-      }
     }
+    const avgCost = purchasedQty > 0 ? purchasedAmount / purchasedQty : 0;
     return {
       soldQty,
       soldAmount,
@@ -397,12 +509,12 @@ function ItemDetailPage() {
       lastSale,
       lastPurchase,
       avgSale: soldQty > 0 ? soldAmount / soldQty : 0,
-      avgCost: purchasedQty > 0 ? purchasedAmount / purchasedQty : 0,
-      profit: soldAmount - (purchasedQty > 0 ? (purchasedAmount / purchasedQty) * soldQty : 0),
+      avgCost,
+      profit: soldAmount - avgCost * soldQty,
     };
-  }, [movements, saleItemMap, purchaseItemMap]);
+  }, [salesAgg, purchasesAgg, movements]);
 
-  // Store-wise stock
+  // Store-wise stock is derived from real movements only (warehouse-aware).
   const storeStock = useMemo(() => {
     const map = new Map<
       string,
@@ -445,6 +557,72 @@ function ItemDetailPage() {
     }
     return Array.from(map.values()).sort((a, b) => a.warehouse.localeCompare(b.warehouse));
   }, [movements, whMap]);
+
+  // ---- Rebuild Item Ledger: post missing stock_movement rows ----
+  const [rebuilding, setRebuilding] = useState(false);
+  const rebuildLedger = async () => {
+    if (!companyId) return;
+    setRebuilding(true);
+    try {
+      // Pick a default warehouse for synthesized movements.
+      const { data: whs } = await sb
+        .from("warehouses")
+        .select("id,is_default")
+        .eq("company_id", companyId)
+        .is("deleted_at", null);
+      const defaultWh =
+        (whs ?? []).find((w: { id: string; is_default: boolean }) => w.is_default)?.id ||
+        (whs ?? [])[0]?.id;
+      if (!defaultWh) {
+        toast.error("No warehouse found. Create a warehouse first.");
+        return;
+      }
+
+      let salesLinked = 0;
+      let purchasesLinked = 0;
+      const today = new Date().toISOString().slice(0, 10);
+
+      for (const s of orphanSales) {
+        const { error } = await sb.from("stock_movements").insert({
+          company_id: companyId,
+          item_id: id,
+          warehouse_id: defaultWh,
+          qty: s.qty,
+          direction: "out",
+          reference_type: "sale",
+          reference_id: s.saleId,
+          reference_no: s.invoiceNo,
+          movement_date: s.date || today,
+          note: "Rebuild: posted missing sale movement",
+        });
+        if (!error) salesLinked++;
+      }
+      for (const p of orphanPurchases) {
+        const { error } = await sb.from("stock_movements").insert({
+          company_id: companyId,
+          item_id: id,
+          warehouse_id: defaultWh,
+          qty: p.qty,
+          direction: "in",
+          reference_type: "purchase",
+          reference_id: p.purchaseId,
+          reference_no: p.billNo,
+          movement_date: p.date || today,
+          note: "Rebuild: posted missing purchase movement",
+        });
+        if (!error) purchasesLinked++;
+      }
+
+      toast.success(
+        `Rebuilt ledger: ${salesLinked} sales, ${purchasesLinked} purchases linked.`,
+      );
+      await queryClient.invalidateQueries({ queryKey: ["item-movements", id] });
+    } catch (e) {
+      toast.error(`Rebuild failed: ${(e as Error).message}`);
+    } finally {
+      setRebuilding(false);
+    }
+  };
 
   if (itemQ.isLoading) {
     return (
@@ -549,6 +727,15 @@ function ItemDetailPage() {
       <Button variant="outline" size="sm" onClick={exportLedger}>
         <Download className="w-4 h-4 mr-1" /> Export Ledger
       </Button>
+      <Button
+        variant={orphanCount > 0 ? "default" : "outline"}
+        size="sm"
+        onClick={rebuildLedger}
+        disabled={rebuilding}
+      >
+        <RefreshCw className={`w-4 h-4 mr-1 ${rebuilding ? "animate-spin" : ""}`} />
+        Rebuild Item Ledger
+      </Button>
     </div>
   );
 
@@ -604,6 +791,21 @@ function ItemDetailPage() {
       {low && (
         <div className="mb-4 rounded-md border border-yellow-200 bg-yellow-50 text-yellow-900 px-3 py-2 text-sm flex items-center gap-2">
           <AlertTriangle className="w-4 h-4" /> Low stock: current {it.stock} ≤ alert {it.low_stock_alert}.
+        </div>
+      )}
+
+      {orphanCount > 0 && (
+        <div className="mb-4 rounded-md border border-orange-300 bg-orange-50 text-orange-900 px-3 py-2 text-sm flex items-center gap-2 flex-wrap">
+          <AlertTriangle className="w-4 h-4 shrink-0" />
+          <span>
+            {orphanCount} transaction{orphanCount === 1 ? "" : "s"} not posted to stock ledger
+            ({orphanSales.length} sales, {orphanPurchases.length} purchases). Totals include
+            them, but warehouse balances will be off until you rebuild.
+          </span>
+          <Button size="sm" variant="default" onClick={rebuildLedger} disabled={rebuilding} className="ml-auto">
+            <RefreshCw className={`w-3.5 h-3.5 mr-1 ${rebuilding ? "animate-spin" : ""}`} />
+            Rebuild Item Ledger
+          </Button>
         </div>
       )}
 
