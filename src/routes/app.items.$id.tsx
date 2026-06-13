@@ -518,6 +518,16 @@ function ItemDetailPage() {
           <ArrowLeft className="w-4 h-4 mr-1" /> Back
         </Link>
       </Button>
+      <Button asChild variant="default" size="sm">
+        <Link to="/app/sales/new">
+          <Plus className="w-4 h-4 mr-1" /> Add Sale
+        </Link>
+      </Button>
+      <Button asChild variant="default" size="sm">
+        <Link to="/app/purchases/new">
+          <ShoppingCart className="w-4 h-4 mr-1" /> Add Purchase
+        </Link>
+      </Button>
       <Button asChild variant="outline" size="sm">
         <Link to="/app/items/$id/edit" params={{ id: it.id }}>
           <Edit3 className="w-4 h-4 mr-1" /> Edit
@@ -542,11 +552,36 @@ function ItemDetailPage() {
     </div>
   );
 
+  // Derive last sale/purchase enrichment for at-a-glance
+  const salesRows = filteredLedger.filter((r) => /sale|delivery|pos/i.test(r.type));
+  const purchaseRows = filteredLedger.filter((r) => /purchase|debit/i.test(r.type));
+  const lastSaleRow = salesRows[0];
+  const lastPurchaseRow = purchaseRows[0];
+  const topStores = [...storeStock].sort((a, b) => b.current - a.current).slice(0, 3);
+  const recentTx = filteredLedger.slice(0, 5);
+  const recentSales = salesRows.slice(0, 5);
+  const recentPurchases = purchaseRows.slice(0, 5);
+  const openingStock = ledger.length > 0 ? 0 : Number(it.stock); // approximation; opening = first balance before any movements
+
   return (
     <div>
       <PageHeader title={it.name} subtitle={it.sku ? `SKU: ${it.sku}` : undefined} actions={actions} />
 
+      {scrolled && (
+        <div className="sticky top-0 z-30 -mx-4 px-4 py-2 mb-2 bg-card/95 backdrop-blur border-b flex items-center gap-4 text-sm">
+          <div className="font-semibold truncate">{it.name}</div>
+          <div className="text-muted-foreground">Stock: <span className={`font-semibold ${low ? "text-sale" : "text-foreground"}`}>{Number(it.stock)} {it.unit}</span></div>
+          <div className="text-muted-foreground">Sold: <span className="font-semibold text-foreground">{totals.soldQty}</span></div>
+          <div className="text-muted-foreground">Value: <span className="font-semibold text-foreground">{fmtMoney(stockValue)}</span></div>
+          <div className="ml-auto flex gap-2">
+            <Button asChild size="sm" variant="default"><Link to="/app/sales/new"><Plus className="w-3.5 h-3.5 mr-1" />Sale</Link></Button>
+            <Button asChild size="sm" variant="outline"><Link to="/app/purchases/new"><ShoppingCart className="w-3.5 h-3.5 mr-1" />Purchase</Link></Button>
+          </div>
+        </div>
+      )}
+
       <div className="rounded-lg border bg-card p-4 mb-4 flex gap-4">
+
         <div className="w-20 h-20 rounded-md border bg-muted flex items-center justify-center overflow-hidden shrink-0">
           {it.image_url ? (
             <img src={it.image_url} alt={it.name} className="object-cover w-full h-full" />
