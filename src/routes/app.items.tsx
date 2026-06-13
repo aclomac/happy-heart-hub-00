@@ -64,6 +64,7 @@ import {
   type PostingDoctorReport,
   type RepairResult,
 } from "@/lib/inventory-posting-doctor";
+import { ItemEditDialog } from "@/components/erp/ItemEditDialog";
 
 export const Route = createFileRoute("/app/items")({ component: ItemsShell });
 
