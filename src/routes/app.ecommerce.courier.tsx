@@ -79,7 +79,14 @@ function CourierPage() {
                   <td><StatusBadge status={c.status} /></td>
                   <td className="text-right">
                     <div className="flex items-center justify-end gap-1">
-                      <DisabledLiveButton reason="Live courier API requires credentials."><Plug className="w-3 h-3 mr-1" /> Test API</DisabledLiveButton>
+                      {c.type === "Steadfast" ? (
+                        <Button variant="outline" size="sm" onClick={async () => {
+                          const r = await steadfastService.testConnection(getSteadfastConfig(), getSettings().integrationMode);
+                          r.status === "success" ? toast.success(r.message) : toast.error(r.message);
+                        }}><Plug className="w-3 h-3 mr-1" /> Test API</Button>
+                      ) : (
+                        <DisabledLiveButton reason="Live courier API requires credentials for this provider."><Plug className="w-3 h-3 mr-1" /> Test API</DisabledLiveButton>
+                      )}
                       <Button variant="ghost" size="sm" onClick={() => { setEditing(c); setForm(c); setOpen(true); }}><Pencil className="w-3 h-3" /></Button>
                       <Button variant="ghost" size="sm" onClick={() => del(c.id)}><Trash2 className="w-3 h-3 text-rose-600" /></Button>
                     </div>
