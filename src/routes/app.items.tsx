@@ -437,7 +437,13 @@ function Items() {
                       />
                     </td>
                     <td className="font-medium">
-                      {i.name}
+                      <Link
+                        to="/app/items/$id"
+                        params={{ id: i.id }}
+                        className="hover:underline text-primary"
+                      >
+                        {i.name}
+                      </Link>
                       {i.is_service && (
                         <span className="ml-2 text-[10px] text-utility uppercase font-semibold">
                           Service
@@ -480,10 +486,17 @@ function Items() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <Link to="/app/items/$id" params={{ id: i.id }}>
+                            <DropdownMenuItem>View Details</DropdownMenuItem>
+                          </Link>
                           <Link to="/app/items/$id/edit" params={{ id: i.id }}>
-                            <DropdownMenuItem>
-                              Edit
-                            </DropdownMenuItem>
+                            <DropdownMenuItem>Edit Item</DropdownMenuItem>
+                          </Link>
+                          <Link to="/app/stock-adjustments">
+                            <DropdownMenuItem>Adjust Stock</DropdownMenuItem>
+                          </Link>
+                          <Link to="/app/stock-transfers">
+                            <DropdownMenuItem>Stock Transfer</DropdownMenuItem>
                           </Link>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
@@ -499,7 +512,7 @@ function Items() {
                               );
                             }}
                           >
-                            Delete
+                            Delete Item
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>

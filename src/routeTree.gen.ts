@@ -112,6 +112,7 @@ import { Route as AppPurchaseOrdersNewRouteImport } from './routes/app.purchase-
 import { Route as AppPaymentsInNewRouteImport } from './routes/app.payments-in.new'
 import { Route as AppPaymentOutNewRouteImport } from './routes/app.payment-out.new'
 import { Route as AppPartiesIdRouteImport } from './routes/app.parties.$id'
+import { Route as AppItemsIdRouteImport } from './routes/app.items.$id'
 import { Route as AppExpensesNewRouteImport } from './routes/app.expenses.new'
 import { Route as AppEstimatesNewRouteImport } from './routes/app.estimates.new'
 import { Route as AppEcommerceWebsitesRouteImport } from './routes/app.ecommerce.websites'
@@ -694,6 +695,11 @@ const AppPartiesIdRoute = AppPartiesIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AppPartiesRoute,
 } as any)
+const AppItemsIdRoute = AppItemsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AppItemsRoute,
+} as any)
 const AppExpensesNewRoute = AppExpensesNewRouteImport.update({
   id: '/new',
   path: '/new',
@@ -894,9 +900,9 @@ const AppPaymentOutIdEditRoute = AppPaymentOutIdEditRouteImport.update({
   getParentRoute: () => AppPaymentOutRoute,
 } as any)
 const AppItemsIdEditRoute = AppItemsIdEditRouteImport.update({
-  id: '/$id/edit',
-  path: '/$id/edit',
-  getParentRoute: () => AppItemsRoute,
+  id: '/edit',
+  path: '/edit',
+  getParentRoute: () => AppItemsIdRoute,
 } as any)
 const AppExpensesIdEditRoute = AppExpensesIdEditRouteImport.update({
   id: '/$id/edit',
@@ -1077,6 +1083,7 @@ export interface FileRoutesByFullPath {
   '/app/ecommerce/websites': typeof AppEcommerceWebsitesRoute
   '/app/estimates/new': typeof AppEstimatesNewRoute
   '/app/expenses/new': typeof AppExpensesNewRoute
+  '/app/items/$id': typeof AppItemsIdRouteWithChildren
   '/app/parties/$id': typeof AppPartiesIdRoute
   '/app/payment-out/new': typeof AppPaymentOutNewRoute
   '/app/payments-in/new': typeof AppPaymentsInNewRoute
@@ -1232,6 +1239,7 @@ export interface FileRoutesByTo {
   '/app/ecommerce/websites': typeof AppEcommerceWebsitesRoute
   '/app/estimates/new': typeof AppEstimatesNewRoute
   '/app/expenses/new': typeof AppExpensesNewRoute
+  '/app/items/$id': typeof AppItemsIdRouteWithChildren
   '/app/parties/$id': typeof AppPartiesIdRoute
   '/app/payment-out/new': typeof AppPaymentOutNewRoute
   '/app/payments-in/new': typeof AppPaymentsInNewRoute
@@ -1392,6 +1400,7 @@ export interface FileRoutesById {
   '/app/ecommerce/websites': typeof AppEcommerceWebsitesRoute
   '/app/estimates/new': typeof AppEstimatesNewRoute
   '/app/expenses/new': typeof AppExpensesNewRoute
+  '/app/items/$id': typeof AppItemsIdRouteWithChildren
   '/app/parties/$id': typeof AppPartiesIdRoute
   '/app/payment-out/new': typeof AppPaymentOutNewRoute
   '/app/payments-in/new': typeof AppPaymentsInNewRoute
@@ -1553,6 +1562,7 @@ export interface FileRouteTypes {
     | '/app/ecommerce/websites'
     | '/app/estimates/new'
     | '/app/expenses/new'
+    | '/app/items/$id'
     | '/app/parties/$id'
     | '/app/payment-out/new'
     | '/app/payments-in/new'
@@ -1708,6 +1718,7 @@ export interface FileRouteTypes {
     | '/app/ecommerce/websites'
     | '/app/estimates/new'
     | '/app/expenses/new'
+    | '/app/items/$id'
     | '/app/parties/$id'
     | '/app/payment-out/new'
     | '/app/payments-in/new'
@@ -1867,6 +1878,7 @@ export interface FileRouteTypes {
     | '/app/ecommerce/websites'
     | '/app/estimates/new'
     | '/app/expenses/new'
+    | '/app/items/$id'
     | '/app/parties/$id'
     | '/app/payment-out/new'
     | '/app/payments-in/new'
@@ -2669,6 +2681,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPartiesIdRouteImport
       parentRoute: typeof AppPartiesRoute
     }
+    '/app/items/$id': {
+      id: '/app/items/$id'
+      path: '/$id'
+      fullPath: '/app/items/$id'
+      preLoaderRoute: typeof AppItemsIdRouteImport
+      parentRoute: typeof AppItemsRoute
+    }
     '/app/expenses/new': {
       id: '/app/expenses/new'
       path: '/new'
@@ -2944,10 +2963,10 @@ declare module '@tanstack/react-router' {
     }
     '/app/items/$id/edit': {
       id: '/app/items/$id/edit'
-      path: '/$id/edit'
+      path: '/edit'
       fullPath: '/app/items/$id/edit'
       preLoaderRoute: typeof AppItemsIdEditRouteImport
-      parentRoute: typeof AppItemsRoute
+      parentRoute: typeof AppItemsIdRoute
     }
     '/app/expenses/$id/edit': {
       id: '/app/expenses/$id/edit'
@@ -3178,12 +3197,24 @@ const AppExpensesRouteWithChildren = AppExpensesRoute._addFileChildren(
   AppExpensesRouteChildren,
 )
 
-interface AppItemsRouteChildren {
+interface AppItemsIdRouteChildren {
   AppItemsIdEditRoute: typeof AppItemsIdEditRoute
 }
 
-const AppItemsRouteChildren: AppItemsRouteChildren = {
+const AppItemsIdRouteChildren: AppItemsIdRouteChildren = {
   AppItemsIdEditRoute: AppItemsIdEditRoute,
+}
+
+const AppItemsIdRouteWithChildren = AppItemsIdRoute._addFileChildren(
+  AppItemsIdRouteChildren,
+)
+
+interface AppItemsRouteChildren {
+  AppItemsIdRoute: typeof AppItemsIdRouteWithChildren
+}
+
+const AppItemsRouteChildren: AppItemsRouteChildren = {
+  AppItemsIdRoute: AppItemsIdRouteWithChildren,
 }
 
 const AppItemsRouteWithChildren = AppItemsRoute._addFileChildren(
@@ -3622,13 +3653,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
