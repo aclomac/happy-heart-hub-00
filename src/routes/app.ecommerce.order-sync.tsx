@@ -14,7 +14,7 @@ import {
   getWebsites, getOrders, setOrders, getSyncLogs, setSyncLogs, getSettings, genId,
   type EcoOrderStatus,
 } from "@/lib/demo/ecommerce";
-import { getWooConfig, woocommerceService } from "@/lib/integrations/woocommerce";
+import { wooConfigForWebsiteId, woocommerceService } from "@/lib/integrations/woocommerce";
 import { Upload, Sparkles, Plug, RefreshCw } from "lucide-react";
 
 export const Route = createFileRoute("/app/ecommerce/order-sync")({ component: OrderSyncPage });
@@ -109,9 +109,11 @@ function OrderSyncPage() {
   };
 
   const testWoo = async () => {
+    if (!websiteId) { toast.error("Select a WooCommerce website first"); return; }
     const settings = getSettings();
+    const cfg = wooConfigForWebsiteId(websiteId);
     setBusy(true);
-    const r = await woocommerceService.testConnection(getWooConfig(), settings.integrationMode);
+    const r = await woocommerceService.testConnection(cfg, settings.integrationMode);
     setBusy(false);
     r.status === "success" ? toast.success(r.message) : toast.error(r.message);
   };
@@ -119,8 +121,9 @@ function OrderSyncPage() {
   const syncWoo = async () => {
     if (!websiteId) { toast.error("Select a website first"); return; }
     const settings = getSettings();
+    const cfg = wooConfigForWebsiteId(websiteId);
     setBusy(true);
-    const r = await woocommerceService.syncOrders(getWooConfig(), websiteId, settings.integrationMode, {
+    const r = await woocommerceService.syncOrders(cfg, websiteId, settings.integrationMode, {
       from: from || undefined, to: to || undefined, status: wooStatus,
     });
     setBusy(false);
@@ -144,8 +147,21 @@ function OrderSyncPage() {
             <Label>Website</Label>
             <Select value={websiteId} onValueChange={setWebsiteId}>
               <SelectTrigger><SelectValue placeholder="Select website" /></SelectTrigger>
-              <SelectContent>{websites.map((w) => <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>)}</SelectContent>
+              <SelectContent>{websites.map((w) => <SelectItem key={w.id} value={w.id}>{w.name} — {w.platform}</SelectItem>)}</SelectContent>
             </Select>
+            {websiteId && (() => {
+              const w = websites.find((x) => x.id === websiteId);
+              const cfg = wooConfigForWebsiteId(websiteId);
+              return (
+                <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
+                  <div>URL: <code>{cfg.websiteUrl || "—"}</code></div>
+                  <div>Key: <code>{cfg.consumerKey ? "✓ set" : "— missing"}</code> · Secret: <code>{cfg.consumerSecret ? "✓ set" : "— missing"}</code></div>
+                  {(!w?.apiKey || !w?.apiSecret) && (
+                    <div className="text-amber-700">Tip: set Consumer Key/Secret on this website in <Link to="/app/ecommerce/websites" className="underline">Websites / Stores</Link>, or globally in <Link to="/app/ecommerce/settings" className="underline">Settings</Link>.</div>
+                  )}
+                </div>
+              );
+            })()}
           </div>
 
           <div className="border rounded p-3 space-y-3">

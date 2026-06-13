@@ -10,9 +10,9 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DisabledLiveButton } from "@/components/erp/ecommerce/EcommerceUI";
 import { DiagnosticsPanel } from "@/components/erp/ecommerce/DiagnosticsPanel";
-import { getSettings, setSettings, getCouriers, type EcoSettings } from "@/lib/demo/ecommerce";
+import { getSettings, setSettings, getCouriers, getWebsites, setWebsites, type EcoSettings } from "@/lib/demo/ecommerce";
 import {
-  getWooConfig, setWooConfig, resetWooConfig, woocommerceService, type WooConfig,
+  getWooConfig, setWooConfig, resetWooConfig, woocommerceService, wooConfigFromWebsite, type WooConfig,
 } from "@/lib/integrations/woocommerce";
 import {
   getSteadfastConfig, setSteadfastConfig, resetSteadfastConfig, steadfastService, type SteadfastConfig,
@@ -26,6 +26,27 @@ function SettingsPage() {
   const [sf, setSf] = useState<SteadfastConfig>(() => getSteadfastConfig());
   const [busy, setBusy] = useState(false);
   const couriers = getCouriers();
+  const [websites, setWebsitesState] = useState(() => getWebsites());
+  const [linkedWebsiteId, setLinkedWebsiteId] = useState<string>("");
+
+  const loadFromWebsite = (id: string) => {
+    setLinkedWebsiteId(id);
+    if (!id) return;
+    const w = websites.find((x) => x.id === id);
+    if (!w) return;
+    setWc((prev) => wooConfigFromWebsite(w, prev));
+    toast.success(`Loaded credentials from ${w.name}`);
+  };
+
+  const saveBackToWebsite = () => {
+    if (!linkedWebsiteId) { toast.error("Select a saved Website first"); return; }
+    const next = websites.map((w) => w.id === linkedWebsiteId ? {
+      ...w, url: wc.websiteUrl, apiKey: wc.consumerKey, apiSecret: wc.consumerSecret,
+      platform: w.platform === "WooCommerce" ? w.platform : "WooCommerce",
+    } : w);
+    setWebsites(next); setWebsitesState(next);
+    toast.success("Saved credentials back to website");
+  };
 
   const save = () => { setSettings(s); toast.success("Settings saved"); };
   const u = <K extends keyof EcoSettings>(k: K, v: EcoSettings[K]) => setS((p) => ({ ...p, [k]: v }));
@@ -134,6 +155,20 @@ function SettingsPage() {
             <span className={`text-xs px-2 py-0.5 rounded ${wc.status === "active" ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-700"}`}>
               {wc.status === "active" ? "Active" : "Inactive"}
             </span>
+          </div>
+          <div className="flex flex-wrap items-end gap-2 border rounded p-2 bg-muted/30">
+            <div className="flex-1 min-w-[220px]">
+              <Label className="text-xs">Load credentials from saved Website</Label>
+              <Select value={linkedWebsiteId || "_none"} onValueChange={(v) => loadFromWebsite(v === "_none" ? "" : v)}>
+                <SelectTrigger><SelectValue placeholder="Select website" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_none">— None (manual entry) —</SelectItem>
+                  {websites.map((w) => <SelectItem key={w.id} value={w.id}>{w.name} ({w.platform})</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button size="sm" variant="outline" disabled={!linkedWebsiteId} onClick={saveBackToWebsite}>Save back to website</Button>
+            <Link to="/app/ecommerce/websites"><Button size="sm" variant="ghost">Manage Websites</Button></Link>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div><Label>Store Name</Label><Input value={wc.storeName} onChange={(e) => setWc({ ...wc, storeName: e.target.value })} /></div>
