@@ -352,6 +352,52 @@ function QaAuditPage() {
         </div>
       </div>
 
+      {/* Release notes */}
+      <div className="bg-card border rounded-md p-4">
+        <div className="flex items-center gap-2 mb-2">
+          <Badge variant="outline" className="border-primary/40 text-primary">
+            Release
+          </Badge>
+          <div className="font-semibold text-sm">
+            ERPOVO Ecommerce Integration Stable
+          </div>
+          <span className="text-xs text-muted-foreground">2026-06-13</span>
+        </div>
+        <ul className="text-xs text-muted-foreground grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-1 list-disc pl-5">
+          <li>Core ERP working</li>
+          <li>Signup / Login working</li>
+          <li>Ecommerce working</li>
+          <li>WooCommerce / Steadfast proxy ready</li>
+          <li>Manual ecommerce flow working</li>
+          <li>Product images working</li>
+          <li>Order details working</li>
+          <li>Courier tracking link working</li>
+        </ul>
+      </div>
+
+      {/* Backup checklist */}
+      <div className="bg-amber-500/10 border border-amber-500/30 rounded-md p-4">
+        <div className="flex items-center gap-2 mb-2">
+          <Download className="w-4 h-4 text-amber-700 dark:text-amber-300" />
+          <div className="font-semibold text-sm text-amber-800 dark:text-amber-200">
+            Backup &amp; Export Checklist
+          </div>
+        </div>
+        <ul className="text-xs text-amber-900/80 dark:text-amber-100/80 space-y-1 list-disc pl-5">
+          <li>Export QA report as CSV (use Export CSV button below)</li>
+          <li>Export QA report as JSON (use Export JSON button below)</li>
+          <li>Download full project ZIP from Lovable (GitHub / Download Code)</li>
+          <li>
+            Save WooCommerce &amp; Steadfast credentials separately — do not rely
+            only on browser storage
+          </li>
+          <li>Run Full QA Audit before adding any new feature</li>
+          <li>Keep this stable build tagged before further changes</li>
+        </ul>
+      </div>
+
+
+
       <PageHeader
         title="ERPOVO Functional QA Audit"
         subtitle="Verify every menu, submenu, route, button and core workflow"
