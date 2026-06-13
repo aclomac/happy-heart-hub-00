@@ -164,6 +164,7 @@ import { Route as ApiIntegrationsWoocommerceTestRouteImport } from './routes/api
 import { Route as ApiIntegrationsWoocommerceProductsRouteImport } from './routes/api.integrations.woocommerce.products'
 import { Route as ApiIntegrationsWoocommerceOrdersRouteImport } from './routes/api.integrations.woocommerce.orders'
 import { Route as ApiIntegrationsSteadfastTestRouteImport } from './routes/api.integrations.steadfast.test'
+import { Route as ApiIntegrationsSteadfastCreateConsignmentRouteImport } from './routes/api.integrations.steadfast.create-consignment'
 
 const SuperAdminRoute = SuperAdminRouteImport.update({
   id: '/super-admin',
@@ -961,6 +962,12 @@ const ApiIntegrationsSteadfastTestRoute =
     path: '/api/integrations/steadfast/test',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiIntegrationsSteadfastCreateConsignmentRoute =
+  ApiIntegrationsSteadfastCreateConsignmentRouteImport.update({
+    id: '/api/integrations/steadfast/create-consignment',
+    path: '/api/integrations/steadfast/create-consignment',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -1092,6 +1099,7 @@ export interface FileRoutesByFullPath {
   '/super-admin/payments/$id': typeof SuperAdminPaymentsIdRoute
   '/app/ecommerce/': typeof AppEcommerceIndexRoute
   '/app/utilities/': typeof AppUtilitiesIndexRoute
+  '/api/integrations/steadfast/create-consignment': typeof ApiIntegrationsSteadfastCreateConsignmentRoute
   '/api/integrations/steadfast/test': typeof ApiIntegrationsSteadfastTestRoute
   '/api/integrations/woocommerce/orders': typeof ApiIntegrationsWoocommerceOrdersRoute
   '/api/integrations/woocommerce/products': typeof ApiIntegrationsWoocommerceProductsRoute
@@ -1245,6 +1253,7 @@ export interface FileRoutesByTo {
   '/super-admin/payments/$id': typeof SuperAdminPaymentsIdRoute
   '/app/ecommerce': typeof AppEcommerceIndexRoute
   '/app/utilities': typeof AppUtilitiesIndexRoute
+  '/api/integrations/steadfast/create-consignment': typeof ApiIntegrationsSteadfastCreateConsignmentRoute
   '/api/integrations/steadfast/test': typeof ApiIntegrationsSteadfastTestRoute
   '/api/integrations/woocommerce/orders': typeof ApiIntegrationsWoocommerceOrdersRoute
   '/api/integrations/woocommerce/products': typeof ApiIntegrationsWoocommerceProductsRoute
@@ -1403,6 +1412,7 @@ export interface FileRoutesById {
   '/super-admin/payments/$id': typeof SuperAdminPaymentsIdRoute
   '/app/ecommerce/': typeof AppEcommerceIndexRoute
   '/app/utilities/': typeof AppUtilitiesIndexRoute
+  '/api/integrations/steadfast/create-consignment': typeof ApiIntegrationsSteadfastCreateConsignmentRoute
   '/api/integrations/steadfast/test': typeof ApiIntegrationsSteadfastTestRoute
   '/api/integrations/woocommerce/orders': typeof ApiIntegrationsWoocommerceOrdersRoute
   '/api/integrations/woocommerce/products': typeof ApiIntegrationsWoocommerceProductsRoute
@@ -1562,6 +1572,7 @@ export interface FileRouteTypes {
     | '/super-admin/payments/$id'
     | '/app/ecommerce/'
     | '/app/utilities/'
+    | '/api/integrations/steadfast/create-consignment'
     | '/api/integrations/steadfast/test'
     | '/api/integrations/woocommerce/orders'
     | '/api/integrations/woocommerce/products'
@@ -1715,6 +1726,7 @@ export interface FileRouteTypes {
     | '/super-admin/payments/$id'
     | '/app/ecommerce'
     | '/app/utilities'
+    | '/api/integrations/steadfast/create-consignment'
     | '/api/integrations/steadfast/test'
     | '/api/integrations/woocommerce/orders'
     | '/api/integrations/woocommerce/products'
@@ -1872,6 +1884,7 @@ export interface FileRouteTypes {
     | '/super-admin/payments/$id'
     | '/app/ecommerce/'
     | '/app/utilities/'
+    | '/api/integrations/steadfast/create-consignment'
     | '/api/integrations/steadfast/test'
     | '/api/integrations/woocommerce/orders'
     | '/api/integrations/woocommerce/products'
@@ -1912,6 +1925,7 @@ export interface RootRouteChildren {
   SuperAdminRoute: typeof SuperAdminRouteWithChildren
   StoreSlugRoute: typeof StoreSlugRoute
   ApiIntegrationsProxyRoute: typeof ApiIntegrationsProxyRoute
+  ApiIntegrationsSteadfastCreateConsignmentRoute: typeof ApiIntegrationsSteadfastCreateConsignmentRoute
   ApiIntegrationsSteadfastTestRoute: typeof ApiIntegrationsSteadfastTestRoute
   ApiIntegrationsWoocommerceOrdersRoute: typeof ApiIntegrationsWoocommerceOrdersRoute
   ApiIntegrationsWoocommerceProductsRoute: typeof ApiIntegrationsWoocommerceProductsRoute
@@ -3005,6 +3019,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiIntegrationsSteadfastTestRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/integrations/steadfast/create-consignment': {
+      id: '/api/integrations/steadfast/create-consignment'
+      path: '/api/integrations/steadfast/create-consignment'
+      fullPath: '/api/integrations/steadfast/create-consignment'
+      preLoaderRoute: typeof ApiIntegrationsSteadfastCreateConsignmentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -3568,6 +3589,8 @@ const rootRouteChildren: RootRouteChildren = {
   SuperAdminRoute: SuperAdminRouteWithChildren,
   StoreSlugRoute: StoreSlugRoute,
   ApiIntegrationsProxyRoute: ApiIntegrationsProxyRoute,
+  ApiIntegrationsSteadfastCreateConsignmentRoute:
+    ApiIntegrationsSteadfastCreateConsignmentRoute,
   ApiIntegrationsSteadfastTestRoute: ApiIntegrationsSteadfastTestRoute,
   ApiIntegrationsWoocommerceOrdersRoute: ApiIntegrationsWoocommerceOrdersRoute,
   ApiIntegrationsWoocommerceProductsRoute:
