@@ -699,9 +699,9 @@ export function refreshOrderItemImages(filter?: { orderId?: string }): { updated
       if (it.imageUrl) continue;
       try {
         const match =
-          (it.productId && byKey.get(`pid:${o.websiteId}:${it.productId}`)) ||
-          (it.sku && byKey.get(`sku:${it.sku.toLowerCase()}`));
-        if (match?.imageUrl) {
+          (it.productId ? byKey.get(`pid:${o.websiteId}:${it.productId}`) : undefined) ??
+          (it.sku ? byKey.get(`sku:${it.sku.toLowerCase()}`) : undefined);
+        if (match && match.imageUrl) {
           it.imageUrl = match.imageUrl;
           it.thumbnailUrl = match.thumbnailUrl || match.imageUrl;
           updated++;
