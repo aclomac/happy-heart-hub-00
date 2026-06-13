@@ -64,6 +64,7 @@ import {
   type PostingDoctorReport,
   type RepairResult,
 } from "@/lib/inventory-posting-doctor";
+import { ItemEditDialog } from "@/components/erp/ItemEditDialog";
 
 export const Route = createFileRoute("/app/items")({ component: ItemsShell });
 
@@ -103,6 +104,7 @@ function Items() {
   const [lowOnly, setLowOnly] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [addOpen, setAddOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [doctorOpen, setDoctorOpen] = useState(false);
   const [doctorItem, setDoctorItem] = useState("Bar Stool");
   const [doctorBusy, setDoctorBusy] = useState(false);
@@ -571,9 +573,9 @@ function Items() {
                           <Link to="/app/items/$id" params={{ id: i.id }}>
                             <DropdownMenuItem>View Details</DropdownMenuItem>
                           </Link>
-                          <Link to="/app/items/$id/edit" params={{ id: i.id }}>
-                            <DropdownMenuItem>Edit Item</DropdownMenuItem>
-                          </Link>
+                          <DropdownMenuItem onSelect={() => setEditingId(i.id)}>
+                            Edit Item
+                          </DropdownMenuItem>
                           <Link to="/app/stock-adjustments">
                             <DropdownMenuItem>Adjust Stock</DropdownMenuItem>
                           </Link>
@@ -757,6 +759,14 @@ function Items() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ItemEditDialog
+        itemId={editingId}
+        companyId={companyId}
+        open={!!editingId}
+        onOpenChange={(o) => { if (!o) setEditingId(null); }}
+        onSaved={() => qc.invalidateQueries({ queryKey: ["items", companyId] })}
+      />
     </div>
   );
 }

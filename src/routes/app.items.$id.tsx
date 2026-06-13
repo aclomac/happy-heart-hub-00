@@ -26,6 +26,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentCompanyId } from "@/lib/use-company";
 import { downloadCSV } from "@/lib/csv";
+import { ItemEditDialog } from "@/components/erp/ItemEditDialog";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const sb = supabase as any;
@@ -82,6 +83,7 @@ function ItemDetailPage() {
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState("overview");
   const [scrolled, setScrolled] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 200);
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -715,10 +717,8 @@ function ItemDetailPage() {
           <ShoppingCart className="w-4 h-4 mr-1" /> Add Purchase
         </Link>
       </Button>
-      <Button asChild variant="outline" size="sm">
-        <Link to="/app/items/$id/edit" params={{ id: it.id }}>
-          <Edit3 className="w-4 h-4 mr-1" /> Edit
-        </Link>
+      <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+        <Edit3 className="w-4 h-4 mr-1" /> Edit
       </Button>
       <Button asChild variant="outline" size="sm">
         <Link to="/app/stock-adjustments">
@@ -1038,6 +1038,12 @@ function ItemDetailPage() {
           </div>
         </TabsContent>
       </Tabs>
+      <ItemEditDialog
+        itemId={it.id}
+        companyId={companyId}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+      />
     </div>
   );
 }
