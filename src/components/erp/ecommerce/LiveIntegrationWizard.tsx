@@ -182,6 +182,7 @@ function WooWizardDialog({ onClose }: { onClose: () => void }) {
               </Select>
             </div>
             <Button size="sm" disabled={busy} onClick={runAll}>Run All Tests</Button>
+            <Button size="sm" variant="ghost" onClick={copyErrors}>Copy Error</Button>
           </div>
 
           {productPreview && (
