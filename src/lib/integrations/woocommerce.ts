@@ -280,12 +280,31 @@ export const woocommerceService = {
             const dedupeKey = `${websiteId}:${orderNo}`;
             if (existingKeys.has(dedupeKey)) { skipped++; continue; }
             const billing = (w.billing ?? {}) as Record<string, string>;
-            const items = ((w.line_items as Array<Record<string, unknown>>) ?? []).map((li) => ({
-              sku: String(li.sku ?? ""),
-              name: String(li.name ?? ""),
-              qty: Number(li.quantity ?? 1),
-              price: Number(li.price ?? 0),
-            }));
+            const { getProducts: _gp } = await import("@/lib/demo/ecommerce");
+            const productCache = _gp();
+            const items = ((w.line_items as Array<Record<string, unknown>>) ?? []).map((li) => {
+              const productId = li.product_id != null ? String(li.product_id) : null;
+              const variationId = li.variation_id ? String(li.variation_id) : null;
+              const sku = String(li.sku ?? "");
+              // Try resolve image from already-imported website product list
+              const match = productCache.find((p) =>
+                (productId && p.websiteId === websiteId && p.websiteProductId === productId) ||
+                (sku && p.sku.toLowerCase() === sku.toLowerCase()),
+              );
+              const liImage = ((li.image as { src?: string } | undefined)?.src) ?? null;
+              const imageUrl = liImage || match?.imageUrl || null;
+              return {
+                sku,
+                name: String(li.name ?? ""),
+                qty: Number(li.quantity ?? 1),
+                price: Number(li.price ?? 0),
+                total: Number(li.total ?? 0) || Number(li.quantity ?? 1) * Number(li.price ?? 0),
+                productId,
+                variationId,
+                imageUrl,
+                thumbnailUrl: match?.thumbnailUrl ?? imageUrl,
+              };
+            });
             const subtotal = items.reduce((s, x) => s + x.qty * x.price, 0);
             const discount = Number(w.discount_total ?? 0);
             const delivery = Number(w.shipping_total ?? 0);
