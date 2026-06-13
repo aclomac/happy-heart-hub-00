@@ -84,6 +84,11 @@ function SettingsPage() {
 
       <DiagnosticsPanel providers={["woocommerce", "steadfast"]} title="API Diagnostics (WooCommerce & Steadfast)" />
 
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-5xl mb-4">
+        <LiveIntegrationWizard />
+      </div>
+
+
       <Card className="mb-4"><CardContent className="pt-4 space-y-3 max-w-2xl">
         <div className="font-semibold">Integration Mode</div>
         <div className="text-xs text-muted-foreground">
