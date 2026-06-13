@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DisabledLiveButton } from "@/components/erp/ecommerce/EcommerceUI";
 import { DiagnosticsPanel } from "@/components/erp/ecommerce/DiagnosticsPanel";
+import { LiveIntegrationWizard } from "@/components/erp/ecommerce/LiveIntegrationWizard";
 import { getSettings, setSettings, getCouriers, getWebsites, setWebsites, type EcoSettings } from "@/lib/demo/ecommerce";
 import {
   getWooConfig, setWooConfig, resetWooConfig, wooConfigFromWebsite, type WooConfig,
