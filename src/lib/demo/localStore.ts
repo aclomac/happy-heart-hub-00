@@ -45,6 +45,9 @@ export type DemoCompany = {
   id: string;
   name: string;
   owner_id: string;
+  ownerUserId?: string;
+  sharedWithUserIds?: string[];
+  isDemoCompany?: boolean;
   business_type: string | null;
   currency: string;
   phone: string | null;
@@ -187,6 +190,15 @@ export function isDemoMode(): boolean {
   }
 }
 
+export function isExplicitDemoMode(): boolean {
+  const session = getDemoSession();
+  return session?.userId === DEMO_USER_ID || session?.user?.isDemoUser === true;
+}
+
+export function getActiveLocalUserId(): string | null {
+  return getDemoSession()?.userId ?? null;
+}
+
 export function getDemoSession(): DemoSession | null {
   return (
     safeRead<DemoSession>(DEMO_SESSION_KEY) ??
@@ -282,8 +294,7 @@ export function startLocalUserSession(input: {
   };
   safeWrite(DEMO_SESSION_KEY, session);
   safeWrite(DEMO_USER_KEY, user);
-  setDemoAuthCookies(user.email);
-  ensureDemoSeed();
+  clearDemoAuthCookies();
   return session;
 }
 
