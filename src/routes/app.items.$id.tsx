@@ -78,6 +78,14 @@ function ItemDetailPage() {
   const { id } = useParams({ from: "/app/items/$id" });
   const companyId = useCurrentCompanyId();
   const [search, setSearch] = useState("");
+  const [tab, setTab] = useState("overview");
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 200);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
 
   const itemQ = useQuery({
     queryKey: ["item-detail-full", id, companyId],
