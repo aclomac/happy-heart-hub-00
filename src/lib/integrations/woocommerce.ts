@@ -399,7 +399,7 @@ export const woocommerceService = {
             const price = Number(w.price ?? w.regular_price ?? 0);
             const stock = Number(w.stock_quantity ?? 0);
             const status: "active" | "inactive" = (w.status === "publish") ? "active" : "inactive";
-            const key = `${websiteId}:${wpId}`;
+            const key: `${string}:${string}` = `${websiteId}:${wpId}`;
             const prev = byKey.get(key);
             if (prev) {
               Object.assign(prev, { name, sku, websitePrice: price, stock, status, lastSyncedAt: new Date().toISOString() });
