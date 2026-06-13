@@ -267,6 +267,12 @@ export interface EcoSyncLog {
   user?: string;
 }
 
+export type IntegrationModeKey =
+  | "local-demo"
+  | "direct-browser"
+  | "backend-proxy"
+  | "electron-proxy";
+
 export interface EcoSettings {
   autoCreateInvoiceOnDelivered: boolean;
   reduceStockOn: "Confirmed" | "Shipped" | "Delivered";
@@ -279,6 +285,7 @@ export interface EcoSettings {
   returnStockRule: "Add back to stock" | "Damaged stock";
   invoicePrefix: string;
   orderPrefix: string;
+  integrationMode: IntegrationModeKey;
 }
 
 // ---------- Repo getters/setters ----------
