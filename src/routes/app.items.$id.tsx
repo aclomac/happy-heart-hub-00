@@ -64,7 +64,7 @@ type Movement = {
 
 type Warehouse = { id: string; name: string };
 
-const SALE_TYPES = new Set(["sale", "delivery", "pos"]);
+const SALE_TYPES = new Set(["sale", "sale_invoice", "delivery", "pos"]);
 const SALE_RETURN_TYPES = new Set(["credit_note", "sale_reversal"]);
 const PURCHASE_TYPES = new Set(["purchase"]);
 const PURCHASE_RETURN_TYPES = new Set(["debit_note"]);
@@ -150,16 +150,25 @@ function ItemDetailPage() {
     queryKey: ["item-sale-lines", id, companyId],
     enabled: !!companyId && !!id,
     queryFn: async () => {
-      const { data, error } = await sb
+      const { data: lines, error } = await sb
         .from("sale_items")
-        .select(
-          "id,sale_id,qty,price,amount,discount_pct,sales!inner(id,invoice_no,invoice_date,party_id,status,balance,paid,total,doc_type,payment_method,deleted_at,company_id)",
-        )
+        .select("id,sale_id,item_id,item_name,qty,price,amount,discount_pct")
         .eq("item_id", id)
-        .is("sales.deleted_at", null)
-        .eq("sales.company_id", companyId);
+        .limit(5000);
       if (error) throw error;
-      return (data ?? []) as Array<{
+      const saleIds = Array.from(new Set(((lines ?? []) as Array<{ sale_id: string }>).map((r) => r.sale_id).filter(Boolean)));
+      const { data: sales } = saleIds.length
+        ? await sb
+            .from("sales")
+            .select("id,invoice_no,invoice_date,party_id,status,balance,paid,total,doc_type,payment_method,deleted_at,company_id")
+            .in("id", saleIds)
+            .eq("company_id", companyId)
+            .is("deleted_at", null)
+        : { data: [] };
+      const salesById = new Map(((sales ?? []) as Array<{ id: string }>).map((s) => [s.id, s]));
+      return ((lines ?? []) as Array<Record<string, unknown>>)
+        .map((r) => ({ ...r, sales: salesById.get(String(r.sale_id)) }))
+        .filter((r) => !!r.sales) as Array<{
         id: string;
         sale_id: string;
         qty: number;
@@ -717,7 +726,7 @@ function ItemDetailPage() {
         </Link>
       </Button>
       <Button asChild variant="outline" size="sm">
-        <Link to="/app/stock-transfers">
+        <Link to="/app/stock-transfers" search={{}}>
           <ArrowLeftRight className="w-4 h-4 mr-1" /> Transfer
         </Link>
       </Button>

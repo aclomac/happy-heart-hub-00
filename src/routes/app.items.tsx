@@ -19,6 +19,7 @@ import {
   FolderOpen,
   Trash2,
   Eye,
+  RefreshCw,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -56,6 +57,13 @@ import { useI18n } from "@/lib/i18n";
 import { downloadCSV, parseCSV, readFileAsText } from "@/lib/csv";
 import { softDeleteWithUndo } from "@/lib/soft-delete";
 import { usePWAStatus } from "@/components/erp/PWAProvider";
+import {
+  analyzeSaleStockPosting,
+  repairSaleStockPosting,
+  runSaleStockPostingTest,
+  type PostingDoctorReport,
+  type RepairResult,
+} from "@/lib/inventory-posting-doctor";
 
 export const Route = createFileRoute("/app/items")({ component: ItemsShell });
 
@@ -95,6 +103,12 @@ function Items() {
   const [lowOnly, setLowOnly] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [addOpen, setAddOpen] = useState(false);
+  const [doctorOpen, setDoctorOpen] = useState(false);
+  const [doctorItem, setDoctorItem] = useState("Bar Stool");
+  const [doctorBusy, setDoctorBusy] = useState(false);
+  const [doctorReport, setDoctorReport] = useState<PostingDoctorReport | null>(null);
+  const [repairResult, setRepairResult] = useState<RepairResult | null>(null);
+  const [qaResult, setQaResult] = useState<{ ok: boolean; steps: Array<{ step: string; ok: boolean; detail: string }> } | null>(null);
   const [form, setForm] = useState({
     name: "",
     sku: "",
@@ -285,6 +299,49 @@ function Items() {
     }
   };
 
+  const runDoctor = async () => {
+    if (!companyId) return;
+    setDoctorBusy(true);
+    try {
+      const report = await analyzeSaleStockPosting(companyId, doctorItem || "Bar Stool");
+      setDoctorReport(report);
+      toast.success("Inventory Posting Doctor scan complete");
+    } catch (e) {
+      toast.error(`Doctor scan failed: ${(e as Error).message}`);
+    } finally {
+      setDoctorBusy(false);
+    }
+  };
+
+  const repairPosting = async () => {
+    if (!companyId) return;
+    setDoctorBusy(true);
+    try {
+      const result = await repairSaleStockPosting(companyId);
+      setRepairResult(result);
+      await qc.invalidateQueries({ queryKey: ["items", companyId] });
+      await runDoctor();
+      toast.success(`Repair complete: ${result.movementsCreated} movement(s), ${result.stockUpdated} stock update(s)`);
+    } catch (e) {
+      toast.error(`Repair failed: ${(e as Error).message}`);
+    } finally {
+      setDoctorBusy(false);
+    }
+  };
+
+  const runPostingTest = async () => {
+    if (!companyId) return;
+    setDoctorBusy(true);
+    try {
+      const result = await runSaleStockPostingTest(companyId);
+      setQaResult(result);
+      result.ok ? toast.success("Sale Stock Posting Test passed") : toast.error("Sale Stock Posting Test failed");
+      await qc.invalidateQueries({ queryKey: ["items", companyId] });
+    } finally {
+      setDoctorBusy(false);
+    }
+  };
+
   return (
     <div>
       <PageHeader
@@ -301,6 +358,17 @@ function Items() {
             <Button variant="outline" size="sm" onClick={handleExport} disabled={isOffline}>
               <Download className="w-4 h-4" />
               Export
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setDoctorOpen(true);
+                void runDoctor();
+              }}
+            >
+              <RefreshCw className="w-4 h-4" />
+              Inventory Posting Doctor
             </Button>
             <Button
               variant="outline"
@@ -509,7 +577,7 @@ function Items() {
                           <Link to="/app/stock-adjustments">
                             <DropdownMenuItem>Adjust Stock</DropdownMenuItem>
                           </Link>
-                          <Link to="/app/stock-transfers">
+                          <Link to="/app/stock-transfers" search={{}}>
                             <DropdownMenuItem>Stock Transfer</DropdownMenuItem>
                           </Link>
                           <DropdownMenuSeparator />
@@ -538,6 +606,84 @@ function Items() {
           </table>
         )}
       </div>
+
+      <Dialog open={doctorOpen} onOpenChange={setDoctorOpen}>
+        <DialogContent className="max-w-5xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Inventory Posting Doctor</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-wrap items-end gap-2">
+            <div className="min-w-[220px]">
+              <Label>Selected item</Label>
+              <Input value={doctorItem} onChange={(e) => setDoctorItem(e.target.value)} placeholder="Bar Stool" />
+            </div>
+            <Button onClick={runDoctor} disabled={doctorBusy}>
+              <RefreshCw className={`w-4 h-4 mr-1 ${doctorBusy ? "animate-spin" : ""}`} />
+              Scan
+            </Button>
+            <Button variant="default" onClick={repairPosting} disabled={doctorBusy}>
+              Repair Sale Stock Posting
+            </Button>
+            <Button variant="outline" onClick={runPostingTest} disabled={doctorBusy}>
+              Run Sale Stock Posting Test
+            </Button>
+          </div>
+
+          {doctorReport && (
+            <div className="space-y-3 text-sm">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <DoctorTile label="Total sale invoices" value={doctorReport.totalSaleInvoices} />
+                <DoctorTile label="Sale invoice item lines" value={doctorReport.saleInvoiceItemLines} />
+                <DoctorTile label="Matching item found" value={doctorReport.matchingItemFound} />
+                <DoctorTile label="Matching item missing" value={doctorReport.matchingItemMissing} tone="text-sale" />
+                <DoctorTile label="Movements created" value={doctorReport.stockMovementsCreated} />
+                <DoctorTile label="Movements missing" value={doctorReport.stockMovementsMissing} tone="text-sale" />
+                <DoctorTile label="Current item stock" value={doctorReport.currentItemStock ?? "—"} />
+                <DoctorTile label="Expected item stock" value={doctorReport.expectedItemStock ?? "—"} />
+                <DoctorTile label="Sold from invoices" value={doctorReport.totalSoldFromInvoices} />
+                <DoctorTile label="Sold from movements" value={doctorReport.totalSoldFromMovements} />
+              </div>
+              {(doctorReport.companyMismatches.length > 0 || doctorReport.storeMismatches.length > 0) && (
+                <div className="rounded-md border border-sale/30 bg-sale/10 p-2 text-xs text-sale">
+                  {[...doctorReport.companyMismatches, ...doctorReport.storeMismatches].join("; ")}
+                </div>
+              )}
+              <div className="rounded-md border overflow-x-auto">
+                <table className="erp-table">
+                  <thead><tr><th>Invoice</th><th>Date</th><th>Customer</th><th>Item</th><th>Code</th><th className="text-right">Qty</th><th className="text-right">Amount</th><th>Item</th><th>Movement</th></tr></thead>
+                  <tbody>
+                    {doctorReport.invoiceLines.length === 0 ? (
+                      <tr><td colSpan={9} className="text-center text-muted-foreground py-4">No invoice lines found for {doctorItem || "selected item"}</td></tr>
+                    ) : doctorReport.invoiceLines.map((l) => (
+                      <tr key={`${l.saleId}-${l.itemId}-${l.invoiceNo}`}>
+                        <td>{l.invoiceNo}</td><td>{l.date}</td><td>{l.customerName}</td><td>{l.itemName}</td><td>{l.itemCode || "—"}</td>
+                        <td className="text-right">{l.qty} {l.unit}</td><td className="text-right">{Number(l.amount).toLocaleString()}</td>
+                        <td>{l.itemMatched ? "Found" : "Missing"}</td><td className={l.movementExists ? "text-success" : "text-sale"}>{l.movementExists ? "Created" : "Missing"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {repairResult && (
+            <div className="rounded-md border bg-muted/30 p-3 text-sm">
+              Repair result: invoices scanned {repairResult.invoicesScanned}, item lines scanned {repairResult.itemLinesScanned}, movements created {repairResult.movementsCreated}, stock updated {repairResult.stockUpdated}, duplicates skipped {repairResult.duplicatesSkipped}, errors {repairResult.errors.length}.
+              {repairResult.errors.length > 0 && <div className="mt-1 text-sale text-xs">{repairResult.errors.join("; ")}</div>}
+            </div>
+          )}
+
+          {qaResult && (
+            <div className="rounded-md border bg-muted/30 p-3 text-sm">
+              <div className={qaResult.ok ? "font-semibold text-success" : "font-semibold text-sale"}>Sale Stock Posting Test: {qaResult.ok ? "Passed" : "Failed"}</div>
+              <ul className="mt-2 space-y-1 text-xs">
+                {qaResult.steps.map((s) => <li key={s.step} className={s.ok ? "text-success" : "text-sale"}>{s.ok ? "✓" : "✕"} {s.step} — {s.detail}</li>)}
+              </ul>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={addOpen} onOpenChange={(o) => { setAddOpen(o); if (!o) resetForm(); }}>
         <DialogContent className="max-w-2xl">
@@ -611,6 +757,15 @@ function Items() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+function DoctorTile({ label, value, tone = "text-foreground" }: { label: string; value: string | number; tone?: string }) {
+  return (
+    <div className="rounded-md border bg-card px-3 py-2">
+      <div className="text-[11px] text-muted-foreground">{label}</div>
+      <div className={`text-lg font-semibold ${tone}`}>{value}</div>
     </div>
   );
 }
