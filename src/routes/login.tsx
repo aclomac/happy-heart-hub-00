@@ -16,7 +16,10 @@ import {
   DEMO_USER_ID,
   DEMO_USER_EMAIL,
   isDemoMode,
+  getDemoCompanies,
+  addDemoCompany,
 } from "@/lib/demo/localStore";
+
 
 import { findUserByEmailOrMobile } from "@/lib/demo/localUsers";
 import { PWAInstallButton } from "@/components/erp/PWAInstallButton";
