@@ -65,6 +65,7 @@ import {
   type RepairResult,
 } from "@/lib/inventory-posting-doctor";
 import { ItemEditDialog } from "@/components/erp/ItemEditDialog";
+import { ItemImagePicker } from "@/components/erp/ItemImagePicker";
 
 export const Route = createFileRoute("/app/items")({ component: ItemsShell });
 
@@ -121,6 +122,7 @@ function Items() {
     stock: "",
     low_stock_alert: "",
     description: "",
+    image_url: "",
   });
   const resetForm = () =>
     setForm({
@@ -133,6 +135,7 @@ function Items() {
       stock: "",
       low_stock_alert: "",
       description: "",
+      image_url: "",
     });
   const handleCreateItem = async () => {
     if (!form.name.trim()) {
@@ -155,6 +158,7 @@ function Items() {
         tax_rate: 0,
         is_service: false,
         description: form.description.trim() || null,
+        image_url: form.image_url.trim() || null,
       };
       const res = await mut.mutateAsync(payload);
       if ((res as any)?.error) throw (res as any).error;
@@ -741,6 +745,12 @@ function Items() {
             <div>
               <Label>Low Stock Alert</Label>
               <Input type="number" value={form.low_stock_alert} onChange={(e) => setForm({ ...form, low_stock_alert: e.target.value })} />
+            </div>
+            <div className="col-span-2">
+              <ItemImagePicker
+                value={form.image_url}
+                onChange={(v) => setForm({ ...form, image_url: v })}
+              />
             </div>
             <div className="col-span-2">
               <Label>Description</Label>

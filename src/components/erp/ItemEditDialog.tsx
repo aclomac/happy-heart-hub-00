@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
+import { ItemImagePicker } from "@/components/erp/ItemImagePicker";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const sb = supabase as any;
@@ -240,11 +241,9 @@ export function ItemEditDialog({
               />
             </div>
             <div className="col-span-2">
-              <Label>Image URL</Label>
-              <Input
+              <ItemImagePicker
                 value={form.image_url}
-                onChange={(e) => setForm({ ...form, image_url: e.target.value })}
-                placeholder="https://…"
+                onChange={(v) => setForm({ ...form, image_url: v })}
               />
             </div>
             <div className="col-span-2">
