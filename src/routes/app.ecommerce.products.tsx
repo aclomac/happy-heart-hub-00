@@ -21,7 +21,7 @@ import {
 } from "@/lib/demo/ecommerce";
 import { getItems } from "@/lib/demo/inventory";
 import { parseCSV, readFileAsText } from "@/lib/csv-parse";
-import { woocommerceService, wooConfigForWebsiteId } from "@/lib/integrations/woocommerce";
+import { syncWooCommerceProducts } from "@/lib/integrations/integrationClient";
 import { Download, Link2, Trash2, Pencil, RefreshCw, Upload, MoreVertical } from "lucide-react";
 
 export const Route = createFileRoute("/app/ecommerce/products")({ component: ProductsPage });
@@ -128,11 +128,10 @@ function ProductsPage() {
   const syncWoo = async () => {
     if (!syncWebsiteId) { toast.error("Select a website"); return; }
     setBusy(true);
-    const cfg = wooConfigForWebsiteId(syncWebsiteId);
-    const r = await woocommerceService.syncProducts(cfg, syncWebsiteId, getSettings().integrationMode);
+    const r = await syncWooCommerceProducts({ websiteId: syncWebsiteId, mode: getSettings().integrationMode });
     setBusy(false);
     setList(getProducts());
-    r.status === "success" || r.status === "skipped" ? toast.success(r.message) : toast.error(r.message);
+    r.success || r.errorKind === "mode_disabled" ? toast.success(r.message) : toast.error(r.message);
   };
 
   const confirmDelete = (ids: string[]) => setConfirmOpen({ ids });

@@ -12,11 +12,12 @@ import { DisabledLiveButton } from "@/components/erp/ecommerce/EcommerceUI";
 import { DiagnosticsPanel } from "@/components/erp/ecommerce/DiagnosticsPanel";
 import { getSettings, setSettings, getCouriers, getWebsites, setWebsites, type EcoSettings } from "@/lib/demo/ecommerce";
 import {
-  getWooConfig, setWooConfig, resetWooConfig, woocommerceService, wooConfigFromWebsite, type WooConfig,
+  getWooConfig, setWooConfig, resetWooConfig, wooConfigFromWebsite, type WooConfig,
 } from "@/lib/integrations/woocommerce";
 import {
-  getSteadfastConfig, setSteadfastConfig, resetSteadfastConfig, steadfastService, type SteadfastConfig,
+  getSteadfastConfig, setSteadfastConfig, resetSteadfastConfig, type SteadfastConfig,
 } from "@/lib/integrations/steadfast";
+import { testWooCommerceConnection, testSteadfastConnection, describeMode } from "@/lib/integrations/integrationClient";
 
 export const Route = createFileRoute("/app/ecommerce/settings")({ component: SettingsPage });
 
@@ -54,17 +55,17 @@ function SettingsPage() {
   const saveWc = () => { setWooConfig(wc); toast.success("WooCommerce credentials saved"); };
   const testWc = async () => {
     setBusy(true);
-    const r = await woocommerceService.testConnection(wc, s.integrationMode);
+    const r = await testWooCommerceConnection({ config: wc, mode: s.integrationMode });
     setBusy(false);
-    r.status === "success" ? toast.success(r.message) : toast.error(r.message);
+    r.success ? toast.success(r.message) : toast.error(r.message);
   };
 
   const saveSf = () => { setSteadfastConfig(sf); toast.success("Steadfast credentials saved"); };
   const testSf = async () => {
     setBusy(true);
-    const r = await steadfastService.testConnection(sf, s.integrationMode);
+    const r = await testSteadfastConnection({ config: sf, mode: s.integrationMode });
     setBusy(false);
-    r.status === "success" ? toast.success(r.message) : toast.error(r.message);
+    r.success ? toast.success(r.message) : toast.error(r.message);
   };
 
   return (
@@ -97,6 +98,7 @@ function SettingsPage() {
             <SelectItem value="electron-proxy">Electron Local Proxy — not yet configured</SelectItem>
           </SelectContent>
         </Select>
+        <div className="text-xs text-muted-foreground">Current: <b>{describeMode(s.integrationMode)}</b></div>
       </CardContent></Card>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-5xl">

@@ -1033,6 +1033,29 @@ export const integrationsWorkflow = () =>
       ? steps.push(pass("Steadfast tracking returns status", track.deliveryStatus))
       : steps.push(fail("Steadfast tracking", track.message));
 
+    // ---- integrationClient facade dispatches by mode ----
+    const ic = await import("@/lib/integrations/integrationClient");
+    const clientRes = await ic.testWooCommerceConnection({ config: fakeWc, mode: "local-demo" });
+    clientRes.errorKind === "mode_disabled"
+      ? steps.push(pass("integrationClient.testWooCommerceConnection routes via mode", clientRes.message))
+      : steps.push(fail("integrationClient.testWooCommerceConnection", `unexpected errorKind=${clientRes.errorKind}`));
+
+    // ---- backend proxy endpoint reachable + validates input ----
+    try {
+      const r = await fetch("/api/integrations/proxy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: "not-a-url" }),
+      });
+      const body = (await r.json()) as { proxyError?: string };
+      body.proxyError
+        ? steps.push(pass("Backend proxy validates input", body.proxyError))
+        : steps.push(fail("Backend proxy validates input", "no proxyError on invalid url"));
+    } catch (e) {
+      steps.push(fail("Backend proxy reachable", (e as Error).message));
+    }
+
+
     // ---- Cleanup ----
     eco.setOrders(beforeAll);
     wc.setWooConfig(prevWc);

@@ -137,6 +137,7 @@ import { Route as AppAdminSecurityTestsRouteImport } from './routes/app.admin.se
 import { Route as AppAdminPaymentsRouteImport } from './routes/app.admin.payments'
 import { Route as AppAdminPaymentSettingsRouteImport } from './routes/app.admin.payment-settings'
 import { Route as AppAdminAccessMatrixRouteImport } from './routes/app.admin.access-matrix'
+import { Route as ApiIntegrationsProxyRouteImport } from './routes/api.integrations.proxy'
 import { Route as AppSubscriptionReceiptIdRouteImport } from './routes/app.subscription.receipt.$id'
 import { Route as AppStockTransfersIdEditRouteImport } from './routes/app.stock-transfers.$id.edit'
 import { Route as AppStockAdjustmentsIdEditRouteImport } from './routes/app.stock-adjustments.$id.edit'
@@ -159,6 +160,12 @@ import { Route as AppCreditNotesIdEditRouteImport } from './routes/app.credit-no
 import { Route as AppCashTransfersIdRouteImport } from './routes/app.cash.transfers.$id'
 import { Route as AppCashLoanPaymentsIdRouteImport } from './routes/app.cash.loan-payments.$id'
 import { Route as AppCashChequesIdRouteImport } from './routes/app.cash.cheques.$id'
+import { Route as ApiIntegrationsWoocommerceTestRouteImport } from './routes/api.integrations.woocommerce.test'
+import { Route as ApiIntegrationsWoocommerceProductsRouteImport } from './routes/api.integrations.woocommerce.products'
+import { Route as ApiIntegrationsWoocommerceOrdersRouteImport } from './routes/api.integrations.woocommerce.orders'
+import { Route as ApiIntegrationsSteadfastTrackRouteImport } from './routes/api.integrations.steadfast.track'
+import { Route as ApiIntegrationsSteadfastTestRouteImport } from './routes/api.integrations.steadfast.test'
+import { Route as ApiIntegrationsSteadfastCreateConsignmentRouteImport } from './routes/api.integrations.steadfast.create-consignment'
 
 const SuperAdminRoute = SuperAdminRouteImport.update({
   id: '/super-admin',
@@ -813,6 +820,11 @@ const AppAdminAccessMatrixRoute = AppAdminAccessMatrixRouteImport.update({
   path: '/admin/access-matrix',
   getParentRoute: () => AppRoute,
 } as any)
+const ApiIntegrationsProxyRoute = ApiIntegrationsProxyRouteImport.update({
+  id: '/api/integrations/proxy',
+  path: '/api/integrations/proxy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppSubscriptionReceiptIdRoute =
   AppSubscriptionReceiptIdRouteImport.update({
     id: '/receipt/$id',
@@ -927,6 +939,42 @@ const AppCashChequesIdRoute = AppCashChequesIdRouteImport.update({
   path: '/cheques/$id',
   getParentRoute: () => AppCashRoute,
 } as any)
+const ApiIntegrationsWoocommerceTestRoute =
+  ApiIntegrationsWoocommerceTestRouteImport.update({
+    id: '/api/integrations/woocommerce/test',
+    path: '/api/integrations/woocommerce/test',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiIntegrationsWoocommerceProductsRoute =
+  ApiIntegrationsWoocommerceProductsRouteImport.update({
+    id: '/api/integrations/woocommerce/products',
+    path: '/api/integrations/woocommerce/products',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiIntegrationsWoocommerceOrdersRoute =
+  ApiIntegrationsWoocommerceOrdersRouteImport.update({
+    id: '/api/integrations/woocommerce/orders',
+    path: '/api/integrations/woocommerce/orders',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiIntegrationsSteadfastTrackRoute =
+  ApiIntegrationsSteadfastTrackRouteImport.update({
+    id: '/api/integrations/steadfast/track',
+    path: '/api/integrations/steadfast/track',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiIntegrationsSteadfastTestRoute =
+  ApiIntegrationsSteadfastTestRouteImport.update({
+    id: '/api/integrations/steadfast/test',
+    path: '/api/integrations/steadfast/test',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiIntegrationsSteadfastCreateConsignmentRoute =
+  ApiIntegrationsSteadfastCreateConsignmentRouteImport.update({
+    id: '/api/integrations/steadfast/create-consignment',
+    path: '/api/integrations/steadfast/create-consignment',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -1003,6 +1051,7 @@ export interface FileRoutesByFullPath {
   '/super-admin/support': typeof SuperAdminSupportRoute
   '/app/': typeof AppIndexRoute
   '/super-admin/': typeof SuperAdminIndexRoute
+  '/api/integrations/proxy': typeof ApiIntegrationsProxyRoute
   '/app/admin/access-matrix': typeof AppAdminAccessMatrixRoute
   '/app/admin/payment-settings': typeof AppAdminPaymentSettingsRoute
   '/app/admin/payments': typeof AppAdminPaymentsRoute
@@ -1057,6 +1106,12 @@ export interface FileRoutesByFullPath {
   '/super-admin/payments/$id': typeof SuperAdminPaymentsIdRoute
   '/app/ecommerce/': typeof AppEcommerceIndexRoute
   '/app/utilities/': typeof AppUtilitiesIndexRoute
+  '/api/integrations/steadfast/create-consignment': typeof ApiIntegrationsSteadfastCreateConsignmentRoute
+  '/api/integrations/steadfast/test': typeof ApiIntegrationsSteadfastTestRoute
+  '/api/integrations/steadfast/track': typeof ApiIntegrationsSteadfastTrackRoute
+  '/api/integrations/woocommerce/orders': typeof ApiIntegrationsWoocommerceOrdersRoute
+  '/api/integrations/woocommerce/products': typeof ApiIntegrationsWoocommerceProductsRoute
+  '/api/integrations/woocommerce/test': typeof ApiIntegrationsWoocommerceTestRoute
   '/app/cash/cheques/$id': typeof AppCashChequesIdRoute
   '/app/cash/loan-payments/$id': typeof AppCashLoanPaymentsIdRoute
   '/app/cash/transfers/$id': typeof AppCashTransfersIdRoute
@@ -1151,6 +1206,7 @@ export interface FileRoutesByTo {
   '/super-admin/support': typeof SuperAdminSupportRoute
   '/app': typeof AppIndexRoute
   '/super-admin': typeof SuperAdminIndexRoute
+  '/api/integrations/proxy': typeof ApiIntegrationsProxyRoute
   '/app/admin/access-matrix': typeof AppAdminAccessMatrixRoute
   '/app/admin/payment-settings': typeof AppAdminPaymentSettingsRoute
   '/app/admin/payments': typeof AppAdminPaymentsRoute
@@ -1205,6 +1261,12 @@ export interface FileRoutesByTo {
   '/super-admin/payments/$id': typeof SuperAdminPaymentsIdRoute
   '/app/ecommerce': typeof AppEcommerceIndexRoute
   '/app/utilities': typeof AppUtilitiesIndexRoute
+  '/api/integrations/steadfast/create-consignment': typeof ApiIntegrationsSteadfastCreateConsignmentRoute
+  '/api/integrations/steadfast/test': typeof ApiIntegrationsSteadfastTestRoute
+  '/api/integrations/steadfast/track': typeof ApiIntegrationsSteadfastTrackRoute
+  '/api/integrations/woocommerce/orders': typeof ApiIntegrationsWoocommerceOrdersRoute
+  '/api/integrations/woocommerce/products': typeof ApiIntegrationsWoocommerceProductsRoute
+  '/api/integrations/woocommerce/test': typeof ApiIntegrationsWoocommerceTestRoute
   '/app/cash/cheques/$id': typeof AppCashChequesIdRoute
   '/app/cash/loan-payments/$id': typeof AppCashLoanPaymentsIdRoute
   '/app/cash/transfers/$id': typeof AppCashTransfersIdRoute
@@ -1304,6 +1366,7 @@ export interface FileRoutesById {
   '/super-admin/support': typeof SuperAdminSupportRoute
   '/app/': typeof AppIndexRoute
   '/super-admin/': typeof SuperAdminIndexRoute
+  '/api/integrations/proxy': typeof ApiIntegrationsProxyRoute
   '/app/admin/access-matrix': typeof AppAdminAccessMatrixRoute
   '/app/admin/payment-settings': typeof AppAdminPaymentSettingsRoute
   '/app/admin/payments': typeof AppAdminPaymentsRoute
@@ -1358,6 +1421,12 @@ export interface FileRoutesById {
   '/super-admin/payments/$id': typeof SuperAdminPaymentsIdRoute
   '/app/ecommerce/': typeof AppEcommerceIndexRoute
   '/app/utilities/': typeof AppUtilitiesIndexRoute
+  '/api/integrations/steadfast/create-consignment': typeof ApiIntegrationsSteadfastCreateConsignmentRoute
+  '/api/integrations/steadfast/test': typeof ApiIntegrationsSteadfastTestRoute
+  '/api/integrations/steadfast/track': typeof ApiIntegrationsSteadfastTrackRoute
+  '/api/integrations/woocommerce/orders': typeof ApiIntegrationsWoocommerceOrdersRoute
+  '/api/integrations/woocommerce/products': typeof ApiIntegrationsWoocommerceProductsRoute
+  '/api/integrations/woocommerce/test': typeof ApiIntegrationsWoocommerceTestRoute
   '/app/cash/cheques/$id': typeof AppCashChequesIdRoute
   '/app/cash/loan-payments/$id': typeof AppCashLoanPaymentsIdRoute
   '/app/cash/transfers/$id': typeof AppCashTransfersIdRoute
@@ -1458,6 +1527,7 @@ export interface FileRouteTypes {
     | '/super-admin/support'
     | '/app/'
     | '/super-admin/'
+    | '/api/integrations/proxy'
     | '/app/admin/access-matrix'
     | '/app/admin/payment-settings'
     | '/app/admin/payments'
@@ -1512,6 +1582,12 @@ export interface FileRouteTypes {
     | '/super-admin/payments/$id'
     | '/app/ecommerce/'
     | '/app/utilities/'
+    | '/api/integrations/steadfast/create-consignment'
+    | '/api/integrations/steadfast/test'
+    | '/api/integrations/steadfast/track'
+    | '/api/integrations/woocommerce/orders'
+    | '/api/integrations/woocommerce/products'
+    | '/api/integrations/woocommerce/test'
     | '/app/cash/cheques/$id'
     | '/app/cash/loan-payments/$id'
     | '/app/cash/transfers/$id'
@@ -1606,6 +1682,7 @@ export interface FileRouteTypes {
     | '/super-admin/support'
     | '/app'
     | '/super-admin'
+    | '/api/integrations/proxy'
     | '/app/admin/access-matrix'
     | '/app/admin/payment-settings'
     | '/app/admin/payments'
@@ -1660,6 +1737,12 @@ export interface FileRouteTypes {
     | '/super-admin/payments/$id'
     | '/app/ecommerce'
     | '/app/utilities'
+    | '/api/integrations/steadfast/create-consignment'
+    | '/api/integrations/steadfast/test'
+    | '/api/integrations/steadfast/track'
+    | '/api/integrations/woocommerce/orders'
+    | '/api/integrations/woocommerce/products'
+    | '/api/integrations/woocommerce/test'
     | '/app/cash/cheques/$id'
     | '/app/cash/loan-payments/$id'
     | '/app/cash/transfers/$id'
@@ -1758,6 +1841,7 @@ export interface FileRouteTypes {
     | '/super-admin/support'
     | '/app/'
     | '/super-admin/'
+    | '/api/integrations/proxy'
     | '/app/admin/access-matrix'
     | '/app/admin/payment-settings'
     | '/app/admin/payments'
@@ -1812,6 +1896,12 @@ export interface FileRouteTypes {
     | '/super-admin/payments/$id'
     | '/app/ecommerce/'
     | '/app/utilities/'
+    | '/api/integrations/steadfast/create-consignment'
+    | '/api/integrations/steadfast/test'
+    | '/api/integrations/steadfast/track'
+    | '/api/integrations/woocommerce/orders'
+    | '/api/integrations/woocommerce/products'
+    | '/api/integrations/woocommerce/test'
     | '/app/cash/cheques/$id'
     | '/app/cash/loan-payments/$id'
     | '/app/cash/transfers/$id'
@@ -1847,6 +1937,13 @@ export interface RootRouteChildren {
   SignupRoute: typeof SignupRoute
   SuperAdminRoute: typeof SuperAdminRouteWithChildren
   StoreSlugRoute: typeof StoreSlugRoute
+  ApiIntegrationsProxyRoute: typeof ApiIntegrationsProxyRoute
+  ApiIntegrationsSteadfastCreateConsignmentRoute: typeof ApiIntegrationsSteadfastCreateConsignmentRoute
+  ApiIntegrationsSteadfastTestRoute: typeof ApiIntegrationsSteadfastTestRoute
+  ApiIntegrationsSteadfastTrackRoute: typeof ApiIntegrationsSteadfastTrackRoute
+  ApiIntegrationsWoocommerceOrdersRoute: typeof ApiIntegrationsWoocommerceOrdersRoute
+  ApiIntegrationsWoocommerceProductsRoute: typeof ApiIntegrationsWoocommerceProductsRoute
+  ApiIntegrationsWoocommerceTestRoute: typeof ApiIntegrationsWoocommerceTestRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -2747,6 +2844,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminAccessMatrixRouteImport
       parentRoute: typeof AppRoute
     }
+    '/api/integrations/proxy': {
+      id: '/api/integrations/proxy'
+      path: '/api/integrations/proxy'
+      fullPath: '/api/integrations/proxy'
+      preLoaderRoute: typeof ApiIntegrationsProxyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app/subscription/receipt/$id': {
       id: '/app/subscription/receipt/$id'
       path: '/receipt/$id'
@@ -2900,6 +3004,48 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/cash/cheques/$id'
       preLoaderRoute: typeof AppCashChequesIdRouteImport
       parentRoute: typeof AppCashRoute
+    }
+    '/api/integrations/woocommerce/test': {
+      id: '/api/integrations/woocommerce/test'
+      path: '/api/integrations/woocommerce/test'
+      fullPath: '/api/integrations/woocommerce/test'
+      preLoaderRoute: typeof ApiIntegrationsWoocommerceTestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/integrations/woocommerce/products': {
+      id: '/api/integrations/woocommerce/products'
+      path: '/api/integrations/woocommerce/products'
+      fullPath: '/api/integrations/woocommerce/products'
+      preLoaderRoute: typeof ApiIntegrationsWoocommerceProductsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/integrations/woocommerce/orders': {
+      id: '/api/integrations/woocommerce/orders'
+      path: '/api/integrations/woocommerce/orders'
+      fullPath: '/api/integrations/woocommerce/orders'
+      preLoaderRoute: typeof ApiIntegrationsWoocommerceOrdersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/integrations/steadfast/track': {
+      id: '/api/integrations/steadfast/track'
+      path: '/api/integrations/steadfast/track'
+      fullPath: '/api/integrations/steadfast/track'
+      preLoaderRoute: typeof ApiIntegrationsSteadfastTrackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/integrations/steadfast/test': {
+      id: '/api/integrations/steadfast/test'
+      path: '/api/integrations/steadfast/test'
+      fullPath: '/api/integrations/steadfast/test'
+      preLoaderRoute: typeof ApiIntegrationsSteadfastTestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/integrations/steadfast/create-consignment': {
+      id: '/api/integrations/steadfast/create-consignment'
+      path: '/api/integrations/steadfast/create-consignment'
+      fullPath: '/api/integrations/steadfast/create-consignment'
+      preLoaderRoute: typeof ApiIntegrationsSteadfastCreateConsignmentRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -3463,6 +3609,15 @@ const rootRouteChildren: RootRouteChildren = {
   SignupRoute: SignupRoute,
   SuperAdminRoute: SuperAdminRouteWithChildren,
   StoreSlugRoute: StoreSlugRoute,
+  ApiIntegrationsProxyRoute: ApiIntegrationsProxyRoute,
+  ApiIntegrationsSteadfastCreateConsignmentRoute:
+    ApiIntegrationsSteadfastCreateConsignmentRoute,
+  ApiIntegrationsSteadfastTestRoute: ApiIntegrationsSteadfastTestRoute,
+  ApiIntegrationsSteadfastTrackRoute: ApiIntegrationsSteadfastTrackRoute,
+  ApiIntegrationsWoocommerceOrdersRoute: ApiIntegrationsWoocommerceOrdersRoute,
+  ApiIntegrationsWoocommerceProductsRoute:
+    ApiIntegrationsWoocommerceProductsRoute,
+  ApiIntegrationsWoocommerceTestRoute: ApiIntegrationsWoocommerceTestRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -14,6 +14,7 @@ import {
   type DiagnosticResult,
   type IntegrationMode,
 } from "./diagnostics";
+import { httpRequest, TransportError } from "./transport";
 import { genId, getOrders, setOrders, getSyncLogs, setSyncLogs, getWebsites, type EcoOrder, type EcoWebsite } from "@/lib/demo/ecommerce";
 
 export interface WooConfig {
@@ -126,21 +127,22 @@ function buildUrl(base: string, path: string, c: WooConfig, extra?: Record<strin
 
 async function callWoo(
   c: WooConfig,
+  mode: IntegrationMode,
   path: string,
   extra: Record<string, string> = {},
 ): Promise<{ ok: boolean; status: number; data?: unknown; errorText?: string; finalUrl: string }> {
   const base = wooBaseEndpoint(c);
   const finalUrl = buildUrl(base, path, c, extra);
-  const res = await fetch(finalUrl, { method: "GET", headers: buildHeaders(c) });
+  const res = await httpRequest(mode, finalUrl, { method: "GET", headers: buildHeaders(c) as Record<string, string> });
+  const text = res.text;
   let data: unknown;
   let errorText: string | undefined;
-  const text = await res.text();
   try {
     data = text ? JSON.parse(text) : undefined;
   } catch {
     errorText = text.slice(0, 300);
   }
-  return { ok: res.ok, status: res.status, data, errorText, finalUrl };
+  return { ok: res.ok, status: res.status, data, errorText, finalUrl: res.finalUrl };
 }
 
 function mapWooStatusToErpovo(woo: string): EcoOrder["status"] {
@@ -187,17 +189,9 @@ export const woocommerceService = {
       });
       saveDiagnostic("woocommerce", d); return d;
     }
-    if (mode === "backend-proxy" || mode === "electron-proxy") {
-      const d = r({
-        status: "blocked",
-        errorKind: "config",
-        message: `${mode === "backend-proxy" ? "Backend" : "Electron"} proxy is not yet configured. Add a proxy endpoint that forwards to ${wooBaseEndpoint(c)} with the stored credentials.`,
-      });
-      saveDiagnostic("woocommerce", d); return d;
-    }
 
     try {
-      const { ok, status, data, errorText, finalUrl } = await callWoo(c, "/orders", { per_page: "1" });
+      const { ok, status, data, errorText, finalUrl } = await callWoo(c, mode, "/orders", { per_page: "1" });
       if (ok) {
         const d = r({
           status: "success", errorKind: "none", httpStatus: status, url: finalUrl,
@@ -258,9 +252,7 @@ export const woocommerceService = {
     if (mode === "local-demo") {
       return wrap({ status: "skipped", errorKind: "mode_disabled", message: "Local Demo Mode — use 'Load Sample Orders' or switch Integration Mode to call the live API." });
     }
-    if (mode !== "direct-browser") {
-      return wrap({ status: "blocked", errorKind: "config", message: "Backend / Electron proxy required for production sync." });
-    }
+    // backend-proxy / electron-proxy use the same code path; httpRequest dispatches.
 
     try {
       const existing = getOrders();
@@ -271,7 +263,7 @@ export const woocommerceService = {
         if (opts.status && opts.status !== "any") extra.status = opts.status;
         if (opts.from) extra.after = `${opts.from}T00:00:00`;
         if (opts.to) extra.before = `${opts.to}T23:59:59`;
-        const { ok, status, data, finalUrl, errorText } = await callWoo(c, "/orders", extra);
+        const { ok, status, data, finalUrl, errorText } = await callWoo(c, mode, "/orders", extra);
         if (!ok) {
           return wrap({
             status: "failed", httpStatus: status, url: finalUrl,
@@ -372,15 +364,13 @@ export const woocommerceService = {
       setProducts(existing);
       return wrap({ status: "skipped", errorKind: "mode_disabled", message: `Local Demo — added ${added} sample products. Switch to Direct Browser API for live sync.` }, { added, updated: 0, failed: 0 });
     }
-    if (mode !== "direct-browser") {
-      return wrap({ status: "blocked", errorKind: "config", message: "Backend/Electron proxy required." });
-    }
+    // backend-proxy / electron-proxy go through httpRequest below.
     try {
       const existing = getProducts();
       const byKey = new Map(existing.map((p) => [`${p.websiteId}:${p.websiteProductId}`, p] as const));
       let added = 0, updated = 0, failed = 0;
       for (let page = 1; page <= 20; page++) {
-        const { ok, status, data, finalUrl, errorText } = await callWoo(c, "/products", { per_page: "100", page: String(page) });
+        const { ok, status, data, finalUrl, errorText } = await callWoo(c, mode, "/products", { per_page: "100", page: String(page) });
         if (!ok) {
           return wrap({
             status: "failed", httpStatus: status, url: finalUrl,

@@ -10,8 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DisabledLiveButton, StatusBadge } from "@/components/erp/ecommerce/EcommerceUI";
 import { DiagnosticsPanel } from "@/components/erp/ecommerce/DiagnosticsPanel";
-import { getCouriers, setCouriers, getSettings, genId, type EcoCourier, type CourierType } from "@/lib/demo/ecommerce";
-import { getSteadfastConfig, steadfastService } from "@/lib/integrations/steadfast";
+import { getCouriers, setCouriers, genId, type EcoCourier, type CourierType } from "@/lib/demo/ecommerce";
+import { testSteadfastConnection } from "@/lib/integrations/integrationClient";
 import { Pencil, Trash2, Plus, Plug } from "lucide-react";
 
 export const Route = createFileRoute("/app/ecommerce/courier")({ component: CourierPage });
@@ -82,8 +82,8 @@ function CourierPage() {
                     <div className="flex items-center justify-end gap-1">
                       {c.type === "Steadfast" ? (
                         <Button variant="outline" size="sm" onClick={async () => {
-                          const r = await steadfastService.testConnection(getSteadfastConfig(), getSettings().integrationMode);
-                          r.status === "success" ? toast.success(r.message) : toast.error(r.message);
+                          const r = await testSteadfastConnection();
+                          r.success ? toast.success(r.message) : toast.error(r.message);
                         }}><Plug className="w-3 h-3 mr-1" /> Test API</Button>
                       ) : (
                         <DisabledLiveButton reason="Live courier API requires credentials for this provider."><Plug className="w-3 h-3 mr-1" /> Test API</DisabledLiveButton>
