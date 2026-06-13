@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { postOnce, reverseOnce } from "@/lib/cash-ledger";
 import { logAudit } from "@/lib/audit";
 import { loadInvoiceSeries, nextSaleInvoiceNumber } from "@/lib/sale-invoice-settings";
+import { isDemoMode } from "@/lib/demo/localStore";
 
 const DUP_RETRY_MAX = 5;
 
@@ -252,23 +253,24 @@ async function applyStockDelta(
     const qty = Math.abs(Number(r.qty || 0));
     if (qty <= 0) continue;
     const itemId = resolved.id;
+    const demoMode = isDemoMode();
 
     let isService = !!resolved.is_service;
     if (r.variant_id) {
       const { data: v } = await supabase.from("item_variants").select("stock").eq("id", r.variant_id).single();
-      if (v) {
+      if (v && !demoMode) {
         const { error } = await supabase.from("item_variants").update({ stock: Number(v.stock) + direction * qty }).eq("id", r.variant_id);
         if (error) throw new Error(`Variant stock update failed: ${error.message}`);
       }
     } else {
-      if (!isService) {
+      if (!isService && !demoMode) {
         const { error } = await supabase.from("items").update({ stock: Number(resolved.stock) + direction * qty }).eq("id", itemId);
         if (error) throw new Error(`Item stock update failed for ${resolved.name}: ${error.message}`);
       }
     }
 
     if (!warehouseId) throw new Error("No warehouse/store available for stock posting");
-    if (!isService) {
+    if (!isService && !demoMode) {
       await adjustStoreStock(companyId, itemId, warehouseId, direction * qty);
     }
     const { error: movementError } = await supabase.from("stock_movements").insert({
