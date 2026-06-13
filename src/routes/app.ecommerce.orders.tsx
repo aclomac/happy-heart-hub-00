@@ -320,6 +320,7 @@ function OrdersPage() {
                           <Button variant="ghost" size="sm"><MoreVertical className="w-4 h-4" /></Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-52">
+                          <DropdownMenuItem onClick={() => openView(o.id)}><Eye className="w-3 h-3 mr-1" /> View Details</DropdownMenuItem>
                           <DropdownMenuItem onClick={() => setEditing(o)}><Pencil className="w-3 h-3 mr-1" /> Edit</DropdownMenuItem>
                           <DropdownMenuItem onClick={() => updateStatus(o.id, "Confirmed")}>Confirm Order</DropdownMenuItem>
                           <DropdownMenuItem onClick={() => updateStatus(o.id, "Packed")}>Pack Order</DropdownMenuItem>
