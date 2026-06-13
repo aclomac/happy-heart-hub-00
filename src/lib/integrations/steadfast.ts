@@ -13,6 +13,7 @@ import {
   type DiagnosticResult,
   type IntegrationMode,
 } from "./diagnostics";
+import { httpRequest } from "./transport";
 import {
   genId, getCouriers, setCouriers, getDeliveries, setDeliveries,
   getOrders, setOrders, getSyncLogs, setSyncLogs,
