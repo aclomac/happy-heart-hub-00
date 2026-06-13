@@ -157,6 +157,7 @@ function Items() {
         tax_rate: 0,
         is_service: false,
         description: form.description.trim() || null,
+        image_url: form.image_url.trim() || null,
       };
       const res = await mut.mutateAsync(payload);
       if ((res as any)?.error) throw (res as any).error;
