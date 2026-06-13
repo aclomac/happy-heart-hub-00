@@ -315,6 +315,25 @@ function ProductsPage() {
                 </Select>
               </div>
               <div className="col-span-2">
+                <Label>Image URL</Label>
+                <div className="flex items-start gap-3">
+                  <ItemImageThumb src={editing.imageUrl || null} alt={editing.name} className="w-16 h-16 rounded border" />
+                  <div className="flex-1 flex flex-col gap-1">
+                    <Input
+                      placeholder="https://…/image.jpg"
+                      value={editing.imageUrl || ""}
+                      onChange={(e) => setEditing({ ...editing, imageUrl: e.target.value || null, thumbnailUrl: e.target.value || null })}
+                    />
+                    {editing.imageUrl && (
+                      <Button variant="ghost" size="sm" className="self-start text-rose-600"
+                        onClick={() => setEditing({ ...editing, imageUrl: null, thumbnailUrl: null, imageAlt: null })}>
+                        Remove image
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="col-span-2">
                 <Label>Map to ERP Item</Label>
                 <Select value={editing.erpItemId || "_none"} onValueChange={(v) => setEditing({ ...editing, erpItemId: v === "_none" ? null : v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
