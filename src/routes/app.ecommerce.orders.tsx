@@ -44,6 +44,7 @@ function OrdersPage() {
   const [websiteFilter, setWebsiteFilter] = useState<string>("all");
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<EcoOrder | null>(null);
+  const [viewing, setViewing] = useState<EcoOrder | null>(null);
   const [confirmOpen, setConfirmOpen] = useState<{ ids: string[] } | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [page, setPage] = useState(1);
