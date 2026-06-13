@@ -418,7 +418,7 @@ export function setDemoSettings(settings: Partial<DemoSettings>): void {
 export function ensureDemoSeed(): void {
   if (!isBrowser()) return;
   const existing = safeRead<DemoCompany[]>(DEMO_COMPANIES_KEY);
-  if (!existing || existing.length === 0) {
+  if (!existing || !existing.some((c) => c.id === DEMO_COMPANY_ID)) {
     const seed: DemoCompany = {
       id: DEMO_COMPANY_ID,
       name: "Chair King",
@@ -434,7 +434,7 @@ export function ensureDemoSeed(): void {
       tin_bin: null,
       created_at: new Date().toISOString(),
     };
-    safeWrite(DEMO_COMPANIES_KEY, [seed]);
+    safeWrite(DEMO_COMPANIES_KEY, [seed, ...(existing ?? [])]);
   }
   if (!safeRead<DemoSettings>(DEMO_SETTINGS_KEY)) {
     safeWrite(DEMO_SETTINGS_KEY, {
