@@ -209,8 +209,8 @@ function WooWizardDialog({ onClose }: { onClose: () => void }) {
                 </table>
               </div>
               <div className="flex gap-2 mt-2">
-                <Button size="sm" variant="outline" disabled={busy || !websiteId} onClick={() => importProducts(false)}>Import These Products</Button>
-                <Button size="sm" variant="outline" disabled={busy || !websiteId} onClick={() => importProducts(false)}>Import All Products</Button>
+               <Button size="sm" variant="outline" disabled={busy || !websiteId} onClick={() => importProducts(false)}>Import These Products</Button>
+               <Button size="sm" variant="outline" disabled={busy || !websiteId} onClick={() => importProducts(true)}>Import All Products</Button>
               </div>
             </div>
           )}
