@@ -17,12 +17,14 @@ import {
 import { StatusBadge } from "@/components/erp/ecommerce/EcommerceUI";
 import { DiagnosticsPanel } from "@/components/erp/ecommerce/DiagnosticsPanel";
 import {
-  getProducts, setProducts, getWebsites, getSettings, genId, type EcoProduct,
+  getProducts, setProducts, getWebsites, getSettings, genId,
+  productImageStats, refreshOrderItemImages, type EcoProduct,
 } from "@/lib/demo/ecommerce";
 import { getItems } from "@/lib/demo/inventory";
 import { parseCSV, readFileAsText } from "@/lib/csv-parse";
 import { syncWooCommerceProducts } from "@/lib/integrations/integrationClient";
-import { Download, Link2, Trash2, Pencil, RefreshCw, Upload, MoreVertical } from "lucide-react";
+import { ItemImageThumb } from "@/components/erp/ItemImageThumb";
+import { Download, Link2, Trash2, Pencil, RefreshCw, Upload, MoreVertical, ImageIcon } from "lucide-react";
 
 export const Route = createFileRoute("/app/ecommerce/products")({ component: ProductsPage });
 
@@ -131,8 +133,20 @@ function ProductsPage() {
     const r = await syncWooCommerceProducts({ websiteId: syncWebsiteId, mode: getSettings().integrationMode });
     setBusy(false);
     setList(getProducts());
-    r.success || r.errorKind === "mode_disabled" ? toast.success(r.message) : toast.error(r.message);
+    // After product sync, propagate any new images into existing order items.
+    const refresh = refreshOrderItemImages();
+    const stats = productImageStats();
+    const withImageMsg = ` (${stats.withImage}/${stats.total} with images, ${refresh.updated} order items updated)`;
+    r.success || r.errorKind === "mode_disabled" ? toast.success(r.message + withImageMsg) : toast.error(r.message);
   };
+
+  const refreshImages = () => {
+    const stats = productImageStats();
+    const refresh = refreshOrderItemImages();
+    toast.success(`Products with images: ${stats.withImage}/${stats.total}. Order items refreshed — updated ${refresh.updated}, missing ${refresh.missing}, failed ${refresh.failed}.`);
+  };
+
+
 
   const confirmDelete = (ids: string[]) => setConfirmOpen({ ids });
   const doDelete = () => {
@@ -171,6 +185,7 @@ function ProductsPage() {
           <>
             <Link to="/app/ecommerce"><Button variant="outline" size="sm">Back</Button></Link>
             <Button size="sm" variant="outline" onClick={autoMap}><Link2 className="w-4 h-4 mr-1" /> Auto-map by SKU</Button>
+            <Button size="sm" variant="outline" onClick={refreshImages}><ImageIcon className="w-4 h-4 mr-1" /> Refresh Product Images</Button>
             <Button size="sm" variant="outline" onClick={exportCsv}><Download className="w-4 h-4 mr-1" /> Export CSV</Button>
           </>
         }
@@ -224,6 +239,7 @@ function ProductsPage() {
             <thead>
               <tr className="text-left text-xs uppercase text-muted-foreground border-b">
                 <th className="py-2 w-8"><Checkbox checked={allOnPageSelected} onCheckedChange={(v) => toggleAll(!!v)} /></th>
+                <th className="w-14">Image</th>
                 <th>Website</th><th>SKU</th><th>Name</th><th>Price</th><th>ERP Item</th><th>Stock</th><th>Status</th><th>Last Synced</th><th></th>
               </tr>
             </thead>
@@ -234,6 +250,13 @@ function ProductsPage() {
                 return (
                   <tr key={p.id} className="border-b last:border-0">
                     <td><Checkbox checked={selected.has(p.id)} onCheckedChange={(v) => toggleOne(p.id, !!v)} /></td>
+                    <td className="py-2">
+                      <ItemImageThumb
+                        src={p.thumbnailUrl || p.imageUrl || null}
+                        alt={p.imageAlt || p.name}
+                        className="w-10 h-10 rounded border"
+                      />
+                    </td>
                     <td className="py-2">{w}</td>
                     <td className="font-mono text-xs">{p.sku}</td>
                     <td>{p.name}</td>
@@ -254,7 +277,7 @@ function ProductsPage() {
                   </tr>
                 );
               })}
-              {pageItems.length === 0 && <tr><td colSpan={10} className="py-8 text-center text-muted-foreground">No products. Use <b>Sync from WooCommerce</b> or <b>Import CSV</b>.</td></tr>}
+              {pageItems.length === 0 && <tr><td colSpan={11} className="py-8 text-center text-muted-foreground">No products. Use <b>Sync from WooCommerce</b> or <b>Import CSV</b>.</td></tr>}
             </tbody>
           </table>
 
@@ -290,6 +313,25 @@ function ProductsPage() {
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent><SelectItem value="active">Active</SelectItem><SelectItem value="inactive">Inactive</SelectItem></SelectContent>
                 </Select>
+              </div>
+              <div className="col-span-2">
+                <Label>Image URL</Label>
+                <div className="flex items-start gap-3">
+                  <ItemImageThumb src={editing.imageUrl || null} alt={editing.name} className="w-16 h-16 rounded border" />
+                  <div className="flex-1 flex flex-col gap-1">
+                    <Input
+                      placeholder="https://…/image.jpg"
+                      value={editing.imageUrl || ""}
+                      onChange={(e) => setEditing({ ...editing, imageUrl: e.target.value || null, thumbnailUrl: e.target.value || null })}
+                    />
+                    {editing.imageUrl && (
+                      <Button variant="ghost" size="sm" className="self-start text-rose-600"
+                        onClick={() => setEditing({ ...editing, imageUrl: null, thumbnailUrl: null, imageAlt: null })}>
+                        Remove image
+                      </Button>
+                    )}
+                  </div>
+                </div>
               </div>
               <div className="col-span-2">
                 <Label>Map to ERP Item</Label>

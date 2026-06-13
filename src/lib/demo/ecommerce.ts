@@ -84,6 +84,12 @@ export interface EcoProduct {
   stock: number;
   status: "active" | "inactive";
   lastSyncedAt?: string | null;
+  // Image fields (imported from WooCommerce / set manually)
+  imageUrl?: string | null;
+  thumbnailUrl?: string | null;
+  imageAlt?: string | null;
+  galleryImages?: string[];
+  wooImageId?: string | null;
 }
 
 export type EcoOrderStatus =
@@ -106,6 +112,14 @@ export interface EcoOrderItem {
   qty: number;
   price: number;
   erpItemId?: string | null;
+  // Optional richer fields populated when importing from WooCommerce
+  productId?: string | null;
+  variationId?: string | null;
+  discount?: number;
+  total?: number;
+  imageUrl?: string | null;
+  thumbnailUrl?: string | null;
+  mappedErpItemId?: string | null;
 }
 
 export interface EcoOrder {
@@ -664,4 +678,48 @@ export function seedEcommerceIfNeeded(force = false) {
 export function clearEcommerce() {
   if (typeof window === "undefined") return;
   Object.values(K).forEach((k) => localStorage.removeItem(k));
+}
+
+/**
+ * Refresh order line-item images by looking up the cached website product
+ * (matched by productId on same website, or globally by SKU). Returns counts.
+ */
+export function refreshOrderItemImages(filter?: { orderId?: string }): { updated: number; missing: number; failed: number } {
+  const products = getProducts();
+  const orders = getOrders();
+  let updated = 0, missing = 0, failed = 0;
+  const byKey = new Map<string, EcoProduct>();
+  for (const p of products) {
+    if (p.websiteProductId) byKey.set(`pid:${p.websiteId}:${p.websiteProductId}`, p);
+    if (p.sku) byKey.set(`sku:${p.sku.toLowerCase()}`, p);
+  }
+  for (const o of orders) {
+    if (filter?.orderId && o.id !== filter.orderId) continue;
+    for (const it of o.items) {
+      if (it.imageUrl) continue;
+      try {
+        const match =
+          (it.productId ? byKey.get(`pid:${o.websiteId}:${it.productId}`) : undefined) ??
+          (it.sku ? byKey.get(`sku:${it.sku.toLowerCase()}`) : undefined);
+        if (match && match.imageUrl) {
+          it.imageUrl = match.imageUrl;
+          it.thumbnailUrl = match.thumbnailUrl || match.imageUrl;
+          updated++;
+        } else {
+          missing++;
+        }
+      } catch {
+        failed++;
+      }
+    }
+  }
+  setOrders(orders);
+  return { updated, missing, failed };
+}
+
+/** Count of products that currently have an imageUrl. */
+export function productImageStats(): { withImage: number; missing: number; total: number } {
+  const products = getProducts();
+  const withImage = products.filter((p) => !!p.imageUrl).length;
+  return { withImage, missing: products.length - withImage, total: products.length };
 }

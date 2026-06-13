@@ -280,12 +280,31 @@ export const woocommerceService = {
             const dedupeKey = `${websiteId}:${orderNo}`;
             if (existingKeys.has(dedupeKey)) { skipped++; continue; }
             const billing = (w.billing ?? {}) as Record<string, string>;
-            const items = ((w.line_items as Array<Record<string, unknown>>) ?? []).map((li) => ({
-              sku: String(li.sku ?? ""),
-              name: String(li.name ?? ""),
-              qty: Number(li.quantity ?? 1),
-              price: Number(li.price ?? 0),
-            }));
+            const { getProducts: _gp } = await import("@/lib/demo/ecommerce");
+            const productCache = _gp();
+            const items = ((w.line_items as Array<Record<string, unknown>>) ?? []).map((li) => {
+              const productId = li.product_id != null ? String(li.product_id) : null;
+              const variationId = li.variation_id ? String(li.variation_id) : null;
+              const sku = String(li.sku ?? "");
+              // Try resolve image from already-imported website product list
+              const match = productCache.find((p) =>
+                (productId && p.websiteId === websiteId && p.websiteProductId === productId) ||
+                (sku && p.sku.toLowerCase() === sku.toLowerCase()),
+              );
+              const liImage = ((li.image as { src?: string } | undefined)?.src) ?? null;
+              const imageUrl = liImage || match?.imageUrl || null;
+              return {
+                sku,
+                name: String(li.name ?? ""),
+                qty: Number(li.quantity ?? 1),
+                price: Number(li.price ?? 0),
+                total: Number(li.total ?? 0) || Number(li.quantity ?? 1) * Number(li.price ?? 0),
+                productId,
+                variationId,
+                imageUrl,
+                thumbnailUrl: match?.thumbnailUrl ?? imageUrl,
+              };
+            });
             const subtotal = items.reduce((s, x) => s + x.qty * x.price, 0);
             const discount = Number(w.discount_total ?? 0);
             const delivery = Number(w.shipping_total ?? 0);
@@ -389,15 +408,33 @@ export const woocommerceService = {
             const price = Number(w.price ?? w.regular_price ?? 0);
             const stock = Number(w.stock_quantity ?? 0);
             const status: "active" | "inactive" = (w.status === "publish") ? "active" : "inactive";
+            // ---- Image mapping (main + gallery) ----
+            const images = Array.isArray(w.images) ? (w.images as Array<Record<string, unknown>>) : [];
+            const firstImg = images[0] as { src?: string; alt?: string; id?: number | string } | undefined;
+            const imageUrl = firstImg?.src ? String(firstImg.src) : null;
+            const imageAlt = firstImg?.alt ? String(firstImg.alt) : null;
+            const galleryImages = images.map((im) => String((im as { src?: string }).src ?? "")).filter(Boolean);
+            const wooImageId = firstImg?.id != null ? String(firstImg.id) : null;
             const key: `${string}:${string}` = `${websiteId}:${wpId}`;
             const prev = byKey.get(key);
             if (prev) {
-              Object.assign(prev, { name, sku, websitePrice: price, stock, status, lastSyncedAt: new Date().toISOString() });
+              Object.assign(prev, {
+                name, sku, websitePrice: price, stock, status,
+                imageUrl: imageUrl || prev.imageUrl || null,
+                thumbnailUrl: imageUrl || prev.thumbnailUrl || null,
+                imageAlt: imageAlt ?? prev.imageAlt ?? null,
+                galleryImages: galleryImages.length ? galleryImages : prev.galleryImages,
+                wooImageId: wooImageId ?? prev.wooImageId ?? null,
+                lastSyncedAt: new Date().toISOString(),
+              });
               updated++;
             } else {
               existing.push({
                 id: genId("ep"), websiteId, websiteProductId: wpId, name, sku,
-                erpItemId: null, websitePrice: price, stock, status, lastSyncedAt: new Date().toISOString(),
+                erpItemId: null, websitePrice: price, stock, status,
+                imageUrl, thumbnailUrl: imageUrl, imageAlt,
+                galleryImages, wooImageId,
+                lastSyncedAt: new Date().toISOString(),
               });
               added++;
             }
