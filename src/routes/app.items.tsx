@@ -437,7 +437,13 @@ function Items() {
                       />
                     </td>
                     <td className="font-medium">
-                      {i.name}
+                      <Link
+                        to="/app/items/$id"
+                        params={{ id: i.id }}
+                        className="hover:underline text-primary"
+                      >
+                        {i.name}
+                      </Link>
                       {i.is_service && (
                         <span className="ml-2 text-[10px] text-utility uppercase font-semibold">
                           Service
