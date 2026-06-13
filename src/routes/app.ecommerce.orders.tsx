@@ -232,6 +232,10 @@ function OrdersPage() {
                           <DropdownMenuItem onClick={() => updateStatus(o.id, "Returned")}>Mark Returned</DropdownMenuItem>
                           <DropdownMenuItem onClick={() => updateStatus(o.id, "Cancelled")}>Cancel Order</DropdownMenuItem>
                           <DropdownMenuSeparator />
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => sendSteadfast(o)}><Send className="w-3 h-3 mr-1" /> Send to Steadfast</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => trackSteadfast(o)}><Navigation className="w-3 h-3 mr-1" /> Track Steadfast Parcel</DropdownMenuItem>
+                          <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => convertToSale(o)}><FileText className="w-3 h-3 mr-1" /> Convert to Sale Invoice</DropdownMenuItem>
                           <DropdownMenuItem onClick={() => duplicate(o)}><Copy className="w-3 h-3 mr-1" /> Duplicate</DropdownMenuItem>
                           <DropdownMenuSeparator />
