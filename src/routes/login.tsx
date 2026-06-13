@@ -16,7 +16,7 @@ import {
   DEMO_USER_ID,
   DEMO_USER_EMAIL,
   isDemoMode,
-  getDemoCompanies,
+  getVisibleDemoCompanies,
   addDemoCompany,
 } from "@/lib/demo/localStore";
 
@@ -105,20 +105,26 @@ function Login() {
         return;
       }
       try {
-        ensureDemoSeed();
         // Ensure the user's company still exists (logout/clear may have wiped it).
         let companyId = localUser.companyId ?? null;
-        const companies = getDemoCompanies();
+        const companies = getVisibleDemoCompanies(localUser.id);
         if (!companyId || !companies.some((c) => c.id === companyId)) {
           const fresh = addDemoCompany({
             name: `${localUser.fullName}'s Business`,
             owner_id: localUser.id,
+            ownerUserId: localUser.id,
+            isDemoCompany: false,
             email: localUser.email,
           });
           companyId = fresh.id;
           setLocalUsers(
             getLocalUsers().map((u) => (u.id === localUser.id ? { ...u, companyId: fresh.id } : u)),
           );
+        }
+        if (localUser.emailVerified === false) {
+          setLoading(false);
+          toast.error("Please verify your email before signing in.");
+          return;
         }
         startLocalUserSession({
           id: localUser.id,
