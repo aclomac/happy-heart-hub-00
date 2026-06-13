@@ -81,6 +81,7 @@ export const AUDIT_REGISTRY: AuditEntry[] = [
   { id: "nav-stock-tr", module: M.items, label: "Stock Transfers", kind: "submenu", route: "/app/stock-transfers", status: W },
   { id: "nav-stock-mov", module: M.items, label: "Stock Movement Ledger", kind: "submenu", route: "/app/stock-movements", status: W },
   { id: "btn-item-add", module: M.items, page: "Items", label: "Add Item", kind: "button", route: "/app/items", status: W, expected: "Opens form / dialog and persists new item." },
+  { id: "btn-inventory-posting-doctor", module: M.items, page: "Items", label: "Inventory Posting Doctor", kind: "button", route: "/app/items", status: W, expected: "Scans sale invoices, missing stock movements, store/company mismatches, and repairs sale stock posting." },
   { id: "btn-item-import", module: M.items, page: "Items", label: "Import Items", kind: "button", route: "/app/utilities/import-items", status: W },
   { id: "btn-item-barcode", module: M.items, page: "Items", label: "Barcode print", kind: "button", route: "/app/utilities/barcode-generator", status: W },
 

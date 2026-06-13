@@ -48,6 +48,11 @@ import {
   parseSaleMeta,
   type SaleInvoiceInput,
 } from "@/lib/sale-invoices";
+import {
+  repairSaleStockPosting,
+  verifySaleInventoryPosting,
+  type RepairResult,
+} from "@/lib/inventory-posting-doctor";
 import { buildInvoiceDataFromSale } from "@/lib/pdf/build-invoice";
 import { downloadInvoicePDF, printInvoicePDF } from "@/lib/pdf/invoice-pdf";
 import {
@@ -349,6 +354,7 @@ export function SalesDocForm({
     validation: string;
     savedInvoiceId: string | null;
     localSalesCount: number | null;
+    inventoryPosting: string | null;
     error: string | null;
   }>({
     clicked: false,
@@ -357,6 +363,7 @@ export function SalesDocForm({
     validation: "—",
     savedInvoiceId: null,
     localSalesCount: null,
+    inventoryPosting: null,
     error: null,
   });
 
@@ -693,6 +700,7 @@ export function SalesDocForm({
       customer: customerDebug,
       itemsCount: validRows.length,
       validation: "checking…",
+      inventoryPosting: null,
       error: null,
     }));
     if (editingId && convertedBlocked) {
@@ -765,6 +773,7 @@ export function SalesDocForm({
           meta.paymentDirection === "in" ? 1 : meta.paymentDirection === "out" ? -1 : 0,
         items: validRows.map((r) => ({
           item_id: r.item_id,
+          item_code: items.find((i) => i.id === r.item_id)?.sku || null,
           item_name: r.item_name,
           description: r.desc || null,
           qty: r.qty,
@@ -802,16 +811,38 @@ export function SalesDocForm({
         }
       }
 
+      let inventoryPosting = "No stock impact for this document.";
+      if (newId && payload.affect_stock !== 0 && kind === "invoice") {
+        const repair: RepairResult = await repairSaleStockPosting(companyId, newId);
+        const verify = await verifySaleInventoryPosting(companyId, newId);
+        if (repair.errors.length > 0 || !verify.ok) {
+          inventoryPosting = `Sale invoice saved but stock posting failed: ${[...repair.errors, ...verify.errors].join("; ") || "movement not verified"}`;
+          toast.error(inventoryPosting);
+        } else if (repair.postings.length > 0) {
+          inventoryPosting = `Inventory posted: ${repair.postings.map((p) => `${p.itemName} -${p.qty} PCS, stock ${p.before} → ${p.after}`).join("; ")}, movement created`;
+          toast.success(inventoryPosting);
+        } else if (verify.lines[0]) {
+          inventoryPosting = `Inventory posted: ${verify.lines[0].itemName} -${verify.lines[0].qty} ${verify.lines[0].unit}, movement already verified`;
+          toast.success(inventoryPosting);
+        }
+      }
+
       console.log("SAVE_INVOICE_SAVED", { id: newId, invoiceNo: finalInvoiceNo, localSalesCount });
       setSaveDebug((d) => ({
         ...d,
         savedInvoiceId: newId,
         validation: "saved",
         localSalesCount,
+        inventoryPosting,
         error: null,
       }));
       toast.success(editingId ? `${finalInvoiceNo} updated` : docLabels.savedToast(finalInvoiceNo));
       qc.invalidateQueries({ queryKey: ["sales", companyId] });
+      qc.invalidateQueries({ queryKey: ["items", companyId] });
+      qc.invalidateQueries({ queryKey: ["items-pick", companyId] });
+      qc.invalidateQueries({ queryKey: ["item-detail-full"] });
+      qc.invalidateQueries({ queryKey: ["item-movements"] });
+      qc.invalidateQueries({ queryKey: ["item-sale-lines"] });
 
       // Phase 2 — flush pending attachments uploaded before the invoice existed.
       if (newId && attachmentsRef.current) {
@@ -909,6 +940,23 @@ export function SalesDocForm({
         <div className="mb-3 text-xs bg-warning/10 border border-warning/30 rounded-md px-3 py-2 text-warning-foreground">
           This order has been converted to an invoice and can no longer be edited. Open the invoice
           to make changes.
+        </div>
+      )}
+
+      {kind === "invoice" && (saveDebug.clicked || saveDebug.inventoryPosting || saveDebug.error) && (
+        <div className="mb-3 rounded-md border bg-muted/30 px-3 py-2 text-xs" data-testid="inventory-posting-debug">
+          <div className="font-semibold text-foreground">Inventory Posting Debug</div>
+          <div className="mt-1 grid grid-cols-1 gap-1 md:grid-cols-3">
+            <span>Customer: {saveDebug.customer}</span>
+            <span>Lines: {saveDebug.itemsCount}</span>
+            <span>Validation: {saveDebug.validation}</span>
+            <span>Invoice ID: {saveDebug.savedInvoiceId || "—"}</span>
+            <span>Local sales: {saveDebug.localSalesCount ?? "—"}</span>
+            <span className={saveDebug.inventoryPosting?.includes("failed") ? "text-sale" : "text-success"}>
+              {saveDebug.inventoryPosting || "Waiting for save…"}
+            </span>
+          </div>
+          {saveDebug.error && <div className="mt-1 text-sale">Error: {saveDebug.error}</div>}
         </div>
       )}
 

@@ -63,6 +63,7 @@ export function cleanSaleNotes(notes: string | null | undefined): string {
 export type SaleItemInput = {
   item_id: string | null;
   variant_id?: string | null;
+  item_code?: string | null;
   item_name: string;
   description?: string | null;
   qty: number;
@@ -131,12 +132,13 @@ async function resolveWarehouseId(companyId: string): Promise<string | null> {
 
   // 3. Auto-provision a "Main Store" default so the first sale invoice on a
   //    fresh company still posts a complete ledger row.
-  const { data: created } = await supabase
+  const { data: created, error } = await supabase
     .from("warehouses")
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .insert({ company_id: companyId, name: "Main Store", is_default: true } as any)
     .select("id")
     .single();
+  if (error) throw new Error(`Could not resolve warehouse for stock posting: ${error.message}`);
   return (created?.id as string | null) ?? null;
 }
 
@@ -160,19 +162,73 @@ async function adjustStoreStock(
     .eq("warehouse_id", warehouseId)
     .maybeSingle();
   if (row?.id) {
-    await sb
+    const { error } = await sb
       .from("item_store_stock")
       .update({ qty: Number(row.qty || 0) + signedQty })
       .eq("id", row.id);
+    if (error) throw new Error(`Store stock update failed: ${error.message}`);
   } else {
-    await sb.from("item_store_stock").insert({
+    const { error } = await sb.from("item_store_stock").insert({
       company_id: companyId,
       item_id: itemId,
       warehouse_id: warehouseId,
       qty: signedQty,
       opening_stock: 0,
     });
+    if (error) throw new Error(`Store stock insert failed: ${error.message}`);
   }
+}
+
+async function resolveInventoryItem(
+  companyId: string,
+  row: { item_id: string | null; item_code?: string | null; item_name?: string | null },
+) {
+  const cols = "id,name,sku,barcode,stock,is_service";
+  if (row.item_id) {
+    const { data, error } = await supabase
+      .from("items")
+      .select(cols)
+      .eq("company_id", companyId)
+      .eq("id", row.item_id)
+      .is("deleted_at", null)
+      .maybeSingle();
+    if (error) throw error;
+    if (data) return data as { id: string; name: string; sku: string | null; barcode: string | null; stock: number; is_service: boolean };
+  }
+  const code = (row.item_code || "").trim();
+  if (code) {
+    const { data, error } = await supabase
+      .from("items")
+      .select(cols)
+      .eq("company_id", companyId)
+      .is("deleted_at", null)
+      .eq("sku", code)
+      .maybeSingle();
+    if (error) throw error;
+    if (data) return data as { id: string; name: string; sku: string | null; barcode: string | null; stock: number; is_service: boolean };
+    const { data: byBarcode, error: barcodeError } = await supabase
+      .from("items")
+      .select(cols)
+      .eq("company_id", companyId)
+      .is("deleted_at", null)
+      .eq("barcode", code)
+      .maybeSingle();
+    if (barcodeError) throw barcodeError;
+    if (byBarcode) return byBarcode as { id: string; name: string; sku: string | null; barcode: string | null; stock: number; is_service: boolean };
+  }
+  const name = (row.item_name || "").trim();
+  if (name) {
+    const { data, error } = await supabase
+      .from("items")
+      .select(cols)
+      .eq("company_id", companyId)
+      .is("deleted_at", null)
+      .ilike("name", name)
+      .maybeSingle();
+    if (error) throw error;
+    if (data) return data as { id: string; name: string; sku: string | null; barcode: string | null; stock: number; is_service: boolean };
+  }
+  return null;
 }
 
 /**
@@ -182,7 +238,7 @@ async function adjustStoreStock(
  */
 async function applyStockDelta(
   companyId: string,
-  items: { item_id: string | null; variant_id?: string | null; qty: number }[],
+  items: { item_id: string | null; variant_id?: string | null; item_code?: string | null; item_name?: string | null; qty: number }[],
   direction: -1 | 0 | 1,
   referenceId: string,
   referenceNo: string,
@@ -191,42 +247,43 @@ async function applyStockDelta(
   if (direction === 0) return;
   const warehouseId = await resolveWarehouseId(companyId);
   for (const r of items) {
-    if (!r.item_id) continue;
+    const resolved = await resolveInventoryItem(companyId, r);
+    if (!resolved?.id) throw new Error(`Stock item not found: ${r.item_name || r.item_code || r.item_id || "unknown item"}`);
     const qty = Math.abs(Number(r.qty || 0));
     if (qty <= 0) continue;
+    const itemId = resolved.id;
 
-    let isService = false;
+    let isService = !!resolved.is_service;
     if (r.variant_id) {
       const { data: v } = await supabase.from("item_variants").select("stock").eq("id", r.variant_id).single();
       if (v) {
-        await supabase.from("item_variants").update({ stock: Number(v.stock) + direction * qty }).eq("id", r.variant_id);
+        const { error } = await supabase.from("item_variants").update({ stock: Number(v.stock) + direction * qty }).eq("id", r.variant_id);
+        if (error) throw new Error(`Variant stock update failed: ${error.message}`);
       }
     } else {
-      const { data: it } = await supabase.from("items").select("id,stock,is_service").eq("id", r.item_id).maybeSingle();
-      if (it) {
-        isService = !!it.is_service;
-        if (!isService) {
-          await supabase.from("items").update({ stock: Number(it.stock) + direction * qty }).eq("id", r.item_id);
-        }
+      if (!isService) {
+        const { error } = await supabase.from("items").update({ stock: Number(resolved.stock) + direction * qty }).eq("id", itemId);
+        if (error) throw new Error(`Item stock update failed for ${resolved.name}: ${error.message}`);
       }
     }
 
-    if (!warehouseId) continue;
+    if (!warehouseId) throw new Error("No warehouse/store available for stock posting");
     if (!isService) {
-      await adjustStoreStock(companyId, r.item_id, warehouseId, direction * qty);
+      await adjustStoreStock(companyId, itemId, warehouseId, direction * qty);
     }
-    await supabase.from("stock_movements").insert({
+    const { error: movementError } = await supabase.from("stock_movements").insert({
       company_id: companyId,
-      item_id: r.item_id,
+      item_id: itemId,
       variant_id: r.variant_id || null,
       warehouse_id: warehouseId,
       qty,
       direction: direction === 1 ? "in" : "out",
-      reference_type: movementKind,
+      reference_type: movementKind === "sale" ? "sale_invoice" : movementKind,
       reference_id: referenceId,
       reference_no: referenceNo,
       note: movementKind.replace(/_/g, " "),
     });
+    if (movementError) throw new Error(`Stock movement create failed for ${resolved.name}: ${movementError.message}`);
   }
 }
 
