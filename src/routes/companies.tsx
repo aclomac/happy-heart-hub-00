@@ -331,6 +331,21 @@ function CreateCompanyDialog({
           `Your ${planLabel} plan allows only ${maxCompanies} compan${maxCompanies === 1 ? "y" : "ies"}. Upgrade to add more.`,
         );
       }
+      if (isDemoMode()) {
+        const user = getDemoUser();
+        if (!user) throw new Error("Not signed in");
+        return addDemoCompany({
+          name,
+          business_type: businessType,
+          currency,
+          phone,
+          address,
+          owner_id: user.id,
+          ownerUserId: user.id,
+          isDemoCompany: user.isDemoUser === true,
+          email: user.email,
+        });
+      }
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) throw new Error("Not signed in");
       const { data: company, error } = await supabase
