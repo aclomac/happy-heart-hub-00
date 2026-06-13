@@ -1205,6 +1205,7 @@ export const ALL_WORKFLOWS = [
   purchaseWorkflow,
   expenseWorkflow,
   ...ALL_ECOMMERCE_WORKFLOWS,
+  integrationsWorkflow,
   signupWorkflow,
   verifyDataChecks,
   printPdfChecks,
