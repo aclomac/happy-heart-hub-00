@@ -141,33 +141,29 @@ function OrdersPage() {
   };
 
   const sendSteadfast = async (o: EcoOrder) => {
-    const settings = getSettings();
-    const r = await steadfastService.createConsignment(getSteadfastConfig(), settings.integrationMode, o);
+    const r = await createSteadfastConsignment(o);
     setList(getOrders());
-    r.status === "success" || r.status === "skipped" ? toast.success(r.message) : toast.error(r.message);
+    r.success || r.errorKind === "mode_disabled" ? toast.success(r.message) : toast.error(r.message);
   };
 
   const trackSteadfast = async (o: EcoOrder) => {
     const code = o.trackingCode || o.trackingId;
     if (!code) { toast.error("No tracking code on this order"); return; }
-    const settings = getSettings();
-    const r = await steadfastService.trackParcel(getSteadfastConfig(), settings.integrationMode, code);
+    const r = await trackSteadfastParcel(code);
     if (r.deliveryStatus) {
-      persist(list.map((x) => x.id === o.id ? { ...x, deliveryStatus: r.deliveryStatus!, courierLastSyncedAt: new Date().toISOString() } : x));
+      persist(list.map((x) => x.id === o.id ? { ...x, deliveryStatus: r.deliveryStatus! as EcoOrder["deliveryStatus"], courierLastSyncedAt: new Date().toISOString() } : x));
     }
-    r.status === "success" || r.status === "skipped" ? toast.success(r.message) : toast.error(r.message);
+    r.success || r.errorKind === "mode_disabled" ? toast.success(r.message) : toast.error(r.message);
   };
 
   const bulkSendSteadfast = async () => {
     if (selected.size === 0) { toast.error("Select orders"); return; }
-    const settings = getSettings();
-    const cfg = getSteadfastConfig();
     let ok = 0, fail = 0;
     for (const id of selected) {
       const o = list.find((x) => x.id === id);
       if (!o) continue;
-      const r = await steadfastService.createConsignment(cfg, settings.integrationMode, o);
-      r.status === "success" || r.status === "skipped" ? ok++ : fail++;
+      const r = await createSteadfastConsignment(o);
+      r.success || r.errorKind === "mode_disabled" ? ok++ : fail++;
     }
     setList(getOrders()); setSelected(new Set());
     toast.success(`Sent ${ok} to Steadfast, ${fail} failed`);
