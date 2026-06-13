@@ -107,7 +107,7 @@ import {
 } from "./system";
 
 import { DEMO_COMPANY_ID } from "./constants";
-import { getDemoCompanies, setDemoCompanies } from "./localStore";
+import { getDemoCompanies, isExplicitDemoMode, setDemoCompanies } from "./localStore";
 
 /**
  * Mirror DB triggers: when a stock_movements row is inserted, update the
@@ -153,14 +153,16 @@ type Reader = () => Row[];
 type Writer = (rows: Row[]) => void;
 
 function table(name: string): { read: Reader; write: Writer } {
-  ensureInventorySeed();
-  ensurePartiesSeed();
-  ensureSalesSeed();
-  ensurePurchasesSeed();
-  ensureExpensesSeed();
-  ensureCashSeed();
-  ensurePayrollSeed();
-  ensureSystemSeed();
+  if (isExplicitDemoMode()) {
+    ensureInventorySeed();
+    ensurePartiesSeed();
+    ensureSalesSeed();
+    ensurePurchasesSeed();
+    ensureExpensesSeed();
+    ensureCashSeed();
+    ensurePayrollSeed();
+    ensureSystemSeed();
+  }
 
   const empty = { read: () => [], write: () => {} };
   switch (name) {
