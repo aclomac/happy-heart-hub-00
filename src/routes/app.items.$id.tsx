@@ -609,14 +609,158 @@ function ItemDetailPage() {
 
       <SummaryCards items={summary} />
 
-      <Tabs defaultValue="ledger" className="mt-4">
+      <Tabs value={tab} onValueChange={setTab} className="mt-4">
         <TabsList className="flex-wrap h-auto">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="ledger">Transactions</TabsTrigger>
           <TabsTrigger value="sales">Sales</TabsTrigger>
           <TabsTrigger value="purchases">Purchases</TabsTrigger>
           <TabsTrigger value="movement">Stock Movement</TabsTrigger>
           <TabsTrigger value="stores">Store-wise Stock</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="overview">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+            <div className="rounded-lg border bg-card p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-sm">Sales Summary</h3>
+                <button onClick={() => setTab("sales")} className="text-xs text-primary hover:underline inline-flex items-center gap-1">View all sales <ArrowRight className="w-3 h-3" /></button>
+              </div>
+              {totals.soldQty === 0 ? (
+                <div className="text-sm text-muted-foreground py-4 text-center">No sales yet</div>
+              ) : (
+                <dl className="grid grid-cols-2 gap-2 text-sm">
+                  <Mini label="Total Sold Qty" value={`${totals.soldQty} ${it.unit}`} />
+                  <Mini label="Total Sales" value={fmtMoney(totals.soldAmount)} />
+                  <Mini label="Last Sale Date" value={lastSaleRow?.date || "—"} />
+                  <Mini label="Last Customer" value={lastSaleRow?.party || "—"} />
+                  <Mini label="Last Invoice" value={lastSaleRow?.refNo || "—"} />
+                  <Mini label="Avg Sale Price" value={fmtMoney(totals.avgSale)} />
+                </dl>
+              )}
+            </div>
+
+            <div className="rounded-lg border bg-card p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-sm">Purchase Summary</h3>
+                <button onClick={() => setTab("purchases")} className="text-xs text-primary hover:underline inline-flex items-center gap-1">View all purchases <ArrowRight className="w-3 h-3" /></button>
+              </div>
+              {totals.purchasedQty === 0 ? (
+                <div className="text-sm text-muted-foreground py-4 text-center">No purchases yet</div>
+              ) : (
+                <dl className="grid grid-cols-2 gap-2 text-sm">
+                  <Mini label="Total Purchased" value={`${totals.purchasedQty} ${it.unit}`} />
+                  <Mini label="Total Purchase" value={fmtMoney(totals.purchasedAmount)} />
+                  <Mini label="Last Purchase Date" value={lastPurchaseRow?.date || "—"} />
+                  <Mini label="Last Supplier" value={lastPurchaseRow?.party || "—"} />
+                  <Mini label="Last Ref" value={lastPurchaseRow?.refNo || "—"} />
+                  <Mini label="Avg Cost" value={fmtMoney(totals.avgCost)} />
+                </dl>
+              )}
+            </div>
+
+            <div className="rounded-lg border bg-card p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-sm">Stock Summary</h3>
+                <button onClick={() => setTab("movement")} className="text-xs text-primary hover:underline inline-flex items-center gap-1">View movement <ArrowRight className="w-3 h-3" /></button>
+              </div>
+              <dl className="grid grid-cols-2 gap-2 text-sm">
+                <Mini label="Current Stock" value={`${Number(it.stock)} ${it.unit}`} />
+                <Mini label="Stock Value" value={fmtMoney(stockValue)} />
+                <Mini label="Low Stock Alert" value={String(it.low_stock_alert ?? "—")} />
+                <Mini label="Opening Stock" value={String(openingStock)} />
+                <Mini label="Damaged/Adjusted" value={String(totals.damagedAdjusted)} />
+                <Mini label="Stores" value={String(storeStock.length)} />
+              </dl>
+            </div>
+
+            <div className="rounded-lg border bg-card p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-sm">Top Stores</h3>
+                <button onClick={() => setTab("stores")} className="text-xs text-primary hover:underline inline-flex items-center gap-1">View all store-wise stock <ArrowRight className="w-3 h-3" /></button>
+              </div>
+              {topStores.length === 0 ? (
+                <div className="text-sm text-muted-foreground py-4 text-center">No store activity yet</div>
+              ) : (
+                <table className="w-full text-sm">
+                  <thead className="text-xs text-muted-foreground"><tr><th className="text-left py-1">Store</th><th className="text-right py-1">Stock</th><th className="text-right py-1">Sold</th><th className="text-right py-1">Purchased</th></tr></thead>
+                  <tbody>
+                    {topStores.map((s) => (
+                      <tr key={s.warehouse} className="border-t"><td className="py-1.5">{s.warehouse}</td><td className="py-1.5 text-right font-semibold">{s.current}</td><td className="py-1.5 text-right">{s.sold}</td><td className="py-1.5 text-right">{s.purchased}</td></tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            <div className="rounded-lg border bg-card p-4 xl:col-span-2">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-sm">Recent Transactions</h3>
+                <button onClick={() => setTab("ledger")} className="text-xs text-primary hover:underline inline-flex items-center gap-1">View full ledger <ArrowRight className="w-3 h-3" /></button>
+              </div>
+              {recentTx.length === 0 ? (
+                <div className="text-sm text-muted-foreground py-4 text-center">No transactions yet</div>
+              ) : (
+                <table className="w-full text-sm">
+                  <thead className="text-xs text-muted-foreground"><tr><th className="text-left py-1">Date</th><th className="text-left py-1">Type</th><th className="text-left py-1">Ref</th><th className="text-left py-1">Party</th><th className="text-left py-1">Store</th><th className="text-right py-1">In</th><th className="text-right py-1">Out</th><th className="text-right py-1">Balance</th></tr></thead>
+                  <tbody>
+                    {recentTx.map((r) => (
+                      <tr key={r.id} className="border-t">
+                        <td className="py-1.5">{r.date}</td><td className="py-1.5">{r.type}</td><td className="py-1.5">{r.refNo}</td><td className="py-1.5">{r.party}</td><td className="py-1.5">{r.warehouse}</td>
+                        <td className="py-1.5 text-right text-success">{r.qtyIn || ""}</td><td className="py-1.5 text-right text-sale">{r.qtyOut || ""}</td><td className="py-1.5 text-right font-semibold">{r.balance}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            <div className="rounded-lg border bg-card p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-sm">Recent Sales</h3>
+                <button onClick={() => setTab("sales")} className="text-xs text-primary hover:underline inline-flex items-center gap-1">View all <ArrowRight className="w-3 h-3" /></button>
+              </div>
+              {recentSales.length === 0 ? (
+                <div className="text-sm text-muted-foreground py-4 text-center">No sales yet</div>
+              ) : (
+                <table className="w-full text-sm">
+                  <thead className="text-xs text-muted-foreground"><tr><th className="text-left py-1">Date</th><th className="text-left py-1">Invoice</th><th className="text-left py-1">Customer</th><th className="text-right py-1">Qty</th><th className="text-right py-1">Rate</th><th className="text-right py-1">Amount</th></tr></thead>
+                  <tbody>
+                    {recentSales.map((r) => (
+                      <tr key={r.id} className="border-t">
+                        <td className="py-1.5">{r.date}</td><td className="py-1.5">{r.refNo}</td><td className="py-1.5">{r.party}</td>
+                        <td className="py-1.5 text-right">{r.qtyOut || r.qtyIn}</td><td className="py-1.5 text-right">{r.price ? fmtMoney(r.price) : "—"}</td><td className="py-1.5 text-right">{r.amount ? fmtMoney(r.amount) : "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            <div className="rounded-lg border bg-card p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-sm">Recent Purchases</h3>
+                <button onClick={() => setTab("purchases")} className="text-xs text-primary hover:underline inline-flex items-center gap-1">View all <ArrowRight className="w-3 h-3" /></button>
+              </div>
+              {recentPurchases.length === 0 ? (
+                <div className="text-sm text-muted-foreground py-4 text-center">No purchases yet</div>
+              ) : (
+                <table className="w-full text-sm">
+                  <thead className="text-xs text-muted-foreground"><tr><th className="text-left py-1">Date</th><th className="text-left py-1">Ref</th><th className="text-left py-1">Supplier</th><th className="text-right py-1">Qty</th><th className="text-right py-1">Rate</th><th className="text-right py-1">Amount</th></tr></thead>
+                  <tbody>
+                    {recentPurchases.map((r) => (
+                      <tr key={r.id} className="border-t">
+                        <td className="py-1.5">{r.date}</td><td className="py-1.5">{r.refNo}</td><td className="py-1.5">{r.party}</td>
+                        <td className="py-1.5 text-right">{r.qtyIn || r.qtyOut}</td><td className="py-1.5 text-right">{r.price ? fmtMoney(r.price) : "—"}</td><td className="py-1.5 text-right">{r.amount ? fmtMoney(r.amount) : "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        </TabsContent>
+
 
         <TabsContent value="ledger">
           <div className="flex gap-2 mb-2">
