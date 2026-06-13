@@ -324,6 +324,7 @@ const DEFAULT_SETTINGS: EcoSettings = {
   returnStockRule: "Add back to stock",
   invoicePrefix: "WEB-",
   orderPrefix: "ECO-",
+  integrationMode: "local-demo",
 };
 export const getSettings = (): EcoSettings => ({ ...DEFAULT_SETTINGS, ...read<Partial<EcoSettings>>(K.settings, {}) });
 export const setSettings = (v: EcoSettings) => write(K.settings, v);
