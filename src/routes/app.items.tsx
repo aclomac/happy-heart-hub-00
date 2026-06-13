@@ -577,7 +577,7 @@ function Items() {
                           <Link to="/app/stock-adjustments">
                             <DropdownMenuItem>Adjust Stock</DropdownMenuItem>
                           </Link>
-                          <Link to="/app/stock-transfers">
+                          <Link to="/app/stock-transfers" search={{}}>
                             <DropdownMenuItem>Stock Transfer</DropdownMenuItem>
                           </Link>
                           <DropdownMenuSeparator />
