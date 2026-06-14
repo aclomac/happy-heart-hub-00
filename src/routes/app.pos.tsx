@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader } from "@/components/erp/PageHeader";
 import { NoCompanySelected } from "@/components/erp/NoCompanySelected";
 import { useCurrentCompanyId } from "@/lib/use-company";
+import { useCompanySettings } from "@/lib/settings/companySettings";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
