@@ -774,8 +774,11 @@ function PerformanceTestPage() {
 
   const handleClear = async () => {
     if (!window.confirm("Clear all [PERF] performance test data? Real and demo data are NOT affected.")) return;
+    setClearing(true);
+    setClearedCount(0);
     try {
-      const n = await clearPerf();
+      const n = await clearPerf((p) => setClearedCount(p));
+      setClearedCount(n);
       await clearAllSummaries();
       toast.success(`Cleared ${n.toLocaleString()} [PERF] records`);
       setBench(null);
@@ -785,9 +788,10 @@ function PerformanceTestPage() {
       setExpectedPlan({});
       setExpectedTotal(0);
       await refreshCount();
-
     } catch (e: any) {
       toast.error(`Cleanup failed: ${e?.message ?? e}`);
+    } finally {
+      setClearing(false);
     }
   };
 
