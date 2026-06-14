@@ -56,4 +56,13 @@ Stable. Sales, Purchase, Payments, Cash/Bank, Payroll, POS, Reports, Items,
 Parties, Ecommerce, Recycle Bin, Permissions, Subscription, Performance Test,
 Backup Export, and Restore Backup all functional.
 
+## Release manifest integrity
+
+- **Manifest:** `qa-summary.json`
+- **Hash file:** `qa-summary.sha256`
+- **SHA-256:** `6e9d135e5ec97e458f7c0aeb04033d533493bd546a44ec3121bf828f91420589`
+- **Verify:** `bun run qa:manifest:verify` — checks schema, hash match
+  (manifest + .sha256), and that all 5 gates PASS. Exits non-zero on any
+  drift with `QA manifest hash mismatch`.
+
 **Backup-ready. Release-ready.**
