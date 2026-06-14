@@ -58,6 +58,55 @@ jobs:
       - name: QA manifest verify (schema + sha256 + gates)
         run: bun run qa:manifest:verify
 
+      - name: Check required QA artifact files
+        run: |
+          missing=0
+          for f in qa-summary.json qa-summary.sha256 QA_SUMMARY.md RELEASE_NOTES.md; do
+            if [ ! -f "$f" ]; then
+              echo "::error title=Missing QA artifact::$f is required but not found"
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then exit 1; fi
+
+      - name: QA artifact summary
+        run: |
+          HASH=$(awk '{print $1}' qa-summary.sha256)
+          READY=$(grep -o '"release_ready"[[:space:]]*:[[:space:]]*[a-z]*' qa-summary.json | head -n1 | awk -F: '{print $2}' | tr -d ' ')
+          echo "========== ERPOVO CI QA Artifact Summary =========="
+          echo "Manifest hash  : $HASH"
+          echo "Release ready  : $READY"
+          echo "Files uploaded :"
+          for f in qa-summary.json qa-summary.sha256 QA_SUMMARY.md RELEASE_NOTES.md stable-build-manifest.json; do
+            [ -f "$f" ] && echo "  · $f"
+          done
+          for f in erpovo-release-audit*.pdf release-audit*.pdf; do
+            [ -f "$f" ] && echo "  · $f"
+          done
+          echo "==================================================="
+          {
+            echo "### ERPOVO CI QA Artifact Summary"
+            echo ""
+            echo "- **Manifest hash:** \`$HASH\`"
+            echo "- **Release ready:** $READY"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload QA release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: erpovo-ci-qa-summary-${{ github.sha }}
+          path: |
+            qa-summary.json
+            qa-summary.sha256
+            QA_SUMMARY.md
+            RELEASE_NOTES.md
+            stable-build-manifest.json
+            erpovo-release-audit*.pdf
+            release-audit*.pdf
+          if-no-files-found: ignore
+          retention-days: 30
+
+
       - name: Coverage report (non-blocking)
         run: bun run test:coverage
         continue-on-error: true
