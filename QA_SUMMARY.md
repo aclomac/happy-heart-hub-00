@@ -64,4 +64,23 @@ bun run build
 `qa:release` prints the same summary block shown above and exits non-zero on
 any failure, so CI rejects regressions automatically.
 
+## Manifest integrity
+
+The machine-readable manifest is `qa-summary.json`, checksummed with SHA-256.
+
+- **Algorithm:** sha256
+- **Hash:** `6e9d135e5ec97e458f7c0aeb04033d533493bd546a44ec3121bf828f91420589`
+- **Hash file:** `qa-summary.sha256` (sha256sum-compatible)
+- **Embedded in:** `qa-summary.json` → `integrity.value`
+
+Verify the manifest at any time:
+
+```bash
+bun run qa:manifest:verify
+```
+
+This checks: file exists, schema valid, hash matches both
+`integrity.value` and `qa-summary.sha256`, and all 5 gates PASS. On
+mismatch it prints `QA manifest hash mismatch` and exits non-zero.
+
 **Release-ready: YES.**
