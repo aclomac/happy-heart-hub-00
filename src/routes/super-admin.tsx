@@ -1,12 +1,16 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
 import { ShieldOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/super-admin")({
-  component: SuperAdminDisabled,
+  component: SuperAdminShell,
 });
 
-function SuperAdminDisabled() {
+function SuperAdminShell() {
+  const { pathname } = useLocation();
+  // Personal Mode: Super Admin is disabled, but child routes still need
+  // <Outlet /> so direct deep links don't render a blank page.
+  if (pathname !== "/super-admin") return <Outlet />;
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-6">
       <div className="max-w-md text-center border rounded-lg p-8 bg-card">
