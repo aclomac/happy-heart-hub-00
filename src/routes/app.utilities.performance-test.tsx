@@ -562,6 +562,78 @@ function PerformanceTestPage() {
         </CardContent>
       </Card>
 
+      {/* Benchmark Controls — always visible */}
+      <Card className="mb-4">
+        <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
+          <CardTitle className="flex items-center gap-2">
+            <Gauge className="w-5 h-5 text-primary" /> Benchmark Controls
+          </CardTitle>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">Scope:</span>
+            <Select value={benchMode} onValueChange={(v) => setBenchMode(v as BenchMode)}>
+              <SelectTrigger className="w-[220px] h-8">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="last_batch">Last Batch ({lastBatchCount.toLocaleString()})</SelectItem>
+                <SelectItem value="all_perf">All PERF Records ({existingNow.toLocaleString()})</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {existingNow === 0 ? (
+            <div className="flex items-center gap-2 p-3 rounded-md bg-warning/10 border border-warning/30 text-sm">
+              <AlertTriangle className="w-4 h-4 text-warning" />
+              Generate performance data first — then run the benchmark.
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              <Button
+                onClick={() => void rerunBenchmark(benchMode, false)}
+                disabled={benchRunning || running}
+              >
+                {benchRunning ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Play className="w-4 h-4 mr-1" />}
+                {bench ? "Re-run Benchmark" : "Run Benchmark"}
+              </Button>
+              {bench && (
+                <Button
+                  variant="outline"
+                  onClick={() => void rerunBenchmark(benchMode, true)}
+                  disabled={benchRunning || running}
+                >
+                  <Sparkles className="w-4 h-4 mr-1" /> Re-run Benchmark (Fresh)
+                </Button>
+              )}
+              <Button
+                variant="secondary"
+                onClick={() => void rerunBenchmark("last_batch", false)}
+                disabled={benchRunning || running || lastBatchCount === 0}
+              >
+                <Gauge className="w-4 h-4 mr-1" /> Benchmark Last Batch
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => void rerunBenchmark("all_perf", false)}
+                disabled={benchRunning || running}
+              >
+                <Database className="w-4 h-4 mr-1" /> Benchmark All PERF Records
+              </Button>
+            </div>
+          )}
+          {benchRunning && (
+            <div className="text-xs text-muted-foreground flex items-center gap-1">
+              <Loader2 className="w-3 h-3 animate-spin" /> Benchmark running...
+            </div>
+          )}
+          <div className="text-[11px] text-muted-foreground">
+            Fresh re-run clears only the benchmark summary cache. Your [PERF] data is never deleted by a benchmark.
+          </div>
+        </CardContent>
+      </Card>
+
+
+
       {bench && (
         <Card className="mb-4">
           <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
