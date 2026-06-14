@@ -835,6 +835,64 @@ function PerformanceTestPage() {
         </Card>
       )}
 
+      {/* Records breakdown / diagnostics */}
+      {existingNow > 0 && (
+        <Card className="mb-4">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Database className="w-4 h-4 text-primary" /> Records Breakdown by Type
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs text-muted-foreground border-b">
+                    <th className="py-2">Type</th>
+                    <th className="py-2 text-right">Expected</th>
+                    <th className="py-2 text-right">Actual</th>
+                    <th className="py-2 text-right">Missing</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {DATA_TYPES.map((t) => {
+                    const exp = expectedPlan[t.key] ?? 0;
+                    const act = breakdown[t.key] ?? 0;
+                    const miss = Math.max(0, exp - act);
+                    return (
+                      <tr key={t.key} className="border-b last:border-0">
+                        <td className="py-1.5">{t.label}</td>
+                        <td className="py-1.5 text-right tabular-nums">{exp.toLocaleString()}</td>
+                        <td className="py-1.5 text-right tabular-nums">{act.toLocaleString()}</td>
+                        <td className={`py-1.5 text-right tabular-nums ${miss > 0 ? "text-warning" : "text-muted-foreground"}`}>
+                          {miss > 0 ? miss.toLocaleString() : "—"}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  <tr className="font-semibold">
+                    <td className="py-2">Total</td>
+                    <td className="py-2 text-right tabular-nums">{expectedTotal.toLocaleString()}</td>
+                    <td className="py-2 text-right tabular-nums">{existingNow.toLocaleString()}</td>
+                    <td className="py-2 text-right tabular-nums">
+                      {Math.max(0, expectedTotal - existingNow).toLocaleString()}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            {expectedTotal > 0 && expectedTotal !== existingNow && (
+              <div className="mt-3 text-xs text-muted-foreground">
+                Note: small differences between requested total and actual counts are caused by
+                per-type ratio rounding (each type count is rounded to an integer).
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
