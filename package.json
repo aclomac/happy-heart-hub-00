@@ -31,6 +31,8 @@
     "package:windows": "vite build && electron-builder --win --x64 --config electron-builder.yml",
     "qa:smoke": "bun run scripts/qa-smoke.ts",
     "qa:build": "tsc --noEmit && vite build",
+    "backup:export": "bun run scripts/backup-export.ts",
+    "backup:full": "tsc --noEmit && vite build && bun run scripts/backup-export.ts",
     "qa:all": "bun run qa:build && bun run qa:smoke"
   },
   "lint-staged": {
