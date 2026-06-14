@@ -98,7 +98,7 @@ async function countPerf(): Promise<number> {
   } catch { return 0; }
 }
 
-async function clearPerf(): Promise<number> {
+async function clearPerf(onProgress?: (n: number) => void): Promise<number> {
   const db = await openDB();
   return new Promise((resolve, reject) => {
     const stores = db.objectStoreNames.contains(SUMMARY_STORE)
@@ -115,6 +115,7 @@ async function clearPerf(): Promise<number> {
         if (c.value?.perfTest === 1 && c.value?.tag === "[PERF]") {
           c.delete();
           n++;
+          if (onProgress && n % 2000 === 0) onProgress(n);
         }
         c.continue();
       }
@@ -418,15 +419,34 @@ function PerformanceTestPage() {
   const [benchMode, setBenchMode] = useState<BenchMode>("last_batch");
   const [storageWarn, setStorageWarn] = useState(false);
   const cancelRef = useRef(false);
+  const [genStartedAt, setGenStartedAt] = useState(0);
+  const [tick, setTick] = useState(0);
 
   // confirmation modal
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingTotal, setPendingTotal] = useState(0);
+  const [pendingFresh, setPendingFresh] = useState(false);
+
+  // stress test warning modal (>=250k)
+  const [stressOpen, setStressOpen] = useState(false);
+  const [stressTotal, setStressTotal] = useState(0);
+  const [stressFresh, setStressFresh] = useState(false);
+
+  // cleanup progress
+  const [clearing, setClearing] = useState(false);
+  const [clearedCount, setClearedCount] = useState(0);
 
   // Diagnostics: actual per-type breakdown vs expected
   const [breakdown, setBreakdown] = useState<Record<string, number>>({});
   const [expectedTotal, setExpectedTotal] = useState(0);
   const [expectedPlan, setExpectedPlan] = useState<Record<string, number>>({});
+
+  // tick clock during generation for elapsed/ETA display
+  useEffect(() => {
+    if (!running) return;
+    const id = setInterval(() => setTick((t) => t + 1), 250);
+    return () => clearInterval(id);
+  }, [running]);
 
   const refreshCount = async () => {
     const n = await countPerf();
@@ -451,6 +471,7 @@ function PerformanceTestPage() {
     setProgress(0);
     setGenerated(0);
     setTarget(total);
+    setGenStartedAt(performance.now());
     setBench(null);
 
     let before = existingNow;
@@ -473,9 +494,17 @@ function PerformanceTestPage() {
       await clearAllSummaries();
 
 
-      const CHUNK = 1000;
+      const CHUNK = total >= 250000 ? 2000 : 1000;
       const t0 = performance.now();
       let done = 0;
+      const yieldToUI = () =>
+        new Promise<void>((r) => {
+          const ric = (window as any).requestIdleCallback as
+            | ((cb: () => void, o?: any) => number)
+            | undefined;
+          if (ric) ric(() => r(), { timeout: 50 });
+          else setTimeout(r, 0);
+        });
 
       for (const p of plan) {
         let i = 0;
@@ -488,7 +517,7 @@ function PerformanceTestPage() {
           done += size;
           setGenerated(done);
           setProgress(Math.round((done / total) * 100));
-          await new Promise((r) => setTimeout(r, 0));
+          await yieldToUI();
         }
       }
       const genMs = Math.round(performance.now() - t0);
@@ -511,8 +540,15 @@ function PerformanceTestPage() {
   };
 
   const onClickGenerate = (total: number, fresh: boolean) => {
+    if (total >= 250000) {
+      setStressTotal(total);
+      setStressFresh(fresh);
+      setStressOpen(true);
+      return;
+    }
     if (!fresh && existingNow > 0) {
       setPendingTotal(total);
+      setPendingFresh(fresh);
       setConfirmOpen(true);
       return;
     }
@@ -738,8 +774,11 @@ function PerformanceTestPage() {
 
   const handleClear = async () => {
     if (!window.confirm("Clear all [PERF] performance test data? Real and demo data are NOT affected.")) return;
+    setClearing(true);
+    setClearedCount(0);
     try {
-      const n = await clearPerf();
+      const n = await clearPerf((p) => setClearedCount(p));
+      setClearedCount(n);
       await clearAllSummaries();
       toast.success(`Cleared ${n.toLocaleString()} [PERF] records`);
       setBench(null);
@@ -749,9 +788,10 @@ function PerformanceTestPage() {
       setExpectedPlan({});
       setExpectedTotal(0);
       await refreshCount();
-
     } catch (e: any) {
       toast.error(`Cleanup failed: ${e?.message ?? e}`);
+    } finally {
+      setClearing(false);
     }
   };
 
@@ -801,7 +841,7 @@ function PerformanceTestPage() {
           <div>
             <div className="text-sm font-medium mb-2">Add to existing</div>
             <div className="flex flex-wrap gap-2">
-              {[1000, 10000, 50000, 100000].map((n) => (
+              {[1000, 10000, 50000, 100000, 250000, 500000].map((n) => (
                 <Button key={n} variant="outline" disabled={running} onClick={() => onClickGenerate(n, false)}>
                   <Play className="w-4 h-4 mr-1" /> Generate {n.toLocaleString()}
                 </Button>
@@ -812,7 +852,7 @@ function PerformanceTestPage() {
           <div>
             <div className="text-sm font-medium mb-2">Fresh (clears [PERF] first)</div>
             <div className="flex flex-wrap gap-2">
-              {[1000, 10000, 50000, 100000].map((n) => (
+              {[1000, 10000, 50000, 100000, 250000, 500000].map((n) => (
                 <Button key={n} variant="secondary" disabled={running} onClick={() => onClickGenerate(n, true)}>
                   <Sparkles className="w-4 h-4 mr-1" /> Generate Fresh {n.toLocaleString()}
                 </Button>
@@ -837,16 +877,43 @@ function PerformanceTestPage() {
             </div>
           )}
 
-          {running && (
-            <div className="space-y-1">
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                  Generating {generated.toLocaleString()} / {target.toLocaleString()}
-                </span>
-                <span>{progress}%</span>
+          {running && (() => {
+            void tick;
+            const elapsedMs = genStartedAt ? performance.now() - genStartedAt : 0;
+            const rate = elapsedMs > 0 && generated > 0 ? generated / (elapsedMs / 1000) : 0;
+            const remain = rate > 0 ? Math.max(0, (target - generated) / rate) : 0;
+            const fmt = (s: number) => {
+              if (!isFinite(s) || s <= 0) return "—";
+              if (s < 60) return `${Math.round(s)}s`;
+              const m = Math.floor(s / 60), r = Math.round(s % 60);
+              return `${m}m ${r}s`;
+            };
+            return (
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    Generating {generated.toLocaleString()} / {target.toLocaleString()}
+                  </span>
+                  <span>{progress}%</span>
+                </div>
+                <Progress value={progress} />
+                <div className="flex flex-wrap gap-3 text-[11px] text-muted-foreground">
+                  <span>Elapsed: <strong>{fmt(elapsedMs / 1000)}</strong></span>
+                  <span>ETA: <strong>{fmt(remain)}</strong></span>
+                  <span>Rate: <strong>{rate ? Math.round(rate).toLocaleString() : 0}</strong> rows/s</span>
+                </div>
               </div>
-              <Progress value={progress} />
+            );
+          })()}
+
+          {clearing && (
+            <div className="space-y-1">
+              <div className="text-xs text-muted-foreground flex items-center gap-1">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                Clearing [PERF] records… <strong>{clearedCount.toLocaleString()}</strong> removed
+              </div>
+              <Progress value={existingNow > 0 ? Math.min(100, Math.round((clearedCount / existingNow) * 100)) : 0} />
             </div>
           )}
 
@@ -932,6 +999,22 @@ function PerformanceTestPage() {
                     disabled={benchRunning || running || cacheBuilding || existingNow === 0}
                   >
                     <Sparkles className="w-4 h-4 mr-1" /> Benchmark All PERF Records (Fresh Full Scan)
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => void rerunBenchmark("all_perf", false)}
+                    disabled={benchRunning || running || cacheBuilding || existingNow < 1}
+                    title="Cached aggregate covers the full PERF set including 500k"
+                  >
+                    <Gauge className="w-4 h-4 mr-1" /> Benchmark 500k Full (Cached)
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => void rerunBenchmark("all_perf", true)}
+                    disabled={benchRunning || running || cacheBuilding || existingNow < 1}
+                    title="Reads first 100,000 rows via IndexedDB indexes — no aggregate cache"
+                  >
+                    <Gauge className="w-4 h-4 mr-1" /> Benchmark 100k Sample
                   </Button>
                 </div>
               </div>
@@ -1151,6 +1234,39 @@ function PerformanceTestPage() {
               onClick={() => { setConfirmOpen(false); void startGenerate(pendingTotal, true); }}
             >
               Clear Old Data & Generate Fresh
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Stress test warning modal (>=250k) */}
+      <Dialog open={stressOpen} onOpenChange={setStressOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-warning" />
+              Heavy stress test: {stressTotal.toLocaleString()} records
+            </DialogTitle>
+            <DialogDescription>
+              {stressTotal.toLocaleString()} records is a heavy stress test. It may take time and
+              can slow the browser. Real/demo data will not be affected. Continue?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <Button variant="ghost" onClick={() => setStressOpen(false)}>Cancel</Button>
+            <Button
+              onClick={() => {
+                setStressOpen(false);
+                if (!stressFresh && existingNow > 0) {
+                  setPendingTotal(stressTotal);
+                  setPendingFresh(false);
+                  setConfirmOpen(true);
+                } else {
+                  void startGenerate(stressTotal, stressFresh);
+                }
+              }}
+            >
+              Continue
             </Button>
           </DialogFooter>
         </DialogContent>
