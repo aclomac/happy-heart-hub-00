@@ -413,18 +413,37 @@ function PerformanceTestPage() {
   };
 
   const [benchRunning, setBenchRunning] = useState(false);
-  const rerunBenchmark = async (mode: BenchMode, fresh = false) => {
+  const rerunBenchmark = async (modeArg: BenchMode, fresh = false) => {
     if (benchRunning) return;
+    console.log("[perf] benchmark button clicked", { mode: modeArg, fresh });
+
+    // Auto-fallback: if user picked Last Batch but no batch in this session, use all PERF
+    let mode = modeArg;
+    const currentPerf = await countPerf();
+    if (mode === "last_batch" && (lastBatchCount === 0 || !lastBatchId)) {
+      if (currentPerf > 0) {
+        mode = "all_perf";
+        toast.message("No batch in this session — benchmarking all PERF records");
+      } else {
+        toast.error("Generate performance data first");
+        return;
+      }
+    }
     setBenchMode(mode);
-    const scope = mode === "last_batch" ? lastBatchCount : existingNow;
+    const scope = mode === "last_batch" ? lastBatchCount : currentPerf;
     if (scope === 0) {
-      toast.error(mode === "last_batch" ? "No last batch yet" : "Generate performance data first");
+      toast.error("Generate performance data first");
       return;
     }
+    console.log("[perf] benchmark started", { mode, scope, batchId: lastBatchId });
     setBenchRunning(true);
     try {
       await runBenchmark(mode, scope, lastGenMs, lastBatchId, { forceFresh: fresh });
-      toast.success(fresh ? "Benchmark re-run (fresh)" : "Benchmark complete");
+      console.log("[perf] benchmark completed");
+      toast.success("Benchmark completed");
+    } catch (e: any) {
+      console.error("[perf] benchmark error", e);
+      toast.error(`Benchmark failed: ${e?.message ?? e}`);
     } finally {
       setBenchRunning(false);
     }
