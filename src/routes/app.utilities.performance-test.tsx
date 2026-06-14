@@ -380,6 +380,13 @@ function PerformanceTestPage() {
       const batchId = `batch_${Date.now()}`;
       const ratioSum = types.reduce((a, t) => a + t.defaultRatio, 0);
       const plan = types.map((t) => ({ type: t.key, count: Math.round((t.defaultRatio / ratioSum) * total) }));
+      const planMap: Record<string, number> = {};
+      plan.forEach((p) => { planMap[p.type] = p.count; });
+      setExpectedPlan(planMap);
+      setExpectedTotal(plan.reduce((a, p) => a + p.count, 0));
+      // Invalidate benchmark caches when data changes
+      await clearAllSummaries();
+
 
       const CHUNK = 1000;
       const t0 = performance.now();
