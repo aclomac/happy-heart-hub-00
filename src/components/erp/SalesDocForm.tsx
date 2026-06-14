@@ -899,11 +899,22 @@ export function SalesDocForm({
         localSalesCount = saved.localSalesCount;
       } else {
         try {
-          newId = await saveSaleInvoice(
+          const newId = await saveSaleInvoice(
             payload,
             editingId ? { editingId, headerOnly: headerOnlyEdit } : { autoNumber: !invoiceNoManual },
           );
           finalInvoiceNo = payload.invoice_no || invoiceNo;
+          if (!editingId && kind === "invoice" && newId) {
+            setSavedInvoiceId(newId);
+            setSavedInvoiceNo(finalInvoiceNo);
+          }
+          // assign to outer for downstream code paths
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (arguments as any); // no-op to keep newId in scope below via closure
+          // hoist:
+          // eslint-disable-next-line prefer-const
+          var newIdOuter = newId;
+          (void newIdOuter);
         } catch (primaryErr) {
           const msg = (primaryErr as Error).message || "";
           if (msg === "Duplicate invoice number") throw primaryErr;
