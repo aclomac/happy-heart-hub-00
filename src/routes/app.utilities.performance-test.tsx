@@ -769,10 +769,14 @@ function PerformanceTestPage() {
       setExistingNow(liveCount);
 
       if (scopeKey === "all" && liveCount === 0) {
-        throw new Error("Generate performance data first, then build cache");
+        setCacheStatus({ state: "Missing" });
+        toast.error("Generate performance data first, then build cache");
+        return;
       }
       if (scopeKey === "batch" && (!bid || lastBatchCount === 0)) {
-        throw new Error("No batch in this session — switch to All PERF Records");
+        setCacheStatus({ state: "Missing" });
+        toast.error("No batch in this session — switch to All PERF Records");
+        return;
       }
 
       await clearSummaryKey(cacheKeyFor(scopeKey, bid));
