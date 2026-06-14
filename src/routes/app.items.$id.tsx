@@ -259,7 +259,7 @@ function ItemDetailPage() {
     queryKey: ["item-detail-parties", id, partyIds.join(",")],
     enabled: !!companyId && partyIds.length > 0,
     queryFn: async () => {
-      const { data } = await sb.from("parties").select("id,name").in("id", partyIds);
+      const { data } = await sb.from("parties").select("id,name").in("id", partyIds).is("deleted_at", null);
       return (data ?? []) as Array<{ id: string; name: string }>;
     },
   });
