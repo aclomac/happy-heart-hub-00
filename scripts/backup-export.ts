@@ -164,6 +164,24 @@ async function main() {
   const releaseNotes = safeRead(join(ROOT, "RELEASE_NOTES.md")) ?? "";
   const buildInfo = safeRead(join(ROOT, "src/lib/build-info.ts")) ?? "";
 
+  // Optional company-scoped DB snapshot — only when --snapshot is passed
+  // AND a company id is provided AND service-role creds are present.
+  let snapshot: Awaited<ReturnType<typeof buildCompanySnapshot>> = null;
+  if (WANT_SNAPSHOT) {
+    if (!SNAPSHOT_COMPANY_ID) {
+      console.warn(
+        "[backup] --snapshot requires --company-id=<uuid> (or ERPOVO_BACKUP_COMPANY_ID). Skipping snapshot.",
+      );
+    } else {
+      console.log(`[backup] building DB snapshot for company ${SNAPSHOT_COMPANY_ID}...`);
+      snapshot = await buildCompanySnapshot(SNAPSHOT_COMPANY_ID);
+      if (snapshot) {
+        const total = snapshot.manifest.tables.reduce((n, t) => n + t.rows, 0);
+        console.log(`[backup] snapshot: ${total} rows across ${snapshot.manifest.tables.length} tables`);
+      }
+    }
+  }
+
   const manifest = {
     app: "erpovo",
     kind: "stable-build-snapshot",
@@ -192,25 +210,26 @@ async function main() {
         : { included: false, reason: "no .output or dist directory found" },
       release_notes: !!releaseNotes,
       build_info: !!buildInfo,
+      snapshot: snapshot
+        ? {
+            included: true,
+            company_id: snapshot.manifest.company_id,
+            tables: snapshot.manifest.tables,
+            path: "snapshot/data.json",
+          }
+        : { included: false, reason: WANT_SNAPSHOT ? "missing creds or company id" : "not requested" },
     },
-    database: {
-      // No live DB rows are exported here. Use the in-app Backup/Restore
-      // (Utilities → Backup) for company-scoped data exports — those go
-      // through src/lib/erpovo-backup.ts and respect RLS + company_id.
-      strategy: "metadata-only",
-      note: "Database rows are NOT included. Use Utilities → Backup in-app for a company-scoped data ZIP.",
-      safe_tables_reference: [
-        "items",
-        "item_categories",
-        "units",
-        "parties",
-        "party_groups",
-        "warehouses",
-        "item_store_stock",
-        "other_income_categories",
-        "other_incomes",
-      ],
-    },
+    database: snapshot
+      ? {
+          strategy: "company-scoped-snapshot",
+          note: "Optional company-scoped snapshot included under snapshot/. Restore via Utilities → Backup using readErpovoBackup().",
+          safe_tables_reference: [...SAFE_TABLES],
+        }
+      : {
+          strategy: "metadata-only",
+          note: "Database rows are NOT included. Re-run with --snapshot --company-id=<uuid> (and SUPABASE_SERVICE_ROLE_KEY) to include a company-scoped snapshot.",
+          safe_tables_reference: [...SAFE_TABLES],
+        },
     excluded: [
       ".env / .env.* (secrets)",
       "node_modules",
@@ -223,7 +242,7 @@ async function main() {
         "2. Run `bun install` to restore dependencies.",
         "3. Run `bun run build` (or unzip the included .output/ for the prebuilt artifact).",
         "4. Run `bunx tsc --noEmit` and `bun run test` to confirm parity (expect 1311/1314).",
-        "5. For data, import the latest in-app Utilities → Backup ZIP into the target company.",
+        "5. For data, either import the in-app Utilities → Backup ZIP, or upload snapshot/data.json + snapshot/manifest.json via readErpovoBackup() into the target company.",
       ],
     },
   };
@@ -233,6 +252,13 @@ async function main() {
   zip.file("manifest.json", JSON.stringify(manifest, null, 2));
   if (releaseNotes) zip.file("RELEASE_NOTES.md", releaseNotes);
   if (buildInfo) zip.file("build-info.ts", buildInfo);
+
+  if (snapshot) {
+    // Layout matches src/lib/erpovo-backup.ts so readErpovoBackup() can
+    // consume snapshot/ directly after unzipping.
+    zip.file("snapshot/manifest.json", JSON.stringify(snapshot.manifest, null, 2));
+    zip.file("snapshot/data.json", JSON.stringify(snapshot.data, null, 2));
+  }
 
   for (const f of buildFiles) {
     const inOutput = f.abs.startsWith(outputDir);
@@ -247,9 +273,10 @@ async function main() {
   console.log(`[backup] ✅ wrote ${OUT_FILE} (${sizeMB} MB)`);
   console.log(`[backup] git: ${git.shortStat}`);
   console.log(
-    `[backup] contents: ${buildFiles.length} build files + manifest + release notes + build info`,
+    `[backup] contents: ${buildFiles.length} build files + manifest + release notes + build info${snapshot ? " + DB snapshot" : ""}`,
   );
 }
+
 
 main().catch((err) => {
   console.error("[backup] FAILED:", err);
