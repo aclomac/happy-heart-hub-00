@@ -40,9 +40,10 @@ export const Route = createFileRoute("/app/utilities/performance-test")({
 
 // ─────────────────────────────── IndexedDB helpers ───────────────────────────
 const DB_NAME = "erpovo_perf_test";
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const STORE = "records";
 const SUMMARY_STORE = "summaries";
+const PERF_CACHE_VERSION = "perf-cache-v3";
 
 function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -189,15 +190,18 @@ async function getCachedSummary(key: string): Promise<any | null> {
 }
 
 async function setCachedSummary(key: string, summary: any): Promise<void> {
-  try {
-    const db = await openDB();
-    return new Promise((resolve) => {
-      const tx = db.transaction(SUMMARY_STORE, "readwrite");
-      tx.objectStore(SUMMARY_STORE).put({ key, ...summary, cachedAt: Date.now() });
-      tx.oncomplete = () => { db.close(); resolve(); };
-      tx.onerror = () => { db.close(); resolve(); };
-    });
-  } catch { /* noop */ }
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    if (!db.objectStoreNames.contains(SUMMARY_STORE)) {
+      db.close();
+      reject(new Error("PERF cache store is unavailable"));
+      return;
+    }
+    const tx = db.transaction(SUMMARY_STORE, "readwrite");
+    tx.objectStore(SUMMARY_STORE).put({ key, ...summary, cachedAt: Date.now() });
+    tx.oncomplete = () => { db.close(); resolve(); };
+    tx.onerror = () => { db.close(); reject(tx.error ?? new Error("Failed to save PERF cache")); };
+  });
 }
 
 async function clearSummaryKey(key: string): Promise<void> {
@@ -298,9 +302,12 @@ interface PerfAggregate {
   scope: "all" | "batch";
   scopeId: string;
   builtAt: number;
+  cacheVersion: string;
   recordsIndexed: number;
   countsByType: Record<string, number>;
   dashboardSummary: { totalSales: number; totalPayments: number; salesCount: number; paymentsCount: number };
+  salesSummary: { totalSales: number; salesCount: number; pageSize: number };
+  itemSummary: { itemCount: number; pageSize: number };
   salesPage: any[];
   itemsPage: any[];
   reportsSummary: { salesTotal: number; purchasesTotal: number; expensesTotal: number; stockMoves: number };
@@ -359,6 +366,7 @@ async function buildPerfCache(scope: "all" | "batch", batchId?: string | null): 
   const agg: PerfAggregate = {
     scope, scopeId: scope === "batch" ? (batchId ?? "") : "__all__",
     builtAt: Date.now(),
+    cacheVersion: PERF_CACHE_VERSION,
     recordsIndexed,
     countsByType: counts,
     dashboardSummary: {
@@ -366,6 +374,15 @@ async function buildPerfCache(scope: "all" | "batch", batchId?: string | null): 
       totalPayments: paymentsTotal,
       salesCount: counts.sales || 0,
       paymentsCount: counts.payments || 0,
+    },
+    salesSummary: {
+      totalSales: salesTotal,
+      salesCount: counts.sales || 0,
+      pageSize: salesPage.length,
+    },
+    itemSummary: {
+      itemCount: counts.items || 0,
+      pageSize: itemsPage.length,
     },
     salesPage,
     itemsPage,
@@ -377,14 +394,26 @@ async function buildPerfCache(scope: "all" | "batch", batchId?: string | null): 
     },
     searchIndexSample: searchSample,
   };
-  await setCachedSummary(cacheKeyFor(scope, batchId), { aggregate: agg });
+  await setCachedSummary(cacheKeyFor(scope, batchId), {
+    scope: agg.scope,
+    recordsIndexed: agg.recordsIndexed,
+    builtAt: agg.builtAt,
+    cacheVersion: agg.cacheVersion,
+    dashboardSummary: agg.dashboardSummary,
+    salesSummary: agg.salesSummary,
+    reportsSummary: agg.reportsSummary,
+    itemSummary: agg.itemSummary,
+    aggregate: agg,
+  });
   console.log("[perf] buildPerfCache completed", { recordsIndexed });
   return agg;
 }
 
 async function getPerfCache(scope: "all" | "batch", batchId?: string | null): Promise<PerfAggregate | null> {
   const row = await getCachedSummary(cacheKeyFor(scope, batchId));
-  return row?.aggregate ?? null;
+  const aggregate = row?.aggregate as PerfAggregate | undefined;
+  if (!aggregate || aggregate.cacheVersion !== PERF_CACHE_VERSION) return null;
+  return aggregate;
 }
 
 // ────────────────────────────────── Page ─────────────────────────────────────
@@ -600,8 +629,23 @@ function PerformanceTestPage() {
     if (!fresh) {
       agg = await getPerfCache(scopeKey, bid);
       if (!agg) {
-        toast.message("Building PERF cache…");
-        agg = await buildPerfCache(scopeKey, bid);
+        setCacheBuilding(true);
+        setCacheError(null);
+        setCacheStatus({ state: "Building" });
+        toast.message("Building PERF cache...");
+        try {
+          agg = await buildPerfCache(scopeKey, bid);
+          setCacheStatus({ state: "Ready", builtAt: agg.builtAt, recordsIndexed: agg.recordsIndexed });
+          toast.success("PERF cache built successfully");
+        } catch (e: any) {
+          const reason = e?.message ?? String(e);
+          setCacheError(reason);
+          setCacheStatus({ state: "Missing", error: reason });
+          throw new Error(`PERF cache build failed: ${reason}`);
+        } finally {
+          setCacheBuilding(false);
+          setCacheStatusVersion((v) => v + 1);
+        }
       }
     }
 
@@ -653,16 +697,7 @@ function PerformanceTestPage() {
       itemsMs = await time(async () => { void a.itemsPage.slice(0, 100); });
       salesMs = await time(async () => { void a.salesPage.slice(0, 100); });
       reportsMs = await time(async () => { void a.reportsSummary; });
-      searchMs = await time(async () => {
-        const db = await openDB();
-        await new Promise<void>((res) => {
-          const tx = db.transaction(STORE, "readonly");
-          const idx = tx.objectStore(STORE).index("by_name_search");
-          const req = idx.getAll(IDBKeyRange.bound("item 1", "item 1\uffff"), 25);
-          req.onsuccess = () => { db.close(); res(); };
-          req.onerror = () => { db.close(); res(); };
-        });
-      });
+      searchMs = await time(async () => { void a.searchIndexSample.slice(0, 25); });
       diag = {
         usedCache: true, usedFullScan: false, indexUsed: true,
         rowsScanned: 0,
@@ -693,25 +728,27 @@ function PerformanceTestPage() {
   // ── PERF cache status (for the visible Cache Status card) ─────────────────
   const [cacheStatusVersion, setCacheStatusVersion] = useState(0);
   const [cacheStatus, setCacheStatus] = useState<{
-    state: "Ready" | "Missing" | "Rebuilding";
+    state: "Ready" | "Missing" | "Building";
     builtAt?: number;
     recordsIndexed?: number;
+    error?: string;
   }>({ state: "Missing" });
   const [cacheBuilding, setCacheBuilding] = useState(false);
+  const [cacheError, setCacheError] = useState<string | null>(null);
   useEffect(() => {
     (async () => {
       const scopeKey: "all" | "batch" = benchMode === "last_batch" ? "batch" : "all";
       const bid = benchMode === "last_batch" ? lastBatchId : null;
       const c = await getPerfCache(scopeKey, bid);
       if (cacheBuilding) {
-        setCacheStatus({ state: "Rebuilding" });
+        setCacheStatus({ state: "Building" });
       } else if (c) {
         setCacheStatus({ state: "Ready", builtAt: c.builtAt, recordsIndexed: c.recordsIndexed });
       } else {
-        setCacheStatus({ state: "Missing" });
+        setCacheStatus({ state: "Missing", error: cacheError ?? undefined });
       }
     })();
-  }, [benchMode, lastBatchId, cacheStatusVersion, cacheBuilding, existingNow]);
+  }, [benchMode, lastBatchId, cacheStatusVersion, cacheBuilding, cacheError, existingNow]);
 
   const buildOrRebuildCache = async () => {
     console.log("[perf] Build cache clicked", { benchMode, lastBatchId, existingNow, cacheBuilding });
@@ -719,33 +756,41 @@ function PerformanceTestPage() {
     const scopeKey: "all" | "batch" = benchMode === "last_batch" ? "batch" : "all";
     const bid = benchMode === "last_batch" ? lastBatchId : null;
 
-    // Re-check fresh count from DB (don't trust stale state)
-    const liveCount = await countPerf();
-    console.log("[perf] PERF records count (live)", liveCount);
-    setExistingNow(liveCount);
-
-    if (scopeKey === "all" && liveCount === 0) {
-      toast.error("Generate performance data first, then build cache");
-      return;
-    }
-    if (scopeKey === "batch" && (!bid || lastBatchCount === 0)) {
-      toast.error("No batch in this session — switch to All PERF Records");
-      return;
-    }
-
     setCacheBuilding(true);
+    setCacheError(null);
+    setCacheStatus({ state: "Building" });
     const t0 = performance.now();
     console.log("[perf] Cache build started");
     toast.message("Building PERF cache...");
     try {
+      // Re-check fresh count from DB (don't trust stale state)
+      const liveCount = await countPerf();
+      console.log("[perf] PERF records count (live)", liveCount);
+      setExistingNow(liveCount);
+
+      if (scopeKey === "all" && liveCount === 0) {
+        setCacheStatus({ state: "Missing" });
+        toast.error("Generate performance data first, then build cache");
+        return;
+      }
+      if (scopeKey === "batch" && (!bid || lastBatchCount === 0)) {
+        setCacheStatus({ state: "Missing" });
+        toast.error("No batch in this session — switch to All PERF Records");
+        return;
+      }
+
       await clearSummaryKey(cacheKeyFor(scopeKey, bid));
       const agg = await buildPerfCache(scopeKey, bid);
       const ms = Math.round(performance.now() - t0);
       console.log("[perf] Cache build completed", { ms, recordsIndexed: agg.recordsIndexed });
-      toast.success(`PERF cache built successfully (${agg.recordsIndexed.toLocaleString()} rows · ${ms} ms)`);
+      setCacheStatus({ state: "Ready", builtAt: agg.builtAt, recordsIndexed: agg.recordsIndexed });
+      toast.success("PERF cache built successfully");
     } catch (e: any) {
       console.error("[perf] Cache build error", e);
-      toast.error(`PERF cache build failed: ${e?.message ?? e}`);
+      const reason = e?.message ?? String(e);
+      setCacheError(reason);
+      setCacheStatus({ state: "Missing", error: reason });
+      toast.error(`PERF cache build failed: ${reason}`);
     } finally {
       setCacheBuilding(false);
       setCacheStatusVersion((v) => v + 1);
@@ -1001,22 +1046,26 @@ function PerformanceTestPage() {
                       className={
                         cacheStatus.state === "Ready"
                           ? "text-success"
-                          : cacheStatus.state === "Rebuilding"
+                          : cacheStatus.state === "Building"
                           ? "text-warning"
                           : "text-destructive"
                       }
                     >
-                      {cacheBuilding ? "Rebuilding" : cacheStatus.state}
+                      {cacheBuilding ? "Building" : cacheStatus.state}
                     </strong>
                   </span>
                   <Button size="sm" variant="outline" onClick={() => void buildOrRebuildCache()} disabled={cacheBuilding || benchRunning || running}>
                     {cacheBuilding ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Database className="w-3 h-3 mr-1" />}
-                    Build/Rebuild PERF Cache
+                    {cacheBuilding ? "Building PERF cache..." : "Build/Rebuild PERF Cache"}
                   </Button>
                 </div>
                 <div className="text-muted-foreground">
-                  {cacheStatus.builtAt
+                  {cacheBuilding
+                    ? "Building PERF cache..."
+                    : cacheStatus.builtAt
                     ? `Built at ${new Date(cacheStatus.builtAt).toLocaleTimeString()} · ${(cacheStatus.recordsIndexed ?? 0).toLocaleString()} rows indexed`
+                    : cacheStatus.error
+                    ? `PERF cache build failed: ${cacheStatus.error}`
                     : "Cache not built yet. Cached benchmarks will build it on first run."}
                 </div>
               </div>
