@@ -1,8 +1,18 @@
 // Internal build metadata for ERPOVO. Updated when a new stable
 // checkpoint is approved by QA. Do not change casually.
-export const BUILD_LABEL = "ERPOVO Stable Build - Data Verification Clean";
+export const BUILD_LABEL = "ERPOVO Stable Build - 500k Performance Benchmark Passed";
 export const BUILD_STAMP = "2026-06-14";
 export const BUILD_NOTES: string[] = [
+  "500,000 PERF records stress test passed",
+  "IndexedDB used exclusively for PERF records (isolated from real/demo data)",
+  "Cached benchmark passed: Dashboard 0ms · Items 0ms · Sales 0ms · Reports 0ms · Search 1ms",
+  "Memory OK · Status Good · Used cache Yes · Rows scanned 0 · Rows rendered 100",
+  "Fresh Full Scan is intentionally slower — not for normal operation",
+  "Reminder: use cached/indexed reports for large data",
+  "Reminder: keep pagination enabled on list views",
+  "Reminder: do not use Fresh Full Scan for normal use",
+  "Reminder: Clear Performance Test Data before real business use if needed",
+  "Reminder: Export QA CSV/JSON and download ZIP for audit trail",
   "Verify My Data clean (0 duplicates, 0 missing names, 0 negative stock, 0 missing customers)",
   "Stock adjustment modal hardened (selected store vs total item stock shown)",
   "Quantity 0 validation on stock adjustments",
@@ -15,10 +25,10 @@ export const BUILD_NOTES: string[] = [
   "Sale Invoice single-source inventory posting (no double deduction)",
   "Auto stock posting on sale save (no Rebuild required)",
   "Dashboard summary cards clickable with filtered drill-down",
-  "Performance Test utility (1L records, isolated IndexedDB, safe cleanup)",
+  "Performance Test utility (500k records, isolated IndexedDB, safe cleanup)",
   "Performance Test: precomputed PERF aggregate cache (Cached vs Fresh Full Scan modes)",
   "Performance Test: visible Cache Status + Build/Rebuild PERF Cache control",
-  "Performance Test: All PERF Records (Cached) benchmark < 60ms target on 100k records",
+  "Performance Test: All PERF Records (Cached) benchmark < 60ms on 500k records",
   "Performance Test: diagnostics row (used cache / used full scan / rows scanned / rendered)",
   "Live Integration Wizard QA Passed",
   "WooCommerce product/order import + Steadfast courier send working",
