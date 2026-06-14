@@ -595,7 +595,7 @@ export function SalesDocForm({
     }
   };
 
-  const saveInvoiceFallback = (payload: SaleInvoiceInput) => {
+  const saveInvoiceFallback = async (payload: SaleInvoiceInput) => {
     const sales = readLocalArray<Record<string, unknown>>("erpovo_demo_sales");
     const saleItems = readLocalArray<Record<string, unknown>>("erpovo_demo_sale_items");
     const id = editingId || `local-sale-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
