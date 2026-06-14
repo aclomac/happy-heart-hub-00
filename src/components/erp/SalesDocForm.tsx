@@ -908,13 +908,9 @@ export function SalesDocForm({
             setSavedInvoiceId(newId);
             setSavedInvoiceNo(finalInvoiceNo);
           }
-          // assign to outer for downstream code paths
+          // propagate to outer scope used by inventory verify / debug / attachments
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (arguments as any); // no-op to keep newId in scope below via closure
-          // hoist:
-          // eslint-disable-next-line prefer-const
-          var newIdOuter = newId;
-          (void newIdOuter);
+          (newId as any) && (Object.assign(outerRef, { id: newId }));
         } catch (primaryErr) {
           const msg = (primaryErr as Error).message || "";
           if (msg === "Duplicate invoice number") throw primaryErr;
