@@ -755,6 +755,8 @@ function PerformanceTestPage() {
     }
 
     setCacheBuilding(true);
+    setCacheError(null);
+    setCacheStatus({ state: "Building" });
     const t0 = performance.now();
     console.log("[perf] Cache build started");
     toast.message("Building PERF cache...");
@@ -763,10 +765,14 @@ function PerformanceTestPage() {
       const agg = await buildPerfCache(scopeKey, bid);
       const ms = Math.round(performance.now() - t0);
       console.log("[perf] Cache build completed", { ms, recordsIndexed: agg.recordsIndexed });
+      setCacheStatus({ state: "Ready", builtAt: agg.builtAt, recordsIndexed: agg.recordsIndexed });
       toast.success(`PERF cache built successfully (${agg.recordsIndexed.toLocaleString()} rows · ${ms} ms)`);
     } catch (e: any) {
       console.error("[perf] Cache build error", e);
-      toast.error(`PERF cache build failed: ${e?.message ?? e}`);
+      const reason = e?.message ?? String(e);
+      setCacheError(reason);
+      setCacheStatus({ state: "Missing", error: reason });
+      toast.error(`PERF cache build failed: ${reason}`);
     } finally {
       setCacheBuilding(false);
       setCacheStatusVersion((v) => v + 1);
