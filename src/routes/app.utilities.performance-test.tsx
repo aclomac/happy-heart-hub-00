@@ -412,15 +412,24 @@ function PerformanceTestPage() {
     });
   };
 
+  const [benchRunning, setBenchRunning] = useState(false);
   const rerunBenchmark = async (mode: BenchMode, fresh = false) => {
+    if (benchRunning) return;
     setBenchMode(mode);
     const scope = mode === "last_batch" ? lastBatchCount : existingNow;
     if (scope === 0) {
-      toast.error(mode === "last_batch" ? "No last batch yet" : "No PERF records to benchmark");
+      toast.error(mode === "last_batch" ? "No last batch yet" : "Generate performance data first");
       return;
     }
-    await runBenchmark(mode, scope, lastGenMs, lastBatchId, { forceFresh: fresh });
+    setBenchRunning(true);
+    try {
+      await runBenchmark(mode, scope, lastGenMs, lastBatchId, { forceFresh: fresh });
+      toast.success(fresh ? "Benchmark re-run (fresh)" : "Benchmark complete");
+    } finally {
+      setBenchRunning(false);
+    }
   };
+
 
   const improvement = (before?: number, after?: number) => {
     if (before == null || after == null || before <= 0) return undefined;
