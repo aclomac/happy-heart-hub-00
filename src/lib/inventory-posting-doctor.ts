@@ -109,7 +109,7 @@ async function fetchSalesBundle(companyId: string) {
   const { data: lines, error: linesError } = await sb.from("sale_items").select("*").in("sale_id", ids);
   if (linesError) throw linesError;
   const partyIds = Array.from(new Set(saleRows.map((s) => s.party_id).filter(Boolean)));
-  const { data: parties } = partyIds.length ? await sb.from("parties").select("id,name").in("id", partyIds) : { data: [] };
+  const { data: parties } = partyIds.length ? await sb.from("parties").select("id,name").in("id", partyIds).is("deleted_at", null) : { data: [] };
   return {
     sales: saleRows,
     lines: (lines ?? []) as AnyRow[],
