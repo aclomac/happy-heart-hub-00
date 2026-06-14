@@ -25,10 +25,12 @@ function run(step: Step): Result {
 }
 
 function parseVitestCounts(out: string): { passed: number; failed: number; skipped: number } {
-  // Match "Tests   1332 passed | 0 failed (1335)" style summary.
-  const passed = Number(out.match(/(\d+)\s+passed/)?.[1] ?? 0);
-  const failed = Number(out.match(/(\d+)\s+failed/)?.[1] ?? 0);
-  const skipped = Number(out.match(/(\d+)\s+skipped/)?.[1] ?? 0);
+  // Vitest prints two summary lines: "Test Files ... passed (N)" then
+  // "Tests   X passed | Y failed | Z skipped (T)". Match the Tests line only.
+  const line = out.split("\n").find((l) => /^\s*Tests\s/.test(l)) ?? "";
+  const passed = Number(line.match(/(\d+)\s+passed/)?.[1] ?? 0);
+  const failed = Number(line.match(/(\d+)\s+failed/)?.[1] ?? 0);
+  const skipped = Number(line.match(/(\d+)\s+skipped/)?.[1] ?? 0);
   return { passed, failed, skipped };
 }
 
