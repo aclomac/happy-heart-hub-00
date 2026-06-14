@@ -26,7 +26,7 @@ const PKG = {
   filename: "erpovo-release-package-2026-06-14T19-04-08.zip",
   href: "/releases/erpovo-release-package-2026-06-14T19-04-08.zip",
   sizeLabel: "3.27 MB",
-  expectedSizeBytes: 3_429_888, // ~3.27 MB; tolerated within ±5%
+  expectedSizeBytes: 3_428_504,
   generatedAt: "2026-06-14T19:04:08Z",
   totalEntries: 714,
   buildFiles: 693,
