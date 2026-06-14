@@ -308,8 +308,10 @@ interface Bench {
   memoryWarn: boolean;
   status: Status;
   cached: boolean;
-  previous?: Omit<Bench, "previous" | "cached"> | null;
+  source: "cache" | "fresh";
+  previous?: Omit<Bench, "previous" | "cached" | "source"> | null;
 }
+
 
 function PerformanceTestPage() {
   const navigate = useNavigate();
