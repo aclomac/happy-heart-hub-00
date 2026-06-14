@@ -713,8 +713,8 @@ function PreferencesTab() {
     },
     {
       key: "stopSaleOnNegativeStock",
-      title: "Stop sale on negative stock",
-      desc: "Prevent over-selling",
+      title: "Stop sale on negative stock (block over-selling)",
+      desc: "When ON, sale invoice and POS will refuse to save if a line quantity exceeds available stock. Turn OFF to allow negative stock.",
     },
     {
       key: "autoSmsOnSale",

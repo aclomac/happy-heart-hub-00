@@ -30,6 +30,7 @@ type NegStockRow = {
   expectedStock: number;
   delta: number;
   reason: string;
+  recommendedAction: string;
 };
 
 type MissingCustSale = {
@@ -123,8 +124,14 @@ function VerifyData() {
         });
         const stock = Number(it.stock);
         let reason = "Sale recorded without enough stock";
-        if (purchQty === 0 && salesQty > 0) reason = "Missing purchase / opening stock";
-        else if (expected !== stock) reason = "Stock vs ledger mismatch";
+        let recommendedAction = "Adjust stock or use Set Current Stock on the item.";
+        if (purchQty === 0 && salesQty > 0) {
+          reason = "Missing purchase / opening stock";
+          recommendedAction = "Add purchase / opening stock or adjust stock.";
+        } else if (expected !== stock) {
+          reason = "Stock vs ledger mismatch";
+          recommendedAction = "Check duplicate stock movements or recalculate from ledger.";
+        }
         negStock.push({
           id: it.id,
           name: it.name,
@@ -134,6 +141,7 @@ function VerifyData() {
           expectedStock: expected,
           delta: expected - stock,
           reason,
+          recommendedAction,
         });
       }
 
@@ -335,7 +343,10 @@ function VerifyData() {
                         <td className={`text-right ${r.delta >= 0 ? "num-pos" : "num-neg"}`}>
                           {r.delta >= 0 ? "+" : ""}{r.delta} {r.unit}
                         </td>
-                        <td className="text-xs text-muted-foreground">{r.reason}</td>
+                        <td className="text-xs text-muted-foreground">
+                          <div>{r.reason}</div>
+                          <div className="text-[11px] italic">→ {r.recommendedAction}</div>
+                        </td>
                         <td className="text-right whitespace-nowrap">
                           <Link to="/app/items/$id" params={{ id: r.id }}>
                             <Button variant="outline" size="sm" className="h-7 mr-1">

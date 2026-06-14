@@ -27,6 +27,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCurrentCompanyId } from "@/lib/use-company";
 import { downloadCSV } from "@/lib/csv";
 import { ItemEditDialog } from "@/components/erp/ItemEditDialog";
+import { postStockAdjustment, getDefaultWarehouseId } from "@/lib/stock";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const sb = supabase as any;
@@ -84,6 +94,9 @@ function ItemDetailPage() {
   const [tab, setTab] = useState("overview");
   const [scrolled, setScrolled] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [setStockOpen, setSetStockOpen] = useState<"set" | "opening" | null>(null);
+  const [setStockQty, setSetStockQty] = useState("");
+  const [stockBusy, setStockBusyFlag] = useState(false);
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 200);
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -725,6 +738,12 @@ function ItemDetailPage() {
           <Sliders className="w-4 h-4 mr-1" /> Adjust Stock
         </Link>
       </Button>
+      <Button variant="outline" size="sm" onClick={() => { setSetStockQty(""); setSetStockOpen("opening"); }}>
+        <Plus className="w-4 h-4 mr-1" /> Set Opening Stock
+      </Button>
+      <Button variant="outline" size="sm" onClick={() => { setSetStockQty(String(it.stock)); setSetStockOpen("set"); }}>
+        <Sliders className="w-4 h-4 mr-1" /> Set Current Stock
+      </Button>
       <Button asChild variant="outline" size="sm">
         <Link to="/app/stock-transfers" search={{}}>
           <ArrowLeftRight className="w-4 h-4 mr-1" /> Transfer
@@ -797,7 +816,24 @@ function ItemDetailPage() {
         </div>
       </div>
 
-      {low && (
+      {Number(it.stock) < 0 && (
+        <div className="mb-4 rounded-md border border-red-300 bg-red-50 text-red-900 px-3 py-2 text-sm flex items-start gap-2 flex-wrap">
+          <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <div className="font-medium">Negative stock: {it.stock} {it.unit}</div>
+            <div className="text-xs">
+              This item has negative stock because sold quantity is greater than available stock / purchase stock.
+              Use <span className="font-medium">Add Purchase</span>, <span className="font-medium">Set Opening Stock</span>,
+              or <span className="font-medium">Set Current Stock</span> to correct it.
+            </div>
+          </div>
+          <Button size="sm" variant="default" className="ml-auto" onClick={() => { setSetStockQty("0"); setSetStockOpen("set"); }}>
+            <Sliders className="w-3.5 h-3.5 mr-1" /> Correct now
+          </Button>
+        </div>
+      )}
+
+      {low && Number(it.stock) >= 0 && (
         <div className="mb-4 rounded-md border border-yellow-200 bg-yellow-50 text-yellow-900 px-3 py-2 text-sm flex items-center gap-2">
           <AlertTriangle className="w-4 h-4" /> Low stock: current {it.stock} ≤ alert {it.low_stock_alert}.
         </div>
@@ -1044,6 +1080,93 @@ function ItemDetailPage() {
         open={editOpen}
         onOpenChange={setEditOpen}
       />
+
+      <Dialog open={setStockOpen !== null} onOpenChange={(o) => !o && setSetStockOpen(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {setStockOpen === "opening" ? "Set Opening Stock" : "Set Current Stock"}
+            </DialogTitle>
+            <DialogDescription>
+              {setStockOpen === "opening"
+                ? "Record opening stock for this item. This adds to the current stock."
+                : "Change the current stock to an exact value. The system will create a stock adjustment for the difference."}
+            </DialogDescription>
+          </DialogHeader>
+          {(() => {
+            const target = Number(setStockQty);
+            const cur = Number(it.stock) || 0;
+            const isValid = setStockQty !== "" && !Number.isNaN(target);
+            const delta = setStockOpen === "opening" ? (isValid ? Math.abs(target) : 0) : (isValid ? target - cur : 0);
+            const final = setStockOpen === "opening" ? cur + delta : (isValid ? target : cur);
+            return (
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="set-stock-qty">
+                    {setStockOpen === "opening" ? "Opening qty" : "New stock value"}
+                  </Label>
+                  <Input
+                    id="set-stock-qty"
+                    type="number"
+                    value={setStockQty}
+                    onChange={(e) => setSetStockQty(e.target.value)}
+                    autoFocus
+                  />
+                </div>
+                <div className="rounded-md border bg-muted/30 px-3 py-2 text-sm space-y-1">
+                  <div className="flex justify-between"><span className="text-muted-foreground">Current stock</span><span className={cur < 0 ? "num-neg font-medium" : "font-medium"}>{cur} {it.unit}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Adjustment</span><span className={delta >= 0 ? "num-pos font-medium" : "num-neg font-medium"}>{delta >= 0 ? "+" : ""}{delta} {it.unit}</span></div>
+                  <div className="flex justify-between border-t pt-1"><span className="text-muted-foreground">Final stock</span><span className="font-semibold">{final} {it.unit}</span></div>
+                </div>
+              </div>
+            );
+          })()}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSetStockOpen(null)} disabled={stockBusy}>Cancel</Button>
+            <Button
+              disabled={stockBusy || setStockQty === "" || Number.isNaN(Number(setStockQty))}
+              onClick={async () => {
+                const target = Number(setStockQty);
+                const cur = Number(it.stock) || 0;
+                if (setStockOpen === "set" && target === cur) {
+                  toast.info("Stock is already at this value.");
+                  return;
+                }
+                if (!companyId) return;
+                setStockBusyFlag(true);
+                try {
+                  const wh = await getDefaultWarehouseId(companyId);
+                  if (!wh) {
+                    toast.error("No default warehouse configured.");
+                    return;
+                  }
+                  const res = await postStockAdjustment({
+                    companyId,
+                    itemId: it.id,
+                    warehouseId: wh,
+                    type: setStockOpen === "opening" ? "opening" : "set",
+                    qtyInput: target,
+                    currentStock: cur,
+                    reason: setStockOpen === "opening" ? "Opening stock" : "Set current stock",
+                  });
+                  if (!res.ok) {
+                    toast.error(res.error);
+                    return;
+                  }
+                  toast.success("Stock updated");
+                  setSetStockOpen(null);
+                  queryClient.invalidateQueries({ queryKey: ["item-detail-full", id] });
+                  queryClient.invalidateQueries({ queryKey: ["item-movements", id] });
+                } finally {
+                  setStockBusyFlag(false);
+                }
+              }}
+            >
+              Apply
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
