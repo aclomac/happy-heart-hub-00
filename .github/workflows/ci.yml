@@ -149,7 +149,7 @@ jobs:
             erpovo-release-audit*.pdf
             release-audit*.pdf
           if-no-files-found: ignore
-          retention-days: 30
+          retention-days: 90
 
 
       - name: Coverage report (non-blocking)
