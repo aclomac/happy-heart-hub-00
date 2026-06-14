@@ -412,15 +412,24 @@ function PerformanceTestPage() {
     });
   };
 
-  const rerunBenchmark = async (mode: BenchMode) => {
+  const rerunBenchmark = async (mode: BenchMode, fresh = false) => {
     setBenchMode(mode);
     const scope = mode === "last_batch" ? lastBatchCount : existingNow;
     if (scope === 0) {
       toast.error(mode === "last_batch" ? "No last batch yet" : "No PERF records to benchmark");
       return;
     }
-    await runBenchmark(mode, scope, lastGenMs, lastBatchId);
+    await runBenchmark(mode, scope, lastGenMs, lastBatchId, { forceFresh: fresh });
   };
+
+  const improvement = (before?: number, after?: number) => {
+    if (before == null || after == null || before <= 0) return undefined;
+    const pct = Math.round(((before - after) / before) * 100);
+    if (pct === 0) return `${before} → ${after} ms`;
+    const sign = pct > 0 ? "▼" : "▲";
+    return `${before} → ${after} ms (${sign} ${Math.abs(pct)}%)`;
+  };
+
 
   const cancel = () => { cancelRef.current = true; };
 
