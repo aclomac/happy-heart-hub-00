@@ -619,8 +619,23 @@ function PerformanceTestPage() {
     if (!fresh) {
       agg = await getPerfCache(scopeKey, bid);
       if (!agg) {
-        toast.message("Building PERF cache…");
-        agg = await buildPerfCache(scopeKey, bid);
+        setCacheBuilding(true);
+        setCacheError(null);
+        setCacheStatus({ state: "Building" });
+        toast.message("Building PERF cache...");
+        try {
+          agg = await buildPerfCache(scopeKey, bid);
+          setCacheStatus({ state: "Ready", builtAt: agg.builtAt, recordsIndexed: agg.recordsIndexed });
+          toast.success("PERF cache built successfully");
+        } catch (e: any) {
+          const reason = e?.message ?? String(e);
+          setCacheError(reason);
+          setCacheStatus({ state: "Missing", error: reason });
+          throw new Error(`PERF cache build failed: ${reason}`);
+        } finally {
+          setCacheBuilding(false);
+          setCacheStatusVersion((v) => v + 1);
+        }
       }
     }
 
@@ -672,16 +687,7 @@ function PerformanceTestPage() {
       itemsMs = await time(async () => { void a.itemsPage.slice(0, 100); });
       salesMs = await time(async () => { void a.salesPage.slice(0, 100); });
       reportsMs = await time(async () => { void a.reportsSummary; });
-      searchMs = await time(async () => {
-        const db = await openDB();
-        await new Promise<void>((res) => {
-          const tx = db.transaction(STORE, "readonly");
-          const idx = tx.objectStore(STORE).index("by_name_search");
-          const req = idx.getAll(IDBKeyRange.bound("item 1", "item 1\uffff"), 25);
-          req.onsuccess = () => { db.close(); res(); };
-          req.onerror = () => { db.close(); res(); };
-        });
-      });
+      searchMs = await time(async () => { void a.searchIndexSample.slice(0, 25); });
       diag = {
         usedCache: true, usedFullScan: false, indexUsed: true,
         rowsScanned: 0,
