@@ -19,11 +19,92 @@ import { existsSync, mkdirSync, readFileSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 import JSZip from "jszip";
 import { writeFile } from "node:fs/promises";
+import { createClient } from "@supabase/supabase-js";
 
 const ROOT = resolve(import.meta.dir, "..");
 const OUT_DIR = "/mnt/documents";
 const STAMP = new Date().toISOString().replace(/[:.]/g, "-");
 const OUT_FILE = join(OUT_DIR, `erpovo-stable-backup-${STAMP}.zip`);
+
+// CLI flags: --snapshot --company-id=<uuid>
+const ARGS = process.argv.slice(2);
+function flag(name: string): string | boolean | undefined {
+  const hit = ARGS.find((a) => a === `--${name}` || a.startsWith(`--${name}=`));
+  if (!hit) return undefined;
+  const eq = hit.indexOf("=");
+  return eq === -1 ? true : hit.slice(eq + 1);
+}
+const WANT_SNAPSHOT = !!flag("snapshot");
+const SNAPSHOT_COMPANY_ID =
+  (typeof flag("company-id") === "string" ? (flag("company-id") as string) : undefined) ??
+  process.env.ERPOVO_BACKUP_COMPANY_ID;
+
+// Mirrors SAFE_TABLES in src/lib/erpovo-backup.ts — no secrets, no auth, no payments.
+const SAFE_TABLES = [
+  "items",
+  "item_categories",
+  "units",
+  "parties",
+  "party_groups",
+  "warehouses",
+  "item_store_stock",
+  "other_income_categories",
+  "other_incomes",
+] as const;
+type SnapshotTableMeta = { name: string; rows: number; skipped?: boolean; error?: string };
+
+async function buildCompanySnapshot(companyId: string): Promise<{
+  manifest: {
+    app: "erpovo";
+    version: 1;
+    exported_at: string;
+    company_id: string;
+    tables: SnapshotTableMeta[];
+  };
+  data: Record<string, Record<string, unknown>[]>;
+} | null> {
+  const url = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) {
+    console.warn(
+      "[backup] --snapshot requested but SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY are not set. Skipping snapshot.",
+    );
+    return null;
+  }
+  const sb = createClient(url, key, { auth: { persistSession: false } });
+  const data: Record<string, Record<string, unknown>[]> = {};
+  const tables: SnapshotTableMeta[] = [];
+  for (const t of SAFE_TABLES) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: rows, error } = await (sb.from(t) as any)
+      .select("*")
+      .eq("company_id", companyId)
+      .is("deleted_at", null);
+    if (error) {
+      tables.push({ name: t, rows: 0, skipped: true, error: error.message });
+      continue;
+    }
+    const clean = ((rows ?? []) as Record<string, unknown>[]).map((r) => {
+      const o = { ...r };
+      for (const k of Object.keys(o)) {
+        if (/secret|token|password|api_key/i.test(k)) delete o[k];
+      }
+      return o;
+    });
+    data[t] = clean;
+    tables.push({ name: t, rows: clean.length });
+  }
+  return {
+    manifest: {
+      app: "erpovo",
+      version: 1,
+      exported_at: new Date().toISOString(),
+      company_id: companyId,
+      tables,
+    },
+    data,
+  };
+}
 
 type FileEntry = { abs: string; rel: string };
 
