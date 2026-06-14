@@ -1,4 +1,12 @@
 import { describe, it, expect, vi } from "vitest";
+
+// Mock supabase client BEFORE any module under test imports it.
+const insertSpy = vi.fn().mockResolvedValue({ error: null });
+const fromSpy = vi.fn(() => ({ insert: insertSpy }));
+vi.mock("@/integrations/supabase/client", () => ({
+  supabase: { from: fromSpy },
+}));
+
 import {
   DISABLED_TABLES,
   DISABLED_MESSAGE,
@@ -11,6 +19,7 @@ import {
   canRestore,
   type ChecklistInput,
 } from "@/lib/restore-safety";
+import { importErpovoBackup, readErpovoBackup } from "@/lib/erpovo-backup";
 
 const REQUIRED_DISABLED = [
   "sales",
