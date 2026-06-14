@@ -229,15 +229,25 @@ function RestoreBackupPage() {
   const [rows, setRows] = useState<ProgressRow[]>([]);
   const [summary, setSummary] = useState<HistoryEntry | null>(null);
   const [conflicts, setConflicts] = useState<ConflictRow[] | null>(null);
+  const [dryRunCompleted, setDryRunCompleted] = useState(false);
   const [history, setHistory] = useState<HistoryEntry[]>(() => (companyId ? loadHistory(companyId) : []));
 
-  const selectedTables = useMemo<SafeTable[]>(() => {
+  // Strip disabled (money-impacting) tables from selection regardless of UI state.
+  const { allowed: selectedTables, blocked: blockedSelected } = useMemo(() => {
     const allow = new Set(FILTER_MAP[filter]);
-    if (!preview) return [...allow] as SafeTable[];
-    return (Object.keys(preview.data) as SafeTable[]).filter((t) =>
-      (SAFE_TABLES as readonly string[]).includes(t) && allow.has(t),
-    );
+    const raw = preview
+      ? (Object.keys(preview.data) as SafeTable[]).filter(
+          (t) => (SAFE_TABLES as readonly string[]).includes(t) && allow.has(t),
+        )
+      : ([...allow] as SafeTable[]);
+    return filterDisabled(raw);
   }, [filter, preview]);
+
+  // Tables present in uploaded backup that are blocked by safety policy.
+  const lockedTablesInBackup = useMemo(() => {
+    if (!preview) return [] as string[];
+    return Object.keys(preview.data).filter((t) => DISABLED_TABLES.has(t));
+  }, [preview]);
 
   const totalRows = useMemo(() => {
     if (!preview) return 0;
