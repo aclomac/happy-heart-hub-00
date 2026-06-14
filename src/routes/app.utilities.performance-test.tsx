@@ -311,56 +311,74 @@ const cacheKeyFor = (scope: "all" | "batch", batchId?: string | null) =>
   `perf_cache:${scope}:${scope === "batch" ? (batchId ?? "") : "__all__"}`;
 
 async function buildPerfCache(scope: "all" | "batch", batchId?: string | null): Promise<PerfAggregate> {
-  const db = await openDB();
+  console.log("[perf] buildPerfCache started", { scope, batchId });
+  const useBatch = scope === "batch" && !!batchId;
+  const bid = useBatch ? (batchId as string) : undefined;
+
+  // Counts per type via index.count (fast, no row materialization)
+  const counts = await countPerfByType(bid);
+  const recordsIndexed = Object.values(counts).reduce((s, n) => s + n, 0);
+  console.log("[perf] buildPerfCache counts", counts, "total", recordsIndexed);
+
+  // Sum amounts per type via cursor on a single type range (only touches that type)
+  const sumAmount = (type: string): Promise<number> =>
+    new Promise(async (resolve) => {
+      const db = await openDB();
+      const tx = db.transaction(STORE, "readonly");
+      const store = tx.objectStore(STORE);
+      const range = useBatch
+        ? IDBKeyRange.only([type, bid])
+        : IDBKeyRange.only(type);
+      const idx = useBatch ? store.index("by_type_batch") : store.index("by_type");
+      let total = 0;
+      const cur = idx.openCursor(range);
+      cur.onsuccess = () => {
+        const c = cur.result;
+        if (!c) return;
+        total += Number((c.value as any).amount) || 0;
+        c.continue();
+      };
+      tx.oncomplete = () => { db.close(); resolve(total); };
+      tx.onerror = () => { db.close(); resolve(total); };
+    });
+
+  const [salesTotal, paymentsTotal, purchasesTotal, expensesTotal] = await Promise.all([
+    sumAmount("sales"),
+    sumAmount("payments"),
+    sumAmount("purchases"),
+    sumAmount("expenses"),
+  ]);
+
+  // Page samples via fast getAll(limit)
+  const [salesPage, itemsPage, searchSample] = await Promise.all([
+    readSample("sales", 100, bid),
+    readSample("items", 100, bid),
+    readSample("items", 25, bid),
+  ]);
+
   const agg: PerfAggregate = {
     scope, scopeId: scope === "batch" ? (batchId ?? "") : "__all__",
-    builtAt: Date.now(), recordsIndexed: 0, countsByType: {},
-    dashboardSummary: { totalSales: 0, totalPayments: 0, salesCount: 0, paymentsCount: 0 },
-    salesPage: [], itemsPage: [],
-    reportsSummary: { salesTotal: 0, purchasesTotal: 0, expensesTotal: 0, stockMoves: 0 },
-    searchIndexSample: [],
+    builtAt: Date.now(),
+    recordsIndexed,
+    countsByType: counts,
+    dashboardSummary: {
+      totalSales: salesTotal,
+      totalPayments: paymentsTotal,
+      salesCount: counts.sales || 0,
+      paymentsCount: counts.payments || 0,
+    },
+    salesPage,
+    itemsPage,
+    reportsSummary: {
+      salesTotal,
+      purchasesTotal,
+      expensesTotal,
+      stockMoves: counts.stock_movements || 0,
+    },
+    searchIndexSample: searchSample,
   };
-  await new Promise<void>((resolve) => {
-    const tx = db.transaction(STORE, "readonly");
-    const store = tx.objectStore(STORE);
-    const useBatch = scope === "batch" && batchId;
-    const cursorReq = useBatch
-      ? store.index("by_type_batch").openCursor()
-      : store.index("by_perf").openCursor(IDBKeyRange.only(1));
-    cursorReq.onsuccess = () => {
-      const cur = cursorReq.result;
-      if (!cur) return;
-      const v: any = cur.value;
-      if (useBatch && v.batchId !== batchId) { cur.continue(); return; }
-      agg.recordsIndexed++;
-      agg.countsByType[v.type] = (agg.countsByType[v.type] || 0) + 1;
-      if (v.type === "sales") {
-        agg.dashboardSummary.salesCount++;
-        agg.dashboardSummary.totalSales += Number(v.amount) || 0;
-        agg.reportsSummary.salesTotal += Number(v.amount) || 0;
-        if (agg.salesPage.length < 100) agg.salesPage.push(v);
-      } else if (v.type === "payments") {
-        agg.dashboardSummary.paymentsCount++;
-        agg.dashboardSummary.totalPayments += Number(v.amount) || 0;
-      } else if (v.type === "purchases") {
-        agg.reportsSummary.purchasesTotal += Number(v.amount) || 0;
-      } else if (v.type === "expenses") {
-        agg.reportsSummary.expensesTotal += Number(v.amount) || 0;
-      } else if (v.type === "stock_movements") {
-        agg.reportsSummary.stockMoves++;
-      } else if (v.type === "items") {
-        if (agg.itemsPage.length < 100) agg.itemsPage.push(v);
-      }
-      if (agg.searchIndexSample.length < 25 && typeof v.nameSearch === "string" && v.nameSearch.startsWith("item 1")) {
-        agg.searchIndexSample.push(v);
-      }
-      cur.continue();
-    };
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => resolve();
-  });
-  db.close();
   await setCachedSummary(cacheKeyFor(scope, batchId), { aggregate: agg });
+  console.log("[perf] buildPerfCache completed", { recordsIndexed });
   return agg;
 }
 
@@ -696,25 +714,38 @@ function PerformanceTestPage() {
   }, [benchMode, lastBatchId, cacheStatusVersion, cacheBuilding, existingNow]);
 
   const buildOrRebuildCache = async () => {
+    console.log("[perf] Build cache clicked", { benchMode, lastBatchId, existingNow, cacheBuilding });
     if (cacheBuilding) return;
     const scopeKey: "all" | "batch" = benchMode === "last_batch" ? "batch" : "all";
     const bid = benchMode === "last_batch" ? lastBatchId : null;
-    if (scopeKey === "all" && existingNow === 0) {
-      toast.error("Generate performance data first");
+
+    // Re-check fresh count from DB (don't trust stale state)
+    const liveCount = await countPerf();
+    console.log("[perf] PERF records count (live)", liveCount);
+    setExistingNow(liveCount);
+
+    if (scopeKey === "all" && liveCount === 0) {
+      toast.error("Generate performance data first, then build cache");
       return;
     }
     if (scopeKey === "batch" && (!bid || lastBatchCount === 0)) {
       toast.error("No batch in this session — switch to All PERF Records");
       return;
     }
+
     setCacheBuilding(true);
+    const t0 = performance.now();
+    console.log("[perf] Cache build started");
+    toast.message("Building PERF cache...");
     try {
-      toast.message("Building PERF cache…");
       await clearSummaryKey(cacheKeyFor(scopeKey, bid));
       const agg = await buildPerfCache(scopeKey, bid);
-      toast.success(`PERF cache ready (${agg.recordsIndexed.toLocaleString()} rows indexed)`);
+      const ms = Math.round(performance.now() - t0);
+      console.log("[perf] Cache build completed", { ms, recordsIndexed: agg.recordsIndexed });
+      toast.success(`PERF cache built successfully (${agg.recordsIndexed.toLocaleString()} rows · ${ms} ms)`);
     } catch (e: any) {
-      toast.error(`Cache build failed: ${e?.message ?? e}`);
+      console.error("[perf] Cache build error", e);
+      toast.error(`PERF cache build failed: ${e?.message ?? e}`);
     } finally {
       setCacheBuilding(false);
       setCacheStatusVersion((v) => v + 1);
