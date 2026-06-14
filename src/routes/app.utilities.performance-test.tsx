@@ -1015,6 +1015,15 @@ function PerformanceTestPage() {
               )}
             </div>
 
+            <div className="mt-3 grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
+              <Metric label="Used cache" value={bench.diag.usedCache ? "Yes" : "No"} />
+              <Metric label="Used full scan" value={bench.diag.usedFullScan ? "Yes" : "No"} />
+              <Metric label="IndexedDB index used" value={bench.diag.indexUsed ? "Yes" : "No"} />
+              <Metric label="Rows scanned" value={bench.diag.rowsScanned.toLocaleString()} />
+              <Metric label="Rows rendered" value={bench.diag.rowsRendered.toLocaleString()} />
+            </div>
+
+
 
 
             {bench.status !== "Good" && (
