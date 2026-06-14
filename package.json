@@ -34,6 +34,8 @@
     "backup:export": "bun run scripts/backup-export.ts",
     "backup:snapshot": "bun run scripts/backup-export.ts --snapshot",
     "backup:full": "tsc --noEmit && vite build && bun run scripts/backup-export.ts",
+    "backup:restore": "bun run scripts/backup-restore.ts",
+    "backup:restore:dry": "bun run scripts/backup-restore.ts --dry-run",
     "qa:all": "bun run qa:build && bun run qa:smoke"
   },
   "lint-staged": {
