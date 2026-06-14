@@ -572,13 +572,28 @@ function PerformanceTestPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
               <Metric label="Records in scope" value={bench.scopeRecords.toLocaleString()} />
               <Metric label="Generation time" value={`${bench.genMs} ms`} />
-              <Metric label="Dashboard load" value={`${bench.dashboardMs} ms`} />
-              <Metric label="Items list load" value={`${bench.itemsMs} ms`} />
-              <Metric label="Sales list load" value={`${bench.salesMs} ms`} />
-              <Metric label="Reports load" value={`${bench.reportsMs} ms`} />
-              <Metric label="Search response" value={`${bench.searchMs} ms`} />
+              <Metric label="Dashboard load" value={`${bench.dashboardMs} ms`} sub={improvement(bench.previous?.dashboardMs, bench.dashboardMs)} />
+              <Metric label="Items list load" value={`${bench.itemsMs} ms`} sub={improvement(bench.previous?.itemsMs, bench.itemsMs)} />
+              <Metric label="Sales list load" value={`${bench.salesMs} ms`} sub={improvement(bench.previous?.salesMs, bench.salesMs)} />
+              <Metric label="Reports load" value={`${bench.reportsMs} ms`} sub={improvement(bench.previous?.reportsMs, bench.reportsMs)} />
+              <Metric label="Search response" value={`${bench.searchMs} ms`} sub={improvement(bench.previous?.searchMs, bench.searchMs)} />
               <Metric label="Memory" value={bench.memoryWarn ? "⚠ High" : "OK"} />
             </div>
+
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <Button size="sm" variant="outline" onClick={() => void rerunBenchmark(benchMode, true)}>
+                <Gauge className="w-4 h-4 mr-1" /> Re-run Benchmark (Fresh)
+              </Button>
+              {bench.cached && (
+                <Badge variant="secondary">Showed cached summary (dashboard pattern)</Badge>
+              )}
+              {bench.previous && (
+                <span className="text-xs text-muted-foreground">
+                  Compared to previous run — improvements shown under each metric.
+                </span>
+              )}
+            </div>
+
 
             {bench.status !== "Good" && (
               <div className="mt-4 p-3 rounded-md bg-muted/50 text-sm">
