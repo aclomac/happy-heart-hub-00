@@ -226,7 +226,7 @@ export function QuickAddCustomerDialog({
           <Button
             variant="sale"
             size="sm"
-            disabled={(!name.trim() && !phone.trim()) || saving}
+            disabled={!name.trim() || saving}
             onClick={save}
             data-testid="quick-add-customer-save"
           >
