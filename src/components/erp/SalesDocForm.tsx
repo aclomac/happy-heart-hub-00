@@ -1610,7 +1610,7 @@ export function SalesDocForm({
               data-testid="success-print-invoice"
               onClick={() => runWithInvoicePdf(printInvoicePDF)}
             >
-              <Printer className="w-4 h-4" /> {t(docLabels.printLabel)}
+              <Printer className="w-4 h-4" /> {kind === "invoice" ? t("Print Invoice") : t(docLabels.printLabel)}
             </Button>
             <Button
               variant="outline"
