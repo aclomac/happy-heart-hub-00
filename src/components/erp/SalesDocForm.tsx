@@ -1597,7 +1597,7 @@ export function SalesDocForm({
       >
         <DialogContent className="sm:max-w-md" data-testid="invoice-saved-dialog">
           <DialogHeader>
-            <DialogTitle>{t(docLabels.savedTitle)}</DialogTitle>
+            <DialogTitle>{kind === "invoice" ? t("Invoice Saved") : t(docLabels.savedTitle)}</DialogTitle>
           </DialogHeader>
           <div className="text-sm text-muted-foreground">
             <span className="font-medium text-foreground">{savedInvoiceNo}</span>
