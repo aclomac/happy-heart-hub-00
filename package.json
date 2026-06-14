@@ -32,6 +32,7 @@
     "qa:smoke": "bun run scripts/qa-smoke.ts",
     "qa:build": "tsc --noEmit && vite build",
     "backup:export": "bun run scripts/backup-export.ts",
+    "backup:snapshot": "bun run scripts/backup-export.ts --snapshot",
     "backup:full": "tsc --noEmit && vite build && bun run scripts/backup-export.ts",
     "qa:all": "bun run qa:build && bun run qa:smoke"
   },
