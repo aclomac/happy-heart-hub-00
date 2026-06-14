@@ -198,19 +198,19 @@ function makeRecord(type: DataType, n: number, batchId: string) {
   };
   switch (type) {
     case "parties":
-      return { ...base, name: `[PERF] Party ${n}`, phone: `0170000${n}`, balance: (n * 17) % 5000 };
+      return { ...base, name: `[PERF] Party ${n}`, nameSearch: `party ${n}`, phone: `0170000${n}`, balance: (n * 17) % 5000 };
     case "items":
-      return { ...base, name: `[PERF] Item ${n}`, code: `PERF-${n}`, price: (n * 13) % 9999, stock: n % 500 };
+      return { ...base, name: `[PERF] Item ${n}`, nameSearch: `item ${n}`, code: `PERF-${n}`, skuSearch: `perf-${n}`, price: (n * 13) % 9999, stock: n % 500 };
     case "sales":
-      return { ...base, invoice: `PERF-INV-${n}`, party: `[PERF] Party ${n % 5000}`, amount: (n * 23) % 99999 };
+      return { ...base, invoice: `PERF-INV-${n}`, invoiceNoSearch: `perf-inv-${n}`, party: `[PERF] Party ${n % 5000}`, nameSearch: `party ${n % 5000}`, amount: (n * 23) % 99999 };
     case "purchases":
-      return { ...base, bill: `PERF-BILL-${n}`, party: `[PERF] Party ${n % 5000}`, amount: (n * 19) % 99999 };
+      return { ...base, bill: `PERF-BILL-${n}`, invoiceNoSearch: `perf-bill-${n}`, party: `[PERF] Party ${n % 5000}`, nameSearch: `party ${n % 5000}`, amount: (n * 19) % 99999 };
     case "stock_movements":
       return { ...base, ref: `PERF-MV-${n}`, itemId: n % 5000, qty: (n % 50) + 1, direction: n % 2 ? "in" : "out" };
     case "ecommerce_orders":
-      return { ...base, order: `PERF-ORD-${n}`, customer: `[PERF] Cust ${n % 5000}`, total: (n * 11) % 50000 };
+      return { ...base, order: `PERF-ORD-${n}`, invoiceNoSearch: `perf-ord-${n}`, customer: `[PERF] Cust ${n % 5000}`, nameSearch: `cust ${n % 5000}`, total: (n * 11) % 50000 };
     case "payments":
-      return { ...base, ref: `PERF-PAY-${n}`, party: `[PERF] Party ${n % 5000}`, amount: (n * 7) % 20000 };
+      return { ...base, ref: `PERF-PAY-${n}`, party: `[PERF] Party ${n % 5000}`, nameSearch: `party ${n % 5000}`, amount: (n * 7) % 20000 };
     case "expenses":
       return { ...base, ref: `PERF-EXP-${n}`, category: ["Salary", "Rent", "Transport", "Office"][n % 4], amount: (n * 5) % 9999 };
   }
