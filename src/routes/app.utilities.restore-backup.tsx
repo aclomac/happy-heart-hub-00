@@ -287,7 +287,9 @@ function RestoreBackupPage() {
     setBusy(true);
     setPhase("analyzing conflicts");
     try {
-      const result = await buildConflictPreview(preview, companyId, selectedTables);
+      const safeTables = filterDisabled(selectedTables).allowed;
+      if (safeTables.length !== selectedTables.length) toast.warning(DISABLED_MESSAGE);
+      const result = await buildConflictPreview(preview, companyId, safeTables);
       setConflicts(result);
       const totalSkip = result.reduce((a, r) => a + r.willSkip, 0);
       const totalIns = result.reduce((a, r) => a + r.willInsert, 0);
