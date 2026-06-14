@@ -233,7 +233,7 @@ function RestoreBackupPage() {
   const [history, setHistory] = useState<HistoryEntry[]>(() => (companyId ? loadHistory(companyId) : []));
 
   // Strip disabled (money-impacting) tables from selection regardless of UI state.
-  const { allowed: selectedTables, blocked: blockedSelected } = useMemo(() => {
+  const tableSelection = useMemo(() => {
     const allow = new Set(FILTER_MAP[filter]);
     const raw = preview
       ? (Object.keys(preview.data) as SafeTable[]).filter(
@@ -242,6 +242,7 @@ function RestoreBackupPage() {
       : ([...allow] as SafeTable[]);
     return filterDisabled(raw);
   }, [filter, preview]);
+  const selectedTables = tableSelection.allowed;
 
   // Tables present in uploaded backup that are blocked by safety policy.
   const lockedTablesInBackup = useMemo(() => {
