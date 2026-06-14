@@ -816,7 +816,24 @@ function ItemDetailPage() {
         </div>
       </div>
 
-      {low && (
+      {Number(it.stock) < 0 && (
+        <div className="mb-4 rounded-md border border-red-300 bg-red-50 text-red-900 px-3 py-2 text-sm flex items-start gap-2 flex-wrap">
+          <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <div className="font-medium">Negative stock: {it.stock} {it.unit}</div>
+            <div className="text-xs">
+              This item has negative stock because sold quantity is greater than available stock / purchase stock.
+              Use <span className="font-medium">Add Purchase</span>, <span className="font-medium">Set Opening Stock</span>,
+              or <span className="font-medium">Set Current Stock</span> to correct it.
+            </div>
+          </div>
+          <Button size="sm" variant="default" className="ml-auto" onClick={() => { setSetStockQty("0"); setSetStockOpen("set"); }}>
+            <Sliders className="w-3.5 h-3.5 mr-1" /> Correct now
+          </Button>
+        </div>
+      )}
+
+      {low && Number(it.stock) >= 0 && (
         <div className="mb-4 rounded-md border border-yellow-200 bg-yellow-50 text-yellow-900 px-3 py-2 text-sm flex items-center gap-2">
           <AlertTriangle className="w-4 h-4" /> Low stock: current {it.stock} ≤ alert {it.low_stock_alert}.
         </div>
