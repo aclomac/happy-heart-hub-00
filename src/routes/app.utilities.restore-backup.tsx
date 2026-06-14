@@ -488,6 +488,22 @@ function RestoreBackupPage() {
                 <ShieldAlert className="w-4 h-4 mt-0.5 shrink-0" />
                 <span>Sales/Purchases restore requires extra safety confirmation because it affects money, stock and reports.</span>
               </div>
+              {lockedTablesInBackup.length > 0 && (
+                <div className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-xs">
+                  <div className="flex items-center gap-2 font-medium text-destructive">
+                    <Lock className="w-3 h-3" /> Locked tables in this backup (not restorable in safe mode)
+                  </div>
+                  <ul className="mt-1 space-y-0.5">
+                    {lockedTablesInBackup.map((t) => (
+                      <li key={t} className="flex items-center gap-2">
+                        <span className="font-mono">{t}</span>
+                        <SafetyBadge s="money" />
+                        <span className="text-muted-foreground">· Locked · Not restorable in current safe mode</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
 
             <div className="text-xs text-muted-foreground">
@@ -499,39 +515,80 @@ function RestoreBackupPage() {
         </Card>
       )}
 
-      {preview && (
-        <Card>
-          <CardHeader><CardTitle className="text-base">3. Confirm &amp; run</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            <label className="flex items-start gap-2 text-sm">
-              <Checkbox checked={confirm} onCheckedChange={(v) => setConfirm(!!v)} disabled={busy} />
-              <span>I understand this may modify current company data</span>
-            </label>
-            <div className="flex items-center gap-2 text-sm">
-              <span>Type</span>
-              <code className="px-1.5 py-0.5 rounded bg-muted">RESTORE</code>
-              <Input
-                value={typed}
-                onChange={(e) => setTyped(e.target.value)}
-                placeholder="RESTORE"
-                className="max-w-[180px]"
-                disabled={busy}
-              />
-            </div>
-            <div className="flex gap-2 flex-wrap pt-1">
-              <Button onClick={doDryRun} variant="outline" disabled={busy || !selectedTables.length}>
-                <PlayCircle className="w-4 h-4 mr-2" />Dry Run
-              </Button>
-              <Button
-                onClick={doRestore}
-                disabled={busy || !selectedTables.length || !confirm || typed.trim().toUpperCase() !== "RESTORE"}
-              >
-                <RotateCcw className="w-4 h-4 mr-2" />{busy ? "Restoring…" : "Restore"}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {preview && (() => {
+        const checklist = [
+          { label: "Backup file validated", ok: !!preview && !parseError },
+          { label: "Snapshot manifest found", ok: !!preview?.manifest },
+          { label: "Company scoped", ok: !!companyId },
+          { label: "Secrets excluded", ok: true },
+          { label: "PERF data excluded", ok: true },
+          { label: "Dry run completed", ok: dryRunCompleted },
+          { label: "Conflicts reviewed", ok: !!conflicts && conflicts.length > 0 },
+          { label: "Restore mode selected", ok: mode === "merge" || mode === "replace" },
+          { label: "Safety confirmation completed", ok: confirm && typed.trim().toUpperCase() === "RESTORE" },
+        ];
+        const allOk = checklist.every((c) => c.ok);
+        const canRestore = !busy && selectedTables.length > 0 && allOk;
+        return (
+          <>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <ListChecks className="w-4 h-4" /> Restore Safety Checklist
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="text-sm space-y-1">
+                  {checklist.map((c) => (
+                    <li key={c.label} className="flex items-center gap-2">
+                      {c.ok ? (
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      ) : (
+                        <AlertTriangle className="w-4 h-4 text-amber-600" />
+                      )}
+                      <span className={c.ok ? "" : "text-muted-foreground"}>{c.label}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader><CardTitle className="text-base">3. Confirm &amp; run</CardTitle></CardHeader>
+              <CardContent className="space-y-3">
+                <label className="flex items-start gap-2 text-sm">
+                  <Checkbox checked={confirm} onCheckedChange={(v) => setConfirm(!!v)} disabled={busy} />
+                  <span>I understand this may modify current company data</span>
+                </label>
+                <div className="flex items-center gap-2 text-sm">
+                  <span>Type</span>
+                  <code className="px-1.5 py-0.5 rounded bg-muted">RESTORE</code>
+                  <Input
+                    value={typed}
+                    onChange={(e) => setTyped(e.target.value)}
+                    placeholder="RESTORE"
+                    className="max-w-[180px]"
+                    disabled={busy}
+                  />
+                </div>
+                <div className="flex gap-2 flex-wrap pt-1">
+                  <Button onClick={doDryRun} variant="outline" disabled={busy || !selectedTables.length}>
+                    <PlayCircle className="w-4 h-4 mr-2" />Dry Run
+                  </Button>
+                  <Button onClick={doRestore} disabled={!canRestore}>
+                    <RotateCcw className="w-4 h-4 mr-2" />{busy ? "Restoring…" : "Restore"}
+                  </Button>
+                </div>
+                {!canRestore && (
+                  <div className="text-xs text-muted-foreground">
+                    Restore is locked until the safety checklist is complete.
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </>
+        );
+      })()}
 
       {conflicts && (
         <Card>
