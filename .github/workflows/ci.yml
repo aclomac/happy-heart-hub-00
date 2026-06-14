@@ -186,6 +186,137 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
 
+      - name: Pre-upload artifact validation (consolidated)
+        run: |
+          set -u
+          REQUIRED="qa-summary.json qa-summary.sha256 QA_SUMMARY.md RELEASE_NOTES.md"
+          OPTIONAL_FIXED="stable-build-manifest.json"
+          OPTIONAL_GLOBS="erpovo-release-audit*.pdf release-audit*.pdf"
+          FORBIDDEN_PATTERNS=".env .env.* *.pem *secret* *token* *api_key* node_modules perf_stress*"
+          UPLOAD_PATHS="qa-summary.json qa-summary.sha256 QA_SUMMARY.md RELEASE_NOTES.md stable-build-manifest.json erpovo-release-audit*.pdf release-audit*.pdf"
+          EXPECTED_RETENTION=90
+
+          REQUIRED_STATUS=PASS
+          HASH_STATUS=PASS
+          SCHEMA_STATUS=PASS
+          RETENTION_STATUS=PASS
+          SECRETS_STATUS=PASS
+          READY_STATUS=PASS
+          FAIL=0
+
+          echo "========== ERPOVO Pre-Upload Artifact Validation =========="
+
+          # 1) Required files
+          for f in $REQUIRED; do
+            if [ ! -f "$f" ]; then
+              echo "::error title=Missing required artifact::$f"
+              echo "MISSING REQUIRED FILE: $f"
+              REQUIRED_STATUS=FAIL
+              FAIL=1
+            else
+              echo "  ✓ required present: $f"
+            fi
+          done
+
+          # 2 + 3) Schema + canonical sha256 hash verification.
+          # Delegate to the project's authoritative verifier so this stays in
+          # sync with how qa-summary.sha256 is computed (canonical manifest hash,
+          # not raw sha256sum of the JSON file).
+          if bun run qa:manifest:verify > /tmp/qa-verify.log 2>&1; then
+            echo "  ✓ schema valid (qa-summary.json)"
+            echo "  ✓ sha256 match (qa-summary.sha256 ↔ integrity.value)"
+          else
+            cat /tmp/qa-verify.log
+            if grep -qi "schema" /tmp/qa-verify.log; then SCHEMA_STATUS=FAIL; fi
+            if grep -qi "hash"   /tmp/qa-verify.log; then HASH_STATUS=FAIL; fi
+            # If verifier failed for any other reason, flag both as fail to be safe.
+            [ "$SCHEMA_STATUS" = "PASS" ] && [ "$HASH_STATUS" = "PASS" ] && { SCHEMA_STATUS=FAIL; HASH_STATUS=FAIL; }
+            FAIL=1
+          fi
+
+          # 4) release_ready === true
+          READY=$(node -e "try{const j=require('./qa-summary.json');console.log(j.release_ready===true?'YES':'NO')}catch(e){console.log('NO')}")
+          if [ "$READY" != "YES" ]; then
+            echo "::error title=Release not ready::qa-summary.json release_ready != true"
+            READY_STATUS=FAIL; FAIL=1
+          else
+            echo "  ✓ release ready: YES"
+          fi
+
+
+          # 5) Retention policy (must be 90)
+          ACTUAL_RETENTION=$(grep -A1 'qa-retention-policy: enforced' .github/workflows/ci.yml \
+            | grep -E '^[[:space:]]+retention-days:[[:space:]]+[0-9]+' \
+            | head -n1 | sed 's/[^0-9]//g')
+          if [ "$ACTUAL_RETENTION" != "$EXPECTED_RETENTION" ]; then
+            echo "::error title=Retention policy::expected $EXPECTED_RETENTION got $ACTUAL_RETENTION"
+            RETENTION_STATUS=FAIL; FAIL=1
+          else
+            echo "  ✓ retention: ${ACTUAL_RETENTION} days"
+          fi
+
+          # 6) Upload paths must not contain forbidden patterns
+          for p in $UPLOAD_PATHS; do
+            for bad in $FORBIDDEN_PATTERNS; do
+              case "$p" in
+                $bad)
+                  echo "::error title=Forbidden upload path::$p matches $bad"
+                  SECRETS_STATUS=FAIL; FAIL=1 ;;
+              esac
+            done
+          done
+          [ "$SECRETS_STATUS" = "PASS" ] && echo "  ✓ secrets excluded from upload paths"
+
+          # Optional files (warn only)
+          OPTIONAL_REPORT=""
+          for f in $OPTIONAL_FIXED; do
+            if [ -f "$f" ]; then
+              OPTIONAL_REPORT="${OPTIONAL_REPORT}- ✓ present \`$f\`\n"
+            else
+              echo "::warning title=Optional file missing::$f"
+              OPTIONAL_REPORT="${OPTIONAL_REPORT}- · missing \`$f\` (optional)\n"
+            fi
+          done
+          for pat in $OPTIONAL_GLOBS; do
+            matched=0
+            for f in $pat; do
+              if [ -f "$f" ]; then
+                OPTIONAL_REPORT="${OPTIONAL_REPORT}- ✓ present \`$f\`\n"; matched=1
+              fi
+            done
+            if [ "$matched" -eq 0 ]; then
+              echo "::warning title=Optional file missing::$pat"
+              OPTIONAL_REPORT="${OPTIONAL_REPORT}- · missing \`$pat\` (optional)\n"
+            fi
+          done
+
+          # CI summary
+          {
+            echo "### ERPOVO Pre-Upload Artifact Validation"
+            echo ""
+            echo "| Check | Status |"
+            echo "|---|---|"
+            echo "| Required files | $REQUIRED_STATUS |"
+            echo "| Schema (qa-summary.json) | $SCHEMA_STATUS |"
+            echo "| SHA-256 hash verify | $HASH_STATUS |"
+            echo "| Retention (90 days) | $RETENTION_STATUS |"
+            echo "| Secrets excluded | $SECRETS_STATUS |"
+            echo "| Release ready | $READY ($READY_STATUS) |"
+            echo ""
+            echo "**Optional files:**"
+            printf "$OPTIONAL_REPORT"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          echo "==========================================================="
+          echo "Summary: required=$REQUIRED_STATUS schema=$SCHEMA_STATUS hash=$HASH_STATUS retention=$RETENTION_STATUS secrets=$SECRETS_STATUS release_ready=$READY"
+
+          if [ "$FAIL" -ne 0 ]; then
+            echo "Pre-upload validation FAILED"
+            exit 1
+          fi
+          echo "Pre-upload validation PASSED"
+
+
       - name: Upload QA release artifacts
         uses: actions/upload-artifact@v4
         with:
