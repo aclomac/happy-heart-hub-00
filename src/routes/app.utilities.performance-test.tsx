@@ -418,15 +418,34 @@ function PerformanceTestPage() {
   const [benchMode, setBenchMode] = useState<BenchMode>("last_batch");
   const [storageWarn, setStorageWarn] = useState(false);
   const cancelRef = useRef(false);
+  const [genStartedAt, setGenStartedAt] = useState(0);
+  const [tick, setTick] = useState(0);
 
   // confirmation modal
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingTotal, setPendingTotal] = useState(0);
+  const [pendingFresh, setPendingFresh] = useState(false);
+
+  // stress test warning modal (>=250k)
+  const [stressOpen, setStressOpen] = useState(false);
+  const [stressTotal, setStressTotal] = useState(0);
+  const [stressFresh, setStressFresh] = useState(false);
+
+  // cleanup progress
+  const [clearing, setClearing] = useState(false);
+  const [clearedCount, setClearedCount] = useState(0);
 
   // Diagnostics: actual per-type breakdown vs expected
   const [breakdown, setBreakdown] = useState<Record<string, number>>({});
   const [expectedTotal, setExpectedTotal] = useState(0);
   const [expectedPlan, setExpectedPlan] = useState<Record<string, number>>({});
+
+  // tick clock during generation for elapsed/ETA display
+  useEffect(() => {
+    if (!running) return;
+    const id = setInterval(() => setTick((t) => t + 1), 250);
+    return () => clearInterval(id);
+  }, [running]);
 
   const refreshCount = async () => {
     const n = await countPerf();
