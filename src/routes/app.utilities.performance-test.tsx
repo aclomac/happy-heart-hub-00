@@ -40,19 +40,33 @@ export const Route = createFileRoute("/app/utilities/performance-test")({
 
 // ─────────────────────────────── IndexedDB helpers ───────────────────────────
 const DB_NAME = "erpovo_perf_test";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE = "records";
+const SUMMARY_STORE = "summaries";
 
 function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
     req.onupgradeneeded = () => {
       const db = req.result;
+      let os: IDBObjectStore;
       if (!db.objectStoreNames.contains(STORE)) {
-        const os = db.createObjectStore(STORE, { keyPath: "id", autoIncrement: true });
+        os = db.createObjectStore(STORE, { keyPath: "id", autoIncrement: true });
         os.createIndex("by_type", "type");
         os.createIndex("by_batch", "batchId");
         os.createIndex("by_perf", "perfTest");
+      } else {
+        os = req.transaction!.objectStore(STORE);
+      }
+      // v2: composite index for fast batch-scoped reads + normalized search field
+      if (!os.indexNames.contains("by_type_batch")) {
+        os.createIndex("by_type_batch", ["type", "batchId"]);
+      }
+      if (!os.indexNames.contains("by_name_search")) {
+        os.createIndex("by_name_search", "nameSearch");
+      }
+      if (!db.objectStoreNames.contains(SUMMARY_STORE)) {
+        db.createObjectStore(SUMMARY_STORE, { keyPath: "key" });
       }
     };
     req.onsuccess = () => resolve(req.result);
@@ -87,7 +101,10 @@ async function countPerf(): Promise<number> {
 async function clearPerf(): Promise<number> {
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE, "readwrite");
+    const stores = db.objectStoreNames.contains(SUMMARY_STORE)
+      ? [STORE, SUMMARY_STORE]
+      : [STORE];
+    const tx = db.transaction(stores, "readwrite");
     const os = tx.objectStore(STORE);
     const idx = os.index("by_perf");
     let n = 0;
@@ -95,7 +112,6 @@ async function clearPerf(): Promise<number> {
     cur.onsuccess = () => {
       const c = cur.result;
       if (c) {
-        // safety: only delete records that are truly [PERF] tagged
         if (c.value?.perfTest === 1 && c.value?.tag === "[PERF]") {
           c.delete();
           n++;
@@ -103,26 +119,56 @@ async function clearPerf(): Promise<number> {
         c.continue();
       }
     };
+    if (db.objectStoreNames.contains(SUMMARY_STORE)) {
+      tx.objectStore(SUMMARY_STORE).clear();
+    }
     tx.oncomplete = () => { db.close(); resolve(n); };
     tx.onerror = () => { db.close(); reject(tx.error); };
   });
 }
 
+// Optimized: native getAll with range+limit (single C++ call, no JS cursor loop)
 async function readSample(type: string, limit = 100, batchId?: string): Promise<any[]> {
   const db = await openDB();
   return new Promise((resolve) => {
     const tx = db.transaction(STORE, "readonly");
-    const idx = tx.objectStore(STORE).index("by_type");
-    const out: any[] = [];
-    const cur = idx.openCursor(IDBKeyRange.only(type));
-    cur.onsuccess = () => {
-      const c = cur.result;
-      if (c && out.length < limit) {
-        if (!batchId || c.value?.batchId === batchId) out.push(c.value);
-        c.continue();
-      } else { db.close(); resolve(out); }
-    };
+    const store = tx.objectStore(STORE);
+    let req: IDBRequest<any[]>;
+    if (batchId) {
+      const idx = store.index("by_type_batch");
+      req = idx.getAll(IDBKeyRange.only([type, batchId]), limit);
+    } else {
+      const idx = store.index("by_type");
+      req = idx.getAll(IDBKeyRange.only(type), limit);
+    }
+    req.onsuccess = () => { db.close(); resolve(req.result || []); };
+    req.onerror = () => { db.close(); resolve([]); };
   });
+}
+
+// Cached summary per scope key (batchId or "__all__")
+async function getCachedSummary(key: string): Promise<any | null> {
+  try {
+    const db = await openDB();
+    return new Promise((resolve) => {
+      const tx = db.transaction(SUMMARY_STORE, "readonly");
+      const req = tx.objectStore(SUMMARY_STORE).get(key);
+      req.onsuccess = () => { db.close(); resolve(req.result || null); };
+      req.onerror = () => { db.close(); resolve(null); };
+    });
+  } catch { return null; }
+}
+
+async function setCachedSummary(key: string, summary: any): Promise<void> {
+  try {
+    const db = await openDB();
+    return new Promise((resolve) => {
+      const tx = db.transaction(SUMMARY_STORE, "readwrite");
+      tx.objectStore(SUMMARY_STORE).put({ key, ...summary, cachedAt: Date.now() });
+      tx.oncomplete = () => { db.close(); resolve(); };
+      tx.onerror = () => { db.close(); resolve(); };
+    });
+  } catch { /* noop */ }
 }
 
 // ─────────────────────────────── Generators ──────────────────────────────────
