@@ -146,6 +146,34 @@ async function readSample(type: string, limit = 100, batchId?: string): Promise<
   });
 }
 
+// Batched read: many small getAll calls in ONE transaction on ONE connection.
+// Avoids per-call DB open/close overhead — critical for All PERF mode.
+async function batchedReadSamples(
+  reads: { type: string; limit: number }[],
+  batchId?: string,
+): Promise<any[][]> {
+  const db = await openDB();
+  return new Promise((resolve) => {
+    const tx = db.transaction(STORE, "readonly");
+    const store = tx.objectStore(STORE);
+    const results: any[][] = new Array(reads.length);
+    reads.forEach((r, i) => {
+      let req: IDBRequest<any[]>;
+      if (batchId) {
+        const idx = store.index("by_type_batch");
+        req = idx.getAll(IDBKeyRange.only([r.type, batchId]), r.limit);
+      } else {
+        const idx = store.index("by_type");
+        req = idx.getAll(IDBKeyRange.only(r.type), r.limit);
+      }
+      req.onsuccess = () => { results[i] = req.result || []; };
+      req.onerror = () => { results[i] = []; };
+    });
+    tx.oncomplete = () => { db.close(); resolve(results); };
+    tx.onerror = () => { db.close(); resolve(results); };
+  });
+}
+
 // Cached summary per scope key (batchId or "__all__")
 async function getCachedSummary(key: string): Promise<any | null> {
   try {
@@ -170,6 +198,54 @@ async function setCachedSummary(key: string, summary: any): Promise<void> {
     });
   } catch { /* noop */ }
 }
+
+async function clearSummaryKey(key: string): Promise<void> {
+  try {
+    const db = await openDB();
+    return new Promise((resolve) => {
+      const tx = db.transaction(SUMMARY_STORE, "readwrite");
+      tx.objectStore(SUMMARY_STORE).delete(key);
+      tx.oncomplete = () => { db.close(); resolve(); };
+      tx.onerror = () => { db.close(); resolve(); };
+    });
+  } catch { /* noop */ }
+}
+
+async function clearAllSummaries(): Promise<void> {
+  try {
+    const db = await openDB();
+    return new Promise((resolve) => {
+      const tx = db.transaction(SUMMARY_STORE, "readwrite");
+      tx.objectStore(SUMMARY_STORE).clear();
+      tx.oncomplete = () => { db.close(); resolve(); };
+      tx.onerror = () => { db.close(); resolve(); };
+    });
+  } catch { /* noop */ }
+}
+
+// Per-type counts via single transaction — used for diagnostics & summary build
+async function countPerfByType(batchId?: string): Promise<Record<string, number>> {
+  const db = await openDB();
+  return new Promise((resolve) => {
+    const tx = db.transaction(STORE, "readonly");
+    const store = tx.objectStore(STORE);
+    const out: Record<string, number> = {};
+    const types = ["parties", "items", "sales", "purchases", "stock_movements", "ecommerce_orders", "payments", "expenses"];
+    types.forEach((t) => {
+      let req: IDBRequest<number>;
+      if (batchId) {
+        req = store.index("by_type_batch").count(IDBKeyRange.only([t, batchId]));
+      } else {
+        req = store.index("by_type").count(IDBKeyRange.only(t));
+      }
+      req.onsuccess = () => { out[t] = req.result || 0; };
+      req.onerror = () => { out[t] = 0; };
+    });
+    tx.oncomplete = () => { db.close(); resolve(out); };
+    tx.onerror = () => { db.close(); resolve(out); };
+  });
+}
+
 
 // ─────────────────────────────── Generators ──────────────────────────────────
 type DataType =
@@ -232,8 +308,10 @@ interface Bench {
   memoryWarn: boolean;
   status: Status;
   cached: boolean;
-  previous?: Omit<Bench, "previous" | "cached"> | null;
+  source: "cache" | "fresh";
+  previous?: Omit<Bench, "previous" | "cached" | "source"> | null;
 }
+
 
 function PerformanceTestPage() {
   const navigate = useNavigate();
@@ -260,12 +338,20 @@ function PerformanceTestPage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingTotal, setPendingTotal] = useState(0);
 
+  // Diagnostics: actual per-type breakdown vs expected
+  const [breakdown, setBreakdown] = useState<Record<string, number>>({});
+  const [expectedTotal, setExpectedTotal] = useState(0);
+  const [expectedPlan, setExpectedPlan] = useState<Record<string, number>>({});
+
   const refreshCount = async () => {
     const n = await countPerf();
     setExistingNow(n);
+    const bd = await countPerfByType();
+    setBreakdown(bd);
     return n;
   };
   useEffect(() => { void refreshCount(); }, []);
+
 
   const toggle = (k: DataType) => setSelected((s) => ({ ...s, [k]: !s[k] }));
 
@@ -294,6 +380,13 @@ function PerformanceTestPage() {
       const batchId = `batch_${Date.now()}`;
       const ratioSum = types.reduce((a, t) => a + t.defaultRatio, 0);
       const plan = types.map((t) => ({ type: t.key, count: Math.round((t.defaultRatio / ratioSum) * total) }));
+      const planMap: Record<string, number> = {};
+      plan.forEach((p) => { planMap[p.type] = p.count; });
+      setExpectedPlan(planMap);
+      setExpectedTotal(plan.reduce((a, p) => a + p.count, 0));
+      // Invalidate benchmark caches when data changes
+      await clearAllSummaries();
+
 
       const CHUNK = 1000;
       const t0 = performance.now();
@@ -351,20 +444,20 @@ function PerformanceTestPage() {
     const bid = mode === "last_batch" ? batchId ?? undefined : undefined;
     const cacheKey = `bench:${mode}:${bid ?? "__all__"}`;
     const previous = (await getCachedSummary(cacheKey)) as
-      | (Omit<Bench, "previous" | "cached"> & { cachedAt?: number })
+      | (Omit<Bench, "previous" | "cached" | "source"> & { cachedAt?: number })
       | null;
 
-    // Use cache when present and not forced fresh — simulates real "cached summary" pattern
+    // Cache hit path: show immediately, no recompute
     if (previous && !opts?.forceFresh) {
-      const dashboardMs = 1; // cache hit
       setBench({
         mode, scopeRecords: scope, genMs,
-        dashboardMs, itemsMs: previous.itemsMs, salesMs: previous.salesMs,
+        dashboardMs: 1, // cached summary read
+        itemsMs: previous.itemsMs, salesMs: previous.salesMs,
         reportsMs: previous.reportsMs, searchMs: previous.searchMs,
         memoryWarn: previous.memoryWarn, status: previous.status,
-        cached: true, previous,
+        cached: true, source: "cache", previous,
       });
-      // continue and refresh underneath
+      return;
     }
 
     const time = async (fn: () => Promise<any>) => {
@@ -372,19 +465,24 @@ function PerformanceTestPage() {
       await fn();
       return Math.round(performance.now() - s);
     };
-    // Dashboard summary: tiny indexed reads only (cached on repeat)
+
+    // All reads share a single DB connection + transaction in the All PERF path
+    // → eliminates per-call open/close overhead that made all_perf slow.
     const dashboardMs = await time(async () => {
-      await readSample("sales", 25, bid);
-      await readSample("payments", 10, bid);
+      await batchedReadSamples(
+        [{ type: "sales", limit: 25 }, { type: "payments", limit: 10 }],
+        bid,
+      );
     });
-    const itemsMs = await time(() => readSample("items", 100, bid));
-    const salesMs = await time(() => readSample("sales", 100, bid));
+    const itemsMs = await time(() => batchedReadSamples([{ type: "items", limit: 100 }], bid).then(r => r[0]));
+    const salesMs = await time(() => batchedReadSamples([{ type: "sales", limit: 100 }], bid).then(r => r[0]));
     const reportsMs = await time(async () => {
-      await readSample("sales", 100, bid);
-      await readSample("stock_movements", 100, bid);
+      await batchedReadSamples(
+        [{ type: "sales", limit: 100 }, { type: "stock_movements", limit: 100 }],
+        bid,
+      );
     });
     const searchMs = await time(async () => {
-      // indexed search on nameSearch (single getAll, no JS filter)
       const db = await openDB();
       await new Promise<void>((res) => {
         const tx = db.transaction(STORE, "readonly");
@@ -403,7 +501,7 @@ function PerformanceTestPage() {
     const status: Status = worst < 150 ? "Good" : worst < 500 ? "Needs Optimization" : "Slow";
     const next: Bench = {
       mode, scopeRecords: scope, genMs, dashboardMs, itemsMs, salesMs, reportsMs,
-      searchMs, memoryWarn, status, cached: false, previous: previous ?? null,
+      searchMs, memoryWarn, status, cached: false, source: "fresh", previous: previous ?? null,
     };
     setBench(next);
     await setCachedSummary(cacheKey, {
@@ -411,6 +509,7 @@ function PerformanceTestPage() {
       searchMs, memoryWarn, status,
     });
   };
+
 
   const [benchRunning, setBenchRunning] = useState(false);
   const rerunBenchmark = async (modeArg: BenchMode, fresh = false) => {
@@ -438,9 +537,14 @@ function PerformanceTestPage() {
     console.log("[perf] benchmark started", { mode, scope, batchId: lastBatchId });
     setBenchRunning(true);
     try {
+      if (fresh) {
+        // Fresh: clear only the benchmark cache for this scope, never PERF data
+        const bid = mode === "last_batch" ? lastBatchId ?? undefined : undefined;
+        await clearSummaryKey(`bench:${mode}:${bid ?? "__all__"}`);
+      }
       await runBenchmark(mode, scope, lastGenMs, lastBatchId, { forceFresh: fresh });
       console.log("[perf] benchmark completed");
-      toast.success("Benchmark completed");
+      toast.success(fresh ? "Fresh benchmark completed" : "Benchmark completed");
     } catch (e: any) {
       console.error("[perf] benchmark error", e);
       toast.error(`Benchmark failed: ${e?.message ?? e}`);
@@ -448,6 +552,7 @@ function PerformanceTestPage() {
       setBenchRunning(false);
     }
   };
+
 
 
   const improvement = (before?: number, after?: number) => {
@@ -465,12 +570,16 @@ function PerformanceTestPage() {
     if (!window.confirm("Clear all [PERF] performance test data? Real and demo data are NOT affected.")) return;
     try {
       const n = await clearPerf();
+      await clearAllSummaries();
       toast.success(`Cleared ${n.toLocaleString()} [PERF] records`);
       setBench(null);
       setLastBatchCount(0);
       setLastBatchId(null);
       setExistingBefore(0);
+      setExpectedPlan({});
+      setExpectedTotal(0);
       await refreshCount();
+
     } catch (e: any) {
       toast.error(`Cleanup failed: ${e?.message ?? e}`);
     }
@@ -693,8 +802,10 @@ function PerformanceTestPage() {
               <Button size="sm" variant="outline" onClick={() => void rerunBenchmark(benchMode, true)}>
                 <Gauge className="w-4 h-4 mr-1" /> Re-run Benchmark (Fresh)
               </Button>
-              {bench.cached && (
-                <Badge variant="secondary">Showed cached summary (dashboard pattern)</Badge>
+              {bench.source === "cache" ? (
+                <Badge variant="secondary">Cached summary used</Badge>
+              ) : (
+                <Badge variant="outline">Fresh full scan</Badge>
               )}
               {bench.previous && (
                 <span className="text-xs text-muted-foreground">
@@ -702,6 +813,7 @@ function PerformanceTestPage() {
                 </span>
               )}
             </div>
+
 
 
             {bench.status !== "Good" && (
@@ -726,6 +838,64 @@ function PerformanceTestPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Records breakdown / diagnostics */}
+      {existingNow > 0 && (
+        <Card className="mb-4">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Database className="w-4 h-4 text-primary" /> Records Breakdown by Type
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs text-muted-foreground border-b">
+                    <th className="py-2">Type</th>
+                    <th className="py-2 text-right">Expected</th>
+                    <th className="py-2 text-right">Actual</th>
+                    <th className="py-2 text-right">Missing</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {DATA_TYPES.map((t) => {
+                    const exp = expectedPlan[t.key] ?? 0;
+                    const act = breakdown[t.key] ?? 0;
+                    const miss = Math.max(0, exp - act);
+                    return (
+                      <tr key={t.key} className="border-b last:border-0">
+                        <td className="py-1.5">{t.label}</td>
+                        <td className="py-1.5 text-right tabular-nums">{exp.toLocaleString()}</td>
+                        <td className="py-1.5 text-right tabular-nums">{act.toLocaleString()}</td>
+                        <td className={`py-1.5 text-right tabular-nums ${miss > 0 ? "text-warning" : "text-muted-foreground"}`}>
+                          {miss > 0 ? miss.toLocaleString() : "—"}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  <tr className="font-semibold">
+                    <td className="py-2">Total</td>
+                    <td className="py-2 text-right tabular-nums">{expectedTotal.toLocaleString()}</td>
+                    <td className="py-2 text-right tabular-nums">{existingNow.toLocaleString()}</td>
+                    <td className="py-2 text-right tabular-nums">
+                      {Math.max(0, expectedTotal - existingNow).toLocaleString()}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            {expectedTotal > 0 && expectedTotal !== existingNow && (
+              <div className="mt-3 text-xs text-muted-foreground">
+                Note: small differences between requested total and actual counts are caused by
+                per-type ratio rounding (each type count is rounded to an integer).
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+
 
       <Card>
         <CardHeader>
