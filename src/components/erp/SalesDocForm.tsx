@@ -809,6 +809,32 @@ export function SalesDocForm({
       console.log("SAVE_INVOICE_VALIDATION_FAIL", { reason: "no_items" });
       return;
     }
+    // Negative-stock prevention: only on stock-reducing invoices
+    if (kind === "invoice" && meta.affectStock === -1) {
+      const insufficient: string[] = [];
+      for (const r of validRows) {
+        const it = items.find((i) => i.id === r.item_id);
+        if (!it || it.is_service) continue;
+        const avail = Number(it.stock) || 0;
+        if (r.qty > avail) {
+          insufficient.push(
+            `${it.name}: available ${avail} ${it.unit}, trying to sell ${r.qty} ${r.unit}`,
+          );
+        }
+      }
+      if (insufficient.length > 0) {
+        if (stopOnNegativeStock) {
+          toast.error(`Stock is not enough. ${insufficient[0]}`);
+          setSaveDebug((d) => ({ ...d, validation: "insufficient_stock" }));
+          console.log("SAVE_INVOICE_VALIDATION_FAIL", { reason: "insufficient_stock", insufficient });
+          return;
+        } else {
+          toast.warning(
+            `Negative stock will be created. ${insufficient[0]}${insufficient.length > 1 ? ` (+${insufficient.length - 1} more)` : ""}`,
+          );
+        }
+      }
+    }
     setSaveDebug((d) => ({ ...d, validation: "ok" }));
 
     setSaving(true);
