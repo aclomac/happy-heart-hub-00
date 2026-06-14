@@ -40,9 +40,10 @@ export const Route = createFileRoute("/app/utilities/performance-test")({
 
 // ─────────────────────────────── IndexedDB helpers ───────────────────────────
 const DB_NAME = "erpovo_perf_test";
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const STORE = "records";
 const SUMMARY_STORE = "summaries";
+const PERF_CACHE_VERSION = "perf-cache-v3";
 
 function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -189,15 +190,18 @@ async function getCachedSummary(key: string): Promise<any | null> {
 }
 
 async function setCachedSummary(key: string, summary: any): Promise<void> {
-  try {
-    const db = await openDB();
-    return new Promise((resolve) => {
-      const tx = db.transaction(SUMMARY_STORE, "readwrite");
-      tx.objectStore(SUMMARY_STORE).put({ key, ...summary, cachedAt: Date.now() });
-      tx.oncomplete = () => { db.close(); resolve(); };
-      tx.onerror = () => { db.close(); resolve(); };
-    });
-  } catch { /* noop */ }
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    if (!db.objectStoreNames.contains(SUMMARY_STORE)) {
+      db.close();
+      reject(new Error("PERF cache store is unavailable"));
+      return;
+    }
+    const tx = db.transaction(SUMMARY_STORE, "readwrite");
+    tx.objectStore(SUMMARY_STORE).put({ key, ...summary, cachedAt: Date.now() });
+    tx.oncomplete = () => { db.close(); resolve(); };
+    tx.onerror = () => { db.close(); reject(tx.error ?? new Error("Failed to save PERF cache")); };
+  });
 }
 
 async function clearSummaryKey(key: string): Promise<void> {
