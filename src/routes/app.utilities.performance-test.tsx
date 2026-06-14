@@ -394,7 +394,17 @@ async function buildPerfCache(scope: "all" | "batch", batchId?: string | null): 
     },
     searchIndexSample: searchSample,
   };
-  await setCachedSummary(cacheKeyFor(scope, batchId), { aggregate: agg });
+  await setCachedSummary(cacheKeyFor(scope, batchId), {
+    scope: agg.scope,
+    recordsIndexed: agg.recordsIndexed,
+    builtAt: agg.builtAt,
+    cacheVersion: agg.cacheVersion,
+    dashboardSummary: agg.dashboardSummary,
+    salesSummary: agg.salesSummary,
+    reportsSummary: agg.reportsSummary,
+    itemSummary: agg.itemSummary,
+    aggregate: agg,
+  });
   console.log("[perf] buildPerfCache completed", { recordsIndexed });
   return agg;
 }
@@ -746,20 +756,6 @@ function PerformanceTestPage() {
     const scopeKey: "all" | "batch" = benchMode === "last_batch" ? "batch" : "all";
     const bid = benchMode === "last_batch" ? lastBatchId : null;
 
-    // Re-check fresh count from DB (don't trust stale state)
-    const liveCount = await countPerf();
-    console.log("[perf] PERF records count (live)", liveCount);
-    setExistingNow(liveCount);
-
-    if (scopeKey === "all" && liveCount === 0) {
-      toast.error("Generate performance data first, then build cache");
-      return;
-    }
-    if (scopeKey === "batch" && (!bid || lastBatchCount === 0)) {
-      toast.error("No batch in this session — switch to All PERF Records");
-      return;
-    }
-
     setCacheBuilding(true);
     setCacheError(null);
     setCacheStatus({ state: "Building" });
@@ -767,12 +763,24 @@ function PerformanceTestPage() {
     console.log("[perf] Cache build started");
     toast.message("Building PERF cache...");
     try {
+      // Re-check fresh count from DB (don't trust stale state)
+      const liveCount = await countPerf();
+      console.log("[perf] PERF records count (live)", liveCount);
+      setExistingNow(liveCount);
+
+      if (scopeKey === "all" && liveCount === 0) {
+        throw new Error("Generate performance data first, then build cache");
+      }
+      if (scopeKey === "batch" && (!bid || lastBatchCount === 0)) {
+        throw new Error("No batch in this session — switch to All PERF Records");
+      }
+
       await clearSummaryKey(cacheKeyFor(scopeKey, bid));
       const agg = await buildPerfCache(scopeKey, bid);
       const ms = Math.round(performance.now() - t0);
       console.log("[perf] Cache build completed", { ms, recordsIndexed: agg.recordsIndexed });
       setCacheStatus({ state: "Ready", builtAt: agg.builtAt, recordsIndexed: agg.recordsIndexed });
-      toast.success(`PERF cache built successfully (${agg.recordsIndexed.toLocaleString()} rows · ${ms} ms)`);
+      toast.success("PERF cache built successfully");
     } catch (e: any) {
       console.error("[perf] Cache build error", e);
       const reason = e?.message ?? String(e);
