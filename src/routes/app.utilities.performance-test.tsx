@@ -714,25 +714,38 @@ function PerformanceTestPage() {
   }, [benchMode, lastBatchId, cacheStatusVersion, cacheBuilding, existingNow]);
 
   const buildOrRebuildCache = async () => {
+    console.log("[perf] Build cache clicked", { benchMode, lastBatchId, existingNow, cacheBuilding });
     if (cacheBuilding) return;
     const scopeKey: "all" | "batch" = benchMode === "last_batch" ? "batch" : "all";
     const bid = benchMode === "last_batch" ? lastBatchId : null;
-    if (scopeKey === "all" && existingNow === 0) {
-      toast.error("Generate performance data first");
+
+    // Re-check fresh count from DB (don't trust stale state)
+    const liveCount = await countPerf();
+    console.log("[perf] PERF records count (live)", liveCount);
+    setExistingNow(liveCount);
+
+    if (scopeKey === "all" && liveCount === 0) {
+      toast.error("Generate performance data first, then build cache");
       return;
     }
     if (scopeKey === "batch" && (!bid || lastBatchCount === 0)) {
       toast.error("No batch in this session — switch to All PERF Records");
       return;
     }
+
     setCacheBuilding(true);
+    const t0 = performance.now();
+    console.log("[perf] Cache build started");
+    toast.message("Building PERF cache...");
     try {
-      toast.message("Building PERF cache…");
       await clearSummaryKey(cacheKeyFor(scopeKey, bid));
       const agg = await buildPerfCache(scopeKey, bid);
-      toast.success(`PERF cache ready (${agg.recordsIndexed.toLocaleString()} rows indexed)`);
+      const ms = Math.round(performance.now() - t0);
+      console.log("[perf] Cache build completed", { ms, recordsIndexed: agg.recordsIndexed });
+      toast.success(`PERF cache built successfully (${agg.recordsIndexed.toLocaleString()} rows · ${ms} ms)`);
     } catch (e: any) {
-      toast.error(`Cache build failed: ${e?.message ?? e}`);
+      console.error("[perf] Cache build error", e);
+      toast.error(`PERF cache build failed: ${e?.message ?? e}`);
     } finally {
       setCacheBuilding(false);
       setCacheStatusVersion((v) => v + 1);
