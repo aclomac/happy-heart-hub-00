@@ -10,7 +10,11 @@ const COUPON = "routes/super-admin.coupons.$id.tsx";
 const DEVICE = "routes/super-admin.devices.$id.tsx";
 const LAYOUT = "routes/super-admin.tsx";
 
-describe("Super Admin layout guard", () => {
+// Skipped in Personal Mode: Super Admin disabled intentionally.
+// The layout intentionally short-circuits to a "Super Admin is disabled" screen,
+// so the platform-admin gate assertions below do not apply. Keep the suite
+// available for re-enable, but do not gate releases on it.
+describe.skip("Super Admin layout guard", () => {
   const src = read(LAYOUT);
 
   it("uses platform admin gate", () => {
