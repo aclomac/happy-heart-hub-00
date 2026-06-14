@@ -4,6 +4,7 @@ import { NoCompanySelected } from "@/components/erp/NoCompanySelected";
 import { StatusBadge } from "@/components/erp/StatusBadge";
 
 import { LowStockAlerts } from "@/components/erp/dashboard/LowStockAlerts";
+import { DashCard } from "@/components/erp/dashboard/DashCard";
 import { loadInventoryDashboard } from "@/lib/inventory-stats";
 import { Warehouse, ArrowRightLeft } from "lucide-react";
 
