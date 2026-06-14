@@ -583,14 +583,15 @@ function PerformanceTestPage() {
       });
       diag = {
         usedCache: false, usedFullScan: true, indexUsed: true,
-        rowsScanned: agg.recordsIndexed, rowsRendered: 100,
+        rowsScanned: scope, rowsRendered: 100,
       };
     } else {
       // Cached: read the precomputed aggregate — no row scan
-      dashboardMs = await time(async () => { void agg!.dashboardSummary; });
-      itemsMs = await time(async () => { void agg!.itemsPage.slice(0, 100); });
-      salesMs = await time(async () => { void agg!.salesPage.slice(0, 100); });
-      reportsMs = await time(async () => { void agg!.reportsSummary; });
+      const a = agg!;
+      dashboardMs = await time(async () => { void a.dashboardSummary; });
+      itemsMs = await time(async () => { void a.itemsPage.slice(0, 100); });
+      salesMs = await time(async () => { void a.salesPage.slice(0, 100); });
+      reportsMs = await time(async () => { void a.reportsSummary; });
       searchMs = await time(async () => {
         const db = await openDB();
         await new Promise<void>((res) => {
@@ -603,8 +604,8 @@ function PerformanceTestPage() {
       });
       diag = {
         usedCache: true, usedFullScan: false, indexUsed: true,
-        rowsScanned: agg.itemsPage.length + agg.salesPage.length,
-        rowsRendered: Math.min(100, agg.salesPage.length),
+        rowsScanned: 0,
+        rowsRendered: Math.min(100, a.salesPage.length),
       };
     }
 
