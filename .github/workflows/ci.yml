@@ -55,6 +55,9 @@ jobs:
       - name: QA critical gate (regression-proof critical paths)
         run: bun run qa:critical
 
+      - name: QA manifest verify (schema + sha256 + gates)
+        run: bun run qa:manifest:verify
+
       - name: Coverage report (non-blocking)
         run: bun run test:coverage
         continue-on-error: true

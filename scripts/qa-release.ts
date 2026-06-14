@@ -12,6 +12,7 @@ const STEPS: Step[] = [
   { name: "TypeScript", cmd: "bunx", args: ["tsc", "--noEmit"] },
   { name: "Tests", cmd: "bunx", args: ["vitest", "run", "--reporter=default"] },
   { name: "Build", cmd: "bunx", args: ["vite", "build"] },
+  { name: "ManifestVerify", cmd: "bun", args: ["run", "scripts/verify-qa-manifest.ts"] },
 ];
 
 type Result = { name: string; ok: boolean; output: string; durationMs: number };
@@ -39,9 +40,11 @@ const results = STEPS.map(run);
 const ts = results.find((r) => r.name === "TypeScript")!;
 const tests = results.find((r) => r.name === "Tests")!;
 const build = results.find((r) => r.name === "Build")!;
+const manifest = results.find((r) => r.name === "ManifestVerify")!;
 const counts = parseVitestCounts(tests.output);
 
-const releaseReady = ts.ok && tests.ok && build.ok;
+const manifestMismatch = /QA manifest hash mismatch/i.test(manifest.output);
+const releaseReady = ts.ok && tests.ok && build.ok && manifest.ok;
 
 console.log("\n========== ERPOVO Release QA Summary ==========");
 console.log(`TypeScript     : ${ts.ok ? "PASS (0 errors)" : "FAIL"}`);
@@ -49,6 +52,9 @@ console.log(
   `Tests          : ${tests.ok ? "PASS" : "FAIL"} — ${counts.passed} passed, ${counts.failed} failed, ${counts.skipped} skipped`,
 );
 console.log(`Build          : ${build.ok ? "PASS" : "FAIL"}`);
+console.log(
+  `QA manifest    : ${manifest.ok ? "PASS (schema valid, sha256 match, gates PASS)" : manifestMismatch ? "FAIL (QA manifest hash mismatch)" : "FAIL"}`,
+);
 console.log(`Intentional    : Super Admin detail-actions suite skipped (Personal Mode)`);
 console.log(`Release ready  : ${releaseReady ? "YES" : "NO"}`);
 console.log("===============================================\n");
