@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useI18n } from "@/lib/i18n";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { isDemoMode } from "@/lib/demo/localStore";
 import {
   Dialog,
   DialogContent,
