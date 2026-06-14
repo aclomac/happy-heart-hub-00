@@ -292,9 +292,93 @@ function makeRecord(type: DataType, n: number, batchId: string) {
   }
 }
 
+// ─────────────────── PERF aggregate cache (precomputed once) ────────────────
+interface PerfAggregate {
+  scope: "all" | "batch";
+  scopeId: string;
+  builtAt: number;
+  recordsIndexed: number;
+  countsByType: Record<string, number>;
+  dashboardSummary: { totalSales: number; totalPayments: number; salesCount: number; paymentsCount: number };
+  salesPage: any[];
+  itemsPage: any[];
+  reportsSummary: { salesTotal: number; purchasesTotal: number; expensesTotal: number; stockMoves: number };
+  searchIndexSample: any[];
+}
+
+const cacheKeyFor = (scope: "all" | "batch", batchId?: string | null) =>
+  `perf_cache:${scope}:${scope === "batch" ? (batchId ?? "") : "__all__"}`;
+
+async function buildPerfCache(scope: "all" | "batch", batchId?: string | null): Promise<PerfAggregate> {
+  const db = await openDB();
+  const agg: PerfAggregate = {
+    scope, scopeId: scope === "batch" ? (batchId ?? "") : "__all__",
+    builtAt: Date.now(), recordsIndexed: 0, countsByType: {},
+    dashboardSummary: { totalSales: 0, totalPayments: 0, salesCount: 0, paymentsCount: 0 },
+    salesPage: [], itemsPage: [],
+    reportsSummary: { salesTotal: 0, purchasesTotal: 0, expensesTotal: 0, stockMoves: 0 },
+    searchIndexSample: [],
+  };
+  await new Promise<void>((resolve) => {
+    const tx = db.transaction(STORE, "readonly");
+    const store = tx.objectStore(STORE);
+    const useBatch = scope === "batch" && batchId;
+    const cursorReq = useBatch
+      ? store.index("by_type_batch").openCursor()
+      : store.index("by_perf").openCursor(IDBKeyRange.only(1));
+    cursorReq.onsuccess = () => {
+      const cur = cursorReq.result;
+      if (!cur) return;
+      const v: any = cur.value;
+      if (useBatch && v.batchId !== batchId) { cur.continue(); return; }
+      agg.recordsIndexed++;
+      agg.countsByType[v.type] = (agg.countsByType[v.type] || 0) + 1;
+      if (v.type === "sales") {
+        agg.dashboardSummary.salesCount++;
+        agg.dashboardSummary.totalSales += Number(v.amount) || 0;
+        agg.reportsSummary.salesTotal += Number(v.amount) || 0;
+        if (agg.salesPage.length < 100) agg.salesPage.push(v);
+      } else if (v.type === "payments") {
+        agg.dashboardSummary.paymentsCount++;
+        agg.dashboardSummary.totalPayments += Number(v.amount) || 0;
+      } else if (v.type === "purchases") {
+        agg.reportsSummary.purchasesTotal += Number(v.amount) || 0;
+      } else if (v.type === "expenses") {
+        agg.reportsSummary.expensesTotal += Number(v.amount) || 0;
+      } else if (v.type === "stock_movements") {
+        agg.reportsSummary.stockMoves++;
+      } else if (v.type === "items") {
+        if (agg.itemsPage.length < 100) agg.itemsPage.push(v);
+      }
+      if (agg.searchIndexSample.length < 25 && typeof v.nameSearch === "string" && v.nameSearch.startsWith("item 1")) {
+        agg.searchIndexSample.push(v);
+      }
+      cur.continue();
+    };
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => resolve();
+  });
+  db.close();
+  await setCachedSummary(cacheKeyFor(scope, batchId), { aggregate: agg });
+  return agg;
+}
+
+async function getPerfCache(scope: "all" | "batch", batchId?: string | null): Promise<PerfAggregate | null> {
+  const row = await getCachedSummary(cacheKeyFor(scope, batchId));
+  return row?.aggregate ?? null;
+}
+
 // ────────────────────────────────── Page ─────────────────────────────────────
 type Status = "Good" | "Needs Optimization" | "Slow";
 type BenchMode = "last_batch" | "all_perf";
+
+interface Diag {
+  usedCache: boolean;
+  usedFullScan: boolean;
+  indexUsed: boolean;
+  rowsScanned: number;
+  rowsRendered: number;
+}
 
 interface Bench {
   mode: BenchMode;
@@ -309,7 +393,8 @@ interface Bench {
   status: Status;
   cached: boolean;
   source: "cache" | "fresh";
-  previous?: Omit<Bench, "previous" | "cached" | "source"> | null;
+  diag: Diag;
+  previous?: Omit<Bench, "previous" | "cached" | "source" | "diag"> | null;
 }
 
 
