@@ -1022,22 +1022,26 @@ function PerformanceTestPage() {
                       className={
                         cacheStatus.state === "Ready"
                           ? "text-success"
-                          : cacheStatus.state === "Rebuilding"
+                          : cacheStatus.state === "Building"
                           ? "text-warning"
                           : "text-destructive"
                       }
                     >
-                      {cacheBuilding ? "Rebuilding" : cacheStatus.state}
+                      {cacheBuilding ? "Building" : cacheStatus.state}
                     </strong>
                   </span>
                   <Button size="sm" variant="outline" onClick={() => void buildOrRebuildCache()} disabled={cacheBuilding || benchRunning || running}>
                     {cacheBuilding ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Database className="w-3 h-3 mr-1" />}
-                    Build/Rebuild PERF Cache
+                    {cacheBuilding ? "Building PERF cache..." : "Build/Rebuild PERF Cache"}
                   </Button>
                 </div>
                 <div className="text-muted-foreground">
-                  {cacheStatus.builtAt
+                  {cacheBuilding
+                    ? "Building PERF cache..."
+                    : cacheStatus.builtAt
                     ? `Built at ${new Date(cacheStatus.builtAt).toLocaleTimeString()} · ${(cacheStatus.recordsIndexed ?? 0).toLocaleString()} rows indexed`
+                    : cacheStatus.error
+                    ? `PERF cache build failed: ${cacheStatus.error}`
                     : "Cache not built yet. Cached benchmarks will build it on first run."}
                 </div>
               </div>
