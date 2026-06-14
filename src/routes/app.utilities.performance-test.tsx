@@ -302,9 +302,12 @@ interface PerfAggregate {
   scope: "all" | "batch";
   scopeId: string;
   builtAt: number;
+  cacheVersion: string;
   recordsIndexed: number;
   countsByType: Record<string, number>;
   dashboardSummary: { totalSales: number; totalPayments: number; salesCount: number; paymentsCount: number };
+  salesSummary: { totalSales: number; salesCount: number; pageSize: number };
+  itemSummary: { itemCount: number; pageSize: number };
   salesPage: any[];
   itemsPage: any[];
   reportsSummary: { salesTotal: number; purchasesTotal: number; expensesTotal: number; stockMoves: number };
@@ -363,6 +366,7 @@ async function buildPerfCache(scope: "all" | "batch", batchId?: string | null): 
   const agg: PerfAggregate = {
     scope, scopeId: scope === "batch" ? (batchId ?? "") : "__all__",
     builtAt: Date.now(),
+    cacheVersion: PERF_CACHE_VERSION,
     recordsIndexed,
     countsByType: counts,
     dashboardSummary: {
@@ -370,6 +374,15 @@ async function buildPerfCache(scope: "all" | "batch", batchId?: string | null): 
       totalPayments: paymentsTotal,
       salesCount: counts.sales || 0,
       paymentsCount: counts.payments || 0,
+    },
+    salesSummary: {
+      totalSales: salesTotal,
+      salesCount: counts.sales || 0,
+      pageSize: salesPage.length,
+    },
+    itemSummary: {
+      itemCount: counts.items || 0,
+      pageSize: itemsPage.length,
     },
     salesPage,
     itemsPage,
@@ -388,7 +401,9 @@ async function buildPerfCache(scope: "all" | "batch", batchId?: string | null): 
 
 async function getPerfCache(scope: "all" | "batch", batchId?: string | null): Promise<PerfAggregate | null> {
   const row = await getCachedSummary(cacheKeyFor(scope, batchId));
-  return row?.aggregate ?? null;
+  const aggregate = row?.aggregate as PerfAggregate | undefined;
+  if (!aggregate || aggregate.cacheVersion !== PERF_CACHE_VERSION) return null;
+  return aggregate;
 }
 
 // ────────────────────────────────── Page ─────────────────────────────────────
