@@ -1034,44 +1034,71 @@ function ItemDetailPage() {
         </TabsContent>
 
         <TabsContent value="stores">
-          <div className="rounded-md border overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-muted">
-                <tr>
-                  <th className="text-left px-3 py-2">Warehouse</th>
-                  <th className="text-right px-3 py-2">Purchased</th>
-                  <th className="text-right px-3 py-2">Sold</th>
-                  <th className="text-right px-3 py-2">Returned In</th>
-                  <th className="text-right px-3 py-2">Transfer In</th>
-                  <th className="text-right px-3 py-2">Transfer Out</th>
-                  <th className="text-right px-3 py-2">Adjusted</th>
-                  <th className="text-right px-3 py-2">Current</th>
-                </tr>
-              </thead>
-              <tbody>
-                {storeStock.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="px-3 py-6 text-center text-muted-foreground">
-                      No store activity yet.
-                    </td>
-                  </tr>
-                ) : (
-                  storeStock.map((r) => (
-                    <tr key={r.warehouse} className="border-t">
-                      <td className="px-3 py-2">{r.warehouse}</td>
-                      <td className="px-3 py-2 text-right">{r.purchased}</td>
-                      <td className="px-3 py-2 text-right">{r.sold}</td>
-                      <td className="px-3 py-2 text-right">{r.returnedIn}</td>
-                      <td className="px-3 py-2 text-right">{r.transferIn}</td>
-                      <td className="px-3 py-2 text-right">{r.transferOut}</td>
-                      <td className="px-3 py-2 text-right">{r.adjusted}</td>
-                      <td className="px-3 py-2 text-right font-semibold">{r.current}</td>
-                    </tr>
-                  ))
+          {(() => {
+            const storeTotal = storeStock.reduce((s, r) => s + Number(r.current || 0), 0);
+            const itemStock = Number(it.stock || 0);
+            const mismatch = Math.abs(storeTotal - itemStock) > 0.0001;
+            return (
+              <>
+                {mismatch && (
+                  <div className="mb-3 rounded-md border border-yellow-300 bg-yellow-50 text-yellow-900 px-3 py-2 text-sm flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4" />
+                    Store stock total ({storeTotal}) does not match item stock ({itemStock}). Recalculate stock.
+                  </div>
                 )}
-              </tbody>
-            </table>
-          </div>
+                <div className="mb-2 text-sm text-muted-foreground">
+                  Store total: <span className="font-semibold text-foreground">{storeTotal}</span> · Item current stock: <span className="font-semibold text-foreground">{itemStock}</span>
+                </div>
+                <div className="rounded-md border overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted">
+                      <tr>
+                        <th className="text-left px-3 py-2">Warehouse</th>
+                        <th className="text-right px-3 py-2">Purchased</th>
+                        <th className="text-right px-3 py-2">Sold</th>
+                        <th className="text-right px-3 py-2">Returned In</th>
+                        <th className="text-right px-3 py-2">Transfer In</th>
+                        <th className="text-right px-3 py-2">Transfer Out</th>
+                        <th className="text-right px-3 py-2">Adjusted</th>
+                        <th className="text-right px-3 py-2">Current</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {storeStock.length === 0 ? (
+                        <tr>
+                          <td colSpan={8} className="px-3 py-6 text-center text-muted-foreground">
+                            No store activity yet.
+                          </td>
+                        </tr>
+                      ) : (
+                        storeStock.map((r) => (
+                          <tr key={r.warehouse} className="border-t">
+                            <td className="px-3 py-2">{r.warehouse}</td>
+                            <td className="px-3 py-2 text-right">{r.purchased}</td>
+                            <td className="px-3 py-2 text-right">{r.sold}</td>
+                            <td className="px-3 py-2 text-right">{r.returnedIn}</td>
+                            <td className="px-3 py-2 text-right">{r.transferIn}</td>
+                            <td className="px-3 py-2 text-right">{r.transferOut}</td>
+                            <td className="px-3 py-2 text-right">{r.adjusted}</td>
+                            <td className={`px-3 py-2 text-right font-semibold ${r.current < 0 ? "text-red-600" : ""}`}>{r.current}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                    {storeStock.length > 0 && (
+                      <tfoot>
+                        <tr className="border-t bg-muted/40 font-semibold">
+                          <td className="px-3 py-2">Total</td>
+                          <td colSpan={6}></td>
+                          <td className={`px-3 py-2 text-right ${mismatch ? "text-yellow-700" : ""}`}>{storeTotal}</td>
+                        </tr>
+                      </tfoot>
+                    )}
+                  </table>
+                </div>
+              </>
+            );
+          })()}
         </TabsContent>
       </Tabs>
       <ItemEditDialog
