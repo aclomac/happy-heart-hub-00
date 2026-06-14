@@ -753,7 +753,7 @@ function ItemDetailPage() {
         <Sliders className="w-4 h-4 mr-1" /> Set Current Stock
       </Button>
       <Button asChild variant="outline" size="sm">
-        <Link to="/app/stock-transfers" search={{}}>
+        <Link to="/app/stock-transfers" search={{ from: undefined, item: undefined }}>
           <ArrowLeftRight className="w-4 h-4 mr-1" /> Transfer
         </Link>
       </Button>
