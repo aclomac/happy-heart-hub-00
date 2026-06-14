@@ -81,9 +81,11 @@ jobs:
           OPTIONAL_FIXED="stable-build-manifest.json"
           OPTIONAL_GLOBS="erpovo-release-audit*.pdf release-audit*.pdf"
           FORBIDDEN=".env .env.* *.pem *secret* *token* *api_key* node_modules perf_stress*"
+          RETENTION_DAYS=90
 
           echo "========== ERPOVO CI QA Artifact Checks =========="
           echo "Artifact name  : $ARTIFACT_NAME"
+          echo "Retention      : $RETENTION_DAYS days"
           echo "Manifest path  : qa-summary.json"
           echo "Hash file path : qa-summary.sha256"
           echo "SHA-256        : $HASH"
@@ -112,19 +114,21 @@ jobs:
           done
           echo ""
           echo "Secrets excluded confirmation:"
-          excluded_ok=1
           for pat in $FORBIDDEN; do
             for f in $pat; do
               [ -e "$f" ] && { echo "  ⚠ forbidden present in repo (NOT uploaded): $f"; }
             done
           done
           echo "  ✓ Upload list contains no .env / secrets / tokens / node_modules / PERF stress data"
+          echo ""
+          echo "QA artifacts retained for $RETENTION_DAYS days"
           echo "==================================================="
 
           {
             echo "### ERPOVO CI QA Artifact Checks"
             echo ""
             echo "- **Artifact name:** \`$ARTIFACT_NAME\`"
+            echo "- **Retention period:** $RETENTION_DAYS days"
             echo "- **Manifest hash (sha256):** \`$HASH\`"
             echo "- **Release ready:** $READY"
             echo ""
@@ -133,8 +137,23 @@ jobs:
               if [ -f "$f" ]; then echo "- ✓ \`$f\`"; else echo "- ✗ MISSING \`$f\`"; fi
             done
             echo ""
+            echo "**Optional files:**"
+            for f in $OPTIONAL_FIXED; do
+              if [ -f "$f" ]; then echo "- ✓ \`$f\`"; else echo "- · skipped \`$f\`"; fi
+            done
+            for pat in $OPTIONAL_GLOBS; do
+              matched=0
+              for f in $pat; do
+                if [ -f "$f" ]; then echo "- ✓ \`$f\`"; matched=1; fi
+              done
+              [ "$matched" -eq 0 ] && echo "- · skipped \`$pat\`"
+            done
+            echo ""
             echo "**Secrets excluded:** ✓ no .env / secrets / tokens / node_modules / PERF stress data in upload list"
+            echo ""
+            echo "_QA artifacts retained for $RETENTION_DAYS days_"
           } >> "$GITHUB_STEP_SUMMARY"
+
 
       - name: Upload QA release artifacts
         uses: actions/upload-artifact@v4
