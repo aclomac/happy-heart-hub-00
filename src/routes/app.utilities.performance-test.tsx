@@ -526,23 +526,25 @@ function PerformanceTestPage() {
     batchId: string | null,
     opts?: { forceFresh?: boolean },
   ) => {
-    const bid = mode === "last_batch" ? batchId ?? undefined : undefined;
-    const cacheKey = `bench:${mode}:${bid ?? "__all__"}`;
-    const previous = (await getCachedSummary(cacheKey)) as
-      | (Omit<Bench, "previous" | "cached" | "source"> & { cachedAt?: number })
-      | null;
+    const fresh = !!opts?.forceFresh;
+    const scopeKey: "all" | "batch" = mode === "last_batch" ? "batch" : "all";
+    const bid = mode === "last_batch" ? batchId : null;
+    const prevKey = `bench_summary:${mode}:${bid ?? "__all__"}`;
+    const previousRow = (await getCachedSummary(prevKey)) as any;
+    const previous = previousRow
+      ? {
+          mode: previousRow.mode, scopeRecords: previousRow.scopeRecords, genMs: previousRow.genMs,
+          dashboardMs: previousRow.dashboardMs, itemsMs: previousRow.itemsMs, salesMs: previousRow.salesMs,
+          reportsMs: previousRow.reportsMs, searchMs: previousRow.searchMs,
+          memoryWarn: previousRow.memoryWarn, status: previousRow.status as Status,
+        }
+      : null;
 
-    // Cache hit path: show immediately, no recompute
-    if (previous && !opts?.forceFresh) {
-      setBench({
-        mode, scopeRecords: scope, genMs,
-        dashboardMs: 1, // cached summary read
-        itemsMs: previous.itemsMs, salesMs: previous.salesMs,
-        reportsMs: previous.reportsMs, searchMs: previous.searchMs,
-        memoryWarn: previous.memoryWarn, status: previous.status,
-        cached: true, source: "cache", previous,
-      });
-      return;
+    // Ensure aggregate cache exists; build it if missing or fresh requested
+    let agg = fresh ? null : await getPerfCache(scopeKey, bid);
+    if (!agg) {
+      if (!fresh) toast.message("Building PERF cache…");
+      agg = await buildPerfCache(scopeKey, bid);
     }
 
     const time = async (fn: () => Promise<any>) => {
@@ -551,32 +553,56 @@ function PerformanceTestPage() {
       return Math.round(performance.now() - s);
     };
 
-    // All reads share a single DB connection + transaction in the All PERF path
-    // → eliminates per-call open/close overhead that made all_perf slow.
-    const dashboardMs = await time(async () => {
-      await batchedReadSamples(
-        [{ type: "sales", limit: 25 }, { type: "payments", limit: 10 }],
-        bid,
+    let dashboardMs: number, itemsMs: number, salesMs: number, reportsMs: number, searchMs: number;
+    let diag: Diag;
+
+    if (fresh) {
+      // Fresh full scan: measure raw IndexedDB reads (no cache shortcut)
+      const bidArg = bid ?? undefined;
+      dashboardMs = await time(() =>
+        batchedReadSamples([{ type: "sales", limit: 25 }, { type: "payments", limit: 10 }], bidArg),
       );
-    });
-    const itemsMs = await time(() => batchedReadSamples([{ type: "items", limit: 100 }], bid).then(r => r[0]));
-    const salesMs = await time(() => batchedReadSamples([{ type: "sales", limit: 100 }], bid).then(r => r[0]));
-    const reportsMs = await time(async () => {
-      await batchedReadSamples(
-        [{ type: "sales", limit: 100 }, { type: "stock_movements", limit: 100 }],
-        bid,
+      itemsMs = await time(() => batchedReadSamples([{ type: "items", limit: 100 }], bidArg));
+      salesMs = await time(() => batchedReadSamples([{ type: "sales", limit: 100 }], bidArg));
+      reportsMs = await time(() =>
+        batchedReadSamples([{ type: "sales", limit: 100 }, { type: "stock_movements", limit: 100 }], bidArg),
       );
-    });
-    const searchMs = await time(async () => {
-      const db = await openDB();
-      await new Promise<void>((res) => {
-        const tx = db.transaction(STORE, "readonly");
-        const idx = tx.objectStore(STORE).index("by_name_search");
-        const req = idx.getAll(IDBKeyRange.bound("item 1", "item 1\uffff"), 25);
-        req.onsuccess = () => { db.close(); res(); };
-        req.onerror = () => { db.close(); res(); };
+      searchMs = await time(async () => {
+        const db = await openDB();
+        await new Promise<void>((res) => {
+          const tx = db.transaction(STORE, "readonly");
+          const idx = tx.objectStore(STORE).index("by_name_search");
+          const req = idx.getAll(IDBKeyRange.bound("item 1", "item 1\uffff"), 25);
+          req.onsuccess = () => { db.close(); res(); };
+          req.onerror = () => { db.close(); res(); };
+        });
       });
-    });
+      diag = {
+        usedCache: false, usedFullScan: true, indexUsed: true,
+        rowsScanned: agg.recordsIndexed, rowsRendered: 100,
+      };
+    } else {
+      // Cached: read the precomputed aggregate — no row scan
+      dashboardMs = await time(async () => { void agg!.dashboardSummary; });
+      itemsMs = await time(async () => { void agg!.itemsPage.slice(0, 100); });
+      salesMs = await time(async () => { void agg!.salesPage.slice(0, 100); });
+      reportsMs = await time(async () => { void agg!.reportsSummary; });
+      searchMs = await time(async () => {
+        const db = await openDB();
+        await new Promise<void>((res) => {
+          const tx = db.transaction(STORE, "readonly");
+          const idx = tx.objectStore(STORE).index("by_name_search");
+          const req = idx.getAll(IDBKeyRange.bound("item 1", "item 1\uffff"), 25);
+          req.onsuccess = () => { db.close(); res(); };
+          req.onerror = () => { db.close(); res(); };
+        });
+      });
+      diag = {
+        usedCache: true, usedFullScan: false, indexUsed: true,
+        rowsScanned: agg.itemsPage.length + agg.salesPage.length,
+        rowsRendered: Math.min(100, agg.salesPage.length),
+      };
+    }
 
     let memoryWarn = false;
     const mem = (performance as any).memory;
@@ -586,13 +612,65 @@ function PerformanceTestPage() {
     const status: Status = worst < 150 ? "Good" : worst < 500 ? "Needs Optimization" : "Slow";
     const next: Bench = {
       mode, scopeRecords: scope, genMs, dashboardMs, itemsMs, salesMs, reportsMs,
-      searchMs, memoryWarn, status, cached: false, source: "fresh", previous: previous ?? null,
+      searchMs, memoryWarn, status,
+      cached: !fresh, source: fresh ? "fresh" : "cache",
+      diag, previous,
     };
     setBench(next);
-    await setCachedSummary(cacheKey, {
+    await setCachedSummary(prevKey, {
       mode, scopeRecords: scope, genMs, dashboardMs, itemsMs, salesMs, reportsMs,
       searchMs, memoryWarn, status,
     });
+    setCacheStatusVersion((v) => v + 1);
+  };
+
+  // ── PERF cache status (for the visible Cache Status card) ─────────────────
+  const [cacheStatusVersion, setCacheStatusVersion] = useState(0);
+  const [cacheStatus, setCacheStatus] = useState<{
+    state: "Ready" | "Missing" | "Rebuilding";
+    builtAt?: number;
+    recordsIndexed?: number;
+  }>({ state: "Missing" });
+  const [cacheBuilding, setCacheBuilding] = useState(false);
+  useEffect(() => {
+    (async () => {
+      const scopeKey: "all" | "batch" = benchMode === "last_batch" ? "batch" : "all";
+      const bid = benchMode === "last_batch" ? lastBatchId : null;
+      const c = await getPerfCache(scopeKey, bid);
+      if (cacheBuilding) {
+        setCacheStatus({ state: "Rebuilding" });
+      } else if (c) {
+        setCacheStatus({ state: "Ready", builtAt: c.builtAt, recordsIndexed: c.recordsIndexed });
+      } else {
+        setCacheStatus({ state: "Missing" });
+      }
+    })();
+  }, [benchMode, lastBatchId, cacheStatusVersion, cacheBuilding, existingNow]);
+
+  const buildOrRebuildCache = async () => {
+    if (cacheBuilding) return;
+    const scopeKey: "all" | "batch" = benchMode === "last_batch" ? "batch" : "all";
+    const bid = benchMode === "last_batch" ? lastBatchId : null;
+    if (scopeKey === "all" && existingNow === 0) {
+      toast.error("Generate performance data first");
+      return;
+    }
+    if (scopeKey === "batch" && (!bid || lastBatchCount === 0)) {
+      toast.error("No batch in this session — switch to All PERF Records");
+      return;
+    }
+    setCacheBuilding(true);
+    try {
+      toast.message("Building PERF cache…");
+      await clearSummaryKey(cacheKeyFor(scopeKey, bid));
+      const agg = await buildPerfCache(scopeKey, bid);
+      toast.success(`PERF cache ready (${agg.recordsIndexed.toLocaleString()} rows indexed)`);
+    } catch (e: any) {
+      toast.error(`Cache build failed: ${e?.message ?? e}`);
+    } finally {
+      setCacheBuilding(false);
+      setCacheStatusVersion((v) => v + 1);
+    }
   };
 
 
