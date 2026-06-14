@@ -738,6 +738,12 @@ function ItemDetailPage() {
           <Sliders className="w-4 h-4 mr-1" /> Adjust Stock
         </Link>
       </Button>
+      <Button variant="outline" size="sm" onClick={() => { setSetStockQty(""); setSetStockOpen("opening"); }}>
+        <Plus className="w-4 h-4 mr-1" /> Set Opening Stock
+      </Button>
+      <Button variant="outline" size="sm" onClick={() => { setSetStockQty(String(it.stock)); setSetStockOpen("set"); }}>
+        <Sliders className="w-4 h-4 mr-1" /> Set Current Stock
+      </Button>
       <Button asChild variant="outline" size="sm">
         <Link to="/app/stock-transfers" search={{}}>
           <ArrowLeftRight className="w-4 h-4 mr-1" /> Transfer
