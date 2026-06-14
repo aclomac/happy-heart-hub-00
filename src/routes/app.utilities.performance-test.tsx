@@ -706,9 +706,11 @@ function PerformanceTestPage() {
     setBenchRunning(true);
     try {
       if (fresh) {
-        // Fresh: clear only the benchmark cache for this scope, never PERF data
-        const bid = mode === "last_batch" ? lastBatchId ?? undefined : undefined;
-        await clearSummaryKey(`bench:${mode}:${bid ?? "__all__"}`);
+        // Fresh: clear only this scope's aggregate cache so the timed full scan
+        // is honest. Never deletes [PERF] data.
+        const bid = mode === "last_batch" ? lastBatchId : null;
+        const scopeKey: "all" | "batch" = mode === "last_batch" ? "batch" : "all";
+        await clearSummaryKey(cacheKeyFor(scopeKey, bid));
       }
       await runBenchmark(mode, scope, lastGenMs, lastBatchId, { forceFresh: fresh });
       console.log("[perf] benchmark completed");
