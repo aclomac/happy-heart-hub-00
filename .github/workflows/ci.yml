@@ -78,9 +78,9 @@ jobs:
           WORKFLOW_FILE=".github/workflows/ci.yml"
           # Extract the retention-days value from the QA upload step block
           # Extract the retention-days value that immediately follows the
-          # 'qa-retention-policy: enforced' marker in the QA upload step.
+          # marker in the QA upload step (anchored to YAML key position).
           ACTUAL=$(grep -A1 'qa-retention-policy: enforced' "$WORKFLOW_FILE" \
-            | grep 'retention-days:' \
+            | grep -E '^[[:space:]]+retention-days:[[:space:]]+[0-9]+' \
             | head -n1 \
             | sed 's/[^0-9]//g')
 
