@@ -124,8 +124,14 @@ function VerifyData() {
         });
         const stock = Number(it.stock);
         let reason = "Sale recorded without enough stock";
-        if (purchQty === 0 && salesQty > 0) reason = "Missing purchase / opening stock";
-        else if (expected !== stock) reason = "Stock vs ledger mismatch";
+        let recommendedAction = "Adjust stock or use Set Current Stock on the item.";
+        if (purchQty === 0 && salesQty > 0) {
+          reason = "Missing purchase / opening stock";
+          recommendedAction = "Add purchase / opening stock or adjust stock.";
+        } else if (expected !== stock) {
+          reason = "Stock vs ledger mismatch";
+          recommendedAction = "Check duplicate stock movements or recalculate from ledger.";
+        }
         negStock.push({
           id: it.id,
           name: it.name,
@@ -135,6 +141,7 @@ function VerifyData() {
           expectedStock: expected,
           delta: expected - stock,
           reason,
+          recommendedAction,
         });
       }
 
