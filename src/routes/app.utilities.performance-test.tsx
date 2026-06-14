@@ -146,6 +146,34 @@ async function readSample(type: string, limit = 100, batchId?: string): Promise<
   });
 }
 
+// Batched read: many small getAll calls in ONE transaction on ONE connection.
+// Avoids per-call DB open/close overhead — critical for All PERF mode.
+async function batchedReadSamples(
+  reads: { type: string; limit: number }[],
+  batchId?: string,
+): Promise<any[][]> {
+  const db = await openDB();
+  return new Promise((resolve) => {
+    const tx = db.transaction(STORE, "readonly");
+    const store = tx.objectStore(STORE);
+    const results: any[][] = new Array(reads.length);
+    reads.forEach((r, i) => {
+      let req: IDBRequest<any[]>;
+      if (batchId) {
+        const idx = store.index("by_type_batch");
+        req = idx.getAll(IDBKeyRange.only([r.type, batchId]), r.limit);
+      } else {
+        const idx = store.index("by_type");
+        req = idx.getAll(IDBKeyRange.only(r.type), r.limit);
+      }
+      req.onsuccess = () => { results[i] = req.result || []; };
+      req.onerror = () => { results[i] = []; };
+    });
+    tx.oncomplete = () => { db.close(); resolve(results); };
+    tx.onerror = () => { db.close(); resolve(results); };
+  });
+}
+
 // Cached summary per scope key (batchId or "__all__")
 async function getCachedSummary(key: string): Promise<any | null> {
   try {
@@ -170,6 +198,54 @@ async function setCachedSummary(key: string, summary: any): Promise<void> {
     });
   } catch { /* noop */ }
 }
+
+async function clearSummaryKey(key: string): Promise<void> {
+  try {
+    const db = await openDB();
+    return new Promise((resolve) => {
+      const tx = db.transaction(SUMMARY_STORE, "readwrite");
+      tx.objectStore(SUMMARY_STORE).delete(key);
+      tx.oncomplete = () => { db.close(); resolve(); };
+      tx.onerror = () => { db.close(); resolve(); };
+    });
+  } catch { /* noop */ }
+}
+
+async function clearAllSummaries(): Promise<void> {
+  try {
+    const db = await openDB();
+    return new Promise((resolve) => {
+      const tx = db.transaction(SUMMARY_STORE, "readwrite");
+      tx.objectStore(SUMMARY_STORE).clear();
+      tx.oncomplete = () => { db.close(); resolve(); };
+      tx.onerror = () => { db.close(); resolve(); };
+    });
+  } catch { /* noop */ }
+}
+
+// Per-type counts via single transaction — used for diagnostics & summary build
+async function countPerfByType(batchId?: string): Promise<Record<string, number>> {
+  const db = await openDB();
+  return new Promise((resolve) => {
+    const tx = db.transaction(STORE, "readonly");
+    const store = tx.objectStore(STORE);
+    const out: Record<string, number> = {};
+    const types = ["parties", "items", "sales", "purchases", "stock_movements", "ecommerce_orders", "payments", "expenses"];
+    types.forEach((t) => {
+      let req: IDBRequest<number>;
+      if (batchId) {
+        req = store.index("by_type_batch").count(IDBKeyRange.only([t, batchId]));
+      } else {
+        req = store.index("by_type").count(IDBKeyRange.only(t));
+      }
+      req.onsuccess = () => { out[t] = req.result || 0; };
+      req.onerror = () => { out[t] = 0; };
+    });
+    tx.oncomplete = () => { db.close(); resolve(out); };
+    tx.onerror = () => { db.close(); resolve(out); };
+  });
+}
+
 
 // ─────────────────────────────── Generators ──────────────────────────────────
 type DataType =
