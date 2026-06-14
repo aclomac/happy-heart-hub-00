@@ -1238,6 +1238,39 @@ function PerformanceTestPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Stress test warning modal (>=250k) */}
+      <Dialog open={stressOpen} onOpenChange={setStressOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-warning" />
+              Heavy stress test: {stressTotal.toLocaleString()} records
+            </DialogTitle>
+            <DialogDescription>
+              {stressTotal.toLocaleString()} records is a heavy stress test. It may take time and
+              can slow the browser. Real/demo data will not be affected. Continue?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <Button variant="ghost" onClick={() => setStressOpen(false)}>Cancel</Button>
+            <Button
+              onClick={() => {
+                setStressOpen(false);
+                if (!stressFresh && existingNow > 0) {
+                  setPendingTotal(stressTotal);
+                  setPendingFresh(false);
+                  setConfirmOpen(true);
+                } else {
+                  void startGenerate(stressTotal, stressFresh);
+                }
+              }}
+            >
+              Continue
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
