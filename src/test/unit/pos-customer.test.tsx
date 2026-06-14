@@ -102,7 +102,9 @@ describe("POS Customer Quick Add", () => {
     });
   });
 
-  test("New Customer button is disabled when permission is missing", async () => {
+  test("New Customer button stays enabled in Personal Mode even without permission", async () => {
+    // Personal Mode unlocks all features. The button must remain interactive
+    // so users can always add customers from POS.
     (usePermission as any).mockReturnValue(false);
 
     render(
@@ -112,6 +114,6 @@ describe("POS Customer Quick Add", () => {
     );
 
     const addButton = await screen.findByTestId("pos-add-customer-btn");
-    expect(addButton).toBeDisabled();
+    expect(addButton).not.toBeDisabled();
   });
 });

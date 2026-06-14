@@ -319,10 +319,7 @@ export function useRouteDecision(): RouteDecision {
 
   // 8) Inside /app/* but no valid company selected → /companies.
   if (isAppRoute && !inAppEscapeHatch(pathname)) {
-    const companySelectionValid =
-      !!companyId &&
-      companiesCount > 0 &&
-      (!isDemoMode() || getVisibleDemoCompanies(auth.userId).some((c) => c.id === companyId));
+    const companySelectionValid = !!companyId && companiesCount > 0 && (!isDemoMode() || getVisibleDemoCompanies(auth.userId).some((c) => c.id === companyId));
     if (!companySelectionValid) {
       const target = "/companies";
       return { status: "ready", target, debug: { ...debug, redirectTarget: target } };

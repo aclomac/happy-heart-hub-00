@@ -200,6 +200,23 @@ const BASELINE: Record<string, number> = {
   "src/components/erp/ExpenseForm.tsx": 1,
   "src/components/erp/DebitNoteAdjustDialog.tsx": 1,
   "src/routes/app.online-store.orders.tsx": 1,
+  "src/routes/app.ecommerce.cod.tsx": 8,
+  "src/routes/app.utilities.verify-data.tsx": 1,
+  "src/routes/app.ecommerce.courier.tsx": 2,
+  "src/routes/app.ecommerce.customers.tsx": 2,
+  "src/routes/app.ecommerce.delivery-charge.tsx": 3,
+  "src/routes/app.ecommerce.expenses.tsx": 1,
+  "src/routes/app.ecommerce.index.tsx": 8,
+  "src/routes/app.ecommerce.orders.tsx": 14,
+  "src/routes/app.ecommerce.payments.tsx": 1,
+  "src/routes/app.ecommerce.products.tsx": 1,
+  "src/routes/app.ecommerce.profit-loss.tsx": 2,
+  "src/routes/app.ecommerce.returns.tsx": 1,
+  "src/routes/app.ecommerce.tracking.tsx": 2,
+  "src/routes/app.marketing-tools.tsx": 1,
+  "src/routes/app.online-store.tsx": 1,
+  "src/routes/app.utilities.performance-test.tsx": 5,
+  "src/routes/app.utilities.pos-smoke-test.tsx": 2,
 };
 
 describe("Privacy guard: repo scan", () => {

@@ -109,7 +109,7 @@ async function fetchSalesBundle(companyId: string) {
   const { data: lines, error: linesError } = await sb.from("sale_items").select("*").in("sale_id", ids);
   if (linesError) throw linesError;
   const partyIds = Array.from(new Set(saleRows.map((s) => s.party_id).filter(Boolean)));
-  const { data: parties } = partyIds.length ? await sb.from("parties").select("id,name").in("id", partyIds) : { data: [] };
+  const { data: parties } = partyIds.length ? await sb.from("parties").select("id,name").in("id", partyIds).is("deleted_at", null) : { data: [] };
   return {
     sales: saleRows,
     lines: (lines ?? []) as AnyRow[],
@@ -272,7 +272,7 @@ export async function runSaleStockPostingTest(companyId: string) {
     saleId = await saveSaleInvoice(payload, { autoNumber: false });
     steps.push({ step: "Create sale invoice qty 5", ok: true, detail: saleId });
 
-    const { data: afterItem } = await sb.from("items").select("stock").eq("id", itemId).maybeSingle();
+    const { data: afterItem } = await sb.from("items").select("stock").eq("id", itemId).is("deleted_at", null).maybeSingle();
     if (Number(afterItem?.stock) !== 15) await fail("Verify item stock = 15", `Got ${afterItem?.stock ?? "missing"}`);
     steps.push({ step: "Verify item stock = 15", ok: true, detail: "15" });
 

@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useLocation, useParams } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -41,7 +41,15 @@ import { Label } from "@/components/ui/label";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const sb = supabase as any;
 
-export const Route = createFileRoute("/app/items/$id")({ component: ItemDetailPage });
+export const Route = createFileRoute("/app/items/$id")({ component: ItemDetailShell });
+
+function ItemDetailShell() {
+  const { pathname } = useLocation();
+  const { id } = useParams({ from: "/app/items/$id" });
+  // Render child routes (e.g. /app/items/$id/edit) via <Outlet />
+  if (pathname !== `/app/items/${id}`) return <Outlet />;
+  return <ItemDetailPage />;
+}
 
 type Item = {
   id: string;
@@ -251,7 +259,7 @@ function ItemDetailPage() {
     queryKey: ["item-detail-parties", id, partyIds.join(",")],
     enabled: !!companyId && partyIds.length > 0,
     queryFn: async () => {
-      const { data } = await sb.from("parties").select("id,name").in("id", partyIds);
+      const { data } = await sb.from("parties").select("id,name").in("id", partyIds).is("deleted_at", null);
       return (data ?? []) as Array<{ id: string; name: string }>;
     },
   });

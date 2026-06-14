@@ -416,7 +416,8 @@ export function SalesDocForm({
   // new invoice gets a fresh sequential number (INV-YYYY-####). Outside demo
   // use the configurable per-company series.
   useEffect(() => {
-    if (!companyId || invoiceNo || editingId) return;
+    if (!companyId) return;
+    if (!(!invoiceNo && !editingId)) return;
     if (isDemoMode()) {
       repairDuplicateInvoiceNos(companyId);
       const sales = readLocalArray<Record<string, unknown>>("erpovo_demo_sales");

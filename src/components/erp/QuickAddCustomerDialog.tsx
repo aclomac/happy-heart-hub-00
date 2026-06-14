@@ -146,23 +146,27 @@ export function QuickAddCustomerDialog({
       setParties([newParty, ...all]);
 
       // Non-demo: also persist to Supabase so the customer is visible across devices.
+      // Failure here must NOT block the local save — the customer already exists locally.
       if (!isDemoMode()) {
-        const { data: inserted, error } = await supabase
-          .from("parties")
-          .insert({
-            company_id: companyId,
-            name: trimmedName || trimmedPhone,
-            type: "customer",
-            phone: trimmedPhone || null,
-            email: email.trim() || null,
-            address: address.trim() || null,
-            opening_balance: opn,
-            balance: opn,
-          })
-          .select("id,name,phone,address,type")
-          .single();
-        if (error) throw error;
-        if (inserted?.id) newParty.id = inserted.id as string;
+        try {
+          const { data: inserted, error } = await supabase
+            .from("parties")
+            .insert({
+              company_id: companyId,
+              name: trimmedName || trimmedPhone,
+              type: "customer",
+              phone: trimmedPhone || null,
+              email: email.trim() || null,
+              address: address.trim() || null,
+              opening_balance: opn,
+              balance: opn,
+            })
+            .select("id,name,phone,address,type")
+            .single();
+          if (!error && inserted?.id) newParty.id = inserted.id as string;
+        } catch {
+          // Offline / not signed in — local copy is the source of truth.
+        }
       }
 
       toast.success(t("Customer added"));
