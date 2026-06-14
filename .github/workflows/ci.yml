@@ -58,6 +58,9 @@ jobs:
       - name: QA manifest verify (schema + sha256 + gates)
         run: bun run qa:manifest:verify
 
+      - name: Build
+        run: bun run build
+
       - name: Check required QA artifact files
         run: |
           missing=0
@@ -119,9 +122,6 @@ jobs:
           path: coverage/
           retention-days: 14
           if-no-files-found: ignore
-
-      - name: Build
-        run: bun run build
 
   e2e:
     name: Playwright E2E (optional)
