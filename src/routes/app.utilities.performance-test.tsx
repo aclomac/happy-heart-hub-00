@@ -429,20 +429,20 @@ function PerformanceTestPage() {
     const bid = mode === "last_batch" ? batchId ?? undefined : undefined;
     const cacheKey = `bench:${mode}:${bid ?? "__all__"}`;
     const previous = (await getCachedSummary(cacheKey)) as
-      | (Omit<Bench, "previous" | "cached"> & { cachedAt?: number })
+      | (Omit<Bench, "previous" | "cached" | "source"> & { cachedAt?: number })
       | null;
 
-    // Use cache when present and not forced fresh — simulates real "cached summary" pattern
+    // Cache hit path: show immediately, no recompute
     if (previous && !opts?.forceFresh) {
-      const dashboardMs = 1; // cache hit
       setBench({
         mode, scopeRecords: scope, genMs,
-        dashboardMs, itemsMs: previous.itemsMs, salesMs: previous.salesMs,
+        dashboardMs: 1, // cached summary read
+        itemsMs: previous.itemsMs, salesMs: previous.salesMs,
         reportsMs: previous.reportsMs, searchMs: previous.searchMs,
         memoryWarn: previous.memoryWarn, status: previous.status,
-        cached: true, previous,
+        cached: true, source: "cache", previous,
       });
-      // continue and refresh underneath
+      return;
     }
 
     const time = async (fn: () => Promise<any>) => {
@@ -450,19 +450,24 @@ function PerformanceTestPage() {
       await fn();
       return Math.round(performance.now() - s);
     };
-    // Dashboard summary: tiny indexed reads only (cached on repeat)
+
+    // All reads share a single DB connection + transaction in the All PERF path
+    // → eliminates per-call open/close overhead that made all_perf slow.
     const dashboardMs = await time(async () => {
-      await readSample("sales", 25, bid);
-      await readSample("payments", 10, bid);
+      await batchedReadSamples(
+        [{ type: "sales", limit: 25 }, { type: "payments", limit: 10 }],
+        bid,
+      );
     });
-    const itemsMs = await time(() => readSample("items", 100, bid));
-    const salesMs = await time(() => readSample("sales", 100, bid));
+    const itemsMs = await time(() => batchedReadSamples([{ type: "items", limit: 100 }], bid).then(r => r[0]));
+    const salesMs = await time(() => batchedReadSamples([{ type: "sales", limit: 100 }], bid).then(r => r[0]));
     const reportsMs = await time(async () => {
-      await readSample("sales", 100, bid);
-      await readSample("stock_movements", 100, bid);
+      await batchedReadSamples(
+        [{ type: "sales", limit: 100 }, { type: "stock_movements", limit: 100 }],
+        bid,
+      );
     });
     const searchMs = await time(async () => {
-      // indexed search on nameSearch (single getAll, no JS filter)
       const db = await openDB();
       await new Promise<void>((res) => {
         const tx = db.transaction(STORE, "readonly");
@@ -481,7 +486,7 @@ function PerformanceTestPage() {
     const status: Status = worst < 150 ? "Good" : worst < 500 ? "Needs Optimization" : "Slow";
     const next: Bench = {
       mode, scopeRecords: scope, genMs, dashboardMs, itemsMs, salesMs, reportsMs,
-      searchMs, memoryWarn, status, cached: false, previous: previous ?? null,
+      searchMs, memoryWarn, status, cached: false, source: "fresh", previous: previous ?? null,
     };
     setBench(next);
     await setCachedSummary(cacheKey, {
@@ -489,6 +494,7 @@ function PerformanceTestPage() {
       searchMs, memoryWarn, status,
     });
   };
+
 
   const [benchRunning, setBenchRunning] = useState(false);
   const rerunBenchmark = async (modeArg: BenchMode, fresh = false) => {
