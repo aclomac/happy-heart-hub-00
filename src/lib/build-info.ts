@@ -1,25 +1,24 @@
 // Internal build metadata for ERPOVO. Updated when a new stable
 // checkpoint is approved by QA. Do not change casually.
-export const BUILD_LABEL = "ERPOVO Stable Build - Live Integration Wizard QA Passed";
-export const BUILD_STAMP = "2026-06-13";
+export const BUILD_LABEL = "ERPOVO Stable Build - Data Verification Clean";
+export const BUILD_STAMP = "2026-06-14";
 export const BUILD_NOTES: string[] = [
+  "Verify My Data clean (0 duplicates, 0 missing names, 0 negative stock, 0 missing customers)",
+  "Stock adjustment modal hardened (selected store vs total item stock shown)",
+  "Quantity 0 validation on stock adjustments",
+  "Store-wise stock consistency check with mismatch warning",
+  "Negative stock prevention on Sale Invoice and POS",
+  "Stop-sale-on-negative-stock setting wired",
+  "Set Opening Stock / Set Current Stock correction flow on Item Details",
+  "Missing customer repair: Assign Walk-in Customer (bulk/single)",
+  "Recalculate stock from ledger action",
+  "Sale Invoice single-source inventory posting (no double deduction)",
+  "Auto stock posting on sale save (no Rebuild required)",
+  "Dashboard summary cards clickable with filtered drill-down",
+  "Performance Test utility (1L records, isolated IndexedDB, safe cleanup)",
   "Live Integration Wizard QA Passed",
-  "WooCommerce product/order preview ready",
-  "Steadfast courier send preview ready",
-  "Send to Courier confirmation checkbox working",
-  "consignmentId / trackingCode / trackingUrl / deliveryStatus / rawSafeResponse saved",
-  "Tracking link clickable from Website Orders",
-  "Product image import working",
-  "Product thumbnails working",
-  "Product edit image preview working",
-  "Order item image mapping working",
-  "Website Order Details drawer/modal working",
-  "Website Orders pagination/edit/delete/bulk delete working",
-  "Website Products import/edit/delete/bulk delete working",
-  "WooCommerce/Steadfast proxy layer ready",
-  "API credentials centralized in Integration Settings",
+  "WooCommerce product/order import + Steadfast courier send working",
   "Core ERP working: Sale Invoice, POS, Items, Purchase, Quotation, Parties",
   "Print/PDF/Export working",
-  "Utilities & Settings working",
-  "QA: 20/20 workflows · Broken 0 · Critical 0 · Partial 0",
+  "QA: workflows green · Critical 0 · Backup ready",
 ];
