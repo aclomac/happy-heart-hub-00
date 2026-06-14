@@ -177,17 +177,9 @@ describe("restore-safety: checklist gating", () => {
 
 describe("restore-safety: importErpovoBackup pipeline respects disabled tables", () => {
   it("safe-flow restore (sanitizeBackupData → importErpovoBackup) never targets disabled tables", async () => {
-    // Mock supabase BEFORE importing the module under test.
-    const fromSpy = vi.fn(() => ({
-      insert: vi.fn().mockResolvedValue({ error: null }),
-    }));
-    vi.doMock("@/integrations/supabase/client", () => ({
-      supabase: { from: fromSpy },
-    }));
+    fromSpy.mockClear();
+    insertSpy.mockClear();
 
-    const { importErpovoBackup } = await import("@/lib/erpovo-backup");
-
-    // Backup contains both safe and money-impacting tables.
     const preview = {
       manifest: {
         app: "erpovo" as const,
@@ -208,20 +200,13 @@ describe("restore-safety: importErpovoBackup pipeline respects disabled tables",
     const safeTables = Object.keys(safeData) as ("items" | "parties")[];
     expect(safeTables).toEqual(["items"]);
 
-    await importErpovoBackup(
-      { ...preview, data: safeData },
-      "dst-co",
-      safeTables,
-    );
+    await importErpovoBackup({ ...preview, data: safeData }, "dst-co", safeTables);
 
-    // supabase.from must never have been called with a disabled table.
-    const calledTables = fromSpy.mock.calls.map((c) => (c as unknown as string[])[0]);
+    const calledTables = fromSpy.mock.calls.map((c) => c[0] as string);
     for (const t of REQUIRED_DISABLED) {
       expect(calledTables).not.toContain(t);
     }
     expect(calledTables).toContain("items");
-
-    vi.doUnmock("@/integrations/supabase/client");
   });
 });
 
