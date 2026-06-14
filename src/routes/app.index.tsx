@@ -345,80 +345,76 @@ function Dashboard() {
                 value: <MoneyText value={`৳ ${data.todaySales.toLocaleString()}`} />,
                 tone: "success" as const,
                 icon: TrendingUp,
+                to: "/app/sales-reports",
+                search: { date: "today" },
+                hint: "View today's sales report",
               },
               {
                 label: "Month Sales",
                 value: <MoneyText value={`৳ ${data.monthSales.toLocaleString()}`} />,
                 tone: "primary" as const,
                 icon: ShoppingCart,
+                to: "/app/sales-reports",
+                search: { date: "this-month" },
+                hint: "View this month's sales report",
               },
               {
                 label: "Month Other Income",
                 value: <MoneyText value={`৳ ${data.monthOtherIncome.toLocaleString()}`} />,
                 tone: "success" as const,
                 icon: TrendingUp,
+                to: "/app/other-income",
+                search: { date: "this-month" },
+                hint: "View other income",
               },
               {
                 label: "Receivables",
                 value: <MoneyText value={`৳ ${data.receivables.toLocaleString()}`} />,
                 tone: "warning" as const,
                 icon: Receipt,
+                to: "/app/parties",
+                search: { type: "receivable" },
+                hint: "View receivables",
               },
               {
                 label: "Payables",
                 value: <MoneyText value={`৳ ${data.payables.toLocaleString()}`} />,
                 tone: "sale" as const,
                 icon: FileMinus,
+                to: "/app/parties",
+                search: { type: "payable" },
+                hint: "View payables",
               },
               {
                 label: "Month Expenses",
                 value: <MoneyText value={`৳ ${data.monthExpenses.toLocaleString()}`} />,
                 tone: "warning" as const,
                 icon: Wallet,
+                to: "/app/expenses",
+                search: { date: "this-month" },
+                hint: "View this month's expenses",
               },
               {
                 label: "Low Stock",
                 value: String(data.lowStock.length),
                 tone: (data.lowStock.length ? "sale" : "muted") as "sale" | "muted",
                 icon: data.lowStock.length ? AlertCircle : Package,
+                to: "/app/reports/inventory",
+                search: { stock: "low" },
+                hint: "View low stock report",
               },
-              ].map((k) => {
-              const toneMap = {
-                success: "text-success bg-success/10",
-                sale: "text-sale bg-sale/10",
-                warning: "text-utility bg-utility/10",
-                primary: "text-primary bg-primary/10",
-                muted: "text-foreground bg-muted",
-              } as const;
-              const cls = toneMap[k.tone];
-              const [textCls, bgCls] = cls.split(" ");
-              return (
-                <div
-                  key={k.label}
-                  className="relative bg-card border rounded-lg px-4 py-3 overflow-hidden transition-all hover:-translate-y-0.5"
-                  style={{ boxShadow: "var(--shadow-card)" }}
-                >
-                  <div
-                    className={`absolute left-0 top-0 bottom-0 w-1 ${textCls.replace("text-", "bg-")} opacity-70`}
-                  />
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <div className="text-[11px] text-muted-foreground uppercase tracking-wide truncate font-medium">
-                        {k.label}
-                      </div>
-                      <div className={`text-lg font-semibold mt-1 ${textCls} truncate`}>
-                        {k.value}
-                      </div>
-                    </div>
-                    <div
-                      className={`shrink-0 w-9 h-9 rounded-md ${bgCls} flex items-center justify-center`}
-                    >
-                      <k.icon className={`w-4 h-4 ${textCls}`} />
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+            ].map((k) => (
+              <DashCard
+                key={k.label}
+                label={k.label}
+                value={k.value}
+                tone={k.tone}
+                icon={k.icon}
+                to={k.to}
+                search={k.search}
+                hint={k.hint}
+              />
+            ))}
           </div>
 
           {invQ.data && (
@@ -429,76 +425,66 @@ function Dashboard() {
                   value: `৳ ${Math.round(invQ.data.totals.stockValue).toLocaleString()}`,
                   tone: "primary" as const,
                   icon: Package,
+                  to: "/app/reports/inventory",
+                  hint: "View inventory valuation",
                 },
                 {
                   label: "Total Items",
                   value: String(invQ.data.totals.totalItems),
                   tone: "success" as const,
                   icon: Package,
+                  to: "/app/items",
+                  hint: "View all items",
                 },
                 {
                   label: "Low Stock",
                   value: String(invQ.data.totals.lowStock),
                   tone: (invQ.data.totals.lowStock ? "warning" : "muted") as "warning" | "muted",
                   icon: AlertTriangle,
+                  to: "/app/reports/inventory",
+                  search: { stock: "low" },
+                  hint: "View low stock items",
                 },
                 {
                   label: "Out of Stock",
                   value: String(invQ.data.totals.outOfStock),
                   tone: (invQ.data.totals.outOfStock ? "sale" : "muted") as "sale" | "muted",
                   icon: AlertCircle,
+                  to: "/app/items",
+                  search: { stock: "out" },
+                  hint: "View out of stock items",
                 },
                 {
                   label: "Warehouses",
                   value: String(invQ.data.totals.warehouses),
                   tone: "primary" as const,
                   icon: Warehouse,
+                  to: "/app/warehouses",
+                  hint: "Manage warehouses",
                 },
                 {
                   label: "Recent Transfers",
                   value: String(invQ.data.transfers.length),
                   tone: "primary" as const,
                   icon: ArrowRightLeft,
+                  to: "/app/stock-transfers",
+                  hint: "View stock transfers",
                 },
-              ].map((k) => {
-                const toneMap = {
-                  success: "text-success bg-success/10",
-                  sale: "text-sale bg-sale/10",
-                  warning: "text-utility bg-utility/10",
-                  primary: "text-primary bg-primary/10",
-                  muted: "text-foreground bg-muted",
-                } as const;
-                const cls = toneMap[k.tone];
-                const [textCls, bgCls] = cls.split(" ");
-                return (
-                  <div
-                    key={k.label}
-                    className="relative bg-card border rounded-lg px-4 py-3 overflow-hidden"
-                    style={{ boxShadow: "var(--shadow-card)" }}
-                  >
-                    <div
-                      className={`absolute left-0 top-0 bottom-0 w-1 ${textCls.replace("text-", "bg-")} opacity-70`}
-                    />
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <div className="text-[11px] text-muted-foreground uppercase tracking-wide truncate font-medium">
-                          {k.label}
-                        </div>
-                        <div className={`text-lg font-semibold mt-1 ${textCls} truncate`}>
-                          {k.value}
-                        </div>
-                      </div>
-                      <div
-                        className={`shrink-0 w-9 h-9 rounded-md ${bgCls} flex items-center justify-center`}
-                      >
-                        <k.icon className={`w-4 h-4 ${textCls}`} />
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+              ].map((k) => (
+                <DashCard
+                  key={k.label}
+                  label={k.label}
+                  value={k.value}
+                  tone={k.tone}
+                  icon={k.icon}
+                  to={k.to}
+                  search={k.search}
+                  hint={k.hint}
+                />
+              ))}
             </div>
           )}
+
 
           {companyId && (
             <div className="mb-4">
