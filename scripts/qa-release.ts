@@ -25,9 +25,10 @@ function run(step: Step): Result {
 }
 
 function parseVitestCounts(out: string): { passed: number; failed: number; skipped: number } {
-  // Vitest prints two summary lines: "Test Files ... passed (N)" then
-  // "Tests   X passed | Y failed | Z skipped (T)". Match the Tests line only.
-  const line = out.split("\n").find((l) => /^\s*Tests\s/.test(l)) ?? "";
+  // Strip ANSI color codes, then match the "Tests" summary line.
+  // eslint-disable-next-line no-control-regex
+  const clean = out.replace(/\u001b\[[0-9;]*m/g, "");
+  const line = clean.split("\n").find((l) => /^\s*Tests\s/.test(l)) ?? "";
   const passed = Number(line.match(/(\d+)\s+passed/)?.[1] ?? 0);
   const failed = Number(line.match(/(\d+)\s+failed/)?.[1] ?? 0);
   const skipped = Number(line.match(/(\d+)\s+skipped/)?.[1] ?? 0);
