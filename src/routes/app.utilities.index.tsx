@@ -14,6 +14,7 @@ import {
   CalendarX,
   Sparkles,
   Gauge,
+  RotateCcw,
   type LucideIcon,
 } from "lucide-react";
 import { resetAndReseedDemo } from "@/lib/demo/resetDemo";
