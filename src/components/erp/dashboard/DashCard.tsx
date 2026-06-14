@@ -18,7 +18,7 @@ export function DashCard(props: {
   tone: Tone;
   icon: LucideIcon;
   to: string;
-  search?: Record<string, string | number | boolean>;
+  search?: Record<string, string | number | boolean | undefined>;
   hint?: string;
 }) {
   const cls = toneMap[props.tone];
