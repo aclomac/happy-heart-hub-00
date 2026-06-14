@@ -969,8 +969,13 @@ export function SalesDocForm({
         }
       }
 
-      // Per spec: navigate to Sale Invoices list after successful save.
-      navigate({ to: meta.listPath });
+      // For new invoices, show success dialog with Print/Download/Open/Create Another.
+      // For edits or other doc types, go back to the list as before.
+      if (!editingId && kind === "invoice" && newId) {
+        setSuccessOpen(true);
+      } else {
+        navigate({ to: meta.listPath });
+      }
     } catch (e) {
       const msg = (e as Error).message || String(e);
       if (msg === "Duplicate invoice number") {
