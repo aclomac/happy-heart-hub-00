@@ -309,6 +309,8 @@ export function SalesDocForm({
   const meta = META[kind];
   const docLabels = labelsFor(kind);
   const companyId = useCurrentCompanyId();
+  const { data: companySettings } = useCompanySettings(companyId);
+  const stopOnNegativeStock = companySettings?.preferences?.stopSaleOnNegativeStock ?? true;
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { t } = useI18n();
