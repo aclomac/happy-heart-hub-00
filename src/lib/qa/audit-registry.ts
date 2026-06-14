@@ -174,6 +174,11 @@ export const AUDIT_REGISTRY: AuditEntry[] = [
   { id: "sub-ut-verify", module: M.utilities, label: "Verify My Data", kind: "submenu", route: "/app/utilities/verify-data", status: W },
   { id: "sub-ut-bin", module: M.utilities, label: "Recycle Bin", kind: "submenu", route: "/app/utilities/recycle-bin", status: W },
   { id: "sub-ut-cfy", module: M.utilities, label: "Close Financial Year", kind: "submenu", route: "/app/utilities/close-financial-year", status: S, note: "Disabled with tooltip until bookkeeping module ships." },
+  { id: "sub-ut-perf", module: M.utilities, label: "Performance Test", kind: "submenu", route: "/app/utilities/performance-test", status: W, note: "Generates [PERF]-tagged demo data in isolated IndexedDB (erpovo_perf_test). Does not touch real or demo business data." },
+  { id: "btn-perf-gen-1k", module: M.utilities, page: "Performance Test", label: "Generate 1,000 records", kind: "button", route: "/app/utilities/performance-test", status: W },
+  { id: "btn-perf-clear", module: M.utilities, page: "Performance Test", label: "Clear Performance Test Data", kind: "button", route: "/app/utilities/performance-test", status: W, note: "Removes only perfTest=true rows from erpovo_perf_test IndexedDB." },
+  { id: "btn-perf-tagged", module: M.utilities, page: "Performance Test", label: "Generated data tagged [PERF]", kind: "workflow", route: "/app/utilities/performance-test", status: W },
+  { id: "btn-perf-safety", module: M.utilities, page: "Performance Test", label: "Real/demo data not deleted by cleanup", kind: "workflow", route: "/app/utilities/performance-test", status: W },
   { id: "sub-ut-qa", module: M.utilities, label: "QA Audit (this page)", kind: "submenu", route: "/app/utilities/qa-audit", status: W },
 
   // ============== SETTINGS ==============
