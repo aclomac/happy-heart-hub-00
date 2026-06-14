@@ -908,7 +908,6 @@ export function SalesDocForm({
             setSavedInvoiceId(newId);
             setSavedInvoiceNo(finalInvoiceNo);
           }
-          resultId = newId;
         } catch (primaryErr) {
           const msg = (primaryErr as Error).message || "";
           if (msg === "Duplicate invoice number") throw primaryErr;
