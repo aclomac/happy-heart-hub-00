@@ -94,6 +94,9 @@ function ItemDetailPage() {
   const [tab, setTab] = useState("overview");
   const [scrolled, setScrolled] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [setStockOpen, setSetStockOpen] = useState<"set" | "opening" | null>(null);
+  const [setStockQty, setSetStockQty] = useState("");
+  const [setStockBusy, setSetStockBusy] = useState(false);
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 200);
     window.addEventListener("scroll", onScroll, { passive: true });
