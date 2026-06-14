@@ -537,9 +537,14 @@ function PerformanceTestPage() {
     console.log("[perf] benchmark started", { mode, scope, batchId: lastBatchId });
     setBenchRunning(true);
     try {
+      if (fresh) {
+        // Fresh: clear only the benchmark cache for this scope, never PERF data
+        const bid = mode === "last_batch" ? lastBatchId ?? undefined : undefined;
+        await clearSummaryKey(`bench:${mode}:${bid ?? "__all__"}`);
+      }
       await runBenchmark(mode, scope, lastGenMs, lastBatchId, { forceFresh: fresh });
       console.log("[perf] benchmark completed");
-      toast.success("Benchmark completed");
+      toast.success(fresh ? "Fresh benchmark completed" : "Benchmark completed");
     } catch (e: any) {
       console.error("[perf] benchmark error", e);
       toast.error(`Benchmark failed: ${e?.message ?? e}`);
@@ -547,6 +552,7 @@ function PerformanceTestPage() {
       setBenchRunning(false);
     }
   };
+
 
 
   const improvement = (before?: number, after?: number) => {
