@@ -325,9 +325,16 @@ function RestoreBackupPage() {
       toast.error("Please tick the checkbox and type RESTORE to confirm.");
       return;
     }
+    // Hard guard: strip disabled tables even if state was tampered with.
+    const { allowed: safeTables, blocked: blockedTables } = filterDisabled(selectedTables);
+    if (blockedTables.length > 0) toast.warning(DISABLED_MESSAGE);
+    if (safeTables.length === 0) {
+      toast.error("Nothing safe to restore.");
+      return;
+    }
     setBusy(true);
     setPhase("reading snapshot");
-    const progress: ProgressRow[] = selectedTables.map((t) => ({
+    const progress: ProgressRow[] = safeTables.map((t) => ({
       table: t, inserted: 0, skipped: 0, status: "pending",
     }));
     setRows(progress);
