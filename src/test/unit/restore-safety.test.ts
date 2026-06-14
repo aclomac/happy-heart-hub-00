@@ -206,7 +206,7 @@ describe("restore-safety: importErpovoBackup pipeline respects disabled tables",
     );
 
     // supabase.from must never have been called with a disabled table.
-    const calledTables = fromSpy.mock.calls.map((c) => c[0] as string);
+    const calledTables = fromSpy.mock.calls.map((c) => (c as unknown as string[])[0]);
     for (const t of REQUIRED_DISABLED) {
       expect(calledTables).not.toContain(t);
     }
