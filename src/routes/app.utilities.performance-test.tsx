@@ -540,11 +540,15 @@ function PerformanceTestPage() {
         }
       : null;
 
-    // Ensure aggregate cache exists; build it if missing or fresh requested
-    let agg = fresh ? null : await getPerfCache(scopeKey, bid);
-    if (!agg) {
-      if (!fresh) toast.message("Building PERF cache…");
-      agg = await buildPerfCache(scopeKey, bid);
+    // Cached path: ensure aggregate cache exists; auto-build if missing.
+    // Fresh path: skip cache entirely so we don't accidentally scan twice.
+    let agg: PerfAggregate | null = null;
+    if (!fresh) {
+      agg = await getPerfCache(scopeKey, bid);
+      if (!agg) {
+        toast.message("Building PERF cache…");
+        agg = await buildPerfCache(scopeKey, bid);
+      }
     }
 
     const time = async (fn: () => Promise<any>) => {
@@ -579,14 +583,15 @@ function PerformanceTestPage() {
       });
       diag = {
         usedCache: false, usedFullScan: true, indexUsed: true,
-        rowsScanned: agg.recordsIndexed, rowsRendered: 100,
+        rowsScanned: scope, rowsRendered: 100,
       };
     } else {
       // Cached: read the precomputed aggregate — no row scan
-      dashboardMs = await time(async () => { void agg!.dashboardSummary; });
-      itemsMs = await time(async () => { void agg!.itemsPage.slice(0, 100); });
-      salesMs = await time(async () => { void agg!.salesPage.slice(0, 100); });
-      reportsMs = await time(async () => { void agg!.reportsSummary; });
+      const a = agg!;
+      dashboardMs = await time(async () => { void a.dashboardSummary; });
+      itemsMs = await time(async () => { void a.itemsPage.slice(0, 100); });
+      salesMs = await time(async () => { void a.salesPage.slice(0, 100); });
+      reportsMs = await time(async () => { void a.reportsSummary; });
       searchMs = await time(async () => {
         const db = await openDB();
         await new Promise<void>((res) => {
@@ -599,8 +604,8 @@ function PerformanceTestPage() {
       });
       diag = {
         usedCache: true, usedFullScan: false, indexUsed: true,
-        rowsScanned: agg.itemsPage.length + agg.salesPage.length,
-        rowsRendered: Math.min(100, agg.salesPage.length),
+        rowsScanned: 0,
+        rowsRendered: Math.min(100, a.salesPage.length),
       };
     }
 
@@ -701,9 +706,11 @@ function PerformanceTestPage() {
     setBenchRunning(true);
     try {
       if (fresh) {
-        // Fresh: clear only the benchmark cache for this scope, never PERF data
-        const bid = mode === "last_batch" ? lastBatchId ?? undefined : undefined;
-        await clearSummaryKey(`bench:${mode}:${bid ?? "__all__"}`);
+        // Fresh: clear only this scope's aggregate cache so the timed full scan
+        // is honest. Never deletes [PERF] data.
+        const bid = mode === "last_batch" ? lastBatchId : null;
+        const scopeKey: "all" | "batch" = mode === "last_batch" ? "batch" : "all";
+        await clearSummaryKey(cacheKeyFor(scopeKey, bid));
       }
       await runBenchmark(mode, scope, lastGenMs, lastBatchId, { forceFresh: fresh });
       console.log("[perf] benchmark completed");
