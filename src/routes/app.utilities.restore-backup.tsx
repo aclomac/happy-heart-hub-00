@@ -308,6 +308,7 @@ function RestoreBackupPage() {
       setSummary(entry);
       pushHistory(companyId, entry);
       setHistory(loadHistory(companyId));
+      setDryRunCompleted(true);
       setPhase("dry run complete");
       toast.success(`Dry run: ${totalIns} insertable, ${totalSkip} duplicates`);
     } catch (e) {
