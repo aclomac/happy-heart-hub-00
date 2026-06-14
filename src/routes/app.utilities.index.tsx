@@ -42,6 +42,7 @@ const tiles: Tile[] = [
   { i: CalendarX, n: "Close Financial Year", d: "Reset numbers, fresh start", to: "/app/utilities/close-financial-year" },
   { i: Gauge, n: "Performance Test", d: "Generate [PERF] data & benchmark", to: "/app/utilities/performance-test" },
   { i: RotateCcw, n: "Restore Backup", d: "Restore from ERPOVO backup ZIP", to: "/app/utilities/restore-backup" },
+  { i: Download, n: "Release Package", d: "Download final release/backup ZIP", to: "/app/utilities/release-package" },
 ];
 
 function UtilitiesIndex() {
