@@ -77,12 +77,12 @@ jobs:
           EXPECTED=90
           WORKFLOW_FILE=".github/workflows/ci.yml"
           # Extract the retention-days value from the QA upload step block
-          ACTUAL=$(awk '
-            /name: erpovo-ci-qa-summary-/ { inblock=1 }
-            inblock && /retention-days:/ {
-              gsub(/[^0-9]/, "", $2); print $2; exit
-            }
-          ' "$WORKFLOW_FILE")
+          # Extract the retention-days value that immediately follows the
+          # 'qa-retention-policy: enforced' marker in the QA upload step.
+          ACTUAL=$(grep -A1 'qa-retention-policy: enforced' "$WORKFLOW_FILE" \
+            | grep 'retention-days:' \
+            | head -n1 \
+            | sed 's/[^0-9]//g')
 
           echo "Retention expected: ${EXPECTED} days"
           echo "Retention actual  : ${ACTUAL} days"
