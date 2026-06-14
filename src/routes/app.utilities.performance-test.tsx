@@ -1002,14 +1002,20 @@ function PerformanceTestPage() {
             </div>
 
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <Button size="sm" variant="outline" onClick={() => void rerunBenchmark(benchMode, true)}>
-                <Gauge className="w-4 h-4 mr-1" /> Re-run Benchmark (Fresh)
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => void rerunBenchmark(bench.mode, bench.source === "fresh")}
+                disabled={benchRunning}
+              >
+                <Gauge className="w-4 h-4 mr-1" /> Re-run ({bench.source === "cache" ? "Cached" : "Fresh Full Scan"})
               </Button>
               {bench.source === "cache" ? (
                 <Badge variant="secondary">Cached summary used</Badge>
               ) : (
                 <Badge variant="outline">Fresh full scan</Badge>
               )}
+
               {bench.previous && (
                 <span className="text-xs text-muted-foreground">
                   Compared to previous run — improvements shown under each metric.
