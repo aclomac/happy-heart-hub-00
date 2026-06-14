@@ -798,8 +798,10 @@ function PerformanceTestPage() {
               <Button size="sm" variant="outline" onClick={() => void rerunBenchmark(benchMode, true)}>
                 <Gauge className="w-4 h-4 mr-1" /> Re-run Benchmark (Fresh)
               </Button>
-              {bench.cached && (
-                <Badge variant="secondary">Showed cached summary (dashboard pattern)</Badge>
+              {bench.source === "cache" ? (
+                <Badge variant="secondary">Cached summary used</Badge>
+              ) : (
+                <Badge variant="outline">Fresh full scan</Badge>
               )}
               {bench.previous && (
                 <span className="text-xs text-muted-foreground">
@@ -807,6 +809,7 @@ function PerformanceTestPage() {
                 </span>
               )}
             </div>
+
 
 
             {bench.status !== "Good" && (
