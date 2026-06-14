@@ -785,7 +785,7 @@ export function SalesDocForm({
       let finalInvoiceNo = invoiceNo;
       let localSalesCount = readLocalSalesCount();
       if (isDemoMode()) {
-        const saved = saveInvoiceFallback(payload);
+        const saved = await saveInvoiceFallback(payload);
         newId = saved.id;
         finalInvoiceNo = saved.invoiceNo;
         localSalesCount = saved.localSalesCount;
