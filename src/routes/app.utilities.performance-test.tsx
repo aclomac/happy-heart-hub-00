@@ -841,7 +841,7 @@ function PerformanceTestPage() {
           <div>
             <div className="text-sm font-medium mb-2">Add to existing</div>
             <div className="flex flex-wrap gap-2">
-              {[1000, 10000, 50000, 100000].map((n) => (
+              {[1000, 10000, 50000, 100000, 250000, 500000].map((n) => (
                 <Button key={n} variant="outline" disabled={running} onClick={() => onClickGenerate(n, false)}>
                   <Play className="w-4 h-4 mr-1" /> Generate {n.toLocaleString()}
                 </Button>
@@ -852,7 +852,7 @@ function PerformanceTestPage() {
           <div>
             <div className="text-sm font-medium mb-2">Fresh (clears [PERF] first)</div>
             <div className="flex flex-wrap gap-2">
-              {[1000, 10000, 50000, 100000].map((n) => (
+              {[1000, 10000, 50000, 100000, 250000, 500000].map((n) => (
                 <Button key={n} variant="secondary" disabled={running} onClick={() => onClickGenerate(n, true)}>
                   <Sparkles className="w-4 h-4 mr-1" /> Generate Fresh {n.toLocaleString()}
                 </Button>
@@ -877,16 +877,43 @@ function PerformanceTestPage() {
             </div>
           )}
 
-          {running && (
-            <div className="space-y-1">
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                  Generating {generated.toLocaleString()} / {target.toLocaleString()}
-                </span>
-                <span>{progress}%</span>
+          {running && (() => {
+            void tick;
+            const elapsedMs = genStartedAt ? performance.now() - genStartedAt : 0;
+            const rate = elapsedMs > 0 && generated > 0 ? generated / (elapsedMs / 1000) : 0;
+            const remain = rate > 0 ? Math.max(0, (target - generated) / rate) : 0;
+            const fmt = (s: number) => {
+              if (!isFinite(s) || s <= 0) return "—";
+              if (s < 60) return `${Math.round(s)}s`;
+              const m = Math.floor(s / 60), r = Math.round(s % 60);
+              return `${m}m ${r}s`;
+            };
+            return (
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    Generating {generated.toLocaleString()} / {target.toLocaleString()}
+                  </span>
+                  <span>{progress}%</span>
+                </div>
+                <Progress value={progress} />
+                <div className="flex flex-wrap gap-3 text-[11px] text-muted-foreground">
+                  <span>Elapsed: <strong>{fmt(elapsedMs / 1000)}</strong></span>
+                  <span>ETA: <strong>{fmt(remain)}</strong></span>
+                  <span>Rate: <strong>{rate ? Math.round(rate).toLocaleString() : 0}</strong> rows/s</span>
+                </div>
               </div>
-              <Progress value={progress} />
+            );
+          })()}
+
+          {clearing && (
+            <div className="space-y-1">
+              <div className="text-xs text-muted-foreground flex items-center gap-1">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                Clearing [PERF] records… <strong>{clearedCount.toLocaleString()}</strong> removed
+              </div>
+              <Progress value={existingNow > 0 ? Math.min(100, Math.round((clearedCount / existingNow) * 100)) : 0} />
             </div>
           )}
 
