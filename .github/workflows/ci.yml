@@ -72,6 +72,37 @@ jobs:
           done
           if [ "$missing" -ne 0 ]; then exit 1; fi
 
+      - name: Enforce QA artifact retention policy (must be 90 days)
+        run: |
+          EXPECTED=90
+          WORKFLOW_FILE=".github/workflows/ci.yml"
+          # Extract the retention-days value from the QA upload step block
+          # Extract the retention-days value that immediately follows the
+          # marker in the QA upload step (anchored to YAML key position).
+          ACTUAL=$(grep -A1 'qa-retention-policy: enforced' "$WORKFLOW_FILE" \
+            | grep -E '^[[:space:]]+retention-days:[[:space:]]+[0-9]+' \
+            | head -n1 \
+            | sed 's/[^0-9]//g')
+
+          echo "Retention expected: ${EXPECTED} days"
+          echo "Retention actual  : ${ACTUAL} days"
+
+          {
+            echo "### ERPOVO CI Artifact Retention Gate"
+            echo ""
+            echo "- **Retention expected:** ${EXPECTED} days"
+            echo "- **Retention actual:** ${ACTUAL} days"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$ACTUAL" != "$EXPECTED" ]; then
+            echo "- **Retention check:** FAIL" >> "$GITHUB_STEP_SUMMARY"
+            echo "::error title=Retention policy violation::Artifact retention must be 90 days (found: ${ACTUAL})"
+            echo "Artifact retention must be 90 days"
+            exit 1
+          fi
+          echo "- **Retention check:** PASS" >> "$GITHUB_STEP_SUMMARY"
+          echo "Retention check: PASS"
+
       - name: QA artifact summary
         run: |
           HASH=$(awk '{print $1}' qa-summary.sha256)
@@ -168,6 +199,7 @@ jobs:
             erpovo-release-audit*.pdf
             release-audit*.pdf
           if-no-files-found: ignore
+          # qa-retention-policy: enforced
           retention-days: 90
 
 
