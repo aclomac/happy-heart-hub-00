@@ -258,6 +258,7 @@ const nav: NavNode[] = [
       { kind: "link", to: "/app/utilities/verify-data", key: "Verify My Data", icon: Wrench },
       { kind: "link", to: "/app/utilities/recycle-bin", key: "Recycle Bin", icon: Wrench },
       { kind: "link", to: "/app/utilities/close-financial-year", key: "Close Financial Year", icon: Wrench },
+      { kind: "link", to: "/app/utilities/performance-test", key: "Performance Test", icon: Wrench },
     ],
   },
 
