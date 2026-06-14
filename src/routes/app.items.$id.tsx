@@ -41,7 +41,15 @@ import { Label } from "@/components/ui/label";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const sb = supabase as any;
 
-export const Route = createFileRoute("/app/items/$id")({ component: ItemDetailPage });
+export const Route = createFileRoute("/app/items/$id")({ component: ItemDetailShell });
+
+function ItemDetailShell() {
+  const { pathname } = useLocation();
+  const { id } = useParams({ from: "/app/items/$id" });
+  // Render child routes (e.g. /app/items/$id/edit) via <Outlet />
+  if (pathname !== `/app/items/${id}`) return <Outlet />;
+  return <ItemDetailPage />;
+}
 
 type Item = {
   id: string;
