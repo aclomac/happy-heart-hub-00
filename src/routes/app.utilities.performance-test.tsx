@@ -231,6 +231,8 @@ interface Bench {
   searchMs: number;
   memoryWarn: boolean;
   status: Status;
+  cached: boolean;
+  previous?: Omit<Bench, "previous" | "cached"> | null;
 }
 
 function PerformanceTestPage() {
