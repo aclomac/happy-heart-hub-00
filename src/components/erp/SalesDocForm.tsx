@@ -809,29 +809,20 @@ export function SalesDocForm({
 
       let inventoryPosting = "No stock impact for this document.";
       if (newId && payload.affect_stock !== 0 && kind === "invoice") {
-        // saveSaleInvoice() should have posted stock via applyStockDelta().
-        // Verify; if any line is missing a movement, auto-repair NOW so the
-        // user never sees "transaction not posted to stock ledger" for a
-        // freshly created sale. repairSaleStockPosting() is idempotent —
-        // it skips lines that already have a movement, so it cannot
-        // double-deduct.
-        let verify = await verifySaleInventoryPosting(companyId, newId);
-        if (!verify.ok) {
-          console.warn("Sale inventory posting incomplete, auto-repairing", verify);
-          try {
-            const repair = await repairSaleStockPosting(companyId, newId);
-            console.log("Auto-repair result", repair);
-            verify = await verifySaleInventoryPosting(companyId, newId);
-          } catch (repairErr) {
-            console.error("Auto-repair threw", repairErr);
-          }
-        }
+        // Stock is posted exactly once at the source:
+        //   - non-demo: saveSaleInvoice() → applyStockDelta()
+        //   - demo:     saveInvoiceFallback() → stock_movements insert
+        //               (demoDb applyInsertSideEffects mirrors item stock)
+        // We only VERIFY here — no auto-repair, no second insert. Manual
+        // Rebuild Item Ledger on /app/items remains for legacy data only.
+        const verify = await verifySaleInventoryPosting(companyId, newId);
         if (!verify.ok) {
           inventoryPosting = `Invoice saved but inventory posting failed: ${verify.errors.join("; ") || "movement not verified"}`;
+          console.error("[SaleInvoice] inventory posting verification failed", verify);
           toast.error(inventoryPosting);
         } else if (verify.lines[0]) {
           const line = verify.lines[0];
-          inventoryPosting = `Inventory posted: ${line.itemName} -${line.qty} ${line.unit}, movement verified`;
+          inventoryPosting = `Inventory posted once: ${line.itemName} -${line.qty} ${line.unit}`;
           toast.success(inventoryPosting);
         }
       }
