@@ -13,6 +13,7 @@ import {
   Trash2,
   CalendarX,
   Sparkles,
+  Gauge,
   type LucideIcon,
 } from "lucide-react";
 import { resetAndReseedDemo } from "@/lib/demo/resetDemo";
