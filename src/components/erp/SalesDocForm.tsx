@@ -60,6 +60,7 @@ import {
   nextSaleInvoiceNumber,
 } from "@/lib/sale-invoice-settings";
 import { SaleInvoiceTimeline } from "@/components/erp/SaleInvoiceTimeline";
+import { useCompanySettings } from "@/lib/settings/companySettings";
 import {
   AttachmentsSection,
   type AttachmentsSectionHandle,
