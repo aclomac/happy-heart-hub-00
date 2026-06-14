@@ -479,13 +479,15 @@ export function POS() {
       return;
     }
     for (const l of cart) {
-      if (!l.item.is_service && l.qty > Number(l.item.stock)) {
-        toast.error(`${l.item.name}: only ${l.item.stock} ${l.item.unit} in stock`);
-        return;
-      }
-      if (!l.item.is_service && Number(l.item.stock) <= 0) {
-        toast.error(`${l.item.name} is out of stock`);
-        return;
+      if (l.item.is_service) continue;
+      const avail = Number(l.item.stock) || 0;
+      if (l.qty > avail) {
+        const msg = `Stock is not enough. Available: ${avail} ${l.item.unit}, trying to sell: ${l.qty} ${l.item.unit} (${l.item.name})`;
+        if (stopOnNegativeStock) {
+          toast.error(msg);
+          return;
+        }
+        toast.warning(`Negative stock will be created — ${msg}`);
       }
     }
     setSaving(true);
