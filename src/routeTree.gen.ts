@@ -92,6 +92,7 @@ import { Route as SuperAdminCouponsIdRouteImport } from './routes/super-admin.co
 import { Route as SuperAdminCompaniesCompanyIdRouteImport } from './routes/super-admin.companies.$companyId'
 import { Route as AppUtilitiesVerifyDataRouteImport } from './routes/app.utilities.verify-data'
 import { Route as AppUtilitiesRestoreBackupRouteImport } from './routes/app.utilities.restore-backup'
+import { Route as AppUtilitiesReleasePackageRouteImport } from './routes/app.utilities.release-package'
 import { Route as AppUtilitiesReferEarnRouteImport } from './routes/app.utilities.refer-earn'
 import { Route as AppUtilitiesRecycleBinRouteImport } from './routes/app.utilities.recycle-bin'
 import { Route as AppUtilitiesQaAuditRouteImport } from './routes/app.utilities.qa-audit'
@@ -589,6 +590,12 @@ const AppUtilitiesRestoreBackupRoute =
   AppUtilitiesRestoreBackupRouteImport.update({
     id: '/restore-backup',
     path: '/restore-backup',
+    getParentRoute: () => AppUtilitiesRoute,
+  } as any)
+const AppUtilitiesReleasePackageRoute =
+  AppUtilitiesReleasePackageRouteImport.update({
+    id: '/release-package',
+    path: '/release-package',
     getParentRoute: () => AppUtilitiesRoute,
   } as any)
 const AppUtilitiesReferEarnRoute = AppUtilitiesReferEarnRouteImport.update({
@@ -1120,6 +1127,7 @@ export interface FileRoutesByFullPath {
   '/app/utilities/qa-audit': typeof AppUtilitiesQaAuditRoute
   '/app/utilities/recycle-bin': typeof AppUtilitiesRecycleBinRoute
   '/app/utilities/refer-earn': typeof AppUtilitiesReferEarnRoute
+  '/app/utilities/release-package': typeof AppUtilitiesReleasePackageRoute
   '/app/utilities/restore-backup': typeof AppUtilitiesRestoreBackupRoute
   '/app/utilities/verify-data': typeof AppUtilitiesVerifyDataRoute
   '/super-admin/companies/$companyId': typeof SuperAdminCompaniesCompanyIdRoute
@@ -1278,6 +1286,7 @@ export interface FileRoutesByTo {
   '/app/utilities/qa-audit': typeof AppUtilitiesQaAuditRoute
   '/app/utilities/recycle-bin': typeof AppUtilitiesRecycleBinRoute
   '/app/utilities/refer-earn': typeof AppUtilitiesReferEarnRoute
+  '/app/utilities/release-package': typeof AppUtilitiesReleasePackageRoute
   '/app/utilities/restore-backup': typeof AppUtilitiesRestoreBackupRoute
   '/app/utilities/verify-data': typeof AppUtilitiesVerifyDataRoute
   '/super-admin/companies/$companyId': typeof SuperAdminCompaniesCompanyIdRoute
@@ -1441,6 +1450,7 @@ export interface FileRoutesById {
   '/app/utilities/qa-audit': typeof AppUtilitiesQaAuditRoute
   '/app/utilities/recycle-bin': typeof AppUtilitiesRecycleBinRoute
   '/app/utilities/refer-earn': typeof AppUtilitiesReferEarnRoute
+  '/app/utilities/release-package': typeof AppUtilitiesReleasePackageRoute
   '/app/utilities/restore-backup': typeof AppUtilitiesRestoreBackupRoute
   '/app/utilities/verify-data': typeof AppUtilitiesVerifyDataRoute
   '/super-admin/companies/$companyId': typeof SuperAdminCompaniesCompanyIdRoute
@@ -1605,6 +1615,7 @@ export interface FileRouteTypes {
     | '/app/utilities/qa-audit'
     | '/app/utilities/recycle-bin'
     | '/app/utilities/refer-earn'
+    | '/app/utilities/release-package'
     | '/app/utilities/restore-backup'
     | '/app/utilities/verify-data'
     | '/super-admin/companies/$companyId'
@@ -1763,6 +1774,7 @@ export interface FileRouteTypes {
     | '/app/utilities/qa-audit'
     | '/app/utilities/recycle-bin'
     | '/app/utilities/refer-earn'
+    | '/app/utilities/release-package'
     | '/app/utilities/restore-backup'
     | '/app/utilities/verify-data'
     | '/super-admin/companies/$companyId'
@@ -1925,6 +1937,7 @@ export interface FileRouteTypes {
     | '/app/utilities/qa-audit'
     | '/app/utilities/recycle-bin'
     | '/app/utilities/refer-earn'
+    | '/app/utilities/release-package'
     | '/app/utilities/restore-backup'
     | '/app/utilities/verify-data'
     | '/super-admin/companies/$companyId'
@@ -2565,6 +2578,13 @@ declare module '@tanstack/react-router' {
       path: '/restore-backup'
       fullPath: '/app/utilities/restore-backup'
       preLoaderRoute: typeof AppUtilitiesRestoreBackupRouteImport
+      parentRoute: typeof AppUtilitiesRoute
+    }
+    '/app/utilities/release-package': {
+      id: '/app/utilities/release-package'
+      path: '/release-package'
+      fullPath: '/app/utilities/release-package'
+      preLoaderRoute: typeof AppUtilitiesReleasePackageRouteImport
       parentRoute: typeof AppUtilitiesRoute
     }
     '/app/utilities/refer-earn': {
@@ -3434,6 +3454,7 @@ interface AppUtilitiesRouteChildren {
   AppUtilitiesQaAuditRoute: typeof AppUtilitiesQaAuditRoute
   AppUtilitiesRecycleBinRoute: typeof AppUtilitiesRecycleBinRoute
   AppUtilitiesReferEarnRoute: typeof AppUtilitiesReferEarnRoute
+  AppUtilitiesReleasePackageRoute: typeof AppUtilitiesReleasePackageRoute
   AppUtilitiesRestoreBackupRoute: typeof AppUtilitiesRestoreBackupRoute
   AppUtilitiesVerifyDataRoute: typeof AppUtilitiesVerifyDataRoute
   AppUtilitiesIndexRoute: typeof AppUtilitiesIndexRoute
@@ -3453,6 +3474,7 @@ const AppUtilitiesRouteChildren: AppUtilitiesRouteChildren = {
   AppUtilitiesQaAuditRoute: AppUtilitiesQaAuditRoute,
   AppUtilitiesRecycleBinRoute: AppUtilitiesRecycleBinRoute,
   AppUtilitiesReferEarnRoute: AppUtilitiesReferEarnRoute,
+  AppUtilitiesReleasePackageRoute: AppUtilitiesReleasePackageRoute,
   AppUtilitiesRestoreBackupRoute: AppUtilitiesRestoreBackupRoute,
   AppUtilitiesVerifyDataRoute: AppUtilitiesVerifyDataRoute,
   AppUtilitiesIndexRoute: AppUtilitiesIndexRoute,
@@ -3697,13 +3719,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
