@@ -246,6 +246,7 @@ async function applyStockDelta(
   movementKind: "sale" | "sale_reversal" | "credit_note" | "credit_note_reversal" | "delivery",
 ) {
   if (direction === 0) return;
+  if (!items || items.length === 0) return;
   const warehouseId = await resolveWarehouseId(companyId);
   for (const r of items) {
     const resolved = await resolveInventoryItem(companyId, r);

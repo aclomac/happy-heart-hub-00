@@ -889,21 +889,26 @@ export function SalesDocForm({
         })),
       };
 
-      let newId: string | null = null;
+      let savedId: string | null = null;
       let finalInvoiceNo = invoiceNo;
       let localSalesCount = readLocalSalesCount();
       if (isDemoMode()) {
         const saved = await saveInvoiceFallback(payload);
-        newId = saved.id;
+        savedId = saved.id;
         finalInvoiceNo = saved.invoiceNo;
         localSalesCount = saved.localSalesCount;
       } else {
         try {
-          newId = await saveSaleInvoice(
+          const newId = await saveSaleInvoice(
             payload,
             editingId ? { editingId, headerOnly: headerOnlyEdit } : { autoNumber: !invoiceNoManual },
           );
           finalInvoiceNo = payload.invoice_no || invoiceNo;
+          if (!editingId && kind === "invoice" && newId) {
+            setSavedInvoiceId(newId);
+            setSavedInvoiceNo(finalInvoiceNo);
+          }
+          savedId = newId;
         } catch (primaryErr) {
           const msg = (primaryErr as Error).message || "";
           if (msg === "Duplicate invoice number") throw primaryErr;
@@ -914,6 +919,8 @@ export function SalesDocForm({
           throw new Error(`Sale invoice failed: ${msg || "save error"}`);
         }
       }
+      const newId = savedId;
+
 
       let inventoryPosting = "No stock impact for this document.";
       if (newId && payload.affect_stock !== 0 && kind === "invoice") {
@@ -962,8 +969,13 @@ export function SalesDocForm({
         }
       }
 
-      // Per spec: navigate to Sale Invoices list after successful save.
-      navigate({ to: meta.listPath });
+      // For new invoices, show success dialog with Print/Download/Open/Create Another.
+      // For edits or other doc types, go back to the list as before.
+      if (!editingId && kind === "invoice" && newId) {
+        setSuccessOpen(true);
+      } else {
+        navigate({ to: meta.listPath });
+      }
     } catch (e) {
       const msg = (e as Error).message || String(e);
       if (msg === "Duplicate invoice number") {
@@ -1585,7 +1597,7 @@ export function SalesDocForm({
       >
         <DialogContent className="sm:max-w-md" data-testid="invoice-saved-dialog">
           <DialogHeader>
-            <DialogTitle>{t(docLabels.savedTitle)}</DialogTitle>
+            <DialogTitle>{t("Invoice Saved")}</DialogTitle>
           </DialogHeader>
           <div className="text-sm text-muted-foreground">
             <span className="font-medium text-foreground">{savedInvoiceNo}</span>
@@ -1598,7 +1610,7 @@ export function SalesDocForm({
               data-testid="success-print-invoice"
               onClick={() => runWithInvoicePdf(printInvoicePDF)}
             >
-              <Printer className="w-4 h-4" /> {t(docLabels.printLabel)}
+              <Printer className="w-4 h-4" /> {t("Print Invoice")}
             </Button>
             <Button
               variant="outline"
@@ -1620,7 +1632,7 @@ export function SalesDocForm({
                 navigate({ to: `/app/sales/${savedInvoiceId}/edit` as any });
               }}
             >
-              <Eye className="w-4 h-4" /> {t(docLabels.openLabel)}
+              <Eye className="w-4 h-4" /> {t("Open Invoice")}
             </Button>
             <Button
               variant="sale"
@@ -1628,7 +1640,7 @@ export function SalesDocForm({
               data-testid="success-create-another"
               onClick={resetForm}
             >
-              <FilePlus2 className="w-4 h-4" /> {t(docLabels.createAnotherLabel)}
+              <FilePlus2 className="w-4 h-4" /> {t("Create Another Sale")}
             </Button>
           </div>
           <DialogFooter className="pt-2">

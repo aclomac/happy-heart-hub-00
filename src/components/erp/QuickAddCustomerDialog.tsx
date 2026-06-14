@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useI18n } from "@/lib/i18n";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { isDemoMode } from "@/lib/demo/localStore";
 import {
   Dialog,
   DialogContent,
@@ -61,10 +63,11 @@ export function QuickAddCustomerDialog({
     }
   }, [open, initialName, initialPhone]);
 
-  const save = () => {
+  const save = async () => {
+    if (saving) return; // duplicate-submit guard
     const trimmedName = name.trim();
     const trimmedPhone = phone.trim();
-    if (!trimmedName && !trimmedPhone) {
+    if (!trimmedName) {
       toast.error(t("Customer name or phone is required"));
       return;
     }
@@ -82,7 +85,7 @@ export function QuickAddCustomerDialog({
             (p.phone || "") === trimmedPhone,
         );
         if (byPhone) {
-          toast.info(t("Customer already exists. Existing customer selected."));
+          toast.info(t("Customer already exists"));
           onCreated({
             id: byPhone.id,
             name: byPhone.name,
@@ -104,7 +107,7 @@ export function QuickAddCustomerDialog({
           p.name.toLowerCase() === trimmedName.toLowerCase(),
       );
       if (byName && !trimmedPhone) {
-        toast.info(t("Customer already exists. Existing customer selected."));
+        toast.info(t("Customer already exists"));
         onCreated({
           id: byName.id,
           name: byName.name,
@@ -117,11 +120,12 @@ export function QuickAddCustomerDialog({
       }
 
       const opn = Number(opening) || 0;
+      const newId =
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID()
+          : `demo-pty-${Date.now()}`;
       const newParty: DemoParty = {
-        id:
-          typeof crypto !== "undefined" && "randomUUID" in crypto
-            ? crypto.randomUUID()
-            : `demo-pty-${Date.now()}`,
+        id: newId,
         company_id: companyId,
         name: trimmedName || trimmedPhone,
         type: "customer",
@@ -140,7 +144,28 @@ export function QuickAddCustomerDialog({
         created_at: new Date().toISOString(),
       };
       setParties([newParty, ...all]);
-      toast.success(t("Customer created and selected"));
+
+      // Non-demo: also persist to Supabase so the customer is visible across devices.
+      if (!isDemoMode()) {
+        const { data: inserted, error } = await supabase
+          .from("parties")
+          .insert({
+            company_id: companyId,
+            name: trimmedName || trimmedPhone,
+            type: "customer",
+            phone: trimmedPhone || null,
+            email: email.trim() || null,
+            address: address.trim() || null,
+            opening_balance: opn,
+            balance: opn,
+          })
+          .select("id,name,phone,address,type")
+          .single();
+        if (error) throw error;
+        if (inserted?.id) newParty.id = inserted.id as string;
+      }
+
+      toast.success(t("Customer added"));
       onCreated({
         id: newParty.id,
         name: newParty.name,
@@ -201,7 +226,7 @@ export function QuickAddCustomerDialog({
           <Button
             variant="sale"
             size="sm"
-            disabled={(!name.trim() && !phone.trim()) || saving}
+            disabled={!name.trim() || saving}
             onClick={save}
             data-testid="quick-add-customer-save"
           >
