@@ -879,39 +879,77 @@ function PerformanceTestPage() {
               Generate performance data first — then run the benchmark.
             </div>
           ) : (
-            <div className="flex flex-wrap gap-2">
-              <Button
-                onClick={() => void rerunBenchmark(benchMode, false)}
-                disabled={benchRunning || running}
-              >
-                {benchRunning ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Play className="w-4 h-4 mr-1" />}
-                {bench ? "Re-run Benchmark" : "Run Benchmark"}
-              </Button>
-              {bench && (
-                <Button
-                  variant="outline"
-                  onClick={() => void rerunBenchmark(benchMode, true)}
-                  disabled={benchRunning || running}
-                >
-                  <Sparkles className="w-4 h-4 mr-1" /> Re-run Benchmark (Fresh)
-                </Button>
-              )}
-              <Button
-                variant="secondary"
-                onClick={() => void rerunBenchmark("last_batch", false)}
-                disabled={benchRunning || running || lastBatchCount === 0}
-              >
-                <Gauge className="w-4 h-4 mr-1" /> Benchmark Last Batch
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={() => void rerunBenchmark("all_perf", false)}
-                disabled={benchRunning || running}
-              >
-                <Database className="w-4 h-4 mr-1" /> Benchmark All PERF Records
-              </Button>
+            <div className="space-y-3">
+              {/* Cache status */}
+              <div className="p-3 rounded-md border bg-muted/30 text-xs space-y-1">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <span>
+                    Cache status:{" "}
+                    <strong
+                      className={
+                        cacheStatus.state === "Ready"
+                          ? "text-success"
+                          : cacheStatus.state === "Rebuilding"
+                          ? "text-warning"
+                          : "text-destructive"
+                      }
+                    >
+                      {cacheBuilding ? "Rebuilding" : cacheStatus.state}
+                    </strong>
+                  </span>
+                  <Button size="sm" variant="outline" onClick={() => void buildOrRebuildCache()} disabled={cacheBuilding || benchRunning || running}>
+                    {cacheBuilding ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Database className="w-3 h-3 mr-1" />}
+                    Build/Rebuild PERF Cache
+                  </Button>
+                </div>
+                <div className="text-muted-foreground">
+                  {cacheStatus.builtAt
+                    ? `Built at ${new Date(cacheStatus.builtAt).toLocaleTimeString()} · ${(cacheStatus.recordsIndexed ?? 0).toLocaleString()} rows indexed`
+                    : "Cache not built yet. Cached benchmarks will build it on first run."}
+                </div>
+              </div>
+
+              <div>
+                <div className="text-xs font-medium mb-1">All PERF Records</div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    onClick={() => void rerunBenchmark("all_perf", false)}
+                    disabled={benchRunning || running || cacheBuilding || existingNow === 0}
+                  >
+                    {benchRunning ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Play className="w-4 h-4 mr-1" />}
+                    Benchmark All PERF Records (Cached)
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => void rerunBenchmark("all_perf", true)}
+                    disabled={benchRunning || running || cacheBuilding || existingNow === 0}
+                  >
+                    <Sparkles className="w-4 h-4 mr-1" /> Benchmark All PERF Records (Fresh Full Scan)
+                  </Button>
+                </div>
+              </div>
+              <div>
+                <div className="text-xs font-medium mb-1">Last Batch</div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="secondary"
+                    onClick={() => void rerunBenchmark("last_batch", false)}
+                    disabled={benchRunning || running || cacheBuilding || lastBatchCount === 0}
+                  >
+                    <Gauge className="w-4 h-4 mr-1" /> Benchmark Last Batch (Cached)
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => void rerunBenchmark("last_batch", true)}
+                    disabled={benchRunning || running || cacheBuilding || lastBatchCount === 0}
+                  >
+                    <Sparkles className="w-4 h-4 mr-1" /> Benchmark Last Batch (Fresh Full Scan)
+                  </Button>
+                </div>
+              </div>
             </div>
           )}
+
           {benchRunning && (
             <div className="text-xs text-muted-foreground flex items-center gap-1">
               <Loader2 className="w-3 h-3 animate-spin" /> Benchmark running...
