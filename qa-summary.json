@@ -1,0 +1,116 @@
+{
+  "app": "erpovo",
+  "label": "ERPOVO Stable Build - CI QA Passed",
+  "generated_at": "2026-06-14T17:30:00Z",
+  "release_ready": true,
+  "gates": {
+    "typescript": {
+      "command": "bunx tsc --noEmit",
+      "status": "PASS",
+      "errors": 0
+    },
+    "tests_full": {
+      "command": "bun run test",
+      "status": "PASS",
+      "passed": 1332,
+      "failed": 0,
+      "skipped": 3,
+      "total": 1335
+    },
+    "qa_critical": {
+      "command": "bun run qa:critical",
+      "status": "PASS",
+      "passed": 128,
+      "failed": 0,
+      "total": 128,
+      "files": [
+        "restore-safety",
+        "sale-invoice",
+        "stock-posting",
+        "deleted-at-filter",
+        "parent-routes-outlet",
+        "pos-customer",
+        "sale-orders-workflow",
+        "performance",
+        "duplicate-submit"
+      ]
+    },
+    "qa_release": {
+      "command": "bun run qa:release",
+      "status": "PASS",
+      "release_ready": true
+    },
+    "build": {
+      "command": "bun run build",
+      "status": "PASS"
+    }
+  },
+  "intentional_skips": [
+    {
+      "file": "src/test/unit/super-admin-detail-actions.test.ts",
+      "describe": "Super Admin layout guard",
+      "count": 3,
+      "reason": "Skipped in Personal Mode: Super Admin disabled intentionally"
+    }
+  ],
+  "restore_safety": {
+    "module": "src/lib/restore-safety.ts",
+    "tests_file": "src/test/unit/restore-safety.test.ts",
+    "tests_passed": 21,
+    "tests_failed": 0,
+    "disabled_tables": [
+      "sales",
+      "sale_invoices",
+      "sale_orders",
+      "purchases",
+      "purchase_invoices",
+      "purchase_orders",
+      "stock_movements",
+      "payments",
+      "payments_in",
+      "payments_out"
+    ],
+    "forbidden_payload_patterns": [
+      "perf_stress",
+      ".env",
+      "secret",
+      "auth_token",
+      "api_key",
+      "password",
+      "token"
+    ],
+    "ui_route": "/app/utilities/restore-backup",
+    "checklist_gates": [
+      "valid_file_uploaded",
+      "manifest_parsed",
+      "company_scope_matched",
+      "dry_run_completed",
+      "conflicts_reviewed",
+      "mode_selected",
+      "money_tables_excluded",
+      "confirmation_checked",
+      "typed_RESTORE"
+    ]
+  },
+  "critical_safeguards": [
+    "Sale invoice number race hardening (atomic next-number reservation)",
+    "Sales form duplicate-submit guard",
+    "Stock posting executes exactly once per invoice",
+    "Restore safety: disabled money-impacting tables stripped at logic level",
+    "Restore safety: PERF stress data and secrets stripped from backup payloads",
+    "500,000-record cached performance benchmark preserved"
+  ],
+  "ci": {
+    "workflow": ".github/workflows/ci.yml",
+    "scripts": {
+      "qa:critical": "scripts/qa-critical.ts",
+      "qa:release": "scripts/qa-release.ts"
+    }
+  },
+  "reproduce": [
+    "bunx tsc --noEmit",
+    "bun run qa:critical",
+    "bun run qa:release",
+    "bun run build"
+  ]
+}
