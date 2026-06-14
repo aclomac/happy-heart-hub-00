@@ -355,21 +355,30 @@ function AdjustmentFormDialog({
               onChange={(e) => setQtyInput(Number(e.target.value))}
             />
           </div>
-          <div className="col-span-2 grid grid-cols-3 gap-3 rounded-md bg-muted/40 p-3 text-sm">
-            <div>
-              <div className="text-xs text-muted-foreground">Current</div>
-              <div className="font-semibold">{currentStock}</div>
-            </div>
-            <div>
-              <div className="text-xs text-muted-foreground">Change</div>
-              <div className={`font-semibold ${delta >= 0 ? "text-green-700" : "text-red-600"}`}>
-                {delta >= 0 ? "+" : ""}
-                {delta}
+          <div className="col-span-2 space-y-2 rounded-md bg-muted/40 p-3 text-sm">
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <div className="text-xs text-muted-foreground">Current (selected store)</div>
+                <div className="font-semibold">{currentStock}</div>
+              </div>
+              <div>
+                <div className="text-xs text-muted-foreground">Change</div>
+                <div className={`font-semibold ${delta >= 0 ? "text-green-700" : "text-red-600"}`}>
+                  {delta >= 0 ? "+" : ""}
+                  {delta}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-muted-foreground">New (selected store)</div>
+                <div className="font-semibold">{newStock}</div>
               </div>
             </div>
-            <div>
-              <div className="text-xs text-muted-foreground">New</div>
-              <div className="font-semibold">{newStock}</div>
+            <div className="text-xs text-muted-foreground">
+              This is selected store stock, not total item stock.
+            </div>
+            <div className="text-xs">
+              <span className="text-muted-foreground">Total item stock: </span>
+              <span className="font-semibold">{totalItemStock}</span>
             </div>
           </div>
           <div className="col-span-2">
