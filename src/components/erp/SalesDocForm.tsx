@@ -1640,7 +1640,7 @@ export function SalesDocForm({
               data-testid="success-create-another"
               onClick={resetForm}
             >
-              <FilePlus2 className="w-4 h-4" /> {t(docLabels.createAnotherLabel)}
+              <FilePlus2 className="w-4 h-4" /> {kind === "invoice" ? t("Create Another Sale") : t(docLabels.createAnotherLabel)}
             </Button>
           </div>
           <DialogFooter className="pt-2">
