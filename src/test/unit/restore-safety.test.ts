@@ -202,7 +202,7 @@ describe("restore-safety: importErpovoBackup pipeline respects disabled tables",
 
     await importErpovoBackup({ ...preview, data: safeData }, "dst-co", safeTables);
 
-    const calledTables = fromSpy.mock.calls.map((c) => c[0] as string);
+    const calledTables = fromSpy.mock.calls.map((c) => (c as unknown as [string])[0]);
     for (const t of REQUIRED_DISABLED) {
       expect(calledTables).not.toContain(t);
     }
