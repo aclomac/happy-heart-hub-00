@@ -48,7 +48,10 @@ import {
   parseSaleMeta,
   type SaleInvoiceInput,
 } from "@/lib/sale-invoices";
-import { verifySaleInventoryPosting } from "@/lib/inventory-posting-doctor";
+import {
+  verifySaleInventoryPosting,
+  repairSaleStockPosting,
+} from "@/lib/inventory-posting-doctor";
 import { buildInvoiceDataFromSale } from "@/lib/pdf/build-invoice";
 import { downloadInvoicePDF, printInvoicePDF } from "@/lib/pdf/invoice-pdf";
 import {
@@ -809,13 +812,25 @@ export function SalesDocForm({
 
       let inventoryPosting = "No stock impact for this document.";
       if (newId && payload.affect_stock !== 0 && kind === "invoice") {
-        // Single source of truth: saveSaleInvoice() already posted stock via
-        // applyStockDelta(). We only VERIFY here — never re-post — to avoid
-        // double deduction. Use the Inventory Posting Doctor on /app/items
-        // if a missing movement needs repair.
-        const verify = await verifySaleInventoryPosting(companyId, newId);
+        // saveSaleInvoice() should have posted stock via applyStockDelta().
+        // Verify; if any line is missing a movement, auto-repair NOW so the
+        // user never sees "transaction not posted to stock ledger" for a
+        // freshly created sale. repairSaleStockPosting() is idempotent —
+        // it skips lines that already have a movement, so it cannot
+        // double-deduct.
+        let verify = await verifySaleInventoryPosting(companyId, newId);
         if (!verify.ok) {
-          inventoryPosting = `Sale invoice saved but stock posting failed: ${verify.errors.join("; ") || "movement not verified"}`;
+          console.warn("Sale inventory posting incomplete, auto-repairing", verify);
+          try {
+            const repair = await repairSaleStockPosting(companyId, newId);
+            console.log("Auto-repair result", repair);
+            verify = await verifySaleInventoryPosting(companyId, newId);
+          } catch (repairErr) {
+            console.error("Auto-repair threw", repairErr);
+          }
+        }
+        if (!verify.ok) {
+          inventoryPosting = `Invoice saved but inventory posting failed: ${verify.errors.join("; ") || "movement not verified"}`;
           toast.error(inventoryPosting);
         } else if (verify.lines[0]) {
           const line = verify.lines[0];
