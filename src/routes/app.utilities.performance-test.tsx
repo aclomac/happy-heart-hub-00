@@ -98,7 +98,7 @@ async function countPerf(): Promise<number> {
   } catch { return 0; }
 }
 
-async function clearPerf(): Promise<number> {
+async function clearPerf(onProgress?: (n: number) => void): Promise<number> {
   const db = await openDB();
   return new Promise((resolve, reject) => {
     const stores = db.objectStoreNames.contains(SUMMARY_STORE)
@@ -115,6 +115,7 @@ async function clearPerf(): Promise<number> {
         if (c.value?.perfTest === 1 && c.value?.tag === "[PERF]") {
           c.delete();
           n++;
+          if (onProgress && n % 2000 === 0) onProgress(n);
         }
         c.continue();
       }
