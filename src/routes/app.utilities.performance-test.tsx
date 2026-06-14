@@ -470,6 +470,7 @@ function PerformanceTestPage() {
     setProgress(0);
     setGenerated(0);
     setTarget(total);
+    setGenStartedAt(performance.now());
     setBench(null);
 
     let before = existingNow;
