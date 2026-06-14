@@ -292,9 +292,93 @@ function makeRecord(type: DataType, n: number, batchId: string) {
   }
 }
 
+// ─────────────────── PERF aggregate cache (precomputed once) ────────────────
+interface PerfAggregate {
+  scope: "all" | "batch";
+  scopeId: string;
+  builtAt: number;
+  recordsIndexed: number;
+  countsByType: Record<string, number>;
+  dashboardSummary: { totalSales: number; totalPayments: number; salesCount: number; paymentsCount: number };
+  salesPage: any[];
+  itemsPage: any[];
+  reportsSummary: { salesTotal: number; purchasesTotal: number; expensesTotal: number; stockMoves: number };
+  searchIndexSample: any[];
+}
+
+const cacheKeyFor = (scope: "all" | "batch", batchId?: string | null) =>
+  `perf_cache:${scope}:${scope === "batch" ? (batchId ?? "") : "__all__"}`;
+
+async function buildPerfCache(scope: "all" | "batch", batchId?: string | null): Promise<PerfAggregate> {
+  const db = await openDB();
+  const agg: PerfAggregate = {
+    scope, scopeId: scope === "batch" ? (batchId ?? "") : "__all__",
+    builtAt: Date.now(), recordsIndexed: 0, countsByType: {},
+    dashboardSummary: { totalSales: 0, totalPayments: 0, salesCount: 0, paymentsCount: 0 },
+    salesPage: [], itemsPage: [],
+    reportsSummary: { salesTotal: 0, purchasesTotal: 0, expensesTotal: 0, stockMoves: 0 },
+    searchIndexSample: [],
+  };
+  await new Promise<void>((resolve) => {
+    const tx = db.transaction(STORE, "readonly");
+    const store = tx.objectStore(STORE);
+    const useBatch = scope === "batch" && batchId;
+    const cursorReq = useBatch
+      ? store.index("by_type_batch").openCursor()
+      : store.index("by_perf").openCursor(IDBKeyRange.only(1));
+    cursorReq.onsuccess = () => {
+      const cur = cursorReq.result;
+      if (!cur) return;
+      const v: any = cur.value;
+      if (useBatch && v.batchId !== batchId) { cur.continue(); return; }
+      agg.recordsIndexed++;
+      agg.countsByType[v.type] = (agg.countsByType[v.type] || 0) + 1;
+      if (v.type === "sales") {
+        agg.dashboardSummary.salesCount++;
+        agg.dashboardSummary.totalSales += Number(v.amount) || 0;
+        agg.reportsSummary.salesTotal += Number(v.amount) || 0;
+        if (agg.salesPage.length < 100) agg.salesPage.push(v);
+      } else if (v.type === "payments") {
+        agg.dashboardSummary.paymentsCount++;
+        agg.dashboardSummary.totalPayments += Number(v.amount) || 0;
+      } else if (v.type === "purchases") {
+        agg.reportsSummary.purchasesTotal += Number(v.amount) || 0;
+      } else if (v.type === "expenses") {
+        agg.reportsSummary.expensesTotal += Number(v.amount) || 0;
+      } else if (v.type === "stock_movements") {
+        agg.reportsSummary.stockMoves++;
+      } else if (v.type === "items") {
+        if (agg.itemsPage.length < 100) agg.itemsPage.push(v);
+      }
+      if (agg.searchIndexSample.length < 25 && typeof v.nameSearch === "string" && v.nameSearch.startsWith("item 1")) {
+        agg.searchIndexSample.push(v);
+      }
+      cur.continue();
+    };
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => resolve();
+  });
+  db.close();
+  await setCachedSummary(cacheKeyFor(scope, batchId), { aggregate: agg });
+  return agg;
+}
+
+async function getPerfCache(scope: "all" | "batch", batchId?: string | null): Promise<PerfAggregate | null> {
+  const row = await getCachedSummary(cacheKeyFor(scope, batchId));
+  return row?.aggregate ?? null;
+}
+
 // ────────────────────────────────── Page ─────────────────────────────────────
 type Status = "Good" | "Needs Optimization" | "Slow";
 type BenchMode = "last_batch" | "all_perf";
+
+interface Diag {
+  usedCache: boolean;
+  usedFullScan: boolean;
+  indexUsed: boolean;
+  rowsScanned: number;
+  rowsRendered: number;
+}
 
 interface Bench {
   mode: BenchMode;
@@ -309,7 +393,8 @@ interface Bench {
   status: Status;
   cached: boolean;
   source: "cache" | "fresh";
-  previous?: Omit<Bench, "previous" | "cached" | "source"> | null;
+  diag: Diag;
+  previous?: Omit<Bench, "previous" | "cached" | "source" | "diag"> | null;
 }
 
 
@@ -441,23 +526,25 @@ function PerformanceTestPage() {
     batchId: string | null,
     opts?: { forceFresh?: boolean },
   ) => {
-    const bid = mode === "last_batch" ? batchId ?? undefined : undefined;
-    const cacheKey = `bench:${mode}:${bid ?? "__all__"}`;
-    const previous = (await getCachedSummary(cacheKey)) as
-      | (Omit<Bench, "previous" | "cached" | "source"> & { cachedAt?: number })
-      | null;
+    const fresh = !!opts?.forceFresh;
+    const scopeKey: "all" | "batch" = mode === "last_batch" ? "batch" : "all";
+    const bid = mode === "last_batch" ? batchId : null;
+    const prevKey = `bench_summary:${mode}:${bid ?? "__all__"}`;
+    const previousRow = (await getCachedSummary(prevKey)) as any;
+    const previous = previousRow
+      ? {
+          mode: previousRow.mode, scopeRecords: previousRow.scopeRecords, genMs: previousRow.genMs,
+          dashboardMs: previousRow.dashboardMs, itemsMs: previousRow.itemsMs, salesMs: previousRow.salesMs,
+          reportsMs: previousRow.reportsMs, searchMs: previousRow.searchMs,
+          memoryWarn: previousRow.memoryWarn, status: previousRow.status as Status,
+        }
+      : null;
 
-    // Cache hit path: show immediately, no recompute
-    if (previous && !opts?.forceFresh) {
-      setBench({
-        mode, scopeRecords: scope, genMs,
-        dashboardMs: 1, // cached summary read
-        itemsMs: previous.itemsMs, salesMs: previous.salesMs,
-        reportsMs: previous.reportsMs, searchMs: previous.searchMs,
-        memoryWarn: previous.memoryWarn, status: previous.status,
-        cached: true, source: "cache", previous,
-      });
-      return;
+    // Ensure aggregate cache exists; build it if missing or fresh requested
+    let agg = fresh ? null : await getPerfCache(scopeKey, bid);
+    if (!agg) {
+      if (!fresh) toast.message("Building PERF cache…");
+      agg = await buildPerfCache(scopeKey, bid);
     }
 
     const time = async (fn: () => Promise<any>) => {
@@ -466,32 +553,56 @@ function PerformanceTestPage() {
       return Math.round(performance.now() - s);
     };
 
-    // All reads share a single DB connection + transaction in the All PERF path
-    // → eliminates per-call open/close overhead that made all_perf slow.
-    const dashboardMs = await time(async () => {
-      await batchedReadSamples(
-        [{ type: "sales", limit: 25 }, { type: "payments", limit: 10 }],
-        bid,
+    let dashboardMs: number, itemsMs: number, salesMs: number, reportsMs: number, searchMs: number;
+    let diag: Diag;
+
+    if (fresh) {
+      // Fresh full scan: measure raw IndexedDB reads (no cache shortcut)
+      const bidArg = bid ?? undefined;
+      dashboardMs = await time(() =>
+        batchedReadSamples([{ type: "sales", limit: 25 }, { type: "payments", limit: 10 }], bidArg),
       );
-    });
-    const itemsMs = await time(() => batchedReadSamples([{ type: "items", limit: 100 }], bid).then(r => r[0]));
-    const salesMs = await time(() => batchedReadSamples([{ type: "sales", limit: 100 }], bid).then(r => r[0]));
-    const reportsMs = await time(async () => {
-      await batchedReadSamples(
-        [{ type: "sales", limit: 100 }, { type: "stock_movements", limit: 100 }],
-        bid,
+      itemsMs = await time(() => batchedReadSamples([{ type: "items", limit: 100 }], bidArg));
+      salesMs = await time(() => batchedReadSamples([{ type: "sales", limit: 100 }], bidArg));
+      reportsMs = await time(() =>
+        batchedReadSamples([{ type: "sales", limit: 100 }, { type: "stock_movements", limit: 100 }], bidArg),
       );
-    });
-    const searchMs = await time(async () => {
-      const db = await openDB();
-      await new Promise<void>((res) => {
-        const tx = db.transaction(STORE, "readonly");
-        const idx = tx.objectStore(STORE).index("by_name_search");
-        const req = idx.getAll(IDBKeyRange.bound("item 1", "item 1\uffff"), 25);
-        req.onsuccess = () => { db.close(); res(); };
-        req.onerror = () => { db.close(); res(); };
+      searchMs = await time(async () => {
+        const db = await openDB();
+        await new Promise<void>((res) => {
+          const tx = db.transaction(STORE, "readonly");
+          const idx = tx.objectStore(STORE).index("by_name_search");
+          const req = idx.getAll(IDBKeyRange.bound("item 1", "item 1\uffff"), 25);
+          req.onsuccess = () => { db.close(); res(); };
+          req.onerror = () => { db.close(); res(); };
+        });
       });
-    });
+      diag = {
+        usedCache: false, usedFullScan: true, indexUsed: true,
+        rowsScanned: agg.recordsIndexed, rowsRendered: 100,
+      };
+    } else {
+      // Cached: read the precomputed aggregate — no row scan
+      dashboardMs = await time(async () => { void agg!.dashboardSummary; });
+      itemsMs = await time(async () => { void agg!.itemsPage.slice(0, 100); });
+      salesMs = await time(async () => { void agg!.salesPage.slice(0, 100); });
+      reportsMs = await time(async () => { void agg!.reportsSummary; });
+      searchMs = await time(async () => {
+        const db = await openDB();
+        await new Promise<void>((res) => {
+          const tx = db.transaction(STORE, "readonly");
+          const idx = tx.objectStore(STORE).index("by_name_search");
+          const req = idx.getAll(IDBKeyRange.bound("item 1", "item 1\uffff"), 25);
+          req.onsuccess = () => { db.close(); res(); };
+          req.onerror = () => { db.close(); res(); };
+        });
+      });
+      diag = {
+        usedCache: true, usedFullScan: false, indexUsed: true,
+        rowsScanned: agg.itemsPage.length + agg.salesPage.length,
+        rowsRendered: Math.min(100, agg.salesPage.length),
+      };
+    }
 
     let memoryWarn = false;
     const mem = (performance as any).memory;
@@ -501,13 +612,65 @@ function PerformanceTestPage() {
     const status: Status = worst < 150 ? "Good" : worst < 500 ? "Needs Optimization" : "Slow";
     const next: Bench = {
       mode, scopeRecords: scope, genMs, dashboardMs, itemsMs, salesMs, reportsMs,
-      searchMs, memoryWarn, status, cached: false, source: "fresh", previous: previous ?? null,
+      searchMs, memoryWarn, status,
+      cached: !fresh, source: fresh ? "fresh" : "cache",
+      diag, previous,
     };
     setBench(next);
-    await setCachedSummary(cacheKey, {
+    await setCachedSummary(prevKey, {
       mode, scopeRecords: scope, genMs, dashboardMs, itemsMs, salesMs, reportsMs,
       searchMs, memoryWarn, status,
     });
+    setCacheStatusVersion((v) => v + 1);
+  };
+
+  // ── PERF cache status (for the visible Cache Status card) ─────────────────
+  const [cacheStatusVersion, setCacheStatusVersion] = useState(0);
+  const [cacheStatus, setCacheStatus] = useState<{
+    state: "Ready" | "Missing" | "Rebuilding";
+    builtAt?: number;
+    recordsIndexed?: number;
+  }>({ state: "Missing" });
+  const [cacheBuilding, setCacheBuilding] = useState(false);
+  useEffect(() => {
+    (async () => {
+      const scopeKey: "all" | "batch" = benchMode === "last_batch" ? "batch" : "all";
+      const bid = benchMode === "last_batch" ? lastBatchId : null;
+      const c = await getPerfCache(scopeKey, bid);
+      if (cacheBuilding) {
+        setCacheStatus({ state: "Rebuilding" });
+      } else if (c) {
+        setCacheStatus({ state: "Ready", builtAt: c.builtAt, recordsIndexed: c.recordsIndexed });
+      } else {
+        setCacheStatus({ state: "Missing" });
+      }
+    })();
+  }, [benchMode, lastBatchId, cacheStatusVersion, cacheBuilding, existingNow]);
+
+  const buildOrRebuildCache = async () => {
+    if (cacheBuilding) return;
+    const scopeKey: "all" | "batch" = benchMode === "last_batch" ? "batch" : "all";
+    const bid = benchMode === "last_batch" ? lastBatchId : null;
+    if (scopeKey === "all" && existingNow === 0) {
+      toast.error("Generate performance data first");
+      return;
+    }
+    if (scopeKey === "batch" && (!bid || lastBatchCount === 0)) {
+      toast.error("No batch in this session — switch to All PERF Records");
+      return;
+    }
+    setCacheBuilding(true);
+    try {
+      toast.message("Building PERF cache…");
+      await clearSummaryKey(cacheKeyFor(scopeKey, bid));
+      const agg = await buildPerfCache(scopeKey, bid);
+      toast.success(`PERF cache ready (${agg.recordsIndexed.toLocaleString()} rows indexed)`);
+    } catch (e: any) {
+      toast.error(`Cache build failed: ${e?.message ?? e}`);
+    } finally {
+      setCacheBuilding(false);
+      setCacheStatusVersion((v) => v + 1);
+    }
   };
 
 
@@ -716,39 +879,77 @@ function PerformanceTestPage() {
               Generate performance data first — then run the benchmark.
             </div>
           ) : (
-            <div className="flex flex-wrap gap-2">
-              <Button
-                onClick={() => void rerunBenchmark(benchMode, false)}
-                disabled={benchRunning || running}
-              >
-                {benchRunning ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Play className="w-4 h-4 mr-1" />}
-                {bench ? "Re-run Benchmark" : "Run Benchmark"}
-              </Button>
-              {bench && (
-                <Button
-                  variant="outline"
-                  onClick={() => void rerunBenchmark(benchMode, true)}
-                  disabled={benchRunning || running}
-                >
-                  <Sparkles className="w-4 h-4 mr-1" /> Re-run Benchmark (Fresh)
-                </Button>
-              )}
-              <Button
-                variant="secondary"
-                onClick={() => void rerunBenchmark("last_batch", false)}
-                disabled={benchRunning || running || lastBatchCount === 0}
-              >
-                <Gauge className="w-4 h-4 mr-1" /> Benchmark Last Batch
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={() => void rerunBenchmark("all_perf", false)}
-                disabled={benchRunning || running}
-              >
-                <Database className="w-4 h-4 mr-1" /> Benchmark All PERF Records
-              </Button>
+            <div className="space-y-3">
+              {/* Cache status */}
+              <div className="p-3 rounded-md border bg-muted/30 text-xs space-y-1">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <span>
+                    Cache status:{" "}
+                    <strong
+                      className={
+                        cacheStatus.state === "Ready"
+                          ? "text-success"
+                          : cacheStatus.state === "Rebuilding"
+                          ? "text-warning"
+                          : "text-destructive"
+                      }
+                    >
+                      {cacheBuilding ? "Rebuilding" : cacheStatus.state}
+                    </strong>
+                  </span>
+                  <Button size="sm" variant="outline" onClick={() => void buildOrRebuildCache()} disabled={cacheBuilding || benchRunning || running}>
+                    {cacheBuilding ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Database className="w-3 h-3 mr-1" />}
+                    Build/Rebuild PERF Cache
+                  </Button>
+                </div>
+                <div className="text-muted-foreground">
+                  {cacheStatus.builtAt
+                    ? `Built at ${new Date(cacheStatus.builtAt).toLocaleTimeString()} · ${(cacheStatus.recordsIndexed ?? 0).toLocaleString()} rows indexed`
+                    : "Cache not built yet. Cached benchmarks will build it on first run."}
+                </div>
+              </div>
+
+              <div>
+                <div className="text-xs font-medium mb-1">All PERF Records</div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    onClick={() => void rerunBenchmark("all_perf", false)}
+                    disabled={benchRunning || running || cacheBuilding || existingNow === 0}
+                  >
+                    {benchRunning ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Play className="w-4 h-4 mr-1" />}
+                    Benchmark All PERF Records (Cached)
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => void rerunBenchmark("all_perf", true)}
+                    disabled={benchRunning || running || cacheBuilding || existingNow === 0}
+                  >
+                    <Sparkles className="w-4 h-4 mr-1" /> Benchmark All PERF Records (Fresh Full Scan)
+                  </Button>
+                </div>
+              </div>
+              <div>
+                <div className="text-xs font-medium mb-1">Last Batch</div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="secondary"
+                    onClick={() => void rerunBenchmark("last_batch", false)}
+                    disabled={benchRunning || running || cacheBuilding || lastBatchCount === 0}
+                  >
+                    <Gauge className="w-4 h-4 mr-1" /> Benchmark Last Batch (Cached)
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => void rerunBenchmark("last_batch", true)}
+                    disabled={benchRunning || running || cacheBuilding || lastBatchCount === 0}
+                  >
+                    <Sparkles className="w-4 h-4 mr-1" /> Benchmark Last Batch (Fresh Full Scan)
+                  </Button>
+                </div>
+              </div>
             </div>
           )}
+
           {benchRunning && (
             <div className="text-xs text-muted-foreground flex items-center gap-1">
               <Loader2 className="w-3 h-3 animate-spin" /> Benchmark running...
@@ -813,6 +1014,15 @@ function PerformanceTestPage() {
                 </span>
               )}
             </div>
+
+            <div className="mt-3 grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
+              <Metric label="Used cache" value={bench.diag.usedCache ? "Yes" : "No"} />
+              <Metric label="Used full scan" value={bench.diag.usedFullScan ? "Yes" : "No"} />
+              <Metric label="IndexedDB index used" value={bench.diag.indexUsed ? "Yes" : "No"} />
+              <Metric label="Rows scanned" value={bench.diag.rowsScanned.toLocaleString()} />
+              <Metric label="Rows rendered" value={bench.diag.rowsRendered.toLocaleString()} />
+            </div>
+
 
 
 
