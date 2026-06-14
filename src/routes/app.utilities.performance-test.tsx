@@ -671,11 +671,12 @@ function PerformanceTestPage() {
   );
 }
 
-function Metric({ label, value }: { label: string; value: string }) {
+function Metric({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <div className="p-3 rounded-md border bg-card">
       <div className="text-xs text-muted-foreground">{label}</div>
       <div className="font-semibold mt-0.5">{value}</div>
+      {sub && <div className="text-[10px] text-muted-foreground mt-0.5">{sub}</div>}
     </div>
   );
 }
