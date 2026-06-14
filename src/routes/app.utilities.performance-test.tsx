@@ -978,21 +978,16 @@ function PerformanceTestPage() {
               <span className={`ml-2 text-sm ${statusColor}`}>● {bench.status}</span>
             </CardTitle>
             <div className="flex items-center gap-2">
+              <Badge variant={bench.source === "cache" ? "secondary" : "outline"}>
+                {bench.mode === "last_batch" ? "Last Batch" : "All PERF Records"}
+                {" · "}
+                {bench.source === "cache" ? "Cached" : "Fresh Full Scan"}
+              </Badge>
               <span className="text-xs text-muted-foreground">
-                {bench.mode === "last_batch"
-                  ? `Benchmarking last batch (${bench.scopeRecords.toLocaleString()} rows)`
-                  : `Benchmarking all PERF records (${bench.scopeRecords.toLocaleString()} rows)`}
+                {bench.scopeRecords.toLocaleString()} rows in scope
               </span>
-              <Select value={benchMode} onValueChange={(v) => void rerunBenchmark(v as BenchMode)}>
-                <SelectTrigger className="w-[240px] h-8">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="last_batch">Benchmark Last Batch</SelectItem>
-                  <SelectItem value="all_perf">Benchmark All PERF Records</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
+
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
@@ -1007,14 +1002,20 @@ function PerformanceTestPage() {
             </div>
 
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <Button size="sm" variant="outline" onClick={() => void rerunBenchmark(benchMode, true)}>
-                <Gauge className="w-4 h-4 mr-1" /> Re-run Benchmark (Fresh)
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => void rerunBenchmark(bench.mode, bench.source === "fresh")}
+                disabled={benchRunning}
+              >
+                <Gauge className="w-4 h-4 mr-1" /> Re-run ({bench.source === "cache" ? "Cached" : "Fresh Full Scan"})
               </Button>
               {bench.source === "cache" ? (
                 <Badge variant="secondary">Cached summary used</Badge>
               ) : (
                 <Badge variant="outline">Fresh full scan</Badge>
               )}
+
               {bench.previous && (
                 <span className="text-xs text-muted-foreground">
                   Compared to previous run — improvements shown under each metric.
