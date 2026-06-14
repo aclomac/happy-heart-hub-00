@@ -96,7 +96,7 @@ function ItemDetailPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [setStockOpen, setSetStockOpen] = useState<"set" | "opening" | null>(null);
   const [setStockQty, setSetStockQty] = useState("");
-  const [setStockBusy, setSetStockBusy] = useState(false);
+  const [stockBusy, setStockBusyFlag] = useState(false);
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 200);
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -1122,9 +1122,9 @@ function ItemDetailPage() {
             );
           })()}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setSetStockOpen(null)} disabled={setStockBusy}>Cancel</Button>
+            <Button variant="outline" onClick={() => setSetStockOpen(null)} disabled={stockBusy}>Cancel</Button>
             <Button
-              disabled={setStockBusy || setStockQty === "" || Number.isNaN(Number(setStockQty))}
+              disabled={stockBusy || setStockQty === "" || Number.isNaN(Number(setStockQty))}
               onClick={async () => {
                 const target = Number(setStockQty);
                 const cur = Number(it.stock) || 0;
@@ -1133,7 +1133,7 @@ function ItemDetailPage() {
                   return;
                 }
                 if (!companyId) return;
-                setStockBusy(true);
+                setStockBusyFlag(true);
                 try {
                   const wh = await getDefaultWarehouseId(companyId);
                   if (!wh) {
@@ -1158,7 +1158,7 @@ function ItemDetailPage() {
                   queryClient.invalidateQueries({ queryKey: ["item-detail-full", id] });
                   queryClient.invalidateQueries({ queryKey: ["item-movements", id] });
                 } finally {
-                  setStockBusy(false);
+                  setStockBusyFlag(false);
                 }
               }}
             >
