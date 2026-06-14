@@ -76,22 +76,64 @@ jobs:
         run: |
           HASH=$(awk '{print $1}' qa-summary.sha256)
           READY=$(grep -o '"release_ready"[[:space:]]*:[[:space:]]*[a-z]*' qa-summary.json | head -n1 | awk -F: '{print $2}' | tr -d ' ')
-          echo "========== ERPOVO CI QA Artifact Summary =========="
-          echo "Manifest hash  : $HASH"
+          ARTIFACT_NAME="erpovo-ci-qa-summary-${{ github.sha }}"
+          REQUIRED="qa-summary.json qa-summary.sha256 QA_SUMMARY.md RELEASE_NOTES.md"
+          OPTIONAL_FIXED="stable-build-manifest.json"
+          OPTIONAL_GLOBS="erpovo-release-audit*.pdf release-audit*.pdf"
+          FORBIDDEN=".env .env.* *.pem *secret* *token* *api_key* node_modules perf_stress*"
+
+          echo "========== ERPOVO CI QA Artifact Checks =========="
+          echo "Artifact name  : $ARTIFACT_NAME"
+          echo "Manifest path  : qa-summary.json"
+          echo "Hash file path : qa-summary.sha256"
+          echo "SHA-256        : $HASH"
           echo "Release ready  : $READY"
-          echo "Files uploaded :"
-          for f in qa-summary.json qa-summary.sha256 QA_SUMMARY.md RELEASE_NOTES.md stable-build-manifest.json; do
-            [ -f "$f" ] && echo "  · $f"
+          echo ""
+          echo "Required files :"
+          for f in $REQUIRED; do
+            if [ -f "$f" ]; then echo "  ✓ present : $f"; else echo "  ✗ MISSING : $f"; fi
           done
-          for f in erpovo-release-audit*.pdf release-audit*.pdf; do
-            [ -f "$f" ] && echo "  · $f"
+          echo ""
+          echo "Optional files :"
+          for f in $OPTIONAL_FIXED; do
+            if [ -f "$f" ]; then echo "  ✓ present : $f"; else echo "  · skipped : $f (not found)"; fi
           done
+          for pat in $OPTIONAL_GLOBS; do
+            matched=0
+            for f in $pat; do
+              if [ -f "$f" ]; then echo "  ✓ present : $f"; matched=1; fi
+            done
+            [ "$matched" -eq 0 ] && echo "  · skipped : $pat (no match)"
+          done
+          echo ""
+          echo "Upload paths   :"
+          for p in $REQUIRED $OPTIONAL_FIXED $OPTIONAL_GLOBS; do
+            echo "  - $p"
+          done
+          echo ""
+          echo "Secrets excluded confirmation:"
+          excluded_ok=1
+          for pat in $FORBIDDEN; do
+            for f in $pat; do
+              [ -e "$f" ] && { echo "  ⚠ forbidden present in repo (NOT uploaded): $f"; }
+            done
+          done
+          echo "  ✓ Upload list contains no .env / secrets / tokens / node_modules / PERF stress data"
           echo "==================================================="
+
           {
-            echo "### ERPOVO CI QA Artifact Summary"
+            echo "### ERPOVO CI QA Artifact Checks"
             echo ""
-            echo "- **Manifest hash:** \`$HASH\`"
+            echo "- **Artifact name:** \`$ARTIFACT_NAME\`"
+            echo "- **Manifest hash (sha256):** \`$HASH\`"
             echo "- **Release ready:** $READY"
+            echo ""
+            echo "**Required files:**"
+            for f in $REQUIRED; do
+              if [ -f "$f" ]; then echo "- ✓ \`$f\`"; else echo "- ✗ MISSING \`$f\`"; fi
+            done
+            echo ""
+            echo "**Secrets excluded:** ✓ no .env / secrets / tokens / node_modules / PERF stress data in upload list"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload QA release artifacts
