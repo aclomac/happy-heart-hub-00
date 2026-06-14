@@ -493,9 +493,17 @@ function PerformanceTestPage() {
       await clearAllSummaries();
 
 
-      const CHUNK = 1000;
+      const CHUNK = total >= 250000 ? 2000 : 1000;
       const t0 = performance.now();
       let done = 0;
+      const yieldToUI = () =>
+        new Promise<void>((r) => {
+          const ric = (window as any).requestIdleCallback as
+            | ((cb: () => void, o?: any) => number)
+            | undefined;
+          if (ric) ric(() => r(), { timeout: 50 });
+          else setTimeout(r, 0);
+        });
 
       for (const p of plan) {
         let i = 0;
@@ -508,7 +516,7 @@ function PerformanceTestPage() {
           done += size;
           setGenerated(done);
           setProgress(Math.round((done / total) * 100));
-          await new Promise((r) => setTimeout(r, 0));
+          await yieldToUI();
         }
       }
       const genMs = Math.round(performance.now() - t0);
