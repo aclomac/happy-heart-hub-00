@@ -48,7 +48,10 @@ import {
   parseSaleMeta,
   type SaleInvoiceInput,
 } from "@/lib/sale-invoices";
-import { verifySaleInventoryPosting } from "@/lib/inventory-posting-doctor";
+import {
+  verifySaleInventoryPosting,
+  repairSaleStockPosting,
+} from "@/lib/inventory-posting-doctor";
 import { buildInvoiceDataFromSale } from "@/lib/pdf/build-invoice";
 import { downloadInvoicePDF, printInvoicePDF } from "@/lib/pdf/invoice-pdf";
 import {
