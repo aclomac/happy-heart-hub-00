@@ -46,32 +46,7 @@ export const Route = createFileRoute("/app/utilities/restore-backup")({
   component: RestoreBackupPage,
 });
 
-// Money-impacting tables that are intentionally blocked from the safe restore flow.
-// Enforced at logic level — even if a future UI change tries to include them, the
-// restore/dry-run pipelines strip them before any DB call.
-const DISABLED_TABLES: ReadonlySet<string> = new Set([
-  "sales",
-  "sale_invoices",
-  "sale_orders",
-  "purchases",
-  "purchase_invoices",
-  "purchase_orders",
-  "stock_movements",
-  "payments",
-  "payments_in",
-  "payments_out",
-  "payment_in",
-  "payment_out",
-]);
-const DISABLED_MESSAGE =
-  "Sales/Purchases restore is disabled for safety. Use advanced restore after extra confirmation.";
-
-function filterDisabled<T extends string>(tables: T[]): { allowed: T[]; blocked: T[] } {
-  const allowed: T[] = [];
-  const blocked: T[] = [];
-  for (const t of tables) (DISABLED_TABLES.has(t) ? blocked : allowed).push(t);
-  return { allowed, blocked };
-}
+import { DISABLED_TABLES, DISABLED_MESSAGE, filterDisabled } from "@/lib/restore-safety";
 
 type RestoreMode = "merge" | "replace";
 type TableFilter = "all" | "items" | "parties" | "sales" | "purchases" | "stock" | "settings";
