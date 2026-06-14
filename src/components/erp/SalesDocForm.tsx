@@ -684,6 +684,85 @@ export function SalesDocForm({
       payload.invoice_no = finalInvoiceNo;
     }
     setInvoiceNo(finalInvoiceNo);
+
+    // ---- Demo-mode stock posting (single source of truth) ----
+    // Real Supabase path posts stock inside saveSaleInvoice(); in demo mode
+    // we post the stock movement here exactly once per line. Inserting into
+    // stock_movements via the demo client triggers demoDb side-effects which
+    // mirror item_store_stock and items.stock — no second adjustment needed.
+    if (payload.affect_stock !== 0) {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const sb: any = (await import("@/integrations/supabase/client")).supabase;
+        // Resolve a warehouse (default → first → none).
+        const { data: whs } = await sb
+          .from("warehouses")
+          .select("id,is_default")
+          .eq("company_id", companyId)
+          .is("deleted_at", null);
+        const warehouseId =
+          (whs ?? []).find((w: { is_default: boolean }) => w.is_default)?.id ||
+          (whs ?? [])[0]?.id ||
+          null;
+
+        // On edit, reverse existing movements for this sale first (insert
+        // opposite-direction rows so demo side-effects restore stock), then
+        // delete the originals + reversals. Keeps stock idempotent under edits.
+        if (editingId && warehouseId) {
+          const { data: existing } = await sb
+            .from("stock_movements")
+            .select("id,item_id,warehouse_id,qty,direction")
+            .eq("company_id", companyId)
+            .eq("reference_id", editingId);
+          for (const m of (existing ?? []) as Array<{
+            id: string;
+            item_id: string;
+            warehouse_id: string;
+            qty: number;
+            direction: string;
+          }>) {
+            await sb.from("stock_movements").insert({
+              company_id: companyId,
+              item_id: m.item_id,
+              warehouse_id: m.warehouse_id,
+              qty: m.qty,
+              direction: m.direction === "out" ? "in" : "out",
+              reference_type: "sale_reversal",
+              reference_id: editingId,
+              reference_no: finalInvoiceNo,
+              movement_date: payload.invoice_date,
+              note: "Edit reversal",
+            });
+          }
+          await sb.from("stock_movements").delete().eq("reference_id", editingId);
+        }
+
+        if (warehouseId) {
+          const direction = payload.affect_stock === -1 ? "out" : "in";
+          for (const line of payload.items) {
+            if (!line.item_id || !line.qty) continue;
+            await sb.from("stock_movements").insert({
+              company_id: companyId,
+              item_id: line.item_id,
+              variant_id: line.variant_id || null,
+              warehouse_id: warehouseId,
+              qty: Math.abs(Number(line.qty)),
+              direction,
+              reference_type: "sale_invoice",
+              reference_id: id,
+              reference_no: finalInvoiceNo,
+              movement_date: payload.invoice_date,
+              note: `Sale Invoice ${finalInvoiceNo}`,
+            });
+          }
+        } else {
+          console.warn("[SaleInvoice demo] no warehouse available, skipped stock posting");
+        }
+      } catch (e) {
+        console.error("[SaleInvoice demo] stock posting failed:", e);
+      }
+    }
+
     return { id, invoiceNo: finalInvoiceNo, localSalesCount: nextSales.length };
   };
 
