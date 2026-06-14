@@ -218,30 +218,20 @@ jobs:
             fi
           done
 
-          # 2) Schema validity (qa-summary.json must be valid JSON with required keys)
-          if [ -f qa-summary.json ]; then
-            if ! node -e "const j=require('./qa-summary.json'); if(typeof j!=='object'||j===null)process.exit(2); for(const k of ['release_ready','sha256']){if(!(k in j)){console.error('missing key:',k);process.exit(3)}}" 2>/tmp/schema.err; then
-              echo "::error title=Schema invalid::qa-summary.json failed schema check ($(cat /tmp/schema.err))"
-              SCHEMA_STATUS=FAIL; FAIL=1
-            else
-              echo "  ✓ schema valid: qa-summary.json"
-            fi
+          # 2 + 3) Schema + canonical sha256 hash verification.
+          # Delegate to the project's authoritative verifier so this stays in
+          # sync with how qa-summary.sha256 is computed (canonical manifest hash,
+          # not raw sha256sum of the JSON file).
+          if bun run qa:manifest:verify > /tmp/qa-verify.log 2>&1; then
+            echo "  ✓ schema valid (qa-summary.json)"
+            echo "  ✓ sha256 match (qa-summary.sha256 ↔ integrity.value)"
           else
-            SCHEMA_STATUS=FAIL; FAIL=1
-          fi
-
-          # 3) SHA-256 hash matches qa-summary.json
-          if [ -f qa-summary.json ] && [ -f qa-summary.sha256 ]; then
-            EXPECTED_HASH=$(awk '{print $1}' qa-summary.sha256)
-            ACTUAL_HASH=$(sha256sum qa-summary.json | awk '{print $1}')
-            if [ "$EXPECTED_HASH" = "$ACTUAL_HASH" ]; then
-              echo "  ✓ sha256 match: $ACTUAL_HASH"
-            else
-              echo "::error title=Hash mismatch::expected=$EXPECTED_HASH actual=$ACTUAL_HASH"
-              HASH_STATUS=FAIL; FAIL=1
-            fi
-          else
-            HASH_STATUS=FAIL; FAIL=1
+            cat /tmp/qa-verify.log
+            if grep -qi "schema" /tmp/qa-verify.log; then SCHEMA_STATUS=FAIL; fi
+            if grep -qi "hash"   /tmp/qa-verify.log; then HASH_STATUS=FAIL; fi
+            # If verifier failed for any other reason, flag both as fail to be safe.
+            [ "$SCHEMA_STATUS" = "PASS" ] && [ "$HASH_STATUS" = "PASS" ] && { SCHEMA_STATUS=FAIL; HASH_STATUS=FAIL; }
+            FAIL=1
           fi
 
           # 4) release_ready === true
@@ -252,6 +242,7 @@ jobs:
           else
             echo "  ✓ release ready: YES"
           fi
+
 
           # 5) Retention policy (must be 90)
           ACTUAL_RETENTION=$(grep -A1 'qa-retention-policy: enforced' .github/workflows/ci.yml \
