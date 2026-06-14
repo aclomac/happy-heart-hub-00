@@ -597,29 +597,36 @@ function PerformanceTestPage() {
     let diag: Diag;
 
     if (fresh) {
-      // Fresh full scan: measure raw IndexedDB reads (no cache shortcut)
+      // Fresh (no aggregate cache): indexed paginated reads only — never scans full dataset
       const bidArg = bid ?? undefined;
-      dashboardMs = await time(() =>
-        batchedReadSamples([{ type: "sales", limit: 25 }, { type: "payments", limit: 10 }], bidArg),
-      );
-      itemsMs = await time(() => batchedReadSamples([{ type: "items", limit: 100 }], bidArg));
-      salesMs = await time(() => batchedReadSamples([{ type: "sales", limit: 100 }], bidArg));
-      reportsMs = await time(() =>
-        batchedReadSamples([{ type: "sales", limit: 100 }, { type: "stock_movements", limit: 100 }], bidArg),
-      );
+      const dashReads = [{ type: "sales", limit: 25 }, { type: "payments", limit: 10 }];
+      const itemsReads = [{ type: "items", limit: 100 }];
+      const salesReads = [{ type: "sales", limit: 100 }];
+      const reportsReads = [{ type: "sales", limit: 100 }, { type: "stock_movements", limit: 100 }];
+      const searchLimit = 25;
+      dashboardMs = await time(() => batchedReadSamples(dashReads, bidArg));
+      itemsMs = await time(() => batchedReadSamples(itemsReads, bidArg));
+      salesMs = await time(() => batchedReadSamples(salesReads, bidArg));
+      reportsMs = await time(() => batchedReadSamples(reportsReads, bidArg));
       searchMs = await time(async () => {
         const db = await openDB();
         await new Promise<void>((res) => {
           const tx = db.transaction(STORE, "readonly");
           const idx = tx.objectStore(STORE).index("by_name_search");
-          const req = idx.getAll(IDBKeyRange.bound("item 1", "item 1\uffff"), 25);
+          const req = idx.getAll(IDBKeyRange.bound("item 1", "item 1\uffff"), searchLimit);
           req.onsuccess = () => { db.close(); res(); };
           req.onerror = () => { db.close(); res(); };
         });
       });
+      const pageRows =
+        dashReads.reduce((s, r) => s + r.limit, 0) +
+        itemsReads.reduce((s, r) => s + r.limit, 0) +
+        salesReads.reduce((s, r) => s + r.limit, 0) +
+        reportsReads.reduce((s, r) => s + r.limit, 0) +
+        searchLimit;
       diag = {
-        usedCache: false, usedFullScan: true, indexUsed: true,
-        rowsScanned: scope, rowsRendered: 100,
+        usedCache: false, usedFullScan: false, indexUsed: true,
+        rowsScanned: pageRows, rowsRendered: 100,
       };
     } else {
       // Cached: read the precomputed aggregate — no row scan
