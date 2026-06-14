@@ -1,8 +1,10 @@
 import { describe, it, expect, vi } from "vitest";
 
-// Mock supabase client BEFORE any module under test imports it.
-const insertSpy = vi.fn().mockResolvedValue({ error: null });
-const fromSpy = vi.fn(() => ({ insert: insertSpy }));
+const { fromSpy, insertSpy } = vi.hoisted(() => {
+  const insertSpy = vi.fn().mockResolvedValue({ error: null });
+  const fromSpy = vi.fn(() => ({ insert: insertSpy }));
+  return { fromSpy, insertSpy };
+});
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: { from: fromSpy },
 }));
