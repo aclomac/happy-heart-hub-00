@@ -30,6 +30,7 @@ type NegStockRow = {
   expectedStock: number;
   delta: number;
   reason: string;
+  recommendedAction: string;
 };
 
 type MissingCustSale = {
