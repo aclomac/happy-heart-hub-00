@@ -248,9 +248,21 @@ function AdjustmentFormDialog({
     setType("increase");
   };
 
+  const selectedItem = items.find((i) => i.id === itemId);
+  const totalItemStock = Number(selectedItem?.stock ?? 0);
+
   const save = async () => {
     if (!itemId || !warehouseId) {
       toast.error("Pick an item and a store");
+      return;
+    }
+    const q = Number(qtyInput);
+    if (type !== "set" && (!Number.isFinite(q) || q <= 0)) {
+      toast.error("Quantity must be greater than 0");
+      return;
+    }
+    if (type === "set" && (!Number.isFinite(q) || q < 0)) {
+      toast.error("Quantity must be greater than 0");
       return;
     }
     setSaving(true);
