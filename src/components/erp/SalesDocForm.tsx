@@ -1632,7 +1632,7 @@ export function SalesDocForm({
                 navigate({ to: `/app/sales/${savedInvoiceId}/edit` as any });
               }}
             >
-              <Eye className="w-4 h-4" /> {t(docLabels.openLabel)}
+              <Eye className="w-4 h-4" /> {kind === "invoice" ? t("Open Invoice") : t(docLabels.openLabel)}
             </Button>
             <Button
               variant="sale"
