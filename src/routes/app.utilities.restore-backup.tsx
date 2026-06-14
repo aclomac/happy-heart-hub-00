@@ -343,7 +343,7 @@ function RestoreBackupPage() {
     try {
       if (mode === "replace") {
         setPhase("clearing existing data (replace mode)");
-        for (const t of selectedTables) {
+        for (const t of safeTables) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const { error } = await (supabase.from(t) as any)
             .update({ deleted_at: new Date().toISOString() })
@@ -353,8 +353,8 @@ function RestoreBackupPage() {
         }
       }
 
-      for (let i = 0; i < selectedTables.length; i++) {
-        const t = selectedTables[i];
+      for (let i = 0; i < safeTables.length; i++) {
+        const t = safeTables[i];
         setPhase(`restoring ${t}`);
         progress[i] = { ...progress[i], status: "running" };
         setRows([...progress]);
@@ -376,7 +376,7 @@ function RestoreBackupPage() {
         file: file?.name ?? "(unknown)",
         mode,
         filter,
-        tables: selectedTables,
+        tables: safeTables,
         dryRun: false,
         inserted: totalIn,
         skipped: totalSkip,
