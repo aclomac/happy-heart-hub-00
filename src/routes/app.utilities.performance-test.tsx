@@ -540,11 +540,15 @@ function PerformanceTestPage() {
         }
       : null;
 
-    // Ensure aggregate cache exists; build it if missing or fresh requested
-    let agg = fresh ? null : await getPerfCache(scopeKey, bid);
-    if (!agg) {
-      if (!fresh) toast.message("Building PERF cache…");
-      agg = await buildPerfCache(scopeKey, bid);
+    // Cached path: ensure aggregate cache exists; auto-build if missing.
+    // Fresh path: skip cache entirely so we don't accidentally scan twice.
+    let agg: PerfAggregate | null = null;
+    if (!fresh) {
+      agg = await getPerfCache(scopeKey, bid);
+      if (!agg) {
+        toast.message("Building PERF cache…");
+        agg = await buildPerfCache(scopeKey, bid);
+      }
     }
 
     const time = async (fn: () => Promise<any>) => {
