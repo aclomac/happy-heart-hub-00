@@ -263,6 +263,7 @@ function RestoreBackupPage() {
     setParseError(null);
     setSummary(null);
     setConflicts(null);
+    setDryRunCompleted(false);
     setRows([]);
     setPhase("idle");
     if (!f) return;
