@@ -712,25 +712,27 @@ function PerformanceTestPage() {
   // ── PERF cache status (for the visible Cache Status card) ─────────────────
   const [cacheStatusVersion, setCacheStatusVersion] = useState(0);
   const [cacheStatus, setCacheStatus] = useState<{
-    state: "Ready" | "Missing" | "Rebuilding";
+    state: "Ready" | "Missing" | "Building";
     builtAt?: number;
     recordsIndexed?: number;
+    error?: string;
   }>({ state: "Missing" });
   const [cacheBuilding, setCacheBuilding] = useState(false);
+  const [cacheError, setCacheError] = useState<string | null>(null);
   useEffect(() => {
     (async () => {
       const scopeKey: "all" | "batch" = benchMode === "last_batch" ? "batch" : "all";
       const bid = benchMode === "last_batch" ? lastBatchId : null;
       const c = await getPerfCache(scopeKey, bid);
       if (cacheBuilding) {
-        setCacheStatus({ state: "Rebuilding" });
+        setCacheStatus({ state: "Building" });
       } else if (c) {
         setCacheStatus({ state: "Ready", builtAt: c.builtAt, recordsIndexed: c.recordsIndexed });
       } else {
-        setCacheStatus({ state: "Missing" });
+        setCacheStatus({ state: "Missing", error: cacheError ?? undefined });
       }
     })();
-  }, [benchMode, lastBatchId, cacheStatusVersion, cacheBuilding, existingNow]);
+  }, [benchMode, lastBatchId, cacheStatusVersion, cacheBuilding, cacheError, existingNow]);
 
   const buildOrRebuildCache = async () => {
     console.log("[perf] Build cache clicked", { benchMode, lastBatchId, existingNow, cacheBuilding });
