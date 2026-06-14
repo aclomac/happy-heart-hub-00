@@ -1000,6 +1000,22 @@ function PerformanceTestPage() {
                   >
                     <Sparkles className="w-4 h-4 mr-1" /> Benchmark All PERF Records (Fresh Full Scan)
                   </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => void rerunBenchmark("all_perf", false)}
+                    disabled={benchRunning || running || cacheBuilding || existingNow < 1}
+                    title="Cached aggregate covers the full PERF set including 500k"
+                  >
+                    <Gauge className="w-4 h-4 mr-1" /> Benchmark 500k Full (Cached)
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => void rerunBenchmark("all_perf", true)}
+                    disabled={benchRunning || running || cacheBuilding || existingNow < 1}
+                    title="Reads first 100,000 rows via IndexedDB indexes — no aggregate cache"
+                  >
+                    <Gauge className="w-4 h-4 mr-1" /> Benchmark 100k Sample
+                  </Button>
                 </div>
               </div>
               <div>
