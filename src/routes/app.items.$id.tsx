@@ -27,6 +27,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCurrentCompanyId } from "@/lib/use-company";
 import { downloadCSV } from "@/lib/csv";
 import { ItemEditDialog } from "@/components/erp/ItemEditDialog";
+import { postStockAdjustment, getDefaultWarehouseId } from "@/lib/stock";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const sb = supabase as any;
