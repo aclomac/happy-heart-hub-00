@@ -95,6 +95,7 @@ import { Route as AppUtilitiesReferEarnRouteImport } from './routes/app.utilitie
 import { Route as AppUtilitiesRecycleBinRouteImport } from './routes/app.utilities.recycle-bin'
 import { Route as AppUtilitiesQaAuditRouteImport } from './routes/app.utilities.qa-audit'
 import { Route as AppUtilitiesPosSmokeTestRouteImport } from './routes/app.utilities.pos-smoke-test'
+import { Route as AppUtilitiesPerformanceTestRouteImport } from './routes/app.utilities.performance-test'
 import { Route as AppUtilitiesImportPartiesRouteImport } from './routes/app.utilities.import-parties'
 import { Route as AppUtilitiesImportItemsRouteImport } from './routes/app.utilities.import-items'
 import { Route as AppUtilitiesImportExportRouteImport } from './routes/app.utilities.import-export'
@@ -604,6 +605,12 @@ const AppUtilitiesPosSmokeTestRoute =
     path: '/pos-smoke-test',
     getParentRoute: () => AppUtilitiesRoute,
   } as any)
+const AppUtilitiesPerformanceTestRoute =
+  AppUtilitiesPerformanceTestRouteImport.update({
+    id: '/performance-test',
+    path: '/performance-test',
+    getParentRoute: () => AppUtilitiesRoute,
+  } as any)
 const AppUtilitiesImportPartiesRoute =
   AppUtilitiesImportPartiesRouteImport.update({
     id: '/import-parties',
@@ -1101,6 +1108,7 @@ export interface FileRoutesByFullPath {
   '/app/utilities/import-export': typeof AppUtilitiesImportExportRoute
   '/app/utilities/import-items': typeof AppUtilitiesImportItemsRoute
   '/app/utilities/import-parties': typeof AppUtilitiesImportPartiesRoute
+  '/app/utilities/performance-test': typeof AppUtilitiesPerformanceTestRoute
   '/app/utilities/pos-smoke-test': typeof AppUtilitiesPosSmokeTestRoute
   '/app/utilities/qa-audit': typeof AppUtilitiesQaAuditRoute
   '/app/utilities/recycle-bin': typeof AppUtilitiesRecycleBinRoute
@@ -1257,6 +1265,7 @@ export interface FileRoutesByTo {
   '/app/utilities/import-export': typeof AppUtilitiesImportExportRoute
   '/app/utilities/import-items': typeof AppUtilitiesImportItemsRoute
   '/app/utilities/import-parties': typeof AppUtilitiesImportPartiesRoute
+  '/app/utilities/performance-test': typeof AppUtilitiesPerformanceTestRoute
   '/app/utilities/pos-smoke-test': typeof AppUtilitiesPosSmokeTestRoute
   '/app/utilities/qa-audit': typeof AppUtilitiesQaAuditRoute
   '/app/utilities/recycle-bin': typeof AppUtilitiesRecycleBinRoute
@@ -1418,6 +1427,7 @@ export interface FileRoutesById {
   '/app/utilities/import-export': typeof AppUtilitiesImportExportRoute
   '/app/utilities/import-items': typeof AppUtilitiesImportItemsRoute
   '/app/utilities/import-parties': typeof AppUtilitiesImportPartiesRoute
+  '/app/utilities/performance-test': typeof AppUtilitiesPerformanceTestRoute
   '/app/utilities/pos-smoke-test': typeof AppUtilitiesPosSmokeTestRoute
   '/app/utilities/qa-audit': typeof AppUtilitiesQaAuditRoute
   '/app/utilities/recycle-bin': typeof AppUtilitiesRecycleBinRoute
@@ -1580,6 +1590,7 @@ export interface FileRouteTypes {
     | '/app/utilities/import-export'
     | '/app/utilities/import-items'
     | '/app/utilities/import-parties'
+    | '/app/utilities/performance-test'
     | '/app/utilities/pos-smoke-test'
     | '/app/utilities/qa-audit'
     | '/app/utilities/recycle-bin'
@@ -1736,6 +1747,7 @@ export interface FileRouteTypes {
     | '/app/utilities/import-export'
     | '/app/utilities/import-items'
     | '/app/utilities/import-parties'
+    | '/app/utilities/performance-test'
     | '/app/utilities/pos-smoke-test'
     | '/app/utilities/qa-audit'
     | '/app/utilities/recycle-bin'
@@ -1896,6 +1908,7 @@ export interface FileRouteTypes {
     | '/app/utilities/import-export'
     | '/app/utilities/import-items'
     | '/app/utilities/import-parties'
+    | '/app/utilities/performance-test'
     | '/app/utilities/pos-smoke-test'
     | '/app/utilities/qa-audit'
     | '/app/utilities/recycle-bin'
@@ -2560,6 +2573,13 @@ declare module '@tanstack/react-router' {
       path: '/pos-smoke-test'
       fullPath: '/app/utilities/pos-smoke-test'
       preLoaderRoute: typeof AppUtilitiesPosSmokeTestRouteImport
+      parentRoute: typeof AppUtilitiesRoute
+    }
+    '/app/utilities/performance-test': {
+      id: '/app/utilities/performance-test'
+      path: '/performance-test'
+      fullPath: '/app/utilities/performance-test'
+      preLoaderRoute: typeof AppUtilitiesPerformanceTestRouteImport
       parentRoute: typeof AppUtilitiesRoute
     }
     '/app/utilities/import-parties': {
@@ -3389,6 +3409,7 @@ interface AppUtilitiesRouteChildren {
   AppUtilitiesImportExportRoute: typeof AppUtilitiesImportExportRoute
   AppUtilitiesImportItemsRoute: typeof AppUtilitiesImportItemsRoute
   AppUtilitiesImportPartiesRoute: typeof AppUtilitiesImportPartiesRoute
+  AppUtilitiesPerformanceTestRoute: typeof AppUtilitiesPerformanceTestRoute
   AppUtilitiesPosSmokeTestRoute: typeof AppUtilitiesPosSmokeTestRoute
   AppUtilitiesQaAuditRoute: typeof AppUtilitiesQaAuditRoute
   AppUtilitiesRecycleBinRoute: typeof AppUtilitiesRecycleBinRoute
@@ -3406,6 +3427,7 @@ const AppUtilitiesRouteChildren: AppUtilitiesRouteChildren = {
   AppUtilitiesImportExportRoute: AppUtilitiesImportExportRoute,
   AppUtilitiesImportItemsRoute: AppUtilitiesImportItemsRoute,
   AppUtilitiesImportPartiesRoute: AppUtilitiesImportPartiesRoute,
+  AppUtilitiesPerformanceTestRoute: AppUtilitiesPerformanceTestRoute,
   AppUtilitiesPosSmokeTestRoute: AppUtilitiesPosSmokeTestRoute,
   AppUtilitiesQaAuditRoute: AppUtilitiesQaAuditRoute,
   AppUtilitiesRecycleBinRoute: AppUtilitiesRecycleBinRoute,

@@ -13,6 +13,7 @@ import {
   Trash2,
   CalendarX,
   Sparkles,
+  Gauge,
   type LucideIcon,
 } from "lucide-react";
 import { resetAndReseedDemo } from "@/lib/demo/resetDemo";
@@ -38,6 +39,7 @@ const tiles: Tile[] = [
   { i: FileCheck2, n: "Verify My Data", d: "Run data & integrity checks", to: "/app/utilities/verify-data" },
   { i: Trash2, n: "Recycle Bin", d: "Restore deleted records", to: "/app/utilities/recycle-bin" },
   { i: CalendarX, n: "Close Financial Year", d: "Reset numbers, fresh start", to: "/app/utilities/close-financial-year" },
+  { i: Gauge, n: "Performance Test", d: "Generate [PERF] data & benchmark", to: "/app/utilities/performance-test" },
 ];
 
 function UtilitiesIndex() {
