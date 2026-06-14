@@ -338,12 +338,20 @@ function PerformanceTestPage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingTotal, setPendingTotal] = useState(0);
 
+  // Diagnostics: actual per-type breakdown vs expected
+  const [breakdown, setBreakdown] = useState<Record<string, number>>({});
+  const [expectedTotal, setExpectedTotal] = useState(0);
+  const [expectedPlan, setExpectedPlan] = useState<Record<string, number>>({});
+
   const refreshCount = async () => {
     const n = await countPerf();
     setExistingNow(n);
+    const bd = await countPerfByType();
+    setBreakdown(bd);
     return n;
   };
   useEffect(() => { void refreshCount(); }, []);
+
 
   const toggle = (k: DataType) => setSelected((s) => ({ ...s, [k]: !s[k] }));
 
