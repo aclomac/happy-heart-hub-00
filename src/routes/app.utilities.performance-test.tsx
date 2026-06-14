@@ -539,8 +539,15 @@ function PerformanceTestPage() {
   };
 
   const onClickGenerate = (total: number, fresh: boolean) => {
+    if (total >= 250000) {
+      setStressTotal(total);
+      setStressFresh(fresh);
+      setStressOpen(true);
+      return;
+    }
     if (!fresh && existingNow > 0) {
       setPendingTotal(total);
+      setPendingFresh(fresh);
       setConfirmOpen(true);
       return;
     }
