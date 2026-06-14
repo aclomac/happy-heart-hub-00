@@ -52,6 +52,9 @@ jobs:
       - name: Static tests
         run: bun run test:static
 
+      - name: QA critical gate (regression-proof critical paths)
+        run: bun run qa:critical
+
       - name: Coverage report (non-blocking)
         run: bun run test:coverage
         continue-on-error: true
