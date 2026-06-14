@@ -343,7 +343,10 @@ function VerifyData() {
                         <td className={`text-right ${r.delta >= 0 ? "num-pos" : "num-neg"}`}>
                           {r.delta >= 0 ? "+" : ""}{r.delta} {r.unit}
                         </td>
-                        <td className="text-xs text-muted-foreground">{r.reason}</td>
+                        <td className="text-xs text-muted-foreground">
+                          <div>{r.reason}</div>
+                          <div className="text-[11px] italic">→ {r.recommendedAction}</div>
+                        </td>
                         <td className="text-right whitespace-nowrap">
                           <Link to="/app/items/$id" params={{ id: r.id }}>
                             <Button variant="outline" size="sm" className="h-7 mr-1">
