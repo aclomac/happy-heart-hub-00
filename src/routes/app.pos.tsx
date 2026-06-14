@@ -284,6 +284,8 @@ type Line = { item: Item; qty: number };
 
 export function POS() {
   const companyId = useCurrentCompanyId();
+  const { data: companySettings } = useCompanySettings(companyId);
+  const stopOnNegativeStock = companySettings?.preferences?.stopSaleOnNegativeStock ?? true;
   const qc = useQueryClient();
   const { t } = useI18n();
   const { isOffline } = usePWAStatus();
