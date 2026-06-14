@@ -255,6 +255,7 @@ const nav: NavNode[] = [
       { kind: "link", to: "/app/utilities/import-parties", key: "Import Parties", icon: Wrench },
       { kind: "link", to: "/app/utilities/export-to-tally", key: "Exports To Tally", icon: Wrench },
       { kind: "link", to: "/app/utilities/export-items", key: "Export Items", icon: Wrench },
+      { kind: "link", to: "/app/utilities/release-package", key: "Release Package", icon: Wrench },
       { kind: "link", to: "/app/utilities/verify-data", key: "Verify My Data", icon: Wrench },
       { kind: "link", to: "/app/utilities/recycle-bin", key: "Recycle Bin", icon: Wrench },
       { kind: "link", to: "/app/utilities/close-financial-year", key: "Close Financial Year", icon: Wrench },
