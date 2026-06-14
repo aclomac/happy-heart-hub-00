@@ -252,7 +252,7 @@ describe("restore-safety: invalid backup messaging", () => {
     const JSZip = (await import("jszip")).default;
     const zip = new JSZip();
     zip.file("random.txt", "hello");
-    const blob = await zip.generateAsync({ type: "uint8array" });
+    const blob = await zip.generateAsync({ type: "arraybuffer" });
     const file = new File([blob], "bad.zip", { type: "application/zip" });
 
     const { readErpovoBackup } = await import("@/lib/erpovo-backup");
