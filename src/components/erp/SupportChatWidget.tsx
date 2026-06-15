@@ -188,7 +188,7 @@ export function SupportChatWidget() {
           onClick={toggle}
           aria-label={t("Support Chat")}
           data-testid="support-chat-fab"
-          className="fixed bottom-4 right-4 z-40 inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground shadow-lg hover:opacity-90 transition px-4 py-3"
+          className="fixed bottom-6 right-6 z-40 inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground shadow-lg hover:opacity-90 transition px-3.5 py-2.5"
         >
           <MessageCircle className="w-4 h-4" />
           <span className="text-sm font-medium hidden sm:inline">{t("Support Chat")}</span>
