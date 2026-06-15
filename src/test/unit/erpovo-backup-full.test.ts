@@ -19,6 +19,13 @@ const { fromSpy } = vi.hoisted(() => {
     payment_settings: [
       { id: 1, gateway: "stripe", api_key: "sk_live_XXX", company_id: "co-1" },
     ],
+    sale_items: [
+      { id: 10, sale_id: 1, item_name: "Tea", qty: 2, price: 500, amount: 1000 },
+      { id: 11, sale_id: 1, item_name: "Sugar", qty: 1, price: 100, amount: 100 },
+    ],
+    purchase_items: [
+      { id: 20, purchase_id: 1, item_name: "Tea", qty: 5, price: 100, amount: 500 },
+    ],
     online_orders: [{ id: 1, total: 100, company_id: "co-1" }],
   };
   const fromSpy = vi.fn((table: string) => {
@@ -26,6 +33,7 @@ const { fromSpy } = vi.hoisted(() => {
     const builder: Record<string, unknown> = {
       select: () => builder,
       eq: () => builder,
+      in: () => builder,
       maybeSingle: () =>
         Promise.resolve(rows ? { data: rows[0], error: null } : { data: null, error: null }),
       then: (resolve: (v: { data: unknown; error: unknown }) => void) =>
