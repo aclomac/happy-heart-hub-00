@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
 import { ChevronsUpDown } from "lucide-react";
-import { Trash2, Plus, Save, UserPlus, Printer, FileDown, Eye, FilePlus2 } from "lucide-react";
+import { Trash2, Plus, Save, UserPlus, Printer, FileDown, Eye, FilePlus2, Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentCompanyId } from "@/lib/use-company";
@@ -343,6 +343,8 @@ export function SalesDocForm({
   const [savedInvoiceNo, setSavedInvoiceNo] = useState<string>("");
   const [successOpen, setSuccessOpen] = useState(false);
   const [pdfBusy, setPdfBusy] = useState(false);
+  const [pdfAction, setPdfAction] = useState<null | "print" | "download">(null);
+  const [popupBusy, setPopupBusy] = useState(false);
   // (Removed) Add Item composer state — original invoice table is the only item editor.
 
   // Visible Save Invoice debug panel state (per /app/sales/new spec).
@@ -1018,19 +1020,24 @@ export function SalesDocForm({
 
   const runWithInvoicePdf = async (
     fn: (d: Awaited<ReturnType<typeof buildInvoiceDataFromSale>>) => void | Promise<void>,
+    action: "print" | "download",
   ) => {
     if (!savedInvoiceId || !companyId) return;
+    if (pdfBusy) return; // debounce: ignore rapid repeat clicks
     setPdfBusy(true);
+    setPdfAction(action);
     try {
       const d = await buildInvoiceDataFromSale(savedInvoiceId, companyId, {
         title: docLabels.pdfTitle,
       });
       await fn(d);
+      toast.success(action === "download" ? t("Download PDF") : t("Print Invoice"));
     } catch (e) {
       console.error(e);
       toast.error(t("PDF generation failed"));
     } finally {
       setPdfBusy(false);
+      setPdfAction(null);
     }
   };
 
@@ -1612,28 +1619,39 @@ export function SalesDocForm({
             <Button
               variant="outline"
               size="sm"
-              disabled={!savedInvoiceId || pdfBusy}
+              disabled={!savedInvoiceId || pdfBusy || popupBusy}
               data-testid="success-print-invoice"
-              onClick={() => runWithInvoicePdf(printInvoicePDF)}
+              onClick={() => runWithInvoicePdf(printInvoicePDF, "print")}
             >
-              <Printer className="w-4 h-4" /> {t("Print Invoice")}
+              {pdfAction === "print" ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Printer className="w-4 h-4" />
+              )}{" "}
+              {t("Print Invoice")}
             </Button>
             <Button
               variant="outline"
               size="sm"
-              disabled={!savedInvoiceId || pdfBusy}
+              disabled={!savedInvoiceId || pdfBusy || popupBusy}
               data-testid="success-download-pdf"
-              onClick={() => runWithInvoicePdf(downloadInvoicePDF)}
+              onClick={() => runWithInvoicePdf(downloadInvoicePDF, "download")}
             >
-              <FileDown className="w-4 h-4" /> {t("Download PDF")}
+              {pdfAction === "download" ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <FileDown className="w-4 h-4" />
+              )}{" "}
+              {t("Download PDF")}
             </Button>
             <Button
               variant="outline"
               size="sm"
-              disabled={!savedInvoiceId}
+              disabled={!savedInvoiceId || pdfBusy || popupBusy}
               data-testid="success-open-invoice"
               onClick={() => {
-                if (!savedInvoiceId) return;
+                if (!savedInvoiceId || popupBusy) return;
+                setPopupBusy(true);
                 setSuccessOpen(false);
                 navigate({ to: `/app/sales/${savedInvoiceId}/edit` as any });
               }}
@@ -1643,8 +1661,14 @@ export function SalesDocForm({
             <Button
               variant="sale"
               size="sm"
+              disabled={pdfBusy || popupBusy}
               data-testid="success-create-another"
-              onClick={resetForm}
+              onClick={() => {
+                if (popupBusy) return;
+                setPopupBusy(true);
+                resetForm();
+                setPopupBusy(false);
+              }}
             >
               <FilePlus2 className="w-4 h-4" /> {t("Create Another Sale")}
             </Button>

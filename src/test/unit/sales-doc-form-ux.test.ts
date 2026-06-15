@@ -199,11 +199,11 @@ describe("SalesDocForm post-save actions", () => {
   });
 
   it("Print Invoice calls existing printInvoicePDF helper", () => {
-    expect(src).toMatch(/runWithInvoicePdf\(printInvoicePDF\)/);
+    expect(src).toMatch(/runWithInvoicePdf\(printInvoicePDF, "print"\)/);
   });
 
   it("Download PDF calls existing downloadInvoicePDF helper", () => {
-    expect(src).toMatch(/runWithInvoicePdf\(downloadInvoicePDF\)/);
+    expect(src).toMatch(/runWithInvoicePdf\(downloadInvoicePDF, "download"\)/);
   });
 
   it("Open Invoice navigates to /app/sales/:id/edit", () => {
@@ -214,11 +214,11 @@ describe("SalesDocForm post-save actions", () => {
     expect(src).toMatch(/const resetForm = \(\) => \{/);
     expect(src).toMatch(/setRows\(\[emptyRow\(\)\]\)/);
     expect(src).toMatch(/setPartyId\(""\)/);
-    expect(src).toMatch(/onClick=\{resetForm\}/);
+    expect(src).toMatch(/resetForm\(\)/);
   });
 
   it("disables print/download until invoice has a valid id", () => {
-    expect(src).toMatch(/disabled=\{!savedInvoiceId \|\| pdfBusy\}/);
+    expect(src).toMatch(/disabled=\{!savedInvoiceId \|\| pdfBusy \|\| popupBusy\}/);
   });
 
   it("shows PDF generation failed toast on error", () => {
@@ -236,5 +236,37 @@ describe("SalesDocForm post-save actions", () => {
     expect(i18n).toContain(
       '"PDF generation failed": { en: "PDF generation failed", bn: "PDF তৈরি করা যায়নি" }',
     );
+  });
+});
+
+describe("SalesDocForm post-save guards", () => {
+  it("shows a spinner on the active PDF button via pdfAction state", () => {
+    expect(src).toMatch(/const \[pdfAction, setPdfAction\] = useState<null \| "print" \| "download">/);
+    expect(src).toMatch(/pdfAction === "print"[\s\S]*Loader2/);
+    expect(src).toMatch(/pdfAction === "download"[\s\S]*Loader2/);
+  });
+
+  it("debounces repeated PDF clicks via pdfBusy early-return", () => {
+    expect(src).toMatch(/if \(pdfBusy\) return;/);
+  });
+
+  it("guards popup actions (Open Invoice, Create Another) against double-click via popupBusy", () => {
+    expect(src).toMatch(/const \[popupBusy, setPopupBusy\] = useState\(false\)/);
+    expect(src).toMatch(/disabled=\{!savedInvoiceId \|\| pdfBusy \|\| popupBusy\}[\s\S]*data-testid="success-open-invoice"/);
+    expect(src).toMatch(/disabled=\{pdfBusy \|\| popupBusy\}[\s\S]*data-testid="success-create-another"/);
+  });
+
+  it("Open Invoice navigates using savedInvoiceId only (no re-save)", () => {
+    expect(src).toMatch(/data-testid="success-open-invoice"[\s\S]*navigate\(\{ to: `\/app\/sales\/\$\{savedInvoiceId\}\/edit`/);
+    // ensure handler does not call save again
+    const block = src.split('data-testid="success-open-invoice"')[1]?.split("</Button>")[0] || "";
+    expect(block).not.toMatch(/handleSaveInvoice|saveSaleInvoice/);
+  });
+
+  it("Print/Download handlers do not call save again", () => {
+    const printBlock = src.split('data-testid="success-print-invoice"')[1]?.split("</Button>")[0] || "";
+    const dlBlock = src.split('data-testid="success-download-pdf"')[1]?.split("</Button>")[0] || "";
+    expect(printBlock).not.toMatch(/handleSaveInvoice|saveSaleInvoice/);
+    expect(dlBlock).not.toMatch(/handleSaveInvoice|saveSaleInvoice/);
   });
 });
