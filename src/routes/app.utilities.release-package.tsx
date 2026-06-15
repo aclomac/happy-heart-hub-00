@@ -148,6 +148,15 @@ function ReleasePackagePage() {
         detail: `${(byteSize / 1024 / 1024).toFixed(2)} MB`,
       });
 
+      // Verify the full ZIP SHA-256 against expected package hash
+      const zipHash = await sha256Hex(buf);
+      const zipHashMatch = zipHash === PKG.zipSha256;
+      checks.push({
+        name: "Package ZIP SHA-256 matches expected",
+        pass: zipHashMatch,
+        detail: zipHash,
+      });
+
       const JSZip = (await import("jszip")).default;
       let zip: import("jszip");
       try {
@@ -176,20 +185,31 @@ function ReleasePackagePage() {
         if (hit) forbiddenHits.push(`${label}: ${hit}`);
       }
 
+      // qa-summary.json hash: must match qa-summary.sha256 inside the ZIP.
+      // The canonical hash strips the `integrity` field (see scripts/hash-qa-manifest.ts).
       const qaEntry = zip.file("qa-summary.json");
+      const shaEntry = zip.file("qa-summary.sha256");
+      let expectedQaHash = PKG.sha256;
+      if (shaEntry) {
+        const shaTxt = (await shaEntry.async("string")).trim();
+        const m = shaTxt.match(/^([a-f0-9]{64})/i);
+        if (m) expectedQaHash = m[1].toLowerCase();
+      }
       if (qaEntry) {
         const txt = await qaEntry.async("string");
-        const parsed = JSON.parse(txt);
-        const canonical = JSON.stringify(canonicalize(parsed));
+        const parsed = JSON.parse(txt) as Record<string, unknown>;
+        const { integrity: _omit, ...rest } = parsed;
+        void _omit;
+        const canonical = JSON.stringify(canonicalize(rest));
         hashActual = await sha256Hex(new TextEncoder().encode(canonical).buffer);
-        const hashMatch = hashActual === PKG.sha256;
+        const hashMatch = hashActual === expectedQaHash;
         checks.push({
-          name: "Manifest SHA-256 matches expected",
+          name: "qa-summary.json SHA-256 matches qa-summary.sha256",
           pass: hashMatch,
           detail: hashActual,
         });
       } else {
-        checks.push({ name: "Manifest SHA-256 matches expected", pass: false, detail: "qa-summary.json missing" });
+        checks.push({ name: "qa-summary.json SHA-256 matches qa-summary.sha256", pass: false, detail: "qa-summary.json missing" });
       }
     } catch (e) {
       checks.push({ name: "Verification completed without errors", pass: false, detail: String(e) });
