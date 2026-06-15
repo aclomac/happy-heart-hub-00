@@ -1504,6 +1504,10 @@ export const DICTIONARY: Record<string, { en: string; bn: string }> = {
   "Download PDF": { en: "Download PDF", bn: "PDF ডাউনলোড" },
   "Create Another Sale": { en: "Create Another Sale", bn: "আরেকটি বিক্রয় তৈরি করুন" },
   "PDF generation failed": { en: "PDF generation failed", bn: "PDF তৈরি করা যায়নি" },
+  "Could not generate the PDF. You can retry without re-saving the invoice.": {
+    en: "Could not generate the PDF. You can retry without re-saving the invoice.",
+    bn: "PDF তৈরি করা যায়নি। ইনভয়েস আবার সেভ না করেই আপনি পুনরায় চেষ্টা করতে পারেন।",
+  },
   "Invoice saved, but invoice reference was not found.": {
     en: "Invoice saved, but invoice reference was not found.",
     bn: "ইনভয়েস সেভ হয়েছে, কিন্তু ইনভয়েস রেফারেন্স পাওয়া যায়নি।",
