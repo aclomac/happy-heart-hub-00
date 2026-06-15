@@ -338,6 +338,9 @@ export function ERPSidebar() {
   // when the user returns to the dashboard.
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
   void STORAGE_KEY;
+  useEffect(() => {
+    try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+  }, []);
 
   // Auto-open any group containing the active route
   useEffect(() => {
