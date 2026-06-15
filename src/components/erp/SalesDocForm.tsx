@@ -1619,28 +1619,39 @@ export function SalesDocForm({
             <Button
               variant="outline"
               size="sm"
-              disabled={!savedInvoiceId || pdfBusy}
+              disabled={!savedInvoiceId || pdfBusy || popupBusy}
               data-testid="success-print-invoice"
-              onClick={() => runWithInvoicePdf(printInvoicePDF)}
+              onClick={() => runWithInvoicePdf(printInvoicePDF, "print")}
             >
-              <Printer className="w-4 h-4" /> {t("Print Invoice")}
+              {pdfAction === "print" ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Printer className="w-4 h-4" />
+              )}{" "}
+              {t("Print Invoice")}
             </Button>
             <Button
               variant="outline"
               size="sm"
-              disabled={!savedInvoiceId || pdfBusy}
+              disabled={!savedInvoiceId || pdfBusy || popupBusy}
               data-testid="success-download-pdf"
-              onClick={() => runWithInvoicePdf(downloadInvoicePDF)}
+              onClick={() => runWithInvoicePdf(downloadInvoicePDF, "download")}
             >
-              <FileDown className="w-4 h-4" /> {t("Download PDF")}
+              {pdfAction === "download" ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <FileDown className="w-4 h-4" />
+              )}{" "}
+              {t("Download PDF")}
             </Button>
             <Button
               variant="outline"
               size="sm"
-              disabled={!savedInvoiceId}
+              disabled={!savedInvoiceId || pdfBusy || popupBusy}
               data-testid="success-open-invoice"
               onClick={() => {
-                if (!savedInvoiceId) return;
+                if (!savedInvoiceId || popupBusy) return;
+                setPopupBusy(true);
                 setSuccessOpen(false);
                 navigate({ to: `/app/sales/${savedInvoiceId}/edit` as any });
               }}
@@ -1650,8 +1661,14 @@ export function SalesDocForm({
             <Button
               variant="sale"
               size="sm"
+              disabled={pdfBusy || popupBusy}
               data-testid="success-create-another"
-              onClick={resetForm}
+              onClick={() => {
+                if (popupBusy) return;
+                setPopupBusy(true);
+                resetForm();
+                setPopupBusy(false);
+              }}
             >
               <FilePlus2 className="w-4 h-4" /> {t("Create Another Sale")}
             </Button>
