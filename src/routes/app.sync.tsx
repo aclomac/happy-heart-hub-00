@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Users, RefreshCw, Cloud, HardDrive, Smartphone, Laptop, Loader2 } from "lucide-react";
+import { Users, RefreshCw, Cloud, HardDrive, Smartphone, Laptop, Loader2, ShieldCheck, CheckCircle2, XCircle } from "lucide-react";
 
 import { PageHeader } from "@/components/erp/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,13 @@ import { useCurrentCompanyId } from "@/lib/use-company";
 import { useCurrentRole } from "@/lib/use-current-role";
 import { useI18n } from "@/lib/i18n";
 import { logAudit } from "@/lib/audit";
-import { exportErpovoBackup } from "@/lib/erpovo-backup";
+import {
+  exportErpovoBackupFull,
+  verifyErpovoBackup,
+  EXCLUDED_FROM_BACKUP,
+  type FullErpovoManifest,
+  type VerifyResult,
+} from "@/lib/erpovo-backup";
 
 export const Route = createFileRoute("/app/sync")({ component: Sync });
 
