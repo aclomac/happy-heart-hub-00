@@ -973,7 +973,12 @@ export function SalesDocForm({
       // For new invoices, show success dialog with Print/Download/Open/Create Another.
       // For edits or other doc types, go back to the list as before.
       if (!editingId && kind === "invoice" && newId) {
+        setSavedInvoiceId(newId);
+        setSavedInvoiceNo(finalInvoiceNo);
         setSuccessOpen(true);
+      } else if (!editingId && kind === "invoice" && !newId) {
+        toast.error(t("Invoice saved, but invoice reference was not found."));
+        navigate({ to: meta.listPath });
       } else {
         navigate({ to: meta.listPath });
       }
