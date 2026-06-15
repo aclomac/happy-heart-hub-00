@@ -23,13 +23,16 @@ export const Route = createFileRoute("/app/utilities/release-package")({
 });
 
 const PKG = {
-  filename: "erpovo-release-package-2026-06-14T19-04-08.zip",
-  href: "/releases/erpovo-release-package-2026-06-14T19-04-08.zip",
-  sizeLabel: "3.27 MB",
-  expectedSizeBytes: 3_428_504,
-  generatedAt: "2026-06-14T19:04:08Z",
-  totalEntries: 714,
-  buildFiles: 693,
+  filename: "erpovo-release-package-2026-06-15T02-27-49.zip",
+  href: "/releases/erpovo-release-package-2026-06-15T02-27-49.zip",
+  sizeLabel: "6.48 MB",
+  expectedSizeBytes: 6_794_619,
+  generatedAt: "2026-06-15T02:27:49Z",
+  totalEntries: 718,
+  buildFiles: 696,
+  /** SHA-256 of the full ZIP file */
+  zipSha256: "428939354684f4b866408fc3d94768e12aa08ae7e82aead2b31e205b1512be03",
+  /** SHA-256 of qa-summary.json (canonicalized, integrity field stripped) */
   sha256: "6e9d135e5ec97e458f7c0aeb04033d533493bd546a44ec3121bf828f91420589",
   includedDocs: [
     "qa-summary.json",
@@ -145,6 +148,15 @@ function ReleasePackagePage() {
         detail: `${(byteSize / 1024 / 1024).toFixed(2)} MB`,
       });
 
+      // Verify the full ZIP SHA-256 against expected package hash
+      const zipHash = await sha256Hex(buf);
+      const zipHashMatch = zipHash === PKG.zipSha256;
+      checks.push({
+        name: "Package ZIP SHA-256 matches expected",
+        pass: zipHashMatch,
+        detail: zipHash,
+      });
+
       const JSZip = (await import("jszip")).default;
       let zip: import("jszip");
       try {
@@ -173,20 +185,31 @@ function ReleasePackagePage() {
         if (hit) forbiddenHits.push(`${label}: ${hit}`);
       }
 
+      // qa-summary.json hash: must match qa-summary.sha256 inside the ZIP.
+      // The canonical hash strips the `integrity` field (see scripts/hash-qa-manifest.ts).
       const qaEntry = zip.file("qa-summary.json");
+      const shaEntry = zip.file("qa-summary.sha256");
+      let expectedQaHash = PKG.sha256;
+      if (shaEntry) {
+        const shaTxt = (await shaEntry.async("string")).trim();
+        const m = shaTxt.match(/^([a-f0-9]{64})/i);
+        if (m) expectedQaHash = m[1].toLowerCase();
+      }
       if (qaEntry) {
         const txt = await qaEntry.async("string");
-        const parsed = JSON.parse(txt);
-        const canonical = JSON.stringify(canonicalize(parsed));
+        const parsed = JSON.parse(txt) as Record<string, unknown>;
+        const { integrity: _omit, ...rest } = parsed;
+        void _omit;
+        const canonical = JSON.stringify(canonicalize(rest));
         hashActual = await sha256Hex(new TextEncoder().encode(canonical).buffer);
-        const hashMatch = hashActual === PKG.sha256;
+        const hashMatch = hashActual === expectedQaHash;
         checks.push({
-          name: "Manifest SHA-256 matches expected",
+          name: "qa-summary.json SHA-256 matches qa-summary.sha256",
           pass: hashMatch,
           detail: hashActual,
         });
       } else {
-        checks.push({ name: "Manifest SHA-256 matches expected", pass: false, detail: "qa-summary.json missing" });
+        checks.push({ name: "qa-summary.json SHA-256 matches qa-summary.sha256", pass: false, detail: "qa-summary.json missing" });
       }
     } catch (e) {
       checks.push({ name: "Verification completed without errors", pass: false, detail: String(e) });
@@ -254,7 +277,11 @@ function ReleasePackagePage() {
             <div><dt className="text-muted-foreground">Generated</dt><dd>{PKG.generatedAt}</dd></div>
             <div><dt className="text-muted-foreground">Total entries</dt><dd>{PKG.totalEntries} ({PKG.buildFiles} build files)</dd></div>
             <div className="sm:col-span-2">
-              <dt className="text-muted-foreground">Manifest SHA-256 (expected)</dt>
+              <dt className="text-muted-foreground">Package ZIP SHA-256 (expected)</dt>
+              <dd className="font-mono text-xs break-all">{PKG.zipSha256}</dd>
+            </div>
+            <div className="sm:col-span-2">
+              <dt className="text-muted-foreground">qa-summary.json SHA-256 (expected)</dt>
               <dd className="font-mono text-xs break-all">{PKG.sha256}</dd>
             </div>
           </dl>
