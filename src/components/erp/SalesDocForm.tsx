@@ -1047,7 +1047,7 @@ export function SalesDocForm({
               type="button"
               data-testid="save-invoice-btn"
               onClick={handleSaveInvoice}
-              className="inline-flex h-8 items-center justify-center gap-2 rounded-md bg-sale px-3 text-xs font-medium text-sale-foreground shadow-sm hover:bg-sale/90"
+              className="inline-flex h-8 items-center justify-center gap-2 rounded-md bg-sale px-3 text-xs font-medium text-sale-foreground shadow-sm cursor-pointer hover:bg-sale/90 active:bg-sale/80 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
             >
               <Save className="w-4 h-4" />
               {saving ? "Saving…" : editingId ? "Update" : meta.saveLabel}
@@ -1551,7 +1551,7 @@ export function SalesDocForm({
           type="button"
           data-testid="save-invoice-btn-bottom"
           onClick={handleSaveInvoice}
-          className="inline-flex h-8 items-center justify-center gap-2 rounded-md bg-sale px-3 text-xs font-medium text-sale-foreground shadow-sm hover:bg-sale/90"
+          className="inline-flex h-8 items-center justify-center gap-2 rounded-md bg-sale px-3 text-xs font-medium text-sale-foreground shadow-sm cursor-pointer hover:bg-sale/90 active:bg-sale/80 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
         >
           <Save className="w-4 h-4" />
           {saving ? "Saving…" : editingId ? "Update" : meta.saveLabel}
