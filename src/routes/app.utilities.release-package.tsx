@@ -23,13 +23,16 @@ export const Route = createFileRoute("/app/utilities/release-package")({
 });
 
 const PKG = {
-  filename: "erpovo-release-package-2026-06-14T19-04-08.zip",
-  href: "/releases/erpovo-release-package-2026-06-14T19-04-08.zip",
-  sizeLabel: "3.27 MB",
-  expectedSizeBytes: 3_428_504,
-  generatedAt: "2026-06-14T19:04:08Z",
-  totalEntries: 714,
-  buildFiles: 693,
+  filename: "erpovo-release-package-2026-06-15T02-27-49.zip",
+  href: "/releases/erpovo-release-package-2026-06-15T02-27-49.zip",
+  sizeLabel: "6.48 MB",
+  expectedSizeBytes: 6_794_619,
+  generatedAt: "2026-06-15T02:27:49Z",
+  totalEntries: 718,
+  buildFiles: 696,
+  /** SHA-256 of the full ZIP file */
+  zipSha256: "428939354684f4b866408fc3d94768e12aa08ae7e82aead2b31e205b1512be03",
+  /** SHA-256 of qa-summary.json (canonicalized, integrity field stripped) */
   sha256: "6e9d135e5ec97e458f7c0aeb04033d533493bd546a44ec3121bf828f91420589",
   includedDocs: [
     "qa-summary.json",
