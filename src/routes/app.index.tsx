@@ -484,26 +484,7 @@ function Dashboard() {
   ];
 
   return (
-    <div className="space-y-6 -m-4 p-4 md:p-6 bg-[#F6F8FC] min-h-full">
-      {/* Header */}
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-[22px] font-bold tracking-tight text-[#0F172A]">Dashboard</h1>
-          <p className="text-sm text-[#64748B]">
-            Welcome back, <span className="font-medium text-[#0F172A]">Md. Tanvir Hasan</span>{" "}
-            <span aria-hidden>👋</span>
-          </p>
-        </div>
-        <div className="flex items-center gap-2 text-xs text-[#64748B]">
-          <span className="rounded-lg border border-[#E5EAF2] bg-card px-3 py-1.5 font-medium text-[#0F172A]">
-            FY 2025–26
-          </span>
-          <span className="rounded-lg border border-[#E5EAF2] bg-card px-3 py-1.5 font-medium text-[#0F172A]">
-            This Month
-          </span>
-        </div>
-      </div>
-
+    <div className="space-y-5 -m-4 p-4 md:p-6 bg-[#F6F8FC] min-h-full">
       {/* KPI Row */}
       {skeletons ? (
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
