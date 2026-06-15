@@ -569,12 +569,12 @@ function Dashboard() {
           <ResponsiveContainer width="100%" height={260}>
             <BarChart
               data={chart.map((c) => ({ m: c.m, revenue: c.sale + c.otherIncome, expense: c.expense }))}
-              margin={{ top: 8, right: 8, left: -16, bottom: 0 }}
+              margin={{ top: 8, right: 8, left: 4, bottom: 0 }}
               barGap={4}
             >
               <CartesianGrid stroke="#EEF2F7" strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="m" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#94A3B8" }} />
-              <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#94A3B8" }} width={48} />
+              <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#94A3B8" }} width={64} tickFormatter={compactBdt} />
               <Tooltip cursor={{ fill: "rgba(15,23,42,0.04)" }} contentStyle={{ borderRadius: 12, border: "1px solid #E5EAF2", fontSize: 12 }} />
               <Legend wrapperStyle={{ display: "none" }} />
               <Bar dataKey="revenue" fill="#14B8A6" radius={[6, 6, 0, 0]} barSize={14} />
