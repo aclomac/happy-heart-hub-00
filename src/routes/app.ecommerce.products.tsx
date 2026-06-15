@@ -45,6 +45,12 @@ function ProductsPage() {
   const [confirmOpen, setConfirmOpen] = useState<{ ids: string[] } | null>(null);
   const [syncWebsiteId, setSyncWebsiteId] = useState<string>(websites[0]?.id || "");
   const [busy, setBusy] = useState(false);
+  const [lastSummary, setLastSummary] = useState<{
+    fetched: number; created: number; updated: number; skipped: number; failed: number;
+    pages: number; transport?: string; at: string; success: boolean; message: string;
+    errorKind?: string; httpStatus?: number; url?: string;
+    failedItems: Array<{ wpId: string; name: string; sku: string; reason: string }>;
+  } | null>(null);
 
   const persist = (next: EcoProduct[]) => { setList(next); setProducts(next); };
 
