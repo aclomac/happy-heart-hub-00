@@ -494,18 +494,30 @@ export function ERPSidebar() {
         className="px-3 py-3 border-t text-xs space-y-2"
         style={{ borderColor: "var(--color-sidebar-border-c)" }}
       >
-        <div
-          className="flex items-center gap-2 px-2 py-2 rounded-md"
-          style={{ background: "var(--color-sidebar-hover)" }}
-        >
-          <Building2 className="w-4 h-4 opacity-70" />
-          <div className="min-w-0">
-            <div className="truncate font-medium">{currentCompany?.name || (isDemoMode() ? "Chair King" : t("Loading…"))}</div>
-            <div className="opacity-60 text-[10px]">
-              {isDemoMode() ? "Personal Mode · All features unlocked" : t("Personal Mode")}
+        {(() => {
+          const rawName = currentCompany?.name || "";
+          // Treat the auto-seeded "X's Business" name as a placeholder and
+          // fall back to Chair King branding for the demo / personal-mode preview.
+          const isAutoName = /'s Business$/i.test(rawName);
+          const displayName = !rawName || isAutoName ? "Chair King" : rawName;
+          const subtitle = !rawName || isAutoName || isDemoMode()
+            ? "Dhaka, Bangladesh"
+            : t("Personal Mode");
+          return (
+            <div
+              className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg"
+              style={{ background: "var(--color-sidebar-hover)" }}
+            >
+              <div className="shrink-0 grid place-items-center w-8 h-8 rounded-md bg-gradient-to-br from-amber-400 to-amber-600 text-white shadow-sm">
+                <Crown className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <div className="truncate font-semibold text-[13px] text-white">{displayName}</div>
+                <div className="opacity-70 text-[10px] truncate">{subtitle}</div>
+              </div>
             </div>
-          </div>
-        </div>
+          );
+        })()}
         <Button
           variant="ghost"
           size="sm"
