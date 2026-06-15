@@ -22,7 +22,9 @@ import {
 } from "@/lib/demo/ecommerce";
 import { getItems } from "@/lib/demo/inventory";
 import { parseCSV, readFileAsText } from "@/lib/csv-parse";
-import { syncWooCommerceProducts } from "@/lib/integrations/integrationClient";
+import { syncWooCommerceProducts, testWooCommerceConnection } from "@/lib/integrations/integrationClient";
+import { clearDiagnostic } from "@/lib/integrations/diagnostics";
+import { wooConfigForWebsiteId, maskedWooCreds, wooBaseEndpoint } from "@/lib/integrations/woocommerce";
 import { ItemImageThumb } from "@/components/erp/ItemImageThumb";
 import { Download, Link2, Trash2, Pencil, RefreshCw, Upload, MoreVertical, ImageIcon } from "lucide-react";
 
@@ -43,6 +45,12 @@ function ProductsPage() {
   const [confirmOpen, setConfirmOpen] = useState<{ ids: string[] } | null>(null);
   const [syncWebsiteId, setSyncWebsiteId] = useState<string>(websites[0]?.id || "");
   const [busy, setBusy] = useState(false);
+  const [lastSummary, setLastSummary] = useState<{
+    fetched: number; created: number; updated: number; skipped: number; failed: number;
+    pages: number; transport?: string; at: string; success: boolean; message: string;
+    errorKind?: string; httpStatus?: number; url?: string;
+    failedItems: Array<{ wpId: string; name: string; sku: string; reason: string }>;
+  } | null>(null);
 
   const persist = (next: EcoProduct[]) => { setList(next); setProducts(next); };
 
@@ -127,17 +135,65 @@ function ProductsPage() {
     toast.success(`Imported ${added} new, updated ${updated}, ${failed} failed`);
   };
 
-  const syncWoo = async () => {
+  const syncWoo = async (forceProxy = false) => {
     if (!syncWebsiteId) { toast.error("Select a website"); return; }
     setBusy(true);
-    const r = await syncWooCommerceProducts({ websiteId: syncWebsiteId, mode: getSettings().integrationMode });
+    const mode = forceProxy ? "backend-proxy" : getSettings().integrationMode;
+    const r = await syncWooCommerceProducts({ websiteId: syncWebsiteId, mode });
     setBusy(false);
     setList(getProducts());
-    // After product sync, propagate any new images into existing order items.
     const refresh = refreshOrderItemImages();
     const stats = productImageStats();
+    const data = r.data ?? { added: 0, updated: 0, failed: 0, fetched: 0, pages: 0, failedItems: [], transport: undefined };
+    // Existing-item duplicates were skipped (matched by SKU + website id).
+    const skipped = Math.max(0, data.fetched - data.added - data.updated - data.failed);
+    setLastSummary({
+      fetched: data.fetched, created: data.added, updated: data.updated, skipped,
+      failed: data.failed, pages: data.pages, transport: data.transport,
+      at: new Date().toISOString(), success: r.success, message: r.message,
+      errorKind: r.errorKind, httpStatus: r.statusCode, url: r.safeRequest.url,
+      failedItems: data.failedItems,
+    });
     const withImageMsg = ` (${stats.withImage}/${stats.total} with images, ${refresh.updated} order items updated)`;
-    r.success || r.errorKind === "mode_disabled" ? toast.success(r.message + withImageMsg) : toast.error(r.message);
+    if (r.success || r.errorKind === "mode_disabled") toast.success(r.message + withImageMsg);
+    else toast.error(r.message);
+  };
+
+  const testConn = async (forceProxy = false) => {
+    if (!syncWebsiteId) { toast.error("Select a website"); return; }
+    setBusy(true);
+    const mode = forceProxy ? "backend-proxy" : getSettings().integrationMode;
+    const r = await testWooCommerceConnection({ websiteId: syncWebsiteId, mode });
+    setBusy(false);
+    if (r.success) toast.success(r.message);
+    else toast.error(r.message);
+  };
+
+  const copySafeError = async () => {
+    const cfg = wooConfigForWebsiteId(syncWebsiteId);
+    const masked = maskedWooCreds(cfg);
+    const lines = [
+      `Provider: WooCommerce`,
+      `Phase: products (/wp-json/${cfg.apiVersion}/products)`,
+      `Endpoint: ${wooBaseEndpoint(cfg)}/products`,
+      lastSummary?.url ? `Last URL: ${lastSummary.url}` : "",
+      `HTTP Status: ${lastSummary?.httpStatus ?? "—"}`,
+      `Error Kind: ${lastSummary?.errorKind ?? "—"}`,
+      `Message: ${lastSummary?.message ?? "(no error recorded)"}`,
+      `Proxy Used: ${lastSummary?.transport === "backend-proxy-fallback" || lastSummary?.transport === "backend-proxy" ? "yes" : "no"}`,
+      `Consumer Key: ${masked.consumerKey}`,
+      `Consumer Secret: ${masked.consumerSecret}`,
+      `Auth Mode: ${cfg.authMode}`,
+      `Timestamp: ${lastSummary?.at ?? new Date().toISOString()}`,
+    ].filter(Boolean).join("\n");
+    try { await navigator.clipboard.writeText(lines); toast.success("Copied safe error details"); }
+    catch { toast.error("Clipboard blocked"); }
+  };
+
+  const clearDiag = () => {
+    clearDiagnostic("woocommerce_products");
+    setLastSummary(null);
+    toast.success("Diagnostics cleared");
   };
 
   const refreshImages = () => {
@@ -202,16 +258,94 @@ function ProductsPage() {
               <SelectContent>{websites.map((w) => <SelectItem key={w.id} value={w.id}>{w.name} — {w.platform}</SelectItem>)}</SelectContent>
             </Select>
           </div>
-          <Button size="sm" disabled={busy} onClick={syncWoo}><RefreshCw className="w-4 h-4 mr-1" /> Sync from WooCommerce</Button>
+          <Button size="sm" variant="outline" disabled={busy} onClick={() => testConn(false)}>Test Connection</Button>
+          <Button size="sm" disabled={busy} onClick={() => syncWoo(false)}><RefreshCw className="w-4 h-4 mr-1" /> Sync Products</Button>
+          <Button size="sm" variant="outline" disabled={busy} onClick={() => syncWoo(true)}><RefreshCw className="w-4 h-4 mr-1" /> Retry via Proxy</Button>
+          <Button size="sm" variant="ghost" disabled={busy} onClick={copySafeError}>Copy Safe Error</Button>
+          <Button size="sm" variant="ghost" disabled={busy} onClick={clearDiag}>Clear Diagnostics</Button>
           <label className="inline-flex items-center">
             <input type="file" accept=".csv" className="hidden" onChange={(e) => e.target.files?.[0] && importCsv(e.target.files[0])} />
             <span className="inline-flex items-center px-3 py-1.5 text-sm border rounded-md cursor-pointer hover:bg-accent">
               <Upload className="w-4 h-4 mr-1" /> Import CSV
             </span>
           </label>
-          <div className="text-xs text-muted-foreground">Configure API in <Link to="/app/ecommerce/settings" className="underline">Integration Settings</Link>.</div>
+          <div className="text-xs text-muted-foreground w-full">Configure API in <Link to="/app/ecommerce/settings" className="underline">Integration Settings</Link>.</div>
         </CardContent>
       </Card>
+
+      {lastSummary && (
+        <Card className="mb-3">
+          <CardContent className="pt-4 space-y-3 text-sm">
+            <div className="flex items-center justify-between">
+              <div className="font-semibold">Last Import Summary</div>
+              <div className="text-xs text-muted-foreground">
+                {new Date(lastSummary.at).toLocaleString()}
+                {lastSummary.transport === "backend-proxy-fallback" && " · via secure proxy fallback"}
+                {lastSummary.transport === "backend-proxy" && " · via backend proxy"}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-6 gap-2">
+              {[
+                ["Fetched", lastSummary.fetched],
+                ["Created", lastSummary.created],
+                ["Updated", lastSummary.updated],
+                ["Skipped (dup)", lastSummary.skipped],
+                ["Failed", lastSummary.failed],
+                ["Pages", lastSummary.pages],
+              ].map(([k, v]) => (
+                <div key={String(k)} className="rounded border p-2">
+                  <div className="text-[11px] uppercase text-muted-foreground">{k}</div>
+                  <div className="text-lg font-semibold">{v}</div>
+                </div>
+              ))}
+            </div>
+            {!lastSummary.success && (
+              <div className="rounded border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900 space-y-1">
+                <div className="font-semibold">Sync failed — try this checklist:</div>
+                <ul className="list-disc ml-4 space-y-0.5">
+                  <li>Is the WooCommerce plugin active and REST API enabled?</li>
+                  <li>Does the API key have <b>Read</b> or <b>Read/Write</b> permission?</li>
+                  <li>Are permalinks set to anything other than <b>Plain</b>?</li>
+                  <li>Is a security plugin / Cloudflare / WAF blocking <code>/wp-json</code>?</li>
+                  <li>Is the HTTPS/SSL certificate valid (no mixed content)?</li>
+                  <li>Is the website URL correct (no trailing slash, with https)?</li>
+                </ul>
+              </div>
+            )}
+            {lastSummary.failedItems.length > 0 && (
+              <details>
+                <summary className="cursor-pointer text-xs text-muted-foreground">
+                  Show {lastSummary.failedItems.length} failed product row(s)
+                </summary>
+                <div className="mt-2 overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="text-left text-muted-foreground border-b">
+                        <th className="py-1">Woo ID</th><th>Name</th><th>SKU</th><th>Reason</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {lastSummary.failedItems.slice(0, 50).map((f, i) => (
+                        <tr key={i} className="border-b last:border-0">
+                          <td className="py-1 font-mono">{f.wpId || "—"}</td>
+                          <td>{f.name || "—"}</td>
+                          <td className="font-mono">{f.sku || "—"}</td>
+                          <td className="text-rose-700">{f.reason}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="mt-2">
+                  <Button size="sm" variant="outline" disabled={busy} onClick={() => syncWoo(true)}>
+                    Retry via Proxy
+                  </Button>
+                </div>
+              </details>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <div className="flex flex-wrap items-center gap-2 mb-3">
         <Input className="w-64" placeholder="Search products by name or SKU…" value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
