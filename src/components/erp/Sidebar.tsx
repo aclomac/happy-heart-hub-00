@@ -98,6 +98,7 @@ const nav: NavNode[] = [
     label: "Sale",
     icon: ShoppingCart,
     children: [
+      { kind: "link", to: "/app/pos", key: "POS / Quick Bill", icon: Zap },
       { kind: "link", to: "/app/sales", key: "Sale Invoices", icon: ShoppingCart },
       { kind: "link", to: "/app/estimates", key: "Estimates / Quotations", icon: ShoppingCart },
       { kind: "link", to: "/app/sale-orders", key: "Sale Orders", icon: ShoppingCart },
