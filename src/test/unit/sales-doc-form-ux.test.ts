@@ -252,8 +252,8 @@ describe("SalesDocForm post-save guards", () => {
 
   it("guards popup actions (Open Invoice, Create Another) against double-click via popupBusy", () => {
     expect(src).toMatch(/const \[popupBusy, setPopupBusy\] = useState\(false\)/);
-    expect(src).toMatch(/data-testid="success-open-invoice"[\s\S]*disabled=\{!savedInvoiceId \|\| pdfBusy \|\| popupBusy\}/);
-    expect(src).toMatch(/data-testid="success-create-another"[\s\S]*disabled=\{pdfBusy \|\| popupBusy\}/);
+    expect(src).toMatch(/disabled=\{!savedInvoiceId \|\| pdfBusy \|\| popupBusy\}[\s\S]*data-testid="success-open-invoice"/);
+    expect(src).toMatch(/disabled=\{pdfBusy \|\| popupBusy\}[\s\S]*data-testid="success-create-another"/);
   });
 
   it("Open Invoice navigates using savedInvoiceId only (no re-save)", () => {
