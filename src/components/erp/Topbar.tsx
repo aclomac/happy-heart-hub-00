@@ -152,7 +152,7 @@ export function ERPTopbar() {
 
     return (
       <TooltipProvider delayDuration={200}>
-        <header className="h-16 bg-card border-b flex items-center gap-3 px-5 sticky top-0 z-30 print:hidden">
+        <header className="h-[72px] bg-card border-b flex items-center gap-3 px-6 sticky top-0 z-30 print:hidden">
           <div className="flex-1 min-w-0">
             <h1 className="text-[18px] font-bold tracking-tight text-foreground leading-tight truncate">
               {t("Dashboard")}
