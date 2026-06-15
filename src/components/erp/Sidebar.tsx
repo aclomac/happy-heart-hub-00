@@ -262,7 +262,6 @@ const nav: NavNode[] = [
     ],
   },
   { kind: "link", to: "/app/support", key: "support", icon: LifeBuoy, module: null },
-  { kind: "link", to: "/app/settings", key: "settings", icon: Settings, module: null },
 ];
 
 
