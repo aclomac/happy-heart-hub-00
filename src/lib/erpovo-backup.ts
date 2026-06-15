@@ -485,6 +485,8 @@ export async function exportErpovoBackupFull(companyId: string): Promise<FullBac
     }
   }
 
+  recoverMissingLineTables(data, tableMeta, companyId);
+
   const total_records = tableMeta.reduce((n, m) => n + m.rows, 0);
   const dataJson = JSON.stringify(data, null, 2);
   const data_sha256 = await sha256Hex(dataJson);
