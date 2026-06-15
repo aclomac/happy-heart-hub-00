@@ -367,6 +367,49 @@ function collectStockMovementLines(
   });
 }
 
+function collectHeaderFallbackLines(
+  data: Record<string, BackupRow[]>,
+  outTable: "sale_items" | "purchase_items",
+  companyId: string,
+): BackupRow[] {
+  const parentTable = outTable === "sale_items" ? "sales" : "purchases";
+  const parentFk = outTable === "sale_items" ? "sale_id" : "purchase_id";
+  const priceKeys = outTable === "sale_items"
+    ? ["sale_price", "price", "rate"]
+    : ["purchase_price", "cost_price", "price", "rate"];
+  const parents = tableRows(data, parentTable);
+  const items = tableRows(data, "items");
+  return parents.map((parent, index) => {
+    const amount = toNumber(firstValue(parent, ["subtotal", "total"]), 0);
+    const candidate = items.find((item) => {
+      const price = toNumber(firstValue(item, priceKeys), 0);
+      return price > 0 && amount > 0 && Number.isInteger(Math.round((amount / price) * 1000) / 1000);
+    }) ?? items[index % Math.max(items.length, 1)];
+    const rate = candidate ? toNumber(firstValue(candidate, priceKeys), amount) : amount;
+    const qty = rate > 0 && amount > 0 ? Math.max(1, Math.round((amount / rate) * 1000) / 1000) : 1;
+    return normalizeLine(
+      outTable === "sale_items" ? "sale" : "purchase",
+      {
+        id: `${String(parent.id)}-backup-recovered-line-1`,
+        [parentFk]: parent.id,
+        item_id: candidate?.id ?? null,
+        item_name: candidate?.name ?? (outTable === "sale_items" ? "Recovered sale line" : "Recovered purchase line"),
+        sku: candidate?.sku ?? candidate?.barcode ?? null,
+        qty,
+        unit: candidate?.unit ?? "PCS",
+        rate,
+        price: rate,
+        discount: parent.discount ?? 0,
+        tax: parent.tax ?? 0,
+        amount,
+      },
+      parent,
+      companyId,
+      index,
+    );
+  });
+}
+
 function recoverMissingLineTables(data: Record<string, BackupRow[]>, meta: FullTableMeta[], companyId: string) {
   for (const outTable of ["sale_items", "purchase_items"] as const) {
     const parentTable = outTable === "sale_items" ? "sales" : "purchases";
@@ -390,6 +433,7 @@ function recoverMissingLineTables(data: Record<string, BackupRow[]>, meta: FullT
       ...collectEmbeddedLines(data, parentTable, outTable, companyId),
       ...collectLocalStorageLines(data, outTable, companyId),
       ...collectStockMovementLines(data, outTable, companyId),
+      ...collectHeaderFallbackLines(data, outTable, companyId),
     ];
     const seen = new Set<string>();
     data[outTable] = recovered.filter((row) => {
