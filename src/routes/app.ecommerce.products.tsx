@@ -258,16 +258,94 @@ function ProductsPage() {
               <SelectContent>{websites.map((w) => <SelectItem key={w.id} value={w.id}>{w.name} — {w.platform}</SelectItem>)}</SelectContent>
             </Select>
           </div>
-          <Button size="sm" disabled={busy} onClick={syncWoo}><RefreshCw className="w-4 h-4 mr-1" /> Sync from WooCommerce</Button>
+          <Button size="sm" variant="outline" disabled={busy} onClick={() => testConn(false)}>Test Connection</Button>
+          <Button size="sm" disabled={busy} onClick={() => syncWoo(false)}><RefreshCw className="w-4 h-4 mr-1" /> Sync Products</Button>
+          <Button size="sm" variant="outline" disabled={busy} onClick={() => syncWoo(true)}><RefreshCw className="w-4 h-4 mr-1" /> Retry via Proxy</Button>
+          <Button size="sm" variant="ghost" disabled={busy} onClick={copySafeError}>Copy Safe Error</Button>
+          <Button size="sm" variant="ghost" disabled={busy} onClick={clearDiag}>Clear Diagnostics</Button>
           <label className="inline-flex items-center">
             <input type="file" accept=".csv" className="hidden" onChange={(e) => e.target.files?.[0] && importCsv(e.target.files[0])} />
             <span className="inline-flex items-center px-3 py-1.5 text-sm border rounded-md cursor-pointer hover:bg-accent">
               <Upload className="w-4 h-4 mr-1" /> Import CSV
             </span>
           </label>
-          <div className="text-xs text-muted-foreground">Configure API in <Link to="/app/ecommerce/settings" className="underline">Integration Settings</Link>.</div>
+          <div className="text-xs text-muted-foreground w-full">Configure API in <Link to="/app/ecommerce/settings" className="underline">Integration Settings</Link>.</div>
         </CardContent>
       </Card>
+
+      {lastSummary && (
+        <Card className="mb-3">
+          <CardContent className="pt-4 space-y-3 text-sm">
+            <div className="flex items-center justify-between">
+              <div className="font-semibold">Last Import Summary</div>
+              <div className="text-xs text-muted-foreground">
+                {new Date(lastSummary.at).toLocaleString()}
+                {lastSummary.transport === "backend-proxy-fallback" && " · via secure proxy fallback"}
+                {lastSummary.transport === "backend-proxy" && " · via backend proxy"}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-6 gap-2">
+              {[
+                ["Fetched", lastSummary.fetched],
+                ["Created", lastSummary.created],
+                ["Updated", lastSummary.updated],
+                ["Skipped (dup)", lastSummary.skipped],
+                ["Failed", lastSummary.failed],
+                ["Pages", lastSummary.pages],
+              ].map(([k, v]) => (
+                <div key={String(k)} className="rounded border p-2">
+                  <div className="text-[11px] uppercase text-muted-foreground">{k}</div>
+                  <div className="text-lg font-semibold">{v}</div>
+                </div>
+              ))}
+            </div>
+            {!lastSummary.success && (
+              <div className="rounded border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900 space-y-1">
+                <div className="font-semibold">Sync failed — try this checklist:</div>
+                <ul className="list-disc ml-4 space-y-0.5">
+                  <li>Is the WooCommerce plugin active and REST API enabled?</li>
+                  <li>Does the API key have <b>Read</b> or <b>Read/Write</b> permission?</li>
+                  <li>Are permalinks set to anything other than <b>Plain</b>?</li>
+                  <li>Is a security plugin / Cloudflare / WAF blocking <code>/wp-json</code>?</li>
+                  <li>Is the HTTPS/SSL certificate valid (no mixed content)?</li>
+                  <li>Is the website URL correct (no trailing slash, with https)?</li>
+                </ul>
+              </div>
+            )}
+            {lastSummary.failedItems.length > 0 && (
+              <details>
+                <summary className="cursor-pointer text-xs text-muted-foreground">
+                  Show {lastSummary.failedItems.length} failed product row(s)
+                </summary>
+                <div className="mt-2 overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="text-left text-muted-foreground border-b">
+                        <th className="py-1">Woo ID</th><th>Name</th><th>SKU</th><th>Reason</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {lastSummary.failedItems.slice(0, 50).map((f, i) => (
+                        <tr key={i} className="border-b last:border-0">
+                          <td className="py-1 font-mono">{f.wpId || "—"}</td>
+                          <td>{f.name || "—"}</td>
+                          <td className="font-mono">{f.sku || "—"}</td>
+                          <td className="text-rose-700">{f.reason}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="mt-2">
+                  <Button size="sm" variant="outline" disabled={busy} onClick={() => syncWoo(true)}>
+                    Retry via Proxy
+                  </Button>
+                </div>
+              </details>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <div className="flex flex-wrap items-center gap-2 mb-3">
         <Input className="w-64" placeholder="Search products by name or SKU…" value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} />
