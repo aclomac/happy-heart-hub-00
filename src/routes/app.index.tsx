@@ -165,14 +165,14 @@ function SectionCard({
 }) {
   return (
     <section
-      className={`rounded-2xl border border-[#E5EAF2] bg-card ${className}`}
+      className={`rounded-xl border border-[#E5EAF2] bg-card ${className}`}
       style={{ boxShadow: "0 1px 2px rgba(15,23,42,0.04)" }}
     >
-      <header className="flex items-center justify-between gap-3 px-5 pt-4 pb-2">
+      <header className="flex items-center justify-between gap-3 px-4 pt-3 pb-2">
         <h2 className="text-sm font-semibold text-[#0F172A]">{title}</h2>
         <div className="text-xs text-[#64748B]">{right}</div>
       </header>
-      <div className="px-5 pb-5">{children}</div>
+      <div className="px-4 pb-4">{children}</div>
     </section>
   );
 }
