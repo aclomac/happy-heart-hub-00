@@ -125,7 +125,28 @@ export async function httpRequest(
   }
   if (mode === "backend-proxy") return viaBackendProxy(url, init);
   if (mode === "electron-proxy") return viaElectronProxy(url, init);
-  return viaDirectBrowser(url, init);
+  // direct-browser: try native fetch first, auto-fall back to the secure
+  // backend proxy if the browser blocks the request (CORS / mixed content /
+  // "Load failed"). This means production stores work even when the user
+  // hasn't manually flipped Integration Mode to "Backend Proxy".
+  try {
+    return await viaDirectBrowser(url, init);
+  } catch (e) {
+    if (e instanceof TransportError && (e.kind === "cors" || e.kind === "network")) {
+      try {
+        const proxied = await viaBackendProxy(url, init);
+        // Tag the headers so callers/diagnostics can see the fallback happened.
+        proxied.headers = { ...proxied.headers, "x-erpovo-transport": "backend-proxy-fallback" };
+        return proxied;
+      } catch (proxyErr) {
+        throw new TransportError(
+          `${e.message} — backend proxy fallback also failed: ${(proxyErr as Error).message}`,
+          "cors",
+        );
+      }
+    }
+    throw e;
+  }
 }
 
 export function isElectronAvailable(): boolean {
