@@ -144,70 +144,11 @@ const nav: NavNode[] = [
   },
   {
     kind: "group",
-    key: "parties",
-    label: "Parties",
-    icon: Users,
-    children: [
-      { kind: "link", to: "/app/parties", key: "All Parties", icon: Users },
-      { kind: "link", to: "/app/party-groups", key: "Party Groups", icon: FolderOpen },
-    ],
-  },
-  {
-    kind: "group",
-    key: "payroll",
-    label: "Payroll & Employees",
-    icon: UserCheck,
-    module: "payroll",
-    children: [
-      {
-        kind: "link",
-        to: "/app/payroll#employees",
-        key: "Employees",
-        icon: UserCheck,
-        module: "payroll",
-      },
-      {
-        kind: "link",
-        to: "/app/payroll#attendance",
-        key: "Attendance",
-        icon: UserCheck,
-        module: "payroll",
-      },
-      {
-        kind: "link",
-        to: "/app/payroll#salary-setup",
-        key: "Salary Setup",
-        icon: UserCheck,
-        module: "payroll",
-      },
-      {
-        kind: "link",
-        to: "/app/payroll#payments",
-        key: "Salary Payments",
-        icon: UserCheck,
-        module: "payroll",
-      },
-      {
-        kind: "link",
-        to: "/app/payroll#reports",
-        key: "Payroll Reports",
-        icon: UserCheck,
-        module: "payroll",
-      },
-    ],
-  },
-  {
-    kind: "group",
     key: "reports",
     label: "Reports",
     icon: BarChart3,
     children: [
-      {
-        kind: "link",
-        to: "/app/reports#transactions",
-        key: "Transaction Reports",
-        icon: BarChart3,
-      },
+      { kind: "link", to: "/app/reports#transactions", key: "Transaction Reports", icon: BarChart3 },
       { kind: "link", to: "/app/reports#party", key: "Party Reports", icon: BarChart3 },
       { kind: "link", to: "/app/reports#stock", key: "Item / Stock Reports", icon: BarChart3 },
       { kind: "link", to: "/app/reports#business", key: "Business Status", icon: BarChart3 },
@@ -239,6 +180,42 @@ const nav: NavNode[] = [
       { kind: "link", to: "/app/ecommerce/reports", key: "Ecommerce Reports", icon: BarChart3 },
       { kind: "link", to: "/app/ecommerce/settings", key: "Integration Settings", icon: Settings },
       { kind: "link", to: "/app/ecommerce/sync-logs", key: "Sync Logs", icon: Activity },
+    ],
+  },
+  {
+    kind: "group",
+    key: "payroll",
+    label: "Payroll",
+    icon: Wallet,
+    module: "payroll",
+    children: [
+      { kind: "link", to: "/app/payroll#salary-setup", key: "Salary Setup", icon: Wallet, module: "payroll" },
+      { kind: "link", to: "/app/payroll#payments", key: "Salary Payments", icon: Wallet, module: "payroll" },
+      { kind: "link", to: "/app/payroll#reports", key: "Payroll Reports", icon: BarChart3, module: "payroll" },
+    ],
+  },
+  {
+    kind: "group",
+    key: "hrm",
+    label: "HRM",
+    icon: UserCheck,
+    module: "payroll",
+    children: [
+      { kind: "link", to: "/app/payroll#employees", key: "Employees", icon: UserCheck, module: "payroll" },
+      { kind: "link", to: "/app/payroll#attendance", key: "Attendance", icon: UserCheck, module: "payroll" },
+    ],
+  },
+  { kind: "link", to: "/app/settings", key: "settings", icon: Settings, module: null },
+
+  // Additional modules — kept accessible below the main reference order.
+  {
+    kind: "group",
+    key: "parties",
+    label: "Parties",
+    icon: Users,
+    children: [
+      { kind: "link", to: "/app/parties", key: "All Parties", icon: Users },
+      { kind: "link", to: "/app/party-groups", key: "Party Groups", icon: FolderOpen },
     ],
   },
   {
@@ -284,11 +261,9 @@ const nav: NavNode[] = [
       { kind: "link", to: "/app/utilities/performance-test", key: "Performance Test", icon: Wrench },
     ],
   },
-
-  
   { kind: "link", to: "/app/support", key: "support", icon: LifeBuoy, module: null },
-  { kind: "link", to: "/app/settings", key: "settings", icon: Settings, module: null },
 ];
+
 
 const adminNav = [
   { to: "/app/admin/payments", labelKey: "Payment Approvals", icon: ShieldCheck },
@@ -400,8 +375,8 @@ export function ERPSidebar() {
         hash={hash as never}
         className={`group/link mx-2 my-0.5 flex items-center gap-3 rounded-lg transition-colors ${
           opts.nested
-            ? "font-normal text-[13px] py-1.5 leading-6 text-slate-300 hover:bg-white/5"
-            : "font-semibold text-[14px] py-2.5 text-slate-100 hover:bg-white/5"
+            ? "font-normal text-[12.5px] py-1 leading-5 text-slate-300 hover:bg-white/5"
+            : "font-semibold text-[13.5px] py-2 text-slate-100 hover:bg-white/5"
         }`}
         style={{
           background: active ? "var(--color-sidebar-active)" : "transparent",
@@ -433,7 +408,7 @@ export function ERPSidebar() {
         <button
           type="button"
           onClick={() => setOpenGroups((s) => ({ ...s, [g.key]: !s[g.key] }))}
-          className="w-full mx-2 my-0.5 flex items-center gap-3 px-3.5 py-2.5 text-[14px] font-semibold text-slate-100 rounded-lg transition-colors text-left hover:bg-white/5"
+          className="w-full mx-2 my-0.5 flex items-center gap-3 px-3.5 py-2 text-[13.5px] font-semibold text-slate-100 rounded-lg transition-colors text-left hover:bg-white/5"
           style={{
             width: "calc(100% - 1rem)",
             background: childActive ? "var(--color-sidebar-active)" : "transparent",
