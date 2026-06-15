@@ -221,8 +221,8 @@ describe("SalesDocForm post-save actions", () => {
     expect(src).toMatch(/disabled=\{!savedInvoiceId \|\| pdfBusy \|\| popupBusy\}/);
   });
 
-  it("shows PDF generation failed toast on error", () => {
-    expect(src).toContain('toast.error(t("PDF generation failed"))');
+  it("shows PDF generation failed toast on error with a retry action", () => {
+    expect(src).toMatch(/toast\.error\(t\("PDF generation failed"\),\s*\{[\s\S]*action:\s*\{[\s\S]*label:\s*t\("Retry"\)[\s\S]*runWithInvoicePdf\(fn, action\)/);
   });
 
   it("registers Bangla translations for all post-save labels", () => {
