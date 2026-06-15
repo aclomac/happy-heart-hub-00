@@ -1020,19 +1020,24 @@ export function SalesDocForm({
 
   const runWithInvoicePdf = async (
     fn: (d: Awaited<ReturnType<typeof buildInvoiceDataFromSale>>) => void | Promise<void>,
+    action: "print" | "download",
   ) => {
     if (!savedInvoiceId || !companyId) return;
+    if (pdfBusy) return; // debounce: ignore rapid repeat clicks
     setPdfBusy(true);
+    setPdfAction(action);
     try {
       const d = await buildInvoiceDataFromSale(savedInvoiceId, companyId, {
         title: docLabels.pdfTitle,
       });
       await fn(d);
+      toast.success(action === "download" ? t("Download PDF") : t("Print Invoice"));
     } catch (e) {
       console.error(e);
       toast.error(t("PDF generation failed"));
     } finally {
       setPdfBusy(false);
+      setPdfAction(null);
     }
   };
 
