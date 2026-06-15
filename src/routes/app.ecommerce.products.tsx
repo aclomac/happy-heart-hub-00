@@ -22,7 +22,9 @@ import {
 } from "@/lib/demo/ecommerce";
 import { getItems } from "@/lib/demo/inventory";
 import { parseCSV, readFileAsText } from "@/lib/csv-parse";
-import { syncWooCommerceProducts } from "@/lib/integrations/integrationClient";
+import { syncWooCommerceProducts, testWooCommerceConnection } from "@/lib/integrations/integrationClient";
+import { clearDiagnostic, maskSecret } from "@/lib/integrations/diagnostics";
+import { wooConfigForWebsiteId, maskedWooCreds, wooBaseEndpoint } from "@/lib/integrations/woocommerce";
 import { ItemImageThumb } from "@/components/erp/ItemImageThumb";
 import { Download, Link2, Trash2, Pencil, RefreshCw, Upload, MoreVertical, ImageIcon } from "lucide-react";
 
