@@ -16,7 +16,7 @@ const LS_KEY = "erpovo.lang";
  */
 export const DICTIONARY: Record<string, { en: string; bn: string }> = {
   // ───── Sidebar groups (legacy short keys, preserved for back-compat) ─────
-  dashboard: { en: "Home", bn: "হোম" },
+  dashboard: { en: "Dashboard", bn: "ড্যাশবোর্ড" },
   pos: { en: "POS", bn: "পিওএস" },
   parties: { en: "Parties", bn: "পার্টি" },
   items: { en: "Items", bn: "আইটেম" },
