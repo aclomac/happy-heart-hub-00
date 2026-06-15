@@ -408,9 +408,109 @@ function Sync() {
             <Button variant="utility" size="sm" onClick={doRestore} disabled={!canManage}>
               {t("Restore Backup")}
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={doVerifyLast}
+              disabled={verifying || !canManage}
+              title="Verify an .erpovo backup file"
+            >
+              {verifying ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <ShieldCheck className="w-4 h-4" />
+              )}
+              Verify Backup
+            </Button>
+            <input
+              ref={verifyInputRef}
+              type="file"
+              accept=".erpovo,.zip,application/zip"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) void runVerify(f);
+                e.target.value = "";
+              }}
+            />
           </div>
+
+          {lastBackup && (
+            <div className="mt-4 p-3 border rounded-md bg-muted/30 text-xs space-y-2">
+              <div className="font-semibold text-sm">Last backup summary</div>
+              <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+                <div className="text-muted-foreground">File</div>
+                <div className="font-mono truncate" title={lastBackup.fileName}>
+                  {lastBackup.fileName}
+                </div>
+                <div className="text-muted-foreground">Size</div>
+                <div>{(lastBackup.size / 1024).toFixed(1)} KB</div>
+                <div className="text-muted-foreground">Total records</div>
+                <div>{lastBackup.manifest.total_records}</div>
+                <div className="text-muted-foreground">Included tables</div>
+                <div>{lastBackup.manifest.included_tables.length}</div>
+                <div className="text-muted-foreground">SHA-256 (data.json)</div>
+                <div className="font-mono break-all">{lastBackup.manifest.data_sha256}</div>
+              </div>
+              <details>
+                <summary className="cursor-pointer text-muted-foreground">
+                  Included modules ({lastBackup.manifest.tables.filter((m) => m.rows > 0).length})
+                </summary>
+                <ul className="mt-1 grid grid-cols-2 gap-x-3">
+                  {lastBackup.manifest.tables
+                    .filter((m) => m.rows > 0)
+                    .map((m) => (
+                      <li key={m.name} className="flex justify-between gap-2">
+                        <span className="truncate">{m.name}</span>
+                        <span className="text-muted-foreground">{m.rows}</span>
+                      </li>
+                    ))}
+                </ul>
+              </details>
+              <div className="text-success">
+                ✓ Secrets, API keys, auth tokens and PERF data excluded
+              </div>
+              <div className="text-muted-foreground">
+                Excluded: {EXCLUDED_FROM_BACKUP.join(", ")}
+              </div>
+            </div>
+          )}
+
+          {verifyResult && (
+            <div className="mt-3 p-3 border rounded-md text-xs space-y-1">
+              <div className="font-semibold text-sm flex items-center gap-2">
+                {verifyResult.ok ? (
+                  <CheckCircle2 className="w-4 h-4 text-success" />
+                ) : (
+                  <XCircle className="w-4 h-4 text-destructive" />
+                )}
+                Verify Backup: {verifyResult.ok ? "PASS" : "FAIL"}
+              </div>
+              <ul className="space-y-0.5">
+                {verifyResult.checks.map((c, i) => (
+                  <li key={i} className="flex items-start gap-2">
+                    <span className={c.ok ? "text-success" : "text-destructive"}>
+                      {c.ok ? "✓" : "✗"}
+                    </span>
+                    <span>
+                      {c.label}
+                      {c.detail ? (
+                        <span className="text-muted-foreground"> — {c.detail}</span>
+                      ) : null}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              {verifyResult.totalRecords != null && (
+                <div className="text-muted-foreground">
+                  Total records: {verifyResult.totalRecords}
+                </div>
+              )}
+            </div>
+          )}
         </section>
       </div>
+
 
       {/* Devices */}
       <section className="bg-card border rounded-md p-5">
