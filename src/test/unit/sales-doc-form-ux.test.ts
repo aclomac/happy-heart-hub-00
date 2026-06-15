@@ -199,11 +199,11 @@ describe("SalesDocForm post-save actions", () => {
   });
 
   it("Print Invoice calls existing printInvoicePDF helper", () => {
-    expect(src).toMatch(/runWithInvoicePdf\(printInvoicePDF\)/);
+    expect(src).toMatch(/runWithInvoicePdf\(printInvoicePDF, "print"\)/);
   });
 
   it("Download PDF calls existing downloadInvoicePDF helper", () => {
-    expect(src).toMatch(/runWithInvoicePdf\(downloadInvoicePDF\)/);
+    expect(src).toMatch(/runWithInvoicePdf\(downloadInvoicePDF, "download"\)/);
   });
 
   it("Open Invoice navigates to /app/sales/:id/edit", () => {
