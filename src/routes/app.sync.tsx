@@ -449,6 +449,16 @@ function Sync() {
                 <div>{lastBackup.manifest.total_records}</div>
                 <div className="text-muted-foreground">Included tables</div>
                 <div>{lastBackup.manifest.included_tables.length}</div>
+                <div className="text-muted-foreground">Sales headers / lines</div>
+                <div>
+                  {(lastBackup.manifest.tables.find((m) => m.name === "sales")?.rows ?? 0)} /{" "}
+                  {(lastBackup.manifest.tables.find((m) => m.name === "sale_items")?.rows ?? 0)}
+                </div>
+                <div className="text-muted-foreground">Purchases headers / lines</div>
+                <div>
+                  {(lastBackup.manifest.tables.find((m) => m.name === "purchases")?.rows ?? 0)} /{" "}
+                  {(lastBackup.manifest.tables.find((m) => m.name === "purchase_items")?.rows ?? 0)}
+                </div>
                 <div className="text-muted-foreground">SHA-256 (data.json)</div>
                 <div className="font-mono break-all">{lastBackup.manifest.data_sha256}</div>
               </div>

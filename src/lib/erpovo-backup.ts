@@ -163,6 +163,13 @@ export const EXCLUDED_FROM_BACKUP = [
   "PERF stress / benchmark data",
 ] as const;
 
+// Child tables that do NOT have a `company_id` column — fetched by parent IDs.
+const CHILD_TABLE_PARENT_FK: Record<string, { parent: string; fk: string } | undefined> = {
+  sale_items: { parent: "sales", fk: "sale_id" },
+  purchase_items: { parent: "purchases", fk: "purchase_id" },
+};
+
+
 const SENSITIVE_KEY = /secret|token|password|api_key|access_key|private_key/i;
 const PERF_KEY = /^perf[_-]?(stress|test|bench)/i;
 
@@ -237,8 +244,27 @@ export async function exportErpovoBackupFull(companyId: string): Promise<FullBac
 
   for (const t of FULL_EXPORT_TABLES) {
     try {
+      const childMap = CHILD_TABLE_PARENT_FK[t];
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const q = (supabase.from(t) as any).select("*").eq("company_id", companyId);
+      let q: any;
+      if (childMap) {
+        // Child table without company_id — fetch by parent IDs already loaded
+        const parentRows = (data[childMap.parent] ?? []) as Record<string, unknown>[];
+        const parentIds = parentRows
+          .map((r) => r.id)
+          .filter((v): v is string => typeof v === "string" || typeof v === "number")
+          .map(String);
+        if (parentIds.length === 0) {
+          data[t] = [];
+          tableMeta.push({ name: t, rows: 0 });
+          continue;
+        }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        q = (supabase.from(t) as any).select("*").in(childMap.fk, parentIds);
+      } else {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        q = (supabase.from(t) as any).select("*").eq("company_id", companyId);
+      }
       const { data: rows, error } = await q;
       if (error) {
         tableMeta.push({ name: t, rows: 0, skipped: true, reason: error.message });

@@ -9,15 +9,20 @@ const { fromSpy } = vi.hoisted(() => {
     parties: [{ id: 1, name: "Acme", company_id: "co-1" }],
     warehouses: [{ id: 1, name: "Main", company_id: "co-1" }],
     sales: [{ id: 1, total: 1000, company_id: "co-1" }],
-    sale_items: [{ id: 1, qty: 2, company_id: "co-1" }],
     purchases: [{ id: 1, total: 500, company_id: "co-1" }],
-    purchase_items: [{ id: 1, qty: 1, company_id: "co-1" }],
     payments: [{ id: 1, amount: 200, company_id: "co-1" }],
     stock_movements: [{ id: 1, qty: 5, company_id: "co-1" }],
     expenses: [{ id: 1, amount: 50, company_id: "co-1" }],
     settings_kv: [{ key: "x", value: "y", company_id: "co-1" }],
     payment_settings: [
       { id: 1, gateway: "stripe", api_key: "sk_live_XXX", company_id: "co-1" },
+    ],
+    sale_items: [
+      { id: 10, sale_id: 1, item_name: "Tea", qty: 2, price: 500, amount: 1000 },
+      { id: 11, sale_id: 1, item_name: "Sugar", qty: 1, price: 100, amount: 100 },
+    ],
+    purchase_items: [
+      { id: 20, purchase_id: 1, item_name: "Tea", qty: 5, price: 100, amount: 500 },
     ],
     online_orders: [{ id: 1, total: 100, company_id: "co-1" }],
   };
@@ -26,6 +31,7 @@ const { fromSpy } = vi.hoisted(() => {
     const builder: Record<string, unknown> = {
       select: () => builder,
       eq: () => builder,
+      in: () => builder,
       maybeSingle: () =>
         Promise.resolve(rows ? { data: rows[0], error: null } : { data: null, error: null }),
       then: (resolve: (v: { data: unknown; error: unknown }) => void) =>
