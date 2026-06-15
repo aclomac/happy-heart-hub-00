@@ -408,7 +408,7 @@ export function ERPSidebar() {
         <button
           type="button"
           onClick={() => setOpenGroups((s) => ({ ...s, [g.key]: !s[g.key] }))}
-          className="w-full mx-2 my-0.5 flex items-center gap-3 px-3.5 py-2.5 text-[14px] font-semibold text-slate-100 rounded-lg transition-colors text-left hover:bg-white/5"
+          className="w-full mx-2 my-0.5 flex items-center gap-3 px-3.5 py-2 text-[13.5px] font-semibold text-slate-100 rounded-lg transition-colors text-left hover:bg-white/5"
           style={{
             width: "calc(100% - 1rem)",
             background: childActive ? "var(--color-sidebar-active)" : "transparent",
