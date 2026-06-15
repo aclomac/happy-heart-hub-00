@@ -238,3 +238,35 @@ describe("SalesDocForm post-save actions", () => {
     );
   });
 });
+
+describe("SalesDocForm post-save guards", () => {
+  it("shows a spinner on the active PDF button via pdfAction state", () => {
+    expect(src).toMatch(/const \[pdfAction, setPdfAction\] = useState<null \| "print" \| "download">/);
+    expect(src).toMatch(/pdfAction === "print"[\s\S]*Loader2/);
+    expect(src).toMatch(/pdfAction === "download"[\s\S]*Loader2/);
+  });
+
+  it("debounces repeated PDF clicks via pdfBusy early-return", () => {
+    expect(src).toMatch(/if \(pdfBusy\) return;/);
+  });
+
+  it("guards popup actions (Open Invoice, Create Another) against double-click via popupBusy", () => {
+    expect(src).toMatch(/const \[popupBusy, setPopupBusy\] = useState\(false\)/);
+    expect(src).toMatch(/data-testid="success-open-invoice"[\s\S]*disabled=\{!savedInvoiceId \|\| pdfBusy \|\| popupBusy\}/);
+    expect(src).toMatch(/data-testid="success-create-another"[\s\S]*disabled=\{pdfBusy \|\| popupBusy\}/);
+  });
+
+  it("Open Invoice navigates using savedInvoiceId only (no re-save)", () => {
+    expect(src).toMatch(/data-testid="success-open-invoice"[\s\S]*navigate\(\{ to: `\/app\/sales\/\$\{savedInvoiceId\}\/edit`/);
+    // ensure handler does not call save again
+    const block = src.split('data-testid="success-open-invoice"')[1]?.split("</Button>")[0] || "";
+    expect(block).not.toMatch(/handleSaveInvoice|saveSaleInvoice/);
+  });
+
+  it("Print/Download handlers do not call save again", () => {
+    const printBlock = src.split('data-testid="success-print-invoice"')[1]?.split("</Button>")[0] || "";
+    const dlBlock = src.split('data-testid="success-download-pdf"')[1]?.split("</Button>")[0] || "";
+    expect(printBlock).not.toMatch(/handleSaveInvoice|saveSaleInvoice/);
+    expect(dlBlock).not.toMatch(/handleSaveInvoice|saveSaleInvoice/);
+  });
+});
