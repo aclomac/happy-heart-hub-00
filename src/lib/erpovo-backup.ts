@@ -249,6 +249,7 @@ function normalizeLine(
     item_name: itemName,
     sku: sku ?? null,
     code: sku ?? null,
+    item_code: sku ?? null,
     qty,
     quantity: qty,
     unit: String(firstValue(line, ["unit", "uom"]) ?? "PCS"),
