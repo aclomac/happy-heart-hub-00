@@ -264,6 +264,130 @@ function normalizeLine(
   };
 }
 
+function collectEmbeddedLines(
+  data: Record<string, BackupRow[]>,
+  parentTable: "sales" | "purchases",
+  outTable: "sale_items" | "purchase_items",
+  companyId: string,
+): BackupRow[] {
+  const parentFk = outTable === "sale_items" ? "sale_id" : "purchase_id";
+  const keys = outTable === "sale_items"
+    ? ["sale_items", "sales_items", "invoice_items", "sale_invoice_items", "sales_doc_items", "document_items", "line_items", "items"]
+    : ["purchase_items", "purchase_invoice_items", "bill_items", "purchase_bill_items", "document_items", "line_items", "items"];
+  const byId = new Map(tableRows(data, parentTable).map((p) => [String(p.id), p]));
+  const recovered: BackupRow[] = [];
+  for (const parent of byId.values()) {
+    for (const key of keys) {
+      const lines = asArray(parent[key]);
+      if (!lines.length) continue;
+      recovered.push(...lines.map((line, i) => normalizeLine(outTable === "sale_items" ? "sale" : "purchase", { ...line, [parentFk]: parent.id }, parent, companyId, recovered.length + i)));
+      break;
+    }
+  }
+  return recovered;
+}
+
+function collectLocalStorageLines(
+  data: Record<string, BackupRow[]>,
+  outTable: "sale_items" | "purchase_items",
+  companyId: string,
+): BackupRow[] {
+  if (typeof window === "undefined" || typeof localStorage === "undefined") return [];
+  const parentTable = outTable === "sale_items" ? "sales" : "purchases";
+  const parentFk = outTable === "sale_items" ? "sale_id" : "purchase_id";
+  const keys = outTable === "sale_items"
+    ? ["erpovo_demo_sale_items", "erpovo_demo_pos_sale_items"]
+    : ["erpovo_demo_purchase_items"];
+  const parents = new Map(tableRows(data, parentTable).map((p) => [String(p.id), p]));
+  const seen = new Set<string>();
+  const recovered: BackupRow[] = [];
+  for (const key of keys) {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(key) ?? "[]");
+      for (const line of asArray(parsed)) {
+        const parentId = String(line[parentFk] ?? "");
+        const parent = parents.get(parentId);
+        if (!parent) continue;
+        const id = String(line.id ?? `${key}-${parentId}-${recovered.length}`);
+        if (seen.has(id)) continue;
+        seen.add(id);
+        recovered.push(normalizeLine(outTable === "sale_items" ? "sale" : "purchase", line, parent, companyId, recovered.length));
+      }
+    } catch {
+      // Ignore malformed legacy/demo storage; ZIP verification will catch missing lines.
+    }
+  }
+  return recovered;
+}
+
+function collectStockMovementLines(
+  data: Record<string, BackupRow[]>,
+  outTable: "sale_items" | "purchase_items",
+  companyId: string,
+): BackupRow[] {
+  const parentTable = outTable === "sale_items" ? "sales" : "purchases";
+  const parentFk = outTable === "sale_items" ? "sale_id" : "purchase_id";
+  const refs = outTable === "sale_items"
+    ? new Set(["sale", "sale_invoice", "invoice", "pos", "delivery", "credit_note"])
+    : new Set(["purchase", "purchase_bill", "bill", "debit_note"]);
+  const parents = new Map(tableRows(data, parentTable).map((p) => [String(p.id), p]));
+  const itemMap = new Map(tableRows(data, "items").map((i) => [String(i.id), i]));
+  const grouped = new Map<string, BackupRow[]>();
+  for (const mv of tableRows(data, "stock_movements")) {
+    const parentId = String(firstValue(mv, ["reference_id", parentFk]) ?? "");
+    if (!parents.has(parentId)) continue;
+    const refType = String(firstValue(mv, ["reference_type", "type", "movement_type"]) ?? "").toLowerCase();
+    if (refType && !refs.has(refType)) continue;
+    const item = itemMap.get(String(mv.item_id ?? ""));
+    const line = normalizeLine(
+      outTable === "sale_items" ? "sale" : "purchase",
+      {
+        id: `${outTable}-from-stock-${mv.id ?? grouped.size}`,
+        [parentFk]: parentId,
+        item_id: mv.item_id ?? null,
+        item_name: firstValue(mv, ["item_name", "product_name"]) ?? item?.name,
+        sku: item?.sku ?? item?.barcode ?? null,
+        qty: mv.qty,
+        unit: item?.unit ?? "PCS",
+        warehouse_id: mv.warehouse_id ?? null,
+        store: mv.warehouse_id ?? null,
+      },
+      parents.get(parentId),
+      companyId,
+      grouped.size,
+    );
+    const key = `${parentId}:${String(line.item_id ?? line.item_name)}:${String(line.warehouse_id ?? "")}`;
+    grouped.set(key, [...(grouped.get(key) ?? []), line]);
+  }
+  return Array.from(grouped.values()).map((lines, i) => {
+    const first = lines[0];
+    const qty = lines.reduce((n, r) => n + Math.abs(toNumber(r.qty ?? r.quantity)), 0);
+    return { ...first, id: first.id ?? `${outTable}-stock-${i + 1}`, qty, quantity: qty, amount: toNumber(first.rate) * qty };
+  });
+}
+
+function recoverMissingLineTables(data: Record<string, BackupRow[]>, meta: FullTableMeta[], companyId: string) {
+  for (const outTable of ["sale_items", "purchase_items"] as const) {
+    if (tableRows(data, outTable).length > 0) continue;
+    const parentTable = outTable === "sale_items" ? "sales" : "purchases";
+    if (tableRows(data, parentTable).length === 0) continue;
+    const recovered = [
+      ...collectEmbeddedLines(data, parentTable, outTable, companyId),
+      ...collectLocalStorageLines(data, outTable, companyId),
+      ...collectStockMovementLines(data, outTable, companyId),
+    ];
+    const seen = new Set<string>();
+    data[outTable] = recovered.filter((row) => {
+      const parentFk = outTable === "sale_items" ? "sale_id" : "purchase_id";
+      const key = `${String(row[parentFk])}:${String(row.id)}:${String(row.item_id ?? row.item_name)}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return !!row[parentFk];
+    });
+    upsertMeta(meta, outTable, data[outTable].length, data[outTable].length ? undefined : `${parentTable} exist but line rows were not found in sale_items/purchase_items, embedded payloads, local backup keys, or stock movements`);
+  }
+}
+
 async function sha256Hex(text: string): Promise<string> {
   const buf = new TextEncoder().encode(text);
   const digest = await crypto.subtle.digest("SHA-256", buf);
