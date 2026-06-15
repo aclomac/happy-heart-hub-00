@@ -389,7 +389,7 @@ export const woocommerceService = {
       const byKey = new Map(existing.map((p) => [`${p.websiteId}:${p.websiteProductId}`, p] as const));
       let added = 0, updated = 0, failed = 0;
       for (let page = 1; page <= 20; page++) {
-        const { ok, status, data, finalUrl, errorText } = await callWoo(c, mode, "/products", { per_page: "100", page: String(page) });
+        const { ok, status, data, finalUrl, errorText } = await callWoo(c, mode, "/products", { per_page: "100", page: String(page), status: "publish", orderby: "date", order: "desc" });
         if (!ok) {
           return wrap({
             status: "failed", httpStatus: status, url: finalUrl,
