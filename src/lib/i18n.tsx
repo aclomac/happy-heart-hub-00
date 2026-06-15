@@ -1504,6 +1504,10 @@ export const DICTIONARY: Record<string, { en: string; bn: string }> = {
   "Download PDF": { en: "Download PDF", bn: "PDF ডাউনলোড" },
   "Create Another Sale": { en: "Create Another Sale", bn: "আরেকটি বিক্রয় তৈরি করুন" },
   "PDF generation failed": { en: "PDF generation failed", bn: "PDF তৈরি করা যায়নি" },
+  "Invoice saved, but invoice reference was not found.": {
+    en: "Invoice saved, but invoice reference was not found.",
+    bn: "ইনভয়েস সেভ হয়েছে, কিন্তু ইনভয়েস রেফারেন্স পাওয়া যায়নি।",
+  },
   // ───── Attachments (Phase 2) ─────
   Attachments: { en: "Attachments", bn: "সংযুক্তি" },
   "Attach Images": { en: "Attach Images", bn: "ছবি সংযুক্ত করুন" },
