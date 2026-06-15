@@ -144,70 +144,11 @@ const nav: NavNode[] = [
   },
   {
     kind: "group",
-    key: "parties",
-    label: "Parties",
-    icon: Users,
-    children: [
-      { kind: "link", to: "/app/parties", key: "All Parties", icon: Users },
-      { kind: "link", to: "/app/party-groups", key: "Party Groups", icon: FolderOpen },
-    ],
-  },
-  {
-    kind: "group",
-    key: "payroll",
-    label: "Payroll & Employees",
-    icon: UserCheck,
-    module: "payroll",
-    children: [
-      {
-        kind: "link",
-        to: "/app/payroll#employees",
-        key: "Employees",
-        icon: UserCheck,
-        module: "payroll",
-      },
-      {
-        kind: "link",
-        to: "/app/payroll#attendance",
-        key: "Attendance",
-        icon: UserCheck,
-        module: "payroll",
-      },
-      {
-        kind: "link",
-        to: "/app/payroll#salary-setup",
-        key: "Salary Setup",
-        icon: UserCheck,
-        module: "payroll",
-      },
-      {
-        kind: "link",
-        to: "/app/payroll#payments",
-        key: "Salary Payments",
-        icon: UserCheck,
-        module: "payroll",
-      },
-      {
-        kind: "link",
-        to: "/app/payroll#reports",
-        key: "Payroll Reports",
-        icon: UserCheck,
-        module: "payroll",
-      },
-    ],
-  },
-  {
-    kind: "group",
     key: "reports",
     label: "Reports",
     icon: BarChart3,
     children: [
-      {
-        kind: "link",
-        to: "/app/reports#transactions",
-        key: "Transaction Reports",
-        icon: BarChart3,
-      },
+      { kind: "link", to: "/app/reports#transactions", key: "Transaction Reports", icon: BarChart3 },
       { kind: "link", to: "/app/reports#party", key: "Party Reports", icon: BarChart3 },
       { kind: "link", to: "/app/reports#stock", key: "Item / Stock Reports", icon: BarChart3 },
       { kind: "link", to: "/app/reports#business", key: "Business Status", icon: BarChart3 },
@@ -239,6 +180,42 @@ const nav: NavNode[] = [
       { kind: "link", to: "/app/ecommerce/reports", key: "Ecommerce Reports", icon: BarChart3 },
       { kind: "link", to: "/app/ecommerce/settings", key: "Integration Settings", icon: Settings },
       { kind: "link", to: "/app/ecommerce/sync-logs", key: "Sync Logs", icon: Activity },
+    ],
+  },
+  {
+    kind: "group",
+    key: "payroll",
+    label: "Payroll",
+    icon: Wallet,
+    module: "payroll",
+    children: [
+      { kind: "link", to: "/app/payroll#salary-setup", key: "Salary Setup", icon: Wallet, module: "payroll" },
+      { kind: "link", to: "/app/payroll#payments", key: "Salary Payments", icon: Wallet, module: "payroll" },
+      { kind: "link", to: "/app/payroll#reports", key: "Payroll Reports", icon: BarChart3, module: "payroll" },
+    ],
+  },
+  {
+    kind: "group",
+    key: "hrm",
+    label: "HRM",
+    icon: UserCheck,
+    module: "payroll",
+    children: [
+      { kind: "link", to: "/app/payroll#employees", key: "Employees", icon: UserCheck, module: "payroll" },
+      { kind: "link", to: "/app/payroll#attendance", key: "Attendance", icon: UserCheck, module: "payroll" },
+    ],
+  },
+  { kind: "link", to: "/app/settings", key: "settings", icon: Settings, module: null },
+
+  // Additional modules — kept accessible below the main reference order.
+  {
+    kind: "group",
+    key: "parties",
+    label: "Parties",
+    icon: Users,
+    children: [
+      { kind: "link", to: "/app/parties", key: "All Parties", icon: Users },
+      { kind: "link", to: "/app/party-groups", key: "Party Groups", icon: FolderOpen },
     ],
   },
   {
@@ -284,11 +261,9 @@ const nav: NavNode[] = [
       { kind: "link", to: "/app/utilities/performance-test", key: "Performance Test", icon: Wrench },
     ],
   },
-
-  
   { kind: "link", to: "/app/support", key: "support", icon: LifeBuoy, module: null },
-  { kind: "link", to: "/app/settings", key: "settings", icon: Settings, module: null },
 ];
+
 
 const adminNav = [
   { to: "/app/admin/payments", labelKey: "Payment Approvals", icon: ShieldCheck },
