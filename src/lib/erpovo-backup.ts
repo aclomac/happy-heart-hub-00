@@ -172,6 +172,7 @@ const CHILD_TABLE_PARENT_FK: Record<string, { parent: string; fk: string } | und
 
 const SENSITIVE_KEY = /secret|token|password|api_key|access_key|private_key/i;
 const PERF_KEY = /^perf[_-]?(stress|test|bench)/i;
+type BackupRow = Record<string, unknown>;
 
 function scrub(row: Record<string, unknown>): Record<string, unknown> {
   const out: Record<string, unknown> = {};
@@ -180,6 +181,87 @@ function scrub(row: Record<string, unknown>): Record<string, unknown> {
     out[k] = v;
   }
   return out;
+}
+
+function tableRows(data: Record<string, BackupRow[]>, name: string): BackupRow[] {
+  const rows = data[name];
+  return Array.isArray(rows) ? rows : [];
+}
+
+function upsertMeta(meta: FullTableMeta[], name: string, rows: number, reason?: string) {
+  const existing = meta.find((m) => m.name === name);
+  if (existing) {
+    existing.rows = rows;
+    if (rows > 0) {
+      delete existing.skipped;
+      delete existing.reason;
+    } else if (reason) {
+      existing.skipped = true;
+      existing.reason = reason;
+    }
+  } else {
+    meta.push(reason ? { name, rows, skipped: true, reason } : { name, rows });
+  }
+}
+
+function firstValue(row: BackupRow, keys: string[]): unknown {
+  for (const key of keys) if (row[key] !== undefined && row[key] !== null && row[key] !== "") return row[key];
+  return undefined;
+}
+
+function toNumber(v: unknown, fallback = 0): number {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function asArray(v: unknown): BackupRow[] {
+  return Array.isArray(v) ? (v.filter((x) => x && typeof x === "object") as BackupRow[]) : [];
+}
+
+function normalizeLine(
+  kind: "sale" | "purchase",
+  line: BackupRow,
+  parent: BackupRow | undefined,
+  companyId: string,
+  index: number,
+): BackupRow {
+  const parentFk = kind === "sale" ? "sale_id" : "purchase_id";
+  const parentId = String(firstValue(line, [parentFk]) ?? parent?.id ?? "");
+  const item = (line.item && typeof line.item === "object" ? line.item : undefined) as BackupRow | undefined;
+  const itemName = String(
+    firstValue(line, ["item_name", "product_name", "name", "description"]) ??
+      firstValue(item ?? {}, ["name", "item_name", "product_name"]) ??
+      (kind === "sale" ? "Recovered sale line" : "Recovered purchase line"),
+  );
+  const sku = firstValue(line, ["sku", "code", "item_code", "barcode"]) ?? firstValue(item ?? {}, ["sku", "code", "barcode"]);
+  const qty = toNumber(firstValue(line, ["qty", "quantity", "quantity_sold", "quantity_purchased"]), 1);
+  const rate = toNumber(firstValue(line, ["rate", "price", "unit_price", "sale_price", "purchase_price"]), 0);
+  const discount = toNumber(firstValue(line, ["discount", "discount_pct", "discount_percent"]), 0);
+  const tax = toNumber(firstValue(line, ["tax", "tax_pct", "tax_percent", "tax_rate"]), 0);
+  const amount = toNumber(firstValue(line, ["amount", "line_total", "total"]), qty * rate);
+  const clean = scrub(line);
+  return {
+    ...clean,
+    id: String(firstValue(line, ["id"]) ?? `${parentId || kind}-backup-line-${index + 1}`),
+    company_id: String(firstValue(line, ["company_id"]) ?? parent?.company_id ?? companyId),
+    [parentFk]: parentId,
+    item_id: firstValue(line, ["item_id", "product_id"]) ?? firstValue(item ?? {}, ["id"]) ?? null,
+    item_name: itemName,
+    sku: sku ?? null,
+    code: sku ?? null,
+    qty,
+    quantity: qty,
+    unit: String(firstValue(line, ["unit", "uom"]) ?? "PCS"),
+    price: rate,
+    rate,
+    discount_pct: discount,
+    discount,
+    tax_pct: tax,
+    tax,
+    amount,
+    warehouse_id: firstValue(line, ["warehouse_id", "store_id"]) ?? null,
+    store: firstValue(line, ["store", "store_name", "warehouse_name"]) ?? firstValue(line, ["warehouse_id", "store_id"]) ?? null,
+  };
 }
 
 async function sha256Hex(text: string): Promise<string> {
