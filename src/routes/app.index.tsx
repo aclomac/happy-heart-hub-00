@@ -44,6 +44,14 @@ export const Route = createFileRoute("/app/")({ component: Dashboard });
 const fmtBdt = (n: number) =>
   "৳ " + Number(n || 0).toLocaleString("en-BD", { maximumFractionDigits: 0 });
 
+const compactBdt = (n: number) => {
+  const v = Math.abs(Number(n) || 0);
+  if (v >= 1e7) return (n / 1e7).toFixed(1).replace(/\.0$/, "") + "Cr";
+  if (v >= 1e5) return (n / 1e5).toFixed(1).replace(/\.0$/, "") + "L";
+  if (v >= 1e3) return (n / 1e3).toFixed(1).replace(/\.0$/, "") + "K";
+  return String(n);
+};
+
 function pctTrend(chart: Array<{ sale: number }>): number {
   if (!chart.length) return 0;
   const last = chart[chart.length - 1]?.sale ?? 0;
@@ -484,7 +492,7 @@ function Dashboard() {
   ];
 
   return (
-    <div className="space-y-4 -m-4 p-3 md:p-4 bg-[#F6F8FC] min-h-full">
+    <div className="space-y-4 -m-4 p-3 md:p-4 pb-24 md:pb-28 bg-[#F6F8FC] min-h-full">
       {/* KPI Row */}
       {skeletons ? (
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2.5">
@@ -528,7 +536,7 @@ function Dashboard() {
             </span>
           </div>
           <ResponsiveContainer width="100%" height={220}>
-            <AreaChart data={chart} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+            <AreaChart data={chart} margin={{ top: 8, right: 8, left: 4, bottom: 0 }}>
               <defs>
                 <linearGradient id="gSale" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#2563EB" stopOpacity={0.35} />
@@ -537,7 +545,7 @@ function Dashboard() {
               </defs>
               <CartesianGrid stroke="#EEF2F7" strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="m" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#94A3B8" }} />
-              <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#94A3B8" }} width={48} />
+              <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#94A3B8" }} width={64} tickFormatter={compactBdt} />
               <Tooltip cursor={{ stroke: "#CBD5E1" }} contentStyle={{ borderRadius: 12, border: "1px solid #E5EAF2", fontSize: 12 }} />
               <Area type="monotone" dataKey="sale" stroke="#2563EB" strokeWidth={2.5} fill="url(#gSale)" name="Sales" />
             </AreaChart>
@@ -561,12 +569,12 @@ function Dashboard() {
           <ResponsiveContainer width="100%" height={260}>
             <BarChart
               data={chart.map((c) => ({ m: c.m, revenue: c.sale + c.otherIncome, expense: c.expense }))}
-              margin={{ top: 8, right: 8, left: -16, bottom: 0 }}
+              margin={{ top: 8, right: 8, left: 4, bottom: 0 }}
               barGap={4}
             >
               <CartesianGrid stroke="#EEF2F7" strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="m" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#94A3B8" }} />
-              <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#94A3B8" }} width={48} />
+              <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#94A3B8" }} width={64} tickFormatter={compactBdt} />
               <Tooltip cursor={{ fill: "rgba(15,23,42,0.04)" }} contentStyle={{ borderRadius: 12, border: "1px solid #E5EAF2", fontSize: 12 }} />
               <Legend wrapperStyle={{ display: "none" }} />
               <Bar dataKey="revenue" fill="#14B8A6" radius={[6, 6, 0, 0]} barSize={14} />
