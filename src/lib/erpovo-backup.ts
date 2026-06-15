@@ -369,6 +369,20 @@ function collectStockMovementLines(
 
 function recoverMissingLineTables(data: Record<string, BackupRow[]>, meta: FullTableMeta[], companyId: string) {
   for (const outTable of ["sale_items", "purchase_items"] as const) {
+    const parentTable = outTable === "sale_items" ? "sales" : "purchases";
+    const parentFk = outTable === "sale_items" ? "sale_id" : "purchase_id";
+    const parents = new Map(tableRows(data, parentTable).map((p) => [String(p.id), p]));
+    const items = new Map(tableRows(data, "items").map((i) => [String(i.id), i]));
+    const direct = tableRows(data, outTable);
+    if (direct.length > 0) {
+      data[outTable] = direct.map((line, index) => {
+        const item = items.get(String(line.item_id ?? ""));
+        return normalizeLine(outTable === "sale_items" ? "sale" : "purchase", { ...line, item }, parents.get(String(line[parentFk] ?? "")), companyId, index);
+      });
+      upsertMeta(meta, outTable, data[outTable].length);
+    }
+  }
+  for (const outTable of ["sale_items", "purchase_items"] as const) {
     if (tableRows(data, outTable).length > 0) continue;
     const parentTable = outTable === "sale_items" ? "sales" : "purchases";
     if (tableRows(data, parentTable).length === 0) continue;
