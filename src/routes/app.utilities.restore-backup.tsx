@@ -80,6 +80,12 @@ function SafetyBadge({ s }: { s: Safety }) {
   return <Badge variant="destructive" className="text-[10px]">Money Impacting</Badge>;
 }
 
+function countBackupRows(preview: ErpovoBackupPreview, table: string): number {
+  const rows = (preview.data as Record<string, unknown[]>)[table];
+  if (Array.isArray(rows)) return rows.length;
+  return preview.manifest.tables.find((t) => t.name === table)?.rows ?? 0;
+}
+
 type HistoryEntry = {
   ts: string;
   file: string;
@@ -397,6 +403,10 @@ function RestoreBackupPage() {
               <div><b>File:</b> {file?.name}</div>
               <div><b>Source company:</b> {preview.manifest.company_id ?? "—"}</div>
               <div><b>Exported at:</b> {preview.manifest.exported_at ?? "—"}</div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-xs">
+                <div><b>Sales headers / lines:</b> {countBackupRows(preview, "sales")} / {countBackupRows(preview, "sale_items")}</div>
+                <div><b>Purchases headers / lines:</b> {countBackupRows(preview, "purchases")} / {countBackupRows(preview, "purchase_items")}</div>
+              </div>
               <div className="flex flex-wrap gap-1 items-center">
                 <b className="mr-1">Tables in backup:</b>
                 {preview.manifest.tables.map((x) => (
