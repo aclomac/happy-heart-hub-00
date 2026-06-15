@@ -130,7 +130,7 @@ async function callWoo(
   mode: IntegrationMode,
   path: string,
   extra: Record<string, string> = {},
-): Promise<{ ok: boolean; status: number; data?: unknown; errorText?: string; finalUrl: string }> {
+): Promise<{ ok: boolean; status: number; data?: unknown; errorText?: string; finalUrl: string; headers: Record<string, string> }> {
   const base = wooBaseEndpoint(c);
   const finalUrl = buildUrl(base, path, c, extra);
   const res = await httpRequest(mode, finalUrl, { method: "GET", headers: buildHeaders(c) as Record<string, string> });
@@ -142,7 +142,7 @@ async function callWoo(
   } catch {
     errorText = text.slice(0, 300);
   }
-  return { ok: res.ok, status: res.status, data, errorText, finalUrl: res.finalUrl };
+  return { ok: res.ok, status: res.status, data, errorText, finalUrl: res.finalUrl, headers: res.headers };
 }
 
 function mapWooStatusToErpovo(woo: string): EcoOrder["status"] {
