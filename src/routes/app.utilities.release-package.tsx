@@ -277,7 +277,11 @@ function ReleasePackagePage() {
             <div><dt className="text-muted-foreground">Generated</dt><dd>{PKG.generatedAt}</dd></div>
             <div><dt className="text-muted-foreground">Total entries</dt><dd>{PKG.totalEntries} ({PKG.buildFiles} build files)</dd></div>
             <div className="sm:col-span-2">
-              <dt className="text-muted-foreground">Manifest SHA-256 (expected)</dt>
+              <dt className="text-muted-foreground">Package ZIP SHA-256 (expected)</dt>
+              <dd className="font-mono text-xs break-all">{PKG.zipSha256}</dd>
+            </div>
+            <div className="sm:col-span-2">
+              <dt className="text-muted-foreground">qa-summary.json SHA-256 (expected)</dt>
               <dd className="font-mono text-xs break-all">{PKG.sha256}</dd>
             </div>
           </dl>
