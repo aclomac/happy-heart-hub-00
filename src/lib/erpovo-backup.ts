@@ -167,15 +167,8 @@ export const EXCLUDED_FROM_BACKUP = [
 const CHILD_TABLE_PARENT_FK: Record<string, { parent: string; fk: string } | undefined> = {
   sale_items: { parent: "sales", fk: "sale_id" },
   purchase_items: { parent: "purchases", fk: "purchase_id" },
-  stock_transfer_items: { parent: "stock_transfers", fk: "transfer_id" },
-  item_manufacturing_recipe_lines: {
-    parent: "item_manufacturing_recipes",
-    fk: "recipe_id",
-  },
-  online_order_status_logs: { parent: "online_orders", fk: "order_id" },
-  replacement_items: { parent: "return_exchange", fk: "return_id" },
-  loan_payments: { parent: "loans", fk: "loan_id" },
 };
+
 
 const SENSITIVE_KEY = /secret|token|password|api_key|access_key|private_key/i;
 const PERF_KEY = /^perf[_-]?(stress|test|bench)/i;
