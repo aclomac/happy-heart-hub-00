@@ -411,13 +411,31 @@ function Dashboard() {
     queryFn: async () => {
       try {
         const { data: rows } = await supabase
-          .from("sale_orders")
-          .select("id,order_no,order_date,total,status,parties(name)")
+          .from("sales")
+          .select("id,invoice_no,invoice_date,total,status,parties(name)")
           .is("deleted_at", null)
           .eq("company_id", companyId!)
-          .order("order_date", { ascending: false })
+          .eq("doc_type", "sale_order")
+          .order("invoice_date", { ascending: false })
           .limit(6);
-        return (rows || []) as Array<{
+        const list = (rows || []) as unknown as Array<{
+          id: string;
+          invoice_no: string;
+          invoice_date: string;
+          total: number;
+          status: string | null;
+          parties: { name: string } | null;
+        }>;
+        return list.map((r) => ({
+          id: r.id,
+          order_no: r.invoice_no,
+          order_date: r.invoice_date,
+          total: r.total,
+          status: r.status,
+          parties: r.parties,
+        }));
+      } catch {
+        return [] as Array<{
           id: string;
           order_no: string;
           order_date: string;
@@ -425,8 +443,6 @@ function Dashboard() {
           status: string | null;
           parties: { name: string } | null;
         }>;
-      } catch {
-        return [];
       }
     },
   });
