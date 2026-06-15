@@ -44,6 +44,14 @@ export const Route = createFileRoute("/app/")({ component: Dashboard });
 const fmtBdt = (n: number) =>
   "৳ " + Number(n || 0).toLocaleString("en-BD", { maximumFractionDigits: 0 });
 
+const compactBdt = (n: number) => {
+  const v = Math.abs(Number(n) || 0);
+  if (v >= 1e7) return (n / 1e7).toFixed(1).replace(/\.0$/, "") + "Cr";
+  if (v >= 1e5) return (n / 1e5).toFixed(1).replace(/\.0$/, "") + "L";
+  if (v >= 1e3) return (n / 1e3).toFixed(1).replace(/\.0$/, "") + "K";
+  return String(n);
+};
+
 function pctTrend(chart: Array<{ sale: number }>): number {
   if (!chart.length) return 0;
   const last = chart[chart.length - 1]?.sale ?? 0;
