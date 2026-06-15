@@ -244,7 +244,7 @@ const nav: NavNode[] = [
   {
     kind: "group",
     key: "grow",
-    label: "Grow Your Business",
+    label: "Grow",
     icon: TrendingUp,
     children: [
       { kind: "link", to: "/app/online-store", key: "Online Store", icon: ShoppingCart },
