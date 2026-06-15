@@ -125,23 +125,42 @@ function Sync() {
   };
 
   const [busy, setBusy] = useState(false);
+  const [lastBackup, setLastBackup] = useState<
+    | {
+        fileName: string;
+        size: number;
+        manifest: FullErpovoManifest;
+      }
+    | null
+  >(null);
+  const [verifying, setVerifying] = useState(false);
+  const [verifyResult, setVerifyResult] = useState<VerifyResult | null>(null);
+  const verifyInputRef = useRef<HTMLInputElement>(null);
+  const [lastBackupBlob, setLastBackupBlob] = useState<Blob | null>(null);
 
   const doBackupPc = async () => {
     if (!guard()) return;
     setBusy(true);
     try {
-      const blob = await exportErpovoBackup(companyId!);
+      const { blob, fileName, manifest } = await exportErpovoBackupFull(companyId!);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `erpovo-backup-${new Date().toISOString().slice(0, 10)}.erpovo`;
+      a.download = fileName;
       a.click();
       URL.revokeObjectURL(url);
+      setLastBackup({ fileName, size: blob.size, manifest });
+      setLastBackupBlob(blob);
       void logAudit({
         companyId,
         module: "Settings",
         action: "backup.downloaded_pc",
-        newValue: { size: blob.size },
+        newValue: {
+          size: blob.size,
+          total_records: manifest.total_records,
+          tables: manifest.tables.length,
+          sha256: manifest.data_sha256,
+        },
       });
       toast.success(t("Backup Downloaded"));
     } catch (e) {
@@ -156,6 +175,33 @@ function Sync() {
     toast.info(t("Drive integration not configured"));
     await doBackupPc();
   };
+
+  const runVerify = async (f: File) => {
+    setVerifying(true);
+    setVerifyResult(null);
+    try {
+      const result = await verifyErpovoBackup(f);
+      setVerifyResult(result);
+      if (result.ok) toast.success("Backup verified");
+      else toast.error("Backup verification failed");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Verify failed");
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  const doVerifyLast = async () => {
+    if (!lastBackupBlob || !lastBackup) {
+      verifyInputRef.current?.click();
+      return;
+    }
+    const f = new File([lastBackupBlob], lastBackup.fileName, {
+      type: "application/zip",
+    });
+    await runVerify(f);
+  };
+
 
   const doRestore = () => {
     if (!guard()) return;
