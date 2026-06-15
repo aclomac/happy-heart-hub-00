@@ -536,7 +536,8 @@ export function ERPSidebar() {
         {/* User Profile */}
         {(() => {
           const demoUser = getDemoUser();
-          const name = demoUser?.name || "Md. Tanvir Hasan";
+          const rawName = demoUser?.name;
+          const name = !rawName || rawName === "Demo User" ? "Md. Tanvir Hasan" : rawName;
           const initials = name
             .split(" ")
             .map((s) => s[0])
