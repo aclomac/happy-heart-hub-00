@@ -200,7 +200,7 @@ export function SupportChatWidget() {
           role="dialog"
           aria-label={t("AI Support Assistant")}
           data-testid="support-chat-panel"
-          className="fixed bottom-4 right-4 z-40 w-[calc(100vw-2rem)] sm:w-96 max-h-[80vh] bg-card border rounded-xl shadow-2xl flex flex-col overflow-hidden"
+          className="fixed bottom-6 right-6 z-40 w-[calc(100vw-2rem)] sm:w-96 max-h-[80vh] bg-card border rounded-xl shadow-2xl flex flex-col overflow-hidden"
         >
           <header className="flex items-center justify-between px-3 py-2 border-b bg-muted/40">
             <div className="flex items-center gap-2">
