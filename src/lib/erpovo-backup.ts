@@ -295,16 +295,15 @@ export type VerifyResult = {
 export async function verifyErpovoBackup(file: File): Promise<VerifyResult> {
   const checks: VerifyCheck[] = [];
   const JSZip = (await import("jszip")).default;
-  let zip: import("jszip");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let z: any;
   try {
-    zip = await JSZip.loadAsync(await file.arrayBuffer());
+    z = await JSZip.loadAsync(await file.arrayBuffer());
     checks.push({ label: ".erpovo file opens", ok: true });
   } catch (e) {
     checks.push({ label: ".erpovo file opens", ok: false, detail: (e as Error).message });
     return { ok: false, checks };
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const z = zip as any;
   const mEntry = z.file("manifest.json");
   const dEntry = z.file("data.json");
   checks.push({ label: "manifest.json present", ok: !!mEntry });
