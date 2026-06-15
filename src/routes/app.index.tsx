@@ -554,7 +554,7 @@ function Dashboard() {
               <XAxis dataKey="m" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#94A3B8" }} />
               <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#94A3B8" }} width={56} tickFormatter={compactBdt} />
               <Tooltip cursor={{ stroke: "#CBD5E1" }} contentStyle={{ borderRadius: 12, border: "1px solid #E5EAF2", fontSize: 12, boxShadow: "0 8px 24px -12px rgba(15,23,42,0.18)" }} formatter={(v: number) => fmtBdt(v)} />
-              <Area type="monotone" dataKey="sale" stroke="#2563EB" strokeWidth={2.5} fill="url(#gSale)" name="Sales" dot={{ r: 3, fill: "#2563EB", strokeWidth: 0 }} activeDot={{ r: 5 }} />
+              <Area type="natural" dataKey="sale" stroke="#2563EB" strokeWidth={2.5} fill="url(#gSale)" name="Sales" dot={{ r: 3, fill: "#2563EB", strokeWidth: 0 }} activeDot={{ r: 5 }} />
             </AreaChart>
           </ResponsiveContainer>
         </SectionCard>
