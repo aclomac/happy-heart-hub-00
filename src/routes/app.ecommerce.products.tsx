@@ -135,17 +135,65 @@ function ProductsPage() {
     toast.success(`Imported ${added} new, updated ${updated}, ${failed} failed`);
   };
 
-  const syncWoo = async () => {
+  const syncWoo = async (forceProxy = false) => {
     if (!syncWebsiteId) { toast.error("Select a website"); return; }
     setBusy(true);
-    const r = await syncWooCommerceProducts({ websiteId: syncWebsiteId, mode: getSettings().integrationMode });
+    const mode = forceProxy ? "backend-proxy" : getSettings().integrationMode;
+    const r = await syncWooCommerceProducts({ websiteId: syncWebsiteId, mode });
     setBusy(false);
     setList(getProducts());
-    // After product sync, propagate any new images into existing order items.
     const refresh = refreshOrderItemImages();
     const stats = productImageStats();
+    const data = r.data ?? { added: 0, updated: 0, failed: 0, fetched: 0, pages: 0, failedItems: [], transport: undefined };
+    // Existing-item duplicates were skipped (matched by SKU + website id).
+    const skipped = Math.max(0, data.fetched - data.added - data.updated - data.failed);
+    setLastSummary({
+      fetched: data.fetched, created: data.added, updated: data.updated, skipped,
+      failed: data.failed, pages: data.pages, transport: data.transport,
+      at: new Date().toISOString(), success: r.success, message: r.message,
+      errorKind: r.errorKind, httpStatus: r.statusCode, url: r.safeRequest.url,
+      failedItems: data.failedItems,
+    });
     const withImageMsg = ` (${stats.withImage}/${stats.total} with images, ${refresh.updated} order items updated)`;
-    r.success || r.errorKind === "mode_disabled" ? toast.success(r.message + withImageMsg) : toast.error(r.message);
+    if (r.success || r.errorKind === "mode_disabled") toast.success(r.message + withImageMsg);
+    else toast.error(r.message);
+  };
+
+  const testConn = async (forceProxy = false) => {
+    if (!syncWebsiteId) { toast.error("Select a website"); return; }
+    setBusy(true);
+    const mode = forceProxy ? "backend-proxy" : getSettings().integrationMode;
+    const r = await testWooCommerceConnection({ websiteId: syncWebsiteId, mode });
+    setBusy(false);
+    if (r.success) toast.success(r.message);
+    else toast.error(r.message);
+  };
+
+  const copySafeError = async () => {
+    const cfg = wooConfigForWebsiteId(syncWebsiteId);
+    const masked = maskedWooCreds(cfg);
+    const lines = [
+      `Provider: WooCommerce`,
+      `Phase: products (/wp-json/${cfg.apiVersion}/products)`,
+      `Endpoint: ${wooBaseEndpoint(cfg)}/products`,
+      lastSummary?.url ? `Last URL: ${lastSummary.url}` : "",
+      `HTTP Status: ${lastSummary?.httpStatus ?? "—"}`,
+      `Error Kind: ${lastSummary?.errorKind ?? "—"}`,
+      `Message: ${lastSummary?.message ?? "(no error recorded)"}`,
+      `Proxy Used: ${lastSummary?.transport === "backend-proxy-fallback" || lastSummary?.transport === "backend-proxy" ? "yes" : "no"}`,
+      `Consumer Key: ${masked.consumerKey}`,
+      `Consumer Secret: ${masked.consumerSecret}`,
+      `Auth Mode: ${cfg.authMode}`,
+      `Timestamp: ${lastSummary?.at ?? new Date().toISOString()}`,
+    ].filter(Boolean).join("\n");
+    try { await navigator.clipboard.writeText(lines); toast.success("Copied safe error details"); }
+    catch { toast.error("Clipboard blocked"); }
+  };
+
+  const clearDiag = () => {
+    clearDiagnostic("woocommerce_products");
+    setLastSummary(null);
+    toast.success("Diagnostics cleared");
   };
 
   const refreshImages = () => {
