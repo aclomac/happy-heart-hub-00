@@ -343,6 +343,8 @@ export function SalesDocForm({
   const [savedInvoiceNo, setSavedInvoiceNo] = useState<string>("");
   const [successOpen, setSuccessOpen] = useState(false);
   const [pdfBusy, setPdfBusy] = useState(false);
+  const [pdfAction, setPdfAction] = useState<null | "print" | "download">(null);
+  const [popupBusy, setPopupBusy] = useState(false);
   // (Removed) Add Item composer state — original invoice table is the only item editor.
 
   // Visible Save Invoice debug panel state (per /app/sales/new spec).
