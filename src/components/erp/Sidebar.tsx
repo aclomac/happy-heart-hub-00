@@ -33,10 +33,12 @@ import {
   Activity,
   LifeBuoy,
   LogOut,
-  Crown,
+  Smartphone,
+  ChevronDown as ChevronDownArrow,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { endDemoSession, clearDemoStorage } from "@/lib/demo/localStore";
+import { endDemoSession, clearDemoStorage, getDemoUser } from "@/lib/demo/localStore";
+
 import { useI18n } from "@/lib/i18n";
 import { companies } from "@/lib/mock-data";
 import { useQuery } from "@tanstack/react-query";
@@ -382,24 +384,25 @@ export function ERPSidebar() {
         key={n.to + n.key}
         to={linkPath as never}
         hash={hash as never}
-        className={`flex items-center gap-3 transition-colors ${
+        className={`group/link mx-2 my-0.5 flex items-center gap-3 rounded-lg transition-colors ${
           opts.nested
-            ? "font-normal text-[13px] py-1.5 leading-6 text-slate-300"
-            : "font-bold text-[15px] py-2.5 text-slate-100"
+            ? "font-normal text-[13px] py-1.5 leading-6 text-slate-300 hover:bg-white/5"
+            : "font-semibold text-[14px] py-2.5 text-slate-100 hover:bg-white/5"
         }`}
         style={{
           background: active ? "var(--color-sidebar-active)" : "transparent",
           color: active ? "#fff" : undefined,
-          borderLeft: active ? "3px solid #fff" : "3px solid transparent",
+          boxShadow: active ? "0 2px 10px -4px rgba(14,165,168,0.55)" : undefined,
           opacity: locked ? 0.55 : 1,
-          paddingLeft: opts.nested ? 52 : 16,
-          paddingRight: 16,
+          paddingLeft: opts.nested ? 40 : 14,
+          paddingRight: 14,
         }}
       >
-        {!opts.nested && <Icon className="w-4 h-4" />}
+        {!opts.nested && <Icon className="w-4 h-4 shrink-0" />}
         <span className="flex-1 truncate">{labelFor(n)}</span>
         {locked && <Lock className="w-3 h-3 opacity-70" />}
       </Link>
+
     );
   };
 
@@ -416,15 +419,16 @@ export function ERPSidebar() {
         <button
           type="button"
           onClick={() => setOpenGroups((s) => ({ ...s, [g.key]: !s[g.key] }))}
-          className="w-full flex items-center gap-3 px-4 py-2.5 text-[15px] font-bold text-slate-100 transition-colors text-left"
+          className="w-full mx-2 my-0.5 flex items-center gap-3 px-3.5 py-2.5 text-[14px] font-semibold text-slate-100 rounded-lg transition-colors text-left hover:bg-white/5"
           style={{
+            width: "calc(100% - 1rem)",
             background: childActive ? "var(--color-sidebar-active)" : "transparent",
             color: childActive ? "#fff" : undefined,
-            borderLeft: childActive ? "3px solid #fff" : "3px solid transparent",
+            boxShadow: childActive ? "0 2px 10px -4px rgba(14,165,168,0.55)" : undefined,
             opacity: planLocked ? 0.55 : 1,
           }}
         >
-          <Icon className="w-4 h-4" />
+          <Icon className="w-4 h-4 shrink-0" />
           <span className="flex-1 truncate">{labelFor(g)}</span>
           {planLocked && <Lock className="w-3 h-3 opacity-70" />}
           {open ? (
@@ -434,25 +438,29 @@ export function ERPSidebar() {
           )}
         </button>
         {open && (
-          <div className="py-0.5" style={{ background: "rgba(0,0,0,0.15)" }}>
+          <div className="py-0.5">
             {g.children.map((c) => renderLink(c, { nested: true }))}
           </div>
         )}
+
       </div>
     );
   };
 
   return (
     <aside
-      className="w-56 shrink-0 flex flex-col h-screen sticky top-0"
-      style={{ background: "var(--color-sidebar-bg)", color: "var(--color-sidebar-fg)" }}
+      className="w-60 shrink-0 flex flex-col h-screen sticky top-0"
+      style={{
+        background: "linear-gradient(180deg, #061B3A 0%, #082B56 100%)",
+        color: "var(--color-sidebar-fg)",
+      }}
     >
-      <div className="px-4 py-4 border-b" style={{ borderColor: "var(--color-sidebar-border-c)" }}>
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center font-bold text-white text-sm">
+      <div className="px-4 py-4 border-b" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#0EA5A8] to-[#2563EB] flex items-center justify-center font-bold text-white text-sm shadow-md">
             E
           </div>
-          <div>
+          <div className="min-w-0">
             <div className="font-bold text-base tracking-tight">ERPOVO</div>
             <div className="text-[10px] opacity-60 uppercase tracking-wider">
               {t("Business ERP")}
@@ -475,11 +483,10 @@ export function ERPSidebar() {
                 <Link
                   key={n.to}
                   to={n.to}
-                  className="flex items-center gap-3 px-4 py-2 text-[13px] transition-colors"
+                  className="mx-2 my-0.5 flex items-center gap-3 px-3.5 py-2 text-[13px] rounded-lg transition-colors hover:bg-white/5"
                   style={{
                     background: active ? "var(--color-sidebar-active)" : "transparent",
                     color: active ? "#fff" : "var(--color-sidebar-fg)",
-                    borderLeft: active ? "3px solid #fff" : "3px solid transparent",
                   }}
                 >
                   <Icon className="w-4 h-4" />
@@ -491,38 +498,76 @@ export function ERPSidebar() {
         )}
       </nav>
       <div
-        className="px-3 py-3 border-t text-xs space-y-2"
-        style={{ borderColor: "var(--color-sidebar-border-c)" }}
+        className="px-3 py-3 border-t text-xs space-y-2.5"
+        style={{ borderColor: "rgba(255,255,255,0.08)" }}
       >
+        {/* Mobile App Promo Card */}
+        <div
+          className="relative overflow-hidden rounded-xl p-3"
+          style={{
+            background: "linear-gradient(135deg, rgba(14,165,168,0.18), rgba(37,99,235,0.18))",
+            border: "1px solid rgba(255,255,255,0.08)",
+          }}
+        >
+          <div className="flex items-center gap-2.5 mb-2">
+            <div className="shrink-0 grid place-items-center w-9 h-9 rounded-lg bg-gradient-to-br from-[#0EA5A8] to-[#2563EB] text-white shadow-sm">
+              <Smartphone className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <div className="truncate font-semibold text-[12px] text-white">
+                ERPOVO Mobile App
+              </div>
+              <div className="opacity-75 text-[10px] truncate text-slate-200">
+                Manage on the go
+              </div>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="w-full rounded-md bg-white/10 hover:bg-white/15 text-white text-[11px] font-semibold py-1.5 transition-colors"
+          >
+            Get the App
+          </button>
+        </div>
+
+        {/* User Profile */}
         {(() => {
-          const rawName = currentCompany?.name || "";
-          // Treat the auto-seeded "X's Business" name as a placeholder and
-          // fall back to Chair King branding for the demo / personal-mode preview.
-          const isAutoName = /'s Business$/i.test(rawName);
-          const displayName = !rawName || isAutoName ? "Chair King" : rawName;
-          const subtitle = !rawName || isAutoName || isDemoMode()
-            ? "Dhaka, Bangladesh"
-            : t("Personal Mode");
+          const demoUser = getDemoUser();
+          const name = demoUser?.name || "Md. Tanvir Hasan";
+          const initials = name
+            .split(" ")
+            .map((s) => s[0])
+            .filter(Boolean)
+            .slice(0, 2)
+            .join("")
+            .toUpperCase();
           return (
             <div
-              className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg"
-              style={{ background: "var(--color-sidebar-hover)" }}
+              className="flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-white/5 cursor-pointer transition-colors"
             >
-              <div className="shrink-0 grid place-items-center w-8 h-8 rounded-md bg-gradient-to-br from-amber-400 to-amber-600 text-white shadow-sm">
-                <Crown className="w-4 h-4" />
+              <div className="relative shrink-0">
+                <div className="grid place-items-center w-9 h-9 rounded-full bg-gradient-to-br from-[#2563EB] to-[#0EA5A8] text-white text-[11px] font-bold ring-2 ring-white/20">
+                  {initials}
+                </div>
+                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-[#082B56]" />
               </div>
-              <div className="min-w-0">
-                <div className="truncate font-semibold text-[13px] text-white">{displayName}</div>
-                <div className="opacity-70 text-[10px] truncate">{subtitle}</div>
+              <div className="min-w-0 flex-1">
+                <div className="truncate font-semibold text-[12.5px] text-white leading-tight">
+                  {name}
+                </div>
+                <div className="opacity-70 text-[10px] truncate text-slate-300">
+                  Administrator
+                </div>
               </div>
+              <ChevronDownArrow className="w-3.5 h-3.5 opacity-60" />
             </div>
           );
         })()}
+
         <Button
           variant="ghost"
           size="sm"
-          className="w-full justify-start gap-2 text-[13px] hover:bg-white/10"
-          style={{ color: "var(--color-sidebar-fg)" }}
+          className="w-full justify-start gap-2 text-[12.5px] hover:bg-white/10 text-slate-200"
           onClick={async () => {
             try {
               if (!isDemoMode()) await supabase.auth.signOut();
@@ -548,8 +593,14 @@ export function ERPSidebar() {
           <LogOut className="w-4 h-4" />
           {t("Logout")}
         </Button>
+
+        {/* Footer credit */}
+        <div className="pt-1 text-center text-[10px] opacity-50">
+          v1.0 · Bangladesh 🇧🇩
+        </div>
       </div>
     </aside>
   );
 }
+
 
