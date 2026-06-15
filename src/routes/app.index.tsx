@@ -492,7 +492,7 @@ function Dashboard() {
   ];
 
   return (
-    <div className="space-y-4 -m-4 p-3 md:p-4 pb-24 md:pb-28 bg-[#F6F8FC] min-h-full">
+    <div className="space-y-4 -m-4 p-3 md:p-4 pb-32 md:pb-36 bg-[#F6F8FC] min-h-full">
       {/* KPI Row */}
       {skeletons ? (
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2.5">
