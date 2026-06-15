@@ -67,9 +67,16 @@ type NavNode = LinkNode | GroupNode;
 
 const nav: NavNode[] = [
   { kind: "link", to: "/app", key: "dashboard", icon: LayoutDashboard, end: true, module: null },
-  { kind: "link", to: "/app/pos", key: "pos", icon: Zap, module: null },
-  { kind: "link", to: "/app/parties", key: "parties", icon: Users, module: null },
-  { kind: "link", to: "/app/party-groups", key: "Party Groups", icon: FolderOpen, module: null },
+  {
+    kind: "group",
+    key: "parties",
+    label: "Parties",
+    icon: Users,
+    children: [
+      { kind: "link", to: "/app/parties", key: "All Parties", icon: Users },
+      { kind: "link", to: "/app/party-groups", key: "Party Groups", icon: FolderOpen },
+    ],
+  },
   {
     kind: "group",
     key: "items",
@@ -91,6 +98,7 @@ const nav: NavNode[] = [
     label: "Sale",
     icon: ShoppingCart,
     children: [
+      { kind: "link", to: "/app/pos", key: "POS / Quick Bill", icon: Zap },
       { kind: "link", to: "/app/sales", key: "Sale Invoices", icon: ShoppingCart },
       { kind: "link", to: "/app/estimates", key: "Estimates / Quotations", icon: ShoppingCart },
       { kind: "link", to: "/app/sale-orders", key: "Sale Orders", icon: ShoppingCart },
@@ -324,20 +332,15 @@ export function ERPSidebar() {
   // Personal mode: subscription/plan gating disabled — everything unlocked.
   // Personal mode: subscription/plan gating disabled — everything unlocked.
 
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
-    if (typeof window === "undefined") return {};
-    try {
-      return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-    } catch {
-      return {};
-    }
-  });
-
+  // Groups are always collapsed on first render; only auto-open the group
+  // that owns the active route (handled by the effect below). We intentionally
+  // do NOT persist open state across navigations so the sidebar stays clean
+  // when the user returns to the dashboard.
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
+  void STORAGE_KEY;
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(openGroups));
-    } catch {}
-  }, [openGroups]);
+    try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+  }, []);
 
   // Auto-open any group containing the active route
   useEffect(() => {
@@ -533,7 +536,8 @@ export function ERPSidebar() {
         {/* User Profile */}
         {(() => {
           const demoUser = getDemoUser();
-          const name = demoUser?.name || "Md. Tanvir Hasan";
+          const rawName = demoUser?.name;
+          const name = !rawName || rawName === "Demo User" ? "Md. Tanvir Hasan" : rawName;
           const initials = name
             .split(" ")
             .map((s) => s[0])

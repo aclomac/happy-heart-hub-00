@@ -141,7 +141,8 @@ export function ERPTopbar() {
   // ─────────── Dashboard-only premium header ───────────
   if (isDashboard) {
     const demoUser = getDemoUser();
-    const displayName = demoUser?.name || "Md. Tanvir Hasan";
+    const rawName = demoUser?.name;
+    const displayName = !rawName || rawName === "Demo User" ? "Md. Tanvir Hasan" : rawName;
     const initials = displayName
       .split(" ")
       .map((s) => s[0])
@@ -155,7 +156,7 @@ export function ERPTopbar() {
         <header className="h-[72px] bg-card border-b flex items-center gap-3 px-6 sticky top-0 z-30 print:hidden">
           <div className="flex-1 min-w-0">
             <h1 className="text-[18px] font-bold tracking-tight text-foreground leading-tight truncate">
-              {t("Dashboard")}
+              {currentCompany?.name || "Chair King"}
             </h1>
             <p className="text-xs text-muted-foreground truncate">
               Welcome back,{" "}
@@ -163,6 +164,7 @@ export function ERPTopbar() {
               <span aria-hidden>👋</span>
             </p>
           </div>
+
 
           <div className="hidden md:flex items-center gap-2">
             <DropdownMenu>

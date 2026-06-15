@@ -129,7 +129,7 @@ function KpiCard({
   return (
     <Link
       to={to}
-      className="group relative block rounded-2xl border border-[#E5EAF2] bg-card p-4 transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-12px_rgba(15,23,42,0.18)]"
+      className="group relative block rounded-xl border border-[#E5EAF2] bg-card p-3 transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-12px_rgba(15,23,42,0.18)]"
       style={{ boxShadow: "0 1px 2px rgba(15,23,42,0.04)" }}
     >
       <div className="flex items-start justify-between">
@@ -165,14 +165,14 @@ function SectionCard({
 }) {
   return (
     <section
-      className={`rounded-2xl border border-[#E5EAF2] bg-card ${className}`}
+      className={`rounded-xl border border-[#E5EAF2] bg-card ${className}`}
       style={{ boxShadow: "0 1px 2px rgba(15,23,42,0.04)" }}
     >
-      <header className="flex items-center justify-between gap-3 px-5 pt-4 pb-2">
+      <header className="flex items-center justify-between gap-3 px-4 pt-3 pb-2">
         <h2 className="text-sm font-semibold text-[#0F172A]">{title}</h2>
         <div className="text-xs text-[#64748B]">{right}</div>
       </header>
-      <div className="px-5 pb-5">{children}</div>
+      <div className="px-4 pb-4">{children}</div>
     </section>
   );
 }
@@ -484,16 +484,16 @@ function Dashboard() {
   ];
 
   return (
-    <div className="space-y-5 -m-4 p-4 md:p-6 bg-[#F6F8FC] min-h-full">
+    <div className="space-y-4 -m-4 p-3 md:p-4 bg-[#F6F8FC] min-h-full">
       {/* KPI Row */}
       {skeletons ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2.5">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-28 rounded-2xl border border-[#E5EAF2] bg-card animate-pulse" />
+            <div key={i} className="h-24 rounded-xl border border-[#E5EAF2] bg-card animate-pulse" />
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2.5">
           {kpis.map((k) => (
             <KpiCard key={k.label} {...k} />
           ))}
