@@ -97,6 +97,31 @@ describe("erpovo backup: verifyErpovoBackup", () => {
     expect(result.checks.find((c) => c.label === "secrets excluded")?.ok).toBe(true);
     expect(result.checks.find((c) => c.label === "PERF data excluded")?.ok).toBe(true);
     expect(result.checks.find((c) => c.label === "required modules present")?.ok).toBe(true);
+    expect(result.checks.find((c) => c.label === "sale item lines included")?.ok).toBe(true);
+    expect(result.checks.find((c) => c.label === "purchase item lines included")?.ok).toBe(true);
+  });
+
+  it("fails validation when transaction headers have no line items", async () => {
+    const JSZip = (await import("jszip")).default;
+    const zip = new JSZip();
+    const dataRaw = JSON.stringify({
+      items: [{}],
+      parties: [{}],
+      warehouses: [{}],
+      sales: [{ id: "s1", company_id: "co-1" }],
+      sale_items: [],
+      purchases: [{ id: "p1", company_id: "co-1" }],
+      purchase_items: [],
+    }, null, 2);
+    const hashBuf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(dataRaw));
+    const hash = Array.from(new Uint8Array(hashBuf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+    zip.file("manifest.json", JSON.stringify({ app: "erpovo", kind: "full-snapshot", version: 2, exported_at: new Date().toISOString(), company_id: "co-1", total_records: 5, tables: [], included_tables: [], excluded_tables: [], data_sha256: hash }));
+    zip.file("data.json", dataRaw);
+    const blob = await zip.generateAsync({ type: "blob" });
+    const result = await verifyErpovoBackup(new File([blob], "bad.erpovo", { type: "application/zip" }));
+    expect(result.ok).toBe(false);
+    expect(result.checks.find((c) => c.detail === "Sales exist but sale item lines are missing from backup")?.ok).toBe(false);
+    expect(result.checks.find((c) => c.detail === "Purchases exist but purchase item lines are missing from backup")?.ok).toBe(false);
   });
 
   it("fails when the file is not a valid zip", async () => {

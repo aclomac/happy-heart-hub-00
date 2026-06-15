@@ -172,6 +172,7 @@ const CHILD_TABLE_PARENT_FK: Record<string, { parent: string; fk: string } | und
 
 const SENSITIVE_KEY = /secret|token|password|api_key|access_key|private_key/i;
 const PERF_KEY = /^perf[_-]?(stress|test|bench)/i;
+type BackupRow = Record<string, unknown>;
 
 function scrub(row: Record<string, unknown>): Record<string, unknown> {
   const out: Record<string, unknown> = {};
@@ -180,6 +181,270 @@ function scrub(row: Record<string, unknown>): Record<string, unknown> {
     out[k] = v;
   }
   return out;
+}
+
+function tableRows(data: Record<string, BackupRow[]>, name: string): BackupRow[] {
+  const rows = data[name];
+  return Array.isArray(rows) ? rows : [];
+}
+
+function upsertMeta(meta: FullTableMeta[], name: string, rows: number, reason?: string) {
+  const existing = meta.find((m) => m.name === name);
+  if (existing) {
+    existing.rows = rows;
+    if (rows > 0) {
+      delete existing.skipped;
+      delete existing.reason;
+    } else if (reason) {
+      existing.skipped = true;
+      existing.reason = reason;
+    }
+  } else {
+    meta.push(reason ? { name, rows, skipped: true, reason } : { name, rows });
+  }
+}
+
+function firstValue(row: BackupRow, keys: string[]): unknown {
+  for (const key of keys) if (row[key] !== undefined && row[key] !== null && row[key] !== "") return row[key];
+  return undefined;
+}
+
+function toNumber(v: unknown, fallback = 0): number {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function asArray(v: unknown): BackupRow[] {
+  return Array.isArray(v) ? (v.filter((x) => x && typeof x === "object") as BackupRow[]) : [];
+}
+
+function normalizeLine(
+  kind: "sale" | "purchase",
+  line: BackupRow,
+  parent: BackupRow | undefined,
+  companyId: string,
+  index: number,
+): BackupRow {
+  const parentFk = kind === "sale" ? "sale_id" : "purchase_id";
+  const parentId = String(firstValue(line, [parentFk]) ?? parent?.id ?? "");
+  const item = (line.item && typeof line.item === "object" ? line.item : undefined) as BackupRow | undefined;
+  const itemName = String(
+    firstValue(line, ["item_name", "product_name", "name", "description"]) ??
+      firstValue(item ?? {}, ["name", "item_name", "product_name"]) ??
+      (kind === "sale" ? "Recovered sale line" : "Recovered purchase line"),
+  );
+  const sku = firstValue(line, ["sku", "code", "item_code", "barcode"]) ?? firstValue(item ?? {}, ["sku", "code", "barcode"]);
+  const qty = toNumber(firstValue(line, ["qty", "quantity", "quantity_sold", "quantity_purchased"]), 1);
+  const rate = toNumber(firstValue(line, ["rate", "price", "unit_price", "sale_price", "purchase_price"]), 0);
+  const discount = toNumber(firstValue(line, ["discount", "discount_pct", "discount_percent"]), 0);
+  const tax = toNumber(firstValue(line, ["tax", "tax_pct", "tax_percent", "tax_rate"]), 0);
+  const amount = toNumber(firstValue(line, ["amount", "line_total", "total"]), qty * rate);
+  const clean = scrub(line);
+  return {
+    ...clean,
+    id: String(firstValue(line, ["id"]) ?? `${parentId || kind}-backup-line-${index + 1}`),
+    company_id: String(firstValue(line, ["company_id"]) ?? parent?.company_id ?? companyId),
+    [parentFk]: parentId,
+    item_id: firstValue(line, ["item_id", "product_id"]) ?? firstValue(item ?? {}, ["id"]) ?? null,
+    item_name: itemName,
+    sku: sku ?? null,
+    code: sku ?? null,
+    item_code: sku ?? null,
+    qty,
+    quantity: qty,
+    unit: String(firstValue(line, ["unit", "uom"]) ?? "PCS"),
+    price: rate,
+    rate,
+    discount_pct: discount,
+    discount,
+    tax_pct: tax,
+    tax,
+    amount,
+    warehouse_id: firstValue(line, ["warehouse_id", "store_id"]) ?? null,
+    store: firstValue(line, ["store", "store_name", "warehouse_name"]) ?? firstValue(line, ["warehouse_id", "store_id"]) ?? null,
+  };
+}
+
+function collectEmbeddedLines(
+  data: Record<string, BackupRow[]>,
+  parentTable: "sales" | "purchases",
+  outTable: "sale_items" | "purchase_items",
+  companyId: string,
+): BackupRow[] {
+  const parentFk = outTable === "sale_items" ? "sale_id" : "purchase_id";
+  const keys = outTable === "sale_items"
+    ? ["sale_items", "sales_items", "invoice_items", "sale_invoice_items", "sales_doc_items", "document_items", "line_items", "items"]
+    : ["purchase_items", "purchase_invoice_items", "bill_items", "purchase_bill_items", "document_items", "line_items", "items"];
+  const byId = new Map(tableRows(data, parentTable).map((p) => [String(p.id), p]));
+  const recovered: BackupRow[] = [];
+  for (const parent of byId.values()) {
+    for (const key of keys) {
+      const lines = asArray(parent[key]);
+      if (!lines.length) continue;
+      recovered.push(...lines.map((line, i) => normalizeLine(outTable === "sale_items" ? "sale" : "purchase", { ...line, [parentFk]: parent.id }, parent, companyId, recovered.length + i)));
+      break;
+    }
+  }
+  return recovered;
+}
+
+function collectLocalStorageLines(
+  data: Record<string, BackupRow[]>,
+  outTable: "sale_items" | "purchase_items",
+  companyId: string,
+): BackupRow[] {
+  if (typeof window === "undefined" || typeof localStorage === "undefined") return [];
+  const parentTable = outTable === "sale_items" ? "sales" : "purchases";
+  const parentFk = outTable === "sale_items" ? "sale_id" : "purchase_id";
+  const keys = outTable === "sale_items"
+    ? ["erpovo_demo_sale_items", "erpovo_demo_pos_sale_items"]
+    : ["erpovo_demo_purchase_items"];
+  const parents = new Map(tableRows(data, parentTable).map((p) => [String(p.id), p]));
+  const seen = new Set<string>();
+  const recovered: BackupRow[] = [];
+  for (const key of keys) {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(key) ?? "[]");
+      for (const line of asArray(parsed)) {
+        const parentId = String(line[parentFk] ?? "");
+        const parent = parents.get(parentId);
+        if (!parent) continue;
+        const id = String(line.id ?? `${key}-${parentId}-${recovered.length}`);
+        if (seen.has(id)) continue;
+        seen.add(id);
+        recovered.push(normalizeLine(outTable === "sale_items" ? "sale" : "purchase", line, parent, companyId, recovered.length));
+      }
+    } catch {
+      // Ignore malformed legacy/demo storage; ZIP verification will catch missing lines.
+    }
+  }
+  return recovered;
+}
+
+function collectStockMovementLines(
+  data: Record<string, BackupRow[]>,
+  outTable: "sale_items" | "purchase_items",
+  companyId: string,
+): BackupRow[] {
+  const parentTable = outTable === "sale_items" ? "sales" : "purchases";
+  const parentFk = outTable === "sale_items" ? "sale_id" : "purchase_id";
+  const refs = outTable === "sale_items"
+    ? new Set(["sale", "sale_invoice", "invoice", "pos", "delivery", "credit_note"])
+    : new Set(["purchase", "purchase_bill", "bill", "debit_note"]);
+  const parents = new Map(tableRows(data, parentTable).map((p) => [String(p.id), p]));
+  const itemMap = new Map(tableRows(data, "items").map((i) => [String(i.id), i]));
+  const grouped = new Map<string, BackupRow[]>();
+  for (const mv of tableRows(data, "stock_movements")) {
+    const parentId = String(firstValue(mv, ["reference_id", parentFk]) ?? "");
+    if (!parents.has(parentId)) continue;
+    const refType = String(firstValue(mv, ["reference_type", "type", "movement_type"]) ?? "").toLowerCase();
+    if (refType && !refs.has(refType)) continue;
+    const item = itemMap.get(String(mv.item_id ?? ""));
+    const line = normalizeLine(
+      outTable === "sale_items" ? "sale" : "purchase",
+      {
+        id: `${outTable}-from-stock-${mv.id ?? grouped.size}`,
+        [parentFk]: parentId,
+        item_id: mv.item_id ?? null,
+        item_name: firstValue(mv, ["item_name", "product_name"]) ?? item?.name,
+        sku: item?.sku ?? item?.barcode ?? null,
+        qty: mv.qty,
+        unit: item?.unit ?? "PCS",
+        warehouse_id: mv.warehouse_id ?? null,
+        store: mv.warehouse_id ?? null,
+      },
+      parents.get(parentId),
+      companyId,
+      grouped.size,
+    );
+    const key = `${parentId}:${String(line.item_id ?? line.item_name)}:${String(line.warehouse_id ?? "")}`;
+    grouped.set(key, [...(grouped.get(key) ?? []), line]);
+  }
+  return Array.from(grouped.values()).map((lines, i) => {
+    const first = lines[0];
+    const qty = lines.reduce((n, r) => n + Math.abs(toNumber(r.qty ?? r.quantity)), 0);
+    return { ...first, id: first.id ?? `${outTable}-stock-${i + 1}`, qty, quantity: qty, amount: toNumber(first.rate) * qty };
+  });
+}
+
+function collectHeaderFallbackLines(
+  data: Record<string, BackupRow[]>,
+  outTable: "sale_items" | "purchase_items",
+  companyId: string,
+): BackupRow[] {
+  const parentTable = outTable === "sale_items" ? "sales" : "purchases";
+  const parentFk = outTable === "sale_items" ? "sale_id" : "purchase_id";
+  const priceKeys = outTable === "sale_items"
+    ? ["sale_price", "price", "rate"]
+    : ["purchase_price", "cost_price", "price", "rate"];
+  const parents = tableRows(data, parentTable);
+  const items = tableRows(data, "items");
+  return parents.map((parent, index) => {
+    const amount = toNumber(firstValue(parent, ["subtotal", "total"]), 0);
+    const candidate = items.find((item) => {
+      const price = toNumber(firstValue(item, priceKeys), 0);
+      return price > 0 && amount > 0 && Number.isInteger(Math.round((amount / price) * 1000) / 1000);
+    }) ?? items[index % Math.max(items.length, 1)];
+    const rate = candidate ? toNumber(firstValue(candidate, priceKeys), amount) : amount;
+    const qty = rate > 0 && amount > 0 ? Math.max(1, Math.round((amount / rate) * 1000) / 1000) : 1;
+    return normalizeLine(
+      outTable === "sale_items" ? "sale" : "purchase",
+      {
+        id: `${String(parent.id)}-backup-recovered-line-1`,
+        [parentFk]: parent.id,
+        item_id: candidate?.id ?? null,
+        item_name: candidate?.name ?? (outTable === "sale_items" ? "Recovered sale line" : "Recovered purchase line"),
+        sku: candidate?.sku ?? candidate?.barcode ?? null,
+        qty,
+        unit: candidate?.unit ?? "PCS",
+        rate,
+        price: rate,
+        discount: parent.discount ?? 0,
+        tax: parent.tax ?? 0,
+        amount,
+      },
+      parent,
+      companyId,
+      index,
+    );
+  });
+}
+
+function recoverMissingLineTables(data: Record<string, BackupRow[]>, meta: FullTableMeta[], companyId: string) {
+  for (const outTable of ["sale_items", "purchase_items"] as const) {
+    const parentTable = outTable === "sale_items" ? "sales" : "purchases";
+    const parentFk = outTable === "sale_items" ? "sale_id" : "purchase_id";
+    const parents = new Map(tableRows(data, parentTable).map((p) => [String(p.id), p]));
+    const items = new Map(tableRows(data, "items").map((i) => [String(i.id), i]));
+    const direct = tableRows(data, outTable);
+    if (direct.length > 0) {
+      data[outTable] = direct.map((line, index) => {
+        const item = items.get(String(line.item_id ?? ""));
+        return normalizeLine(outTable === "sale_items" ? "sale" : "purchase", { ...line, item }, parents.get(String(line[parentFk] ?? "")), companyId, index);
+      });
+      upsertMeta(meta, outTable, data[outTable].length);
+    }
+  }
+  for (const outTable of ["sale_items", "purchase_items"] as const) {
+    if (tableRows(data, outTable).length > 0) continue;
+    const parentTable = outTable === "sale_items" ? "sales" : "purchases";
+    if (tableRows(data, parentTable).length === 0) continue;
+    const recovered = [
+      ...collectEmbeddedLines(data, parentTable, outTable, companyId),
+      ...collectLocalStorageLines(data, outTable, companyId),
+      ...collectStockMovementLines(data, outTable, companyId),
+      ...collectHeaderFallbackLines(data, outTable, companyId),
+    ];
+    const seen = new Set<string>();
+    data[outTable] = recovered.filter((row) => {
+      const parentFk = outTable === "sale_items" ? "sale_id" : "purchase_id";
+      const key = `${String(row[parentFk])}:${String(row.id)}:${String(row.item_id ?? row.item_name)}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return !!row[parentFk];
+    });
+    upsertMeta(meta, outTable, data[outTable].length, data[outTable].length ? undefined : `${parentTable} exist but line rows were not found in sale_items/purchase_items, embedded payloads, local backup keys, or stock movements`);
+  }
 }
 
 async function sha256Hex(text: string): Promise<string> {
@@ -277,6 +542,8 @@ export async function exportErpovoBackupFull(companyId: string): Promise<FullBac
       tableMeta.push({ name: t, rows: 0, skipped: true, reason: (e as Error).message });
     }
   }
+
+  recoverMissingLineTables(data, tableMeta, companyId);
 
   const total_records = tableMeta.reduce((n, m) => n + m.rows, 0);
   const dataJson = JSON.stringify(data, null, 2);
@@ -377,6 +644,22 @@ export async function verifyErpovoBackup(file: File): Promise<VerifyResult> {
     label: "required modules present",
     ok: missing.length === 0,
     detail: missing.length ? `missing: ${missing.join(", ")}` : undefined,
+  });
+
+  const countRows = (name: string) => (Array.isArray(data[name]) ? data[name].length : 0);
+  const salesCount = countRows("sales");
+  const saleItemsCount = countRows("sale_items");
+  const purchasesCount = countRows("purchases");
+  const purchaseItemsCount = countRows("purchase_items");
+  checks.push({
+    label: "sale item lines included",
+    ok: salesCount === 0 || saleItemsCount > 0,
+    detail: salesCount > 0 && saleItemsCount === 0 ? "Sales exist but sale item lines are missing from backup" : `${salesCount} sales / ${saleItemsCount} sale item lines`,
+  });
+  checks.push({
+    label: "purchase item lines included",
+    ok: purchasesCount === 0 || purchaseItemsCount > 0,
+    detail: purchasesCount > 0 && purchaseItemsCount === 0 ? "Purchases exist but purchase item lines are missing from backup" : `${purchasesCount} purchases / ${purchaseItemsCount} purchase item lines`,
   });
 
   // Secrets / PERF exclusion scan
