@@ -348,7 +348,7 @@ export const woocommerceService = {
     c: WooConfig,
     websiteId: string,
     mode: IntegrationMode,
-  ): Promise<DiagnosticResult & { added: number; updated: number; failed: number }> {
+  ): Promise<DiagnosticResult & { added: number; updated: number; failed: number; fetched: number; pages: number; failedItems: Array<{ wpId: string; name: string; sku: string; reason: string }>; transport?: string }> {
     const { getProducts, setProducts } = await import("@/lib/demo/ecommerce");
     const base: DiagnosticResult = {
       provider: "WooCommerce", action: "Sync Products",
@@ -357,7 +357,10 @@ export const woocommerceService = {
       at: new Date().toISOString(),
       status: "failed", errorKind: "unknown", message: "",
     };
-    const wrap = (extra: Partial<DiagnosticResult>, counts = { added: 0, updated: 0, failed: 0 }) => {
+    const wrap = (
+      extra: Partial<DiagnosticResult>,
+      counts = { added: 0, updated: 0, failed: 0, fetched: 0, pages: 0, failedItems: [] as Array<{ wpId: string; name: string; sku: string; reason: string }>, transport: undefined as string | undefined },
+    ) => {
       const d = { ...base, ...extra };
       saveDiagnostic("woocommerce_products", d);
       return { ...d, ...counts };
@@ -381,30 +384,39 @@ export const woocommerceService = {
         added++;
       }
       setProducts(existing);
-      return wrap({ status: "skipped", errorKind: "mode_disabled", message: `Local Demo — added ${added} sample products. Switch to Direct Browser API for live sync.` }, { added, updated: 0, failed: 0 });
+      return wrap(
+        { status: "skipped", errorKind: "mode_disabled", message: `Local Demo — added ${added} sample products. Switch to Direct Browser API for live sync.` },
+        { added, updated: 0, failed: 0, fetched: added, pages: 1, failedItems: [], transport: "local-demo" },
+      );
     }
-    // backend-proxy / electron-proxy go through httpRequest below.
     try {
       const existing = getProducts();
       const byKey = new Map(existing.map((p) => [`${p.websiteId}:${p.websiteProductId}`, p] as const));
-      let added = 0, updated = 0, failed = 0;
+      let added = 0, updated = 0, failed = 0, fetched = 0, pages = 0;
+      const failedItems: Array<{ wpId: string; name: string; sku: string; reason: string }> = [];
+      let transport: string | undefined;
       for (let page = 1; page <= 20; page++) {
-        const { ok, status, data, finalUrl, errorText } = await callWoo(c, mode, "/products", { per_page: "100", page: String(page), status: "publish", orderby: "date", order: "desc" });
+        const { ok, status, data, finalUrl, errorText, headers } = await callWoo(c, mode, "/products", { per_page: "100", page: String(page), status: "publish", orderby: "date", order: "desc" });
+        if (!transport && headers?.["x-erpovo-transport"]) transport = String(headers["x-erpovo-transport"]);
         if (!ok) {
           return wrap({
             status: "failed", httpStatus: status, url: finalUrl,
             errorKind: status === 401 || status === 403 ? "auth" : status === 404 ? "not_found" : "server",
             message: `HTTP ${status} ${errorText || ""}`.trim(),
-          }, { added, updated, failed });
+          }, { added, updated, failed, fetched, pages, failedItems, transport });
         }
         const list = Array.isArray(data) ? (data as Array<Record<string, unknown>>) : [];
+        pages++;
+        fetched += list.length;
         if (list.length === 0) break;
         for (const w of list) {
+          const wpId = String(w.id ?? "");
+          const skuRaw = String(w.sku ?? "");
+          const nameRaw = String(w.name ?? "Untitled");
           try {
-            const wpId = String(w.id ?? "");
-            if (!wpId) { failed++; continue; }
-            const sku = String(w.sku ?? "") || `WP-${wpId}`;
-            const name = String(w.name ?? "Untitled");
+            if (!wpId) { failed++; failedItems.push({ wpId: "", name: nameRaw, sku: skuRaw, reason: "Missing WooCommerce product id" }); continue; }
+            const sku = skuRaw || `WP-${wpId}`;
+            const name = nameRaw;
             const price = Number(w.price ?? w.regular_price ?? 0);
             const stock = Number(w.stock_quantity ?? 0);
             const status: "active" | "inactive" = (w.status === "publish") ? "active" : "inactive";
@@ -438,12 +450,18 @@ export const woocommerceService = {
               });
               added++;
             }
-          } catch { failed++; }
+          } catch (e) {
+            failed++;
+            failedItems.push({ wpId, name: nameRaw, sku: skuRaw, reason: (e as Error).message || "Mapping failed" });
+          }
         }
         setProducts(existing);
         if (list.length < 100) break;
       }
-      return wrap({ status: "success", errorKind: "none", message: `Imported ${added} new, updated ${updated}, ${failed} failed.` }, { added, updated, failed });
+      return wrap(
+        { status: "success", errorKind: "none", message: `Fetched ${fetched} across ${pages} page(s) · ${added} new, ${updated} updated, ${failed} failed.${transport === "backend-proxy-fallback" ? " (via secure proxy fallback)" : ""}` },
+        { added, updated, failed, fetched, pages, failedItems, transport },
+      );
     } catch (e) {
       const cls = classifyFetchError(e);
       return wrap({ status: "failed", errorKind: cls.kind, message: cls.message });
