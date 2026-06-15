@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
 import { ChevronsUpDown } from "lucide-react";
-import { Trash2, Plus, Save, UserPlus, Printer, FileDown, Eye, FilePlus2 } from "lucide-react";
+import { Trash2, Plus, Save, UserPlus, Printer, FileDown, Eye, FilePlus2, Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentCompanyId } from "@/lib/use-company";
