@@ -9,7 +9,7 @@ const { fromSpy } = vi.hoisted(() => {
     parties: [{ id: 1, name: "Acme", company_id: "co-1" }],
     warehouses: [{ id: 1, name: "Main", company_id: "co-1" }],
     sales: [{ id: 1, total: 1000, company_id: "co-1" }],
-    payments: [{ id: 1, amount: 200, company_id: "co-1" }],
+    purchases: [{ id: 1, total: 500, company_id: "co-1" }],
     payments: [{ id: 1, amount: 200, company_id: "co-1" }],
     stock_movements: [{ id: 1, qty: 5, company_id: "co-1" }],
     expenses: [{ id: 1, amount: 50, company_id: "co-1" }],
