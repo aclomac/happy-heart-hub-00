@@ -588,6 +588,22 @@ export async function verifyErpovoBackup(file: File): Promise<VerifyResult> {
     detail: missing.length ? `missing: ${missing.join(", ")}` : undefined,
   });
 
+  const countRows = (name: string) => (Array.isArray(data[name]) ? data[name].length : 0);
+  const salesCount = countRows("sales");
+  const saleItemsCount = countRows("sale_items");
+  const purchasesCount = countRows("purchases");
+  const purchaseItemsCount = countRows("purchase_items");
+  checks.push({
+    label: "sale item lines included",
+    ok: salesCount === 0 || saleItemsCount > 0,
+    detail: salesCount > 0 && saleItemsCount === 0 ? "Sales exist but sale item lines are missing from backup" : `${salesCount} sales / ${saleItemsCount} sale item lines`,
+  });
+  checks.push({
+    label: "purchase item lines included",
+    ok: purchasesCount === 0 || purchaseItemsCount > 0,
+    detail: purchasesCount > 0 && purchaseItemsCount === 0 ? "Purchases exist but purchase item lines are missing from backup" : `${purchasesCount} purchases / ${purchaseItemsCount} purchase item lines`,
+  });
+
   // Secrets / PERF exclusion scan
   const flat = dataRaw;
   const secretHit = /"(?:[a-z_]*?(?:secret|api_key|auth_token|password|private_key))"\s*:/i.test(flat);
