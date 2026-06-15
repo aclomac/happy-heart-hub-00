@@ -332,20 +332,12 @@ export function ERPSidebar() {
   // Personal mode: subscription/plan gating disabled — everything unlocked.
   // Personal mode: subscription/plan gating disabled — everything unlocked.
 
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
-    if (typeof window === "undefined") return {};
-    try {
-      return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-    } catch {
-      return {};
-    }
-  });
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(openGroups));
-    } catch {}
-  }, [openGroups]);
+  // Groups are always collapsed on first render; only auto-open the group
+  // that owns the active route (handled by the effect below). We intentionally
+  // do NOT persist open state across navigations so the sidebar stays clean
+  // when the user returns to the dashboard.
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
+  void STORAGE_KEY;
 
   // Auto-open any group containing the active route
   useEffect(() => {
