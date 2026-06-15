@@ -207,6 +207,8 @@ const nav: NavNode[] = [
   },
   { kind: "link", to: "/app/settings", key: "settings", icon: Settings, module: null },
 
+  
+
   // Additional modules — kept accessible below the main reference order.
   {
     kind: "group",
