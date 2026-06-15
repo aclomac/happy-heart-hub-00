@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Users, RefreshCw, Cloud, HardDrive, Smartphone, Laptop, Loader2 } from "lucide-react";
+import { Users, RefreshCw, Cloud, HardDrive, Smartphone, Laptop, Loader2, ShieldCheck, CheckCircle2, XCircle } from "lucide-react";
 
 import { PageHeader } from "@/components/erp/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,13 @@ import { useCurrentCompanyId } from "@/lib/use-company";
 import { useCurrentRole } from "@/lib/use-current-role";
 import { useI18n } from "@/lib/i18n";
 import { logAudit } from "@/lib/audit";
-import { exportErpovoBackup } from "@/lib/erpovo-backup";
+import {
+  exportErpovoBackupFull,
+  verifyErpovoBackup,
+  EXCLUDED_FROM_BACKUP,
+  type FullErpovoManifest,
+  type VerifyResult,
+} from "@/lib/erpovo-backup";
 
 export const Route = createFileRoute("/app/sync")({ component: Sync });
 
@@ -119,23 +125,42 @@ function Sync() {
   };
 
   const [busy, setBusy] = useState(false);
+  const [lastBackup, setLastBackup] = useState<
+    | {
+        fileName: string;
+        size: number;
+        manifest: FullErpovoManifest;
+      }
+    | null
+  >(null);
+  const [verifying, setVerifying] = useState(false);
+  const [verifyResult, setVerifyResult] = useState<VerifyResult | null>(null);
+  const verifyInputRef = useRef<HTMLInputElement>(null);
+  const [lastBackupBlob, setLastBackupBlob] = useState<Blob | null>(null);
 
   const doBackupPc = async () => {
     if (!guard()) return;
     setBusy(true);
     try {
-      const blob = await exportErpovoBackup(companyId!);
+      const { blob, fileName, manifest } = await exportErpovoBackupFull(companyId!);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `erpovo-backup-${new Date().toISOString().slice(0, 10)}.erpovo`;
+      a.download = fileName;
       a.click();
       URL.revokeObjectURL(url);
+      setLastBackup({ fileName, size: blob.size, manifest });
+      setLastBackupBlob(blob);
       void logAudit({
         companyId,
         module: "Settings",
         action: "backup.downloaded_pc",
-        newValue: { size: blob.size },
+        newValue: {
+          size: blob.size,
+          total_records: manifest.total_records,
+          tables: manifest.tables.length,
+          sha256: manifest.data_sha256,
+        },
       });
       toast.success(t("Backup Downloaded"));
     } catch (e) {
@@ -150,6 +175,33 @@ function Sync() {
     toast.info(t("Drive integration not configured"));
     await doBackupPc();
   };
+
+  const runVerify = async (f: File) => {
+    setVerifying(true);
+    setVerifyResult(null);
+    try {
+      const result = await verifyErpovoBackup(f);
+      setVerifyResult(result);
+      if (result.ok) toast.success("Backup verified");
+      else toast.error("Backup verification failed");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Verify failed");
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  const doVerifyLast = async () => {
+    if (!lastBackupBlob || !lastBackup) {
+      verifyInputRef.current?.click();
+      return;
+    }
+    const f = new File([lastBackupBlob], lastBackup.fileName, {
+      type: "application/zip",
+    });
+    await runVerify(f);
+  };
+
 
   const doRestore = () => {
     if (!guard()) return;
@@ -356,9 +408,109 @@ function Sync() {
             <Button variant="utility" size="sm" onClick={doRestore} disabled={!canManage}>
               {t("Restore Backup")}
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={doVerifyLast}
+              disabled={verifying || !canManage}
+              title="Verify an .erpovo backup file"
+            >
+              {verifying ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <ShieldCheck className="w-4 h-4" />
+              )}
+              Verify Backup
+            </Button>
+            <input
+              ref={verifyInputRef}
+              type="file"
+              accept=".erpovo,.zip,application/zip"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) void runVerify(f);
+                e.target.value = "";
+              }}
+            />
           </div>
+
+          {lastBackup && (
+            <div className="mt-4 p-3 border rounded-md bg-muted/30 text-xs space-y-2">
+              <div className="font-semibold text-sm">Last backup summary</div>
+              <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+                <div className="text-muted-foreground">File</div>
+                <div className="font-mono truncate" title={lastBackup.fileName}>
+                  {lastBackup.fileName}
+                </div>
+                <div className="text-muted-foreground">Size</div>
+                <div>{(lastBackup.size / 1024).toFixed(1)} KB</div>
+                <div className="text-muted-foreground">Total records</div>
+                <div>{lastBackup.manifest.total_records}</div>
+                <div className="text-muted-foreground">Included tables</div>
+                <div>{lastBackup.manifest.included_tables.length}</div>
+                <div className="text-muted-foreground">SHA-256 (data.json)</div>
+                <div className="font-mono break-all">{lastBackup.manifest.data_sha256}</div>
+              </div>
+              <details>
+                <summary className="cursor-pointer text-muted-foreground">
+                  Included modules ({lastBackup.manifest.tables.filter((m) => m.rows > 0).length})
+                </summary>
+                <ul className="mt-1 grid grid-cols-2 gap-x-3">
+                  {lastBackup.manifest.tables
+                    .filter((m) => m.rows > 0)
+                    .map((m) => (
+                      <li key={m.name} className="flex justify-between gap-2">
+                        <span className="truncate">{m.name}</span>
+                        <span className="text-muted-foreground">{m.rows}</span>
+                      </li>
+                    ))}
+                </ul>
+              </details>
+              <div className="text-success">
+                ✓ Secrets, API keys, auth tokens and PERF data excluded
+              </div>
+              <div className="text-muted-foreground">
+                Excluded: {EXCLUDED_FROM_BACKUP.join(", ")}
+              </div>
+            </div>
+          )}
+
+          {verifyResult && (
+            <div className="mt-3 p-3 border rounded-md text-xs space-y-1">
+              <div className="font-semibold text-sm flex items-center gap-2">
+                {verifyResult.ok ? (
+                  <CheckCircle2 className="w-4 h-4 text-success" />
+                ) : (
+                  <XCircle className="w-4 h-4 text-destructive" />
+                )}
+                Verify Backup: {verifyResult.ok ? "PASS" : "FAIL"}
+              </div>
+              <ul className="space-y-0.5">
+                {verifyResult.checks.map((c, i) => (
+                  <li key={i} className="flex items-start gap-2">
+                    <span className={c.ok ? "text-success" : "text-destructive"}>
+                      {c.ok ? "✓" : "✗"}
+                    </span>
+                    <span>
+                      {c.label}
+                      {c.detail ? (
+                        <span className="text-muted-foreground"> — {c.detail}</span>
+                      ) : null}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              {verifyResult.totalRecords != null && (
+                <div className="text-muted-foreground">
+                  Total records: {verifyResult.totalRecords}
+                </div>
+              )}
+            </div>
+          )}
         </section>
       </div>
+
 
       {/* Devices */}
       <section className="bg-card border rounded-md p-5">
