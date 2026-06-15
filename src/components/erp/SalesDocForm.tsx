@@ -1034,7 +1034,17 @@ export function SalesDocForm({
       toast.success(action === "download" ? t("Download PDF") : t("Print Invoice"));
     } catch (e) {
       console.error(e);
-      toast.error(t("PDF generation failed"));
+      // savedInvoiceId is intentionally NOT cleared — retry reuses the same saved sale.
+      toast.error(t("PDF generation failed"), {
+        description: t("Could not generate the PDF. You can retry without re-saving the invoice."),
+        action: {
+          label: t("Retry"),
+          onClick: () => {
+            void runWithInvoicePdf(fn, action);
+          },
+        },
+      });
+
     } finally {
       setPdfBusy(false);
       setPdfAction(null);
