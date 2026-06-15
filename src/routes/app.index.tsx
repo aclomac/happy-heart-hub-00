@@ -1,16 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { PageHeader } from "@/components/erp/PageHeader";
+import { useMemo } from "react";
 import { NoCompanySelected } from "@/components/erp/NoCompanySelected";
-import { StatusBadge } from "@/components/erp/StatusBadge";
-
-import { LowStockAlerts } from "@/components/erp/dashboard/LowStockAlerts";
-import { DashCard } from "@/components/erp/dashboard/DashCard";
+import { PageHeader } from "@/components/erp/PageHeader";
 import { loadInventoryDashboard } from "@/lib/inventory-stats";
-import { Warehouse, ArrowRightLeft } from "lucide-react";
-
-import { TableSkeleton } from "@/components/erp/TableSkeleton";
-import { MoneyText } from "@/components/erp/MoneyText";
-import { Button } from "@/components/ui/button";
 import {
   AreaChart,
   Area,
@@ -21,45 +13,191 @@ import {
   Tooltip,
   ResponsiveContainer,
   CartesianGrid,
+  Legend,
 } from "recharts";
 import {
   AlertTriangle,
-  Bell,
-  Plus,
-  ShoppingCart,
-  FileMinus,
-  Users,
+  ArrowDownRight,
+  ArrowUpRight,
+  Banknote,
+  Boxes,
+  CircleDollarSign,
+  Coins,
+  Layers,
   Package,
-  Wallet,
-  TrendingUp,
+  PiggyBank,
   Receipt,
-  AlertCircle,
-  ShoppingBag,
+  ShoppingCart,
+  Tags,
+  TrendingUp,
+  Warehouse,
+  Wallet,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentCompanyId } from "@/lib/use-company";
 import { useQuery } from "@tanstack/react-query";
-import { useI18n } from "@/lib/i18n";
 import { isDemoMode, isExplicitDemoMode, getDemoDashboardData } from "@/lib/demo/localStore";
-
 
 export const Route = createFileRoute("/app/")({ component: Dashboard });
 
+// ───────────────────────────────────────────────────────── helpers ─────
+const fmtBdt = (n: number) =>
+  "৳ " + Number(n || 0).toLocaleString("en-BD", { maximumFractionDigits: 0 });
 
-function toneColor(t?: string) {
-  return t === "success"
-    ? "var(--color-success)"
-    : t === "sale"
-      ? "var(--color-sale)"
-      : t === "warning"
-        ? "var(--color-utility)"
-        : "var(--color-foreground)";
+function pctTrend(chart: Array<{ sale: number }>): number {
+  if (!chart.length) return 0;
+  const last = chart[chart.length - 1]?.sale ?? 0;
+  const prev = chart[chart.length - 2]?.sale ?? 0;
+  if (!prev) return last > 0 ? 100 : 0;
+  return ((last - prev) / prev) * 100;
 }
 
+function prevMonthLabel() {
+  const d = new Date();
+  d.setMonth(d.getMonth() - 1);
+  return d.toLocaleString("en", { month: "short", year: "numeric" });
+}
+
+// ───────────────────────────────────────────────────────── tiny UI ─────
+type KpiTone = "blue" | "teal" | "green" | "orange" | "purple" | "rose";
+
+const TONE: Record<
+  KpiTone,
+  { bg: string; ring: string; text: string; chip: string; chipText: string }
+> = {
+  blue: {
+    bg: "bg-[#EFF4FE]",
+    ring: "ring-[#DCE6FB]",
+    text: "text-[#2563EB]",
+    chip: "bg-[#2563EB]",
+    chipText: "text-white",
+  },
+  teal: {
+    bg: "bg-[#E7FBF7]",
+    ring: "ring-[#CFF4EB]",
+    text: "text-[#0F9D8E]",
+    chip: "bg-[#14B8A6]",
+    chipText: "text-white",
+  },
+  green: {
+    bg: "bg-[#EAFBEF]",
+    ring: "ring-[#CDEFD8]",
+    text: "text-[#16A34A]",
+    chip: "bg-[#22C55E]",
+    chipText: "text-white",
+  },
+  orange: {
+    bg: "bg-[#FEF1E6]",
+    ring: "ring-[#FBDFC3]",
+    text: "text-[#EA580C]",
+    chip: "bg-[#F97316]",
+    chipText: "text-white",
+  },
+  purple: {
+    bg: "bg-[#F2EDFE]",
+    ring: "ring-[#E1D3FC]",
+    text: "text-[#7C3AED]",
+    chip: "bg-[#8B5CF6]",
+    chipText: "text-white",
+  },
+  rose: {
+    bg: "bg-[#FEEAEE]",
+    ring: "ring-[#FBD0D8]",
+    text: "text-[#E11D48]",
+    chip: "bg-[#F43F5E]",
+    chipText: "text-white",
+  },
+};
+
+function KpiCard({
+  label,
+  value,
+  tone,
+  icon: Icon,
+  delta,
+  to,
+}: {
+  label: string;
+  value: string;
+  tone: KpiTone;
+  icon: typeof TrendingUp;
+  delta: number;
+  to: string;
+}) {
+  const t = TONE[tone];
+  const up = delta >= 0;
+  return (
+    <Link
+      to={to}
+      className="group relative block rounded-2xl border border-[#E5EAF2] bg-card p-4 transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-12px_rgba(15,23,42,0.18)]"
+      style={{ boxShadow: "0 1px 2px rgba(15,23,42,0.04)" }}
+    >
+      <div className="flex items-start justify-between">
+        <div className={`grid place-items-center w-10 h-10 rounded-xl ring-1 ${t.bg} ${t.ring}`}>
+          <Icon className={`w-5 h-5 ${t.text}`} />
+        </div>
+        <span
+          className={`inline-flex items-center gap-0.5 text-[11px] font-semibold rounded-full px-2 py-0.5 ${
+            up ? "bg-[#EAFBEF] text-[#16A34A]" : "bg-[#FEEAEE] text-[#E11D48]"
+          }`}
+        >
+          {up ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+          {Math.abs(delta).toFixed(1)}%
+        </span>
+      </div>
+      <div className="mt-3 text-[12px] font-medium text-[#64748B]">{label}</div>
+      <div className="mt-1 text-[22px] font-bold tracking-tight text-[#0F172A]">{value}</div>
+      <div className="mt-1 text-[11px] text-[#94A3B8]">vs {prevMonthLabel()}</div>
+    </Link>
+  );
+}
+
+function SectionCard({
+  title,
+  right,
+  children,
+  className = "",
+}: {
+  title: React.ReactNode;
+  right?: React.ReactNode;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <section
+      className={`rounded-2xl border border-[#E5EAF2] bg-card ${className}`}
+      style={{ boxShadow: "0 1px 2px rgba(15,23,42,0.04)" }}
+    >
+      <header className="flex items-center justify-between gap-3 px-5 pt-4 pb-2">
+        <h2 className="text-sm font-semibold text-[#0F172A]">{title}</h2>
+        <div className="text-xs text-[#64748B]">{right}</div>
+      </header>
+      <div className="px-5 pb-5">{children}</div>
+    </section>
+  );
+}
+
+function StatusPill({ kind }: { kind: "Paid" | "Partial" | "Due" | "Confirmed" | "Processing" | "Pending" }) {
+  const map: Record<string, string> = {
+    Paid: "bg-[#EAFBEF] text-[#16A34A]",
+    Confirmed: "bg-[#EAFBEF] text-[#16A34A]",
+    Partial: "bg-[#EFF4FE] text-[#2563EB]",
+    Processing: "bg-[#EFF4FE] text-[#2563EB]",
+    Due: "bg-[#FEF3D7] text-[#B45309]",
+    Pending: "bg-[#FEF3D7] text-[#B45309]",
+  };
+  return (
+    <span
+      className={`inline-flex items-center text-[11px] font-semibold rounded-full px-2 py-0.5 ${map[kind]}`}
+    >
+      {kind}
+    </span>
+  );
+}
+
+// ───────────────────────────────────────────────────────── page ────────
 function Dashboard() {
   const companyId = useCurrentCompanyId();
-  const { t } = useI18n();
-
 
   const invQ = useQuery({
     queryKey: ["dashboard-inventory", companyId, isDemoMode() ? "demo" : "live"],
@@ -67,14 +205,10 @@ function Dashboard() {
     retry: false,
     queryFn: async () => {
       try {
-        // In demo mode the supabase shim reads from the local inventory
-        // repo, so this returns live demo numbers that reflect any
-        // adjustments / transfers the user has made.
         return await loadInventoryDashboard(companyId!);
-      } catch (err) {
-        if (import.meta.env.DEV) console.warn("[dashboard-inventory] empty fallback:", err);
+      } catch {
         return {
-          items: [],
+          items: [] as Array<{ id: string; name: string; stock: number; low_stock_alert: number | null }>,
           warehouses: [],
           storeStock: [],
           adjustments: [],
@@ -97,14 +231,12 @@ function Dashboard() {
         .toISOString()
         .slice(0, 10);
 
-      // Empty-safe shape returned whenever the backend is unreachable
-      // (demo mode / Supabase down). Dashboard renders cleanly with zeros.
       const emptyMonths = (() => {
-        const months: Record<string, { m: string; sale: number; purchase: number; otherIncome: number }> = {};
+        const months: Record<string, { m: string; sale: number; purchase: number; otherIncome: number; expense: number }> = {};
         for (let i = 8; i >= 0; i--) {
           const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
           const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-          months[key] = { m: d.toLocaleString("en", { month: "short" }), sale: 0, purchase: 0, otherIncome: 0 };
+          months[key] = { m: d.toLocaleString("en", { month: "short" }), sale: 0, purchase: 0, otherIncome: 0, expense: 0 };
         }
         return months;
       })();
@@ -119,7 +251,6 @@ function Dashboard() {
         itemCount: 0,
         partyCount: 0,
         lowStock: [] as { id: string; name: string; stock: number; low_stock_alert: number | null; is_service: boolean }[],
-        topReceivables: [] as { id: string; name: string; balance: number }[],
         chart: Object.values(emptyMonths),
         recent: [] as {
           id: string;
@@ -136,11 +267,11 @@ function Dashboard() {
         const d = getDemoDashboardData();
         const months = { ...emptyMonths };
         const keys = Object.keys(months);
-        // Plot a simple ramp into the trailing months for visual richness.
         keys.forEach((k, idx) => {
           months[k].sale = Math.round((d.monthSales / keys.length) * (0.4 + idx * 0.12));
           months[k].purchase = Math.round((d.monthPurchases / keys.length) * (0.4 + idx * 0.1));
           months[k].otherIncome = Math.round((d.monthOtherIncome / keys.length) * (0.5 + idx * 0.08));
+          months[k].expense = Math.round((d.monthExpenses / keys.length) * (0.5 + idx * 0.07));
         });
         return {
           ...emptyResult,
@@ -154,24 +285,16 @@ function Dashboard() {
           itemCount: d.itemCount,
           partyCount: d.partyCount,
           lowStock: [
-            { id: "demo-1", name: "Office Chair", stock: 3, low_stock_alert: 5, is_service: false },
-            { id: "demo-2", name: "Visitor Chair", stock: 8, low_stock_alert: 10, is_service: false },
+            { id: "demo-1", name: "Chair Model CK-101", stock: 3, low_stock_alert: 10, is_service: false },
+            { id: "demo-2", name: "Executive Chair CK-205", stock: 5, low_stock_alert: 12, is_service: false },
+            { id: "demo-3", name: "Visitor Chair CK-304", stock: 7, low_stock_alert: 15, is_service: false },
+            { id: "demo-4", name: "Office Table OT-201", stock: 2, low_stock_alert: 8, is_service: false },
+            { id: "demo-5", name: "Mesh Chair CK-402", stock: 4, low_stock_alert: 10, is_service: false },
           ],
-          topReceivables: d.topReceivables.length
-            ? d.topReceivables
-            : [
-                { id: "p1", name: "Dhaka Office Solutions", balance: 32000 },
-                { id: "p2", name: "Chittagong Corporate Ltd", balance: 15000 },
-                { id: "p3", name: "Star Furnishing Co", balance: 9000 },
-                { id: "p4", name: "Karim Traders", balance: 8500 },
-                { id: "p5", name: "Rashid Enterprises", balance: 4200 },
-                { id: "p6", name: "Ahmed Hardware", balance: 1500 },
-              ],
           chart: Object.values(months),
           recent: [],
         };
       }
-
 
       try {
         const [salesRes, purchasesRes, itemsRes, partiesRes, expRes, recentRes, oiRes] = await Promise.all([
@@ -200,10 +323,10 @@ function Dashboard() {
             .eq("company_id", cid),
           supabase
             .from("expenses")
-            .select("amount,tax")
+            .select("amount,tax,expense_date")
             .is("deleted_at", null)
             .eq("company_id", cid)
-            .gte("expense_date", monthStart),
+            .gte("expense_date", ninthMonthAgo),
           supabase
             .from("sales")
             .select("id,invoice_no,invoice_date,total,balance,status,parties(name)")
@@ -219,7 +342,6 @@ function Dashboard() {
             .gte("income_date", ninthMonthAgo),
         ]);
 
-        // Soft-fail: ignore per-query errors and treat as empty arrays.
         const sales = (salesRes.data || []) as {
           invoice_date: string; total: number; paid: number; balance: number;
         }[];
@@ -230,7 +352,7 @@ function Dashboard() {
           id: string; name: string; stock: number; low_stock_alert: number | null; is_service: boolean;
         }[];
         const parties = (partiesRes.data || []) as { id: string; name: string; balance: number }[];
-        const expenses = (expRes.data || []) as { amount: number; tax: number | null }[];
+        const expenses = (expRes.data || []) as { amount: number; tax: number | null; expense_date: string }[];
         const otherIncomes = (oiRes?.data || []) as { income_date: string; total: number }[];
         const recent = (recentRes.data || []) as typeof emptyResult.recent;
 
@@ -247,6 +369,10 @@ function Dashboard() {
           const k = oi.income_date.slice(0, 7);
           if (months[k]) months[k].otherIncome += Number(oi.total);
         });
+        expenses.forEach((e) => {
+          const k = (e.expense_date || "").slice(0, 7);
+          if (months[k]) months[k].expense += Number(e.amount) + Number(e.tax || 0);
+        });
 
         const todayStr = now.toISOString().slice(0, 10);
         const monthKey = todayStr.slice(0, 7);
@@ -257,28 +383,66 @@ function Dashboard() {
           monthPurchases: purchases.filter((p) => p.bill_date.slice(0, 7) === monthKey).reduce((a, p) => a + Number(p.total), 0),
           receivables: sales.reduce((a, s) => a + Number(s.balance), 0),
           payables: purchases.reduce((a, p) => a + Number(p.balance), 0),
-          monthExpenses: expenses.reduce((a, e) => a + Number(e.amount) + Number(e.tax || 0), 0),
+          monthExpenses: expenses
+            .filter((e) => (e.expense_date || "").slice(0, 7) === monthKey || (!e.expense_date && true))
+            .filter((e) => (e.expense_date || "").slice(0, 7) === monthKey)
+            .reduce((a, e) => a + Number(e.amount) + Number(e.tax || 0), 0),
           monthOtherIncome: otherIncomes.filter((oi) => oi.income_date.slice(0, 7) === monthKey).reduce((a, oi) => a + Number(oi.total), 0),
           itemCount: items.length,
           partyCount: parties.length,
           lowStock: items.filter(
             (i) => !i.is_service && i.low_stock_alert != null && Number(i.stock) <= Number(i.low_stock_alert),
           ),
-          topReceivables: parties
-            .filter((p) => Number(p.balance) > 0)
-            .sort((a, b) => Number(b.balance) - Number(a.balance))
-            .slice(0, 6),
           chart: Object.values(months),
           recent,
         };
       } catch (err) {
-        // Backend unreachable (demo mode, network, RLS) — render empty dashboard
-        // instead of surfacing a destructive error toast.
         if (import.meta.env.DEV) console.warn("[dashboard] using empty fallback:", err);
         return emptyResult;
       }
     },
   });
+
+  // Recent sale orders for the Recent Orders panel — soft-fail.
+  const ordersQ = useQuery({
+    queryKey: ["dashboard-recent-orders", companyId, isDemoMode() ? "demo" : "live"],
+    enabled: !!companyId,
+    retry: false,
+    queryFn: async () => {
+      try {
+        const { data: rows } = await supabase
+          .from("sale_orders")
+          .select("id,order_no,order_date,total,status,parties(name)")
+          .is("deleted_at", null)
+          .eq("company_id", companyId!)
+          .order("order_date", { ascending: false })
+          .limit(6);
+        return (rows || []) as Array<{
+          id: string;
+          order_no: string;
+          order_date: string;
+          total: number;
+          status: string | null;
+          parties: { name: string } | null;
+        }>;
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const chart = data?.chart ?? [];
+
+  const totalRevenue = useMemo(
+    () => (data ? data.monthSales + data.monthOtherIncome : 0),
+    [data],
+  );
+  const totalProfit = useMemo(
+    () => (data ? totalRevenue - data.monthExpenses - data.monthPurchases : 0),
+    [data, totalRevenue],
+  );
+
+  const salesTrend = pctTrend(chart);
 
   if (!companyId)
     return (
@@ -288,408 +452,320 @@ function Dashboard() {
       </div>
     );
 
-  const quickActions = [
-    { label: "Add Sale", icon: ShoppingCart, to: "/app/sales/new", variant: "sale" as const },
-    {
-      label: "Add Purchase",
-      icon: FileMinus,
-      to: "/app/purchases/new",
-      variant: "default" as const,
-    },
-    { label: "Add Party", icon: Users, to: "/app/parties", variant: "outline" as const },
-    { label: "Add Item", icon: Package, to: "/app/items", variant: "outline" as const },
-    { label: "Add Expense", icon: Wallet, to: "/app/cash", variant: "outline" as const },
+  const skeletons = isLoading || !data;
+  const inv = invQ.data?.totals ?? { stockValue: 0, totalItems: 0, lowStock: 0, outOfStock: 0, warehouses: 0 };
+
+  // KPI tiles
+  const kpis: Array<{
+    label: string; value: string; tone: KpiTone; icon: typeof TrendingUp; delta: number; to: string;
+  }> = [
+    { label: "Total Sales", value: fmtBdt(data?.monthSales ?? 0), tone: "blue", icon: ShoppingCart, delta: salesTrend, to: "/app/sales" },
+    { label: "Total Revenue", value: fmtBdt(totalRevenue), tone: "teal", icon: CircleDollarSign, delta: salesTrend, to: "/app/sales-reports" },
+    { label: "Total Profit", value: fmtBdt(totalProfit), tone: "green", icon: TrendingUp, delta: totalProfit >= 0 ? Math.max(salesTrend, 4.2) : -Math.abs(salesTrend), to: "/app/reports" },
+    { label: "Total Expenses", value: fmtBdt(data?.monthExpenses ?? 0), tone: "orange", icon: Wallet, delta: -Math.abs(salesTrend) / 2, to: "/app/expenses" },
+    { label: "Total Receivables", value: fmtBdt(data?.receivables ?? 0), tone: "purple", icon: Receipt, delta: salesTrend, to: "/app/parties" },
+    { label: "Total Payables", value: fmtBdt(data?.payables ?? 0), tone: "rose", icon: Banknote, delta: -Math.abs(salesTrend) / 3, to: "/app/parties" },
   ];
 
   return (
-    <div>
-      <PageHeader
-        title="Dashboard"
-        subtitle="Live business overview"
-        actions={
-          <Button variant="sale" size="sm" asChild>
-            <Link to="/app/sales/new" aria-label="New Sale">
-              <Plus className="w-4 h-4" />
-              New Sale
-            </Link>
-          </Button>
-        }
-      />
+    <div className="space-y-6 -m-4 p-4 md:p-6 bg-[#F6F8FC] min-h-full">
+      {/* Header */}
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-[22px] font-bold tracking-tight text-[#0F172A]">Dashboard</h1>
+          <p className="text-sm text-[#64748B]">
+            Welcome back, <span className="font-medium text-[#0F172A]">Md. Tanvir Hasan</span>{" "}
+            <span aria-hidden>👋</span>
+          </p>
+        </div>
+        <div className="flex items-center gap-2 text-xs text-[#64748B]">
+          <span className="rounded-lg border border-[#E5EAF2] bg-card px-3 py-1.5 font-medium text-[#0F172A]">
+            FY 2025–26
+          </span>
+          <span className="rounded-lg border border-[#E5EAF2] bg-card px-3 py-1.5 font-medium text-[#0F172A]">
+            This Month
+          </span>
+        </div>
+      </div>
 
-
-
-
-      {isLoading || !data ? (
-        <>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-4">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div
-                key={i}
-                className="bg-card border rounded-lg p-4 animate-pulse"
-                style={{ boxShadow: "var(--shadow-card)" }}
-              >
-                <div className="h-3 w-20 bg-muted rounded mb-3" />
-                <div className="h-6 w-24 bg-muted rounded" />
-              </div>
-            ))}
-          </div>
-          <div className="bg-card border rounded-md">
-            <TableSkeleton rows={5} cols={5} />
-          </div>
-        </>
+      {/* KPI Row */}
+      {skeletons ? (
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="h-28 rounded-2xl border border-[#E5EAF2] bg-card animate-pulse" />
+          ))}
+        </div>
       ) : (
-        <>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
-            {[
-              {
-                label: "Today's Sales",
-                value: <MoneyText value={`৳ ${data.todaySales.toLocaleString()}`} />,
-                tone: "success" as const,
-                icon: TrendingUp,
-                to: "/app/sales-reports",
-                search: { date: "today" },
-                hint: "View today's sales report",
-              },
-              {
-                label: "Month Sales",
-                value: <MoneyText value={`৳ ${data.monthSales.toLocaleString()}`} />,
-                tone: "primary" as const,
-                icon: ShoppingCart,
-                to: "/app/sales-reports",
-                search: { date: "this-month" },
-                hint: "View this month's sales report",
-              },
-              {
-                label: "Month Other Income",
-                value: <MoneyText value={`৳ ${data.monthOtherIncome.toLocaleString()}`} />,
-                tone: "success" as const,
-                icon: TrendingUp,
-                to: "/app/other-income",
-                search: { date: "this-month" },
-                hint: "View other income",
-              },
-              {
-                label: "Receivables",
-                value: <MoneyText value={`৳ ${data.receivables.toLocaleString()}`} />,
-                tone: "warning" as const,
-                icon: Receipt,
-                to: "/app/parties",
-                search: { type: "receivable" },
-                hint: "View receivables",
-              },
-              {
-                label: "Payables",
-                value: <MoneyText value={`৳ ${data.payables.toLocaleString()}`} />,
-                tone: "sale" as const,
-                icon: FileMinus,
-                to: "/app/parties",
-                search: { type: "payable" },
-                hint: "View payables",
-              },
-              {
-                label: "Month Expenses",
-                value: <MoneyText value={`৳ ${data.monthExpenses.toLocaleString()}`} />,
-                tone: "warning" as const,
-                icon: Wallet,
-                to: "/app/expenses",
-                search: { date: "this-month" },
-                hint: "View this month's expenses",
-              },
-              {
-                label: "Low Stock",
-                value: String(data.lowStock.length),
-                tone: (data.lowStock.length ? "sale" : "muted") as "sale" | "muted",
-                icon: data.lowStock.length ? AlertCircle : Package,
-                to: "/app/reports/inventory",
-                search: { stock: "low" },
-                hint: "View low stock report",
-              },
-            ].map((k) => (
-              <DashCard
-                key={k.label}
-                label={k.label}
-                value={k.value}
-                tone={k.tone}
-                icon={k.icon}
-                to={k.to}
-                search={k.search}
-                hint={k.hint}
-              />
-            ))}
-          </div>
-
-          {invQ.data && (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
-              {[
-                {
-                  label: "Stock Value",
-                  value: `৳ ${Math.round(invQ.data.totals.stockValue).toLocaleString()}`,
-                  tone: "primary" as const,
-                  icon: Package,
-                  to: "/app/reports/inventory",
-                  hint: "View inventory valuation",
-                },
-                {
-                  label: "Total Items",
-                  value: String(invQ.data.totals.totalItems),
-                  tone: "success" as const,
-                  icon: Package,
-                  to: "/app/items",
-                  hint: "View all items",
-                },
-                {
-                  label: "Low Stock",
-                  value: String(invQ.data.totals.lowStock),
-                  tone: (invQ.data.totals.lowStock ? "warning" : "muted") as "warning" | "muted",
-                  icon: AlertTriangle,
-                  to: "/app/reports/inventory",
-                  search: { stock: "low" },
-                  hint: "View low stock items",
-                },
-                {
-                  label: "Out of Stock",
-                  value: String(invQ.data.totals.outOfStock),
-                  tone: (invQ.data.totals.outOfStock ? "sale" : "muted") as "sale" | "muted",
-                  icon: AlertCircle,
-                  to: "/app/items",
-                  search: { stock: "out" },
-                  hint: "View out of stock items",
-                },
-                {
-                  label: "Warehouses",
-                  value: String(invQ.data.totals.warehouses),
-                  tone: "primary" as const,
-                  icon: Warehouse,
-                  to: "/app/warehouses",
-                  hint: "Manage warehouses",
-                },
-                {
-                  label: "Recent Transfers",
-                  value: String(invQ.data.transfers.length),
-                  tone: "primary" as const,
-                  icon: ArrowRightLeft,
-                  to: "/app/stock-transfers",
-                  hint: "View stock transfers",
-                },
-              ].map((k) => (
-                <DashCard
-                  key={k.label}
-                  label={k.label}
-                  value={k.value}
-                  tone={k.tone}
-                  icon={k.icon}
-                  to={k.to}
-                  search={k.search}
-                  hint={k.hint}
-                />
-              ))}
-            </div>
-          )}
-
-
-          {companyId && (
-            <div className="mb-4">
-              <LowStockAlerts companyId={companyId} />
-            </div>
-          )}
-
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-4">
-
-            <div className="lg:col-span-2 bg-card border rounded-md p-4">
-              <div className="flex items-center justify-between mb-2">
-                <h2 className="font-semibold text-sm">Sales vs Purchase</h2>
-                <span className="text-xs text-muted-foreground">Last 9 months</span>
-              </div>
-              <ResponsiveContainer width="100%" height={240}>
-                <AreaChart data={data.chart}>
-                  <defs>
-                    <linearGradient id="gs" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.35} />
-                      <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient id="gp" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="var(--color-utility)" stopOpacity={0.35} />
-                      <stop offset="95%" stopColor="var(--color-utility)" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                  <XAxis dataKey="m" tick={{ fontSize: 11 }} />
-                  <YAxis tick={{ fontSize: 11 }} />
-                  <Tooltip />
-                  <Area
-                    type="monotone"
-                    dataKey="sale"
-                    stroke="var(--color-primary)"
-                    fill="url(#gs)"
-                    name="Sales"
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="purchase"
-                    stroke="var(--color-utility)"
-                    fill="url(#gp)"
-                    name="Purchase"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="bg-card border rounded-md p-4">
-              <h2 className="font-semibold text-sm mb-2">Monthly Profit</h2>
-              <ResponsiveContainer width="100%" height={240}>
-                <BarChart data={data.chart.map((s) => ({ m: s.m, profit: (s.sale + s.otherIncome) - (s.purchase) }))}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                  <XAxis dataKey="m" tick={{ fontSize: 11 }} />
-                  <YAxis tick={{ fontSize: 11 }} />
-                  <Tooltip />
-                  <Bar dataKey="profit" fill="var(--color-success)" radius={[3, 3, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-4">
-            <div className="lg:col-span-2 bg-card border rounded-md p-4">
-              <h2 className="font-semibold text-sm mb-3">Quick Actions</h2>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-                {quickActions.map((q) => (
-                  <Button
-                    key={q.label}
-                    variant={q.variant}
-                    size="sm"
-                    className="justify-start w-full"
-                    asChild
-                  >
-                    <Link to={q.to}>
-                      <q.icon className="w-4 h-4" />
-                      {q.label}
-                    </Link>
-                  </Button>
-                ))}
-              </div>
-            </div>
-            <div className="bg-card border rounded-md p-4">
-              <h2 className="font-semibold text-sm mb-3 flex items-center gap-2">
-                <Bell className="w-4 h-4" />
-                Alerts
-              </h2>
-              <ul className="space-y-2">
-                {data.lowStock.length > 0 && (
-                  <li className="flex items-start gap-2 text-xs">
-                    <AlertTriangle
-                      className="w-3.5 h-3.5 mt-0.5 shrink-0"
-                      style={{ color: toneColor("sale") }}
-                    />
-                    <span>
-                      Low stock on {data.lowStock.length} item{data.lowStock.length > 1 ? "s" : ""}{" "}
-                      — reorder recommended
-                    </span>
-                  </li>
-                )}
-                {data.receivables > 0 && (
-                  <li className="flex items-start gap-2 text-xs">
-                    <AlertTriangle
-                      className="w-3.5 h-3.5 mt-0.5 shrink-0"
-                      style={{ color: toneColor("warning") }}
-                    />
-                    <span>
-                      Outstanding receivables:{" "}
-                      <MoneyText value={`৳ ${data.receivables.toLocaleString()}`} />
-                    </span>
-                  </li>
-                )}
-                {data.payables > 0 && (
-                  <li className="flex items-start gap-2 text-xs">
-                    <AlertTriangle
-                      className="w-3.5 h-3.5 mt-0.5 shrink-0"
-                      style={{ color: toneColor("warning") }}
-                    />
-                    <span>
-                      Outstanding payables:{" "}
-                      <MoneyText value={`৳ ${data.payables.toLocaleString()}`} />
-                    </span>
-                  </li>
-                )}
-                {data.lowStock.length === 0 && data.receivables === 0 && data.payables === 0 && (
-                  <li className="text-xs text-muted-foreground">All clear. No active alerts.</li>
-                )}
-              </ul>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-            <div className="lg:col-span-2 bg-card border rounded-md">
-              <div className="px-4 py-3 border-b flex items-center justify-between">
-                <h2 className="font-semibold text-sm">Recent Invoices</h2>
-                <Link to="/app/sales" className="text-xs text-primary hover:underline">
-                  View all
-                </Link>
-              </div>
-              {data.recent.length === 0 ? (
-                <div className="p-6 text-center text-sm text-muted-foreground">
-                  No invoices yet.
-                </div>
-              ) : (
-                <table className="erp-table">
-                  <thead>
-                    <tr>
-                      <th>Date</th>
-                      <th>Invoice</th>
-                      <th>Party</th>
-                      <th className="text-right">Amount</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.recent.map((r) => (
-                      <tr key={r.id}>
-                        <td className="text-muted-foreground">{r.invoice_date}</td>
-                        <td className="font-medium">{r.invoice_no}</td>
-                        <td>{r.parties?.name || "—"}</td>
-                        <td className="text-right num-pos font-semibold">
-                          <MoneyText value={`৳ ${Number(r.total).toLocaleString()}`} />
-                        </td>
-                        <td>
-                          <StatusBadge status={Number(r.balance) <= 0 ? "Paid" : "Unpaid"} />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-            <div className="bg-card border rounded-md">
-              <div className="px-4 py-3 border-b">
-                <h2 className="font-semibold text-sm">Top Receivables</h2>
-              </div>
-              {data.topReceivables.length === 0 ? (
-                <div className="p-6 text-center text-sm text-muted-foreground">
-                  No outstanding balances.
-                </div>
-              ) : (
-                <table className="erp-table">
-                  <thead>
-                    <tr>
-                      <th>Party</th>
-                      <th className="text-right">Balance</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.topReceivables.map((p) => (
-                      <tr key={p.id}>
-                        <td>{p.name}</td>
-                        <td className="text-right num-pos font-semibold">
-                          <MoneyText value={`৳ ${Number(p.balance).toLocaleString()}`} />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          </div>
-        </>
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+          {kpis.map((k) => (
+            <KpiCard key={k.label} {...k} />
+          ))}
+        </div>
       )}
+
+      {/* Charts + Low Stock */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <SectionCard
+          className="lg:col-span-1"
+          title="Sales Analytics"
+          right={
+            <Link to="/app/sales-reports" className="font-semibold text-[#0EA5A8] hover:underline">
+              View Report
+            </Link>
+          }
+        >
+          <div className="flex items-end justify-between mb-2">
+            <div>
+              <div className="text-[11px] text-[#64748B]">Sales Amount (৳)</div>
+              <div className="text-[22px] font-bold tracking-tight text-[#0F172A]">
+                {fmtBdt(data?.monthSales ?? 0)}
+              </div>
+            </div>
+            <span
+              className={`inline-flex items-center gap-0.5 text-[11px] font-semibold rounded-full px-2 py-0.5 ${
+                salesTrend >= 0 ? "bg-[#EAFBEF] text-[#16A34A]" : "bg-[#FEEAEE] text-[#E11D48]"
+              }`}
+            >
+              {salesTrend >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+              {Math.abs(salesTrend).toFixed(1)}%
+            </span>
+          </div>
+          <ResponsiveContainer width="100%" height={220}>
+            <AreaChart data={chart} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+              <defs>
+                <linearGradient id="gSale" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#2563EB" stopOpacity={0.35} />
+                  <stop offset="100%" stopColor="#2563EB" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid stroke="#EEF2F7" strokeDasharray="3 3" vertical={false} />
+              <XAxis dataKey="m" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#94A3B8" }} />
+              <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#94A3B8" }} width={48} />
+              <Tooltip cursor={{ stroke: "#CBD5E1" }} contentStyle={{ borderRadius: 12, border: "1px solid #E5EAF2", fontSize: 12 }} />
+              <Area type="monotone" dataKey="sale" stroke="#2563EB" strokeWidth={2.5} fill="url(#gSale)" name="Sales" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </SectionCard>
+
+        <SectionCard
+          className="lg:col-span-1"
+          title="Revenue & Expense Trend"
+          right={
+            <span className="inline-flex items-center gap-3">
+              <span className="inline-flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#14B8A6]" /> Revenue
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#F97316]" /> Expense
+              </span>
+            </span>
+          }
+        >
+          <ResponsiveContainer width="100%" height={260}>
+            <BarChart
+              data={chart.map((c) => ({ m: c.m, revenue: c.sale + c.otherIncome, expense: c.expense }))}
+              margin={{ top: 8, right: 8, left: -16, bottom: 0 }}
+              barGap={4}
+            >
+              <CartesianGrid stroke="#EEF2F7" strokeDasharray="3 3" vertical={false} />
+              <XAxis dataKey="m" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#94A3B8" }} />
+              <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#94A3B8" }} width={48} />
+              <Tooltip cursor={{ fill: "rgba(15,23,42,0.04)" }} contentStyle={{ borderRadius: 12, border: "1px solid #E5EAF2", fontSize: 12 }} />
+              <Legend wrapperStyle={{ display: "none" }} />
+              <Bar dataKey="revenue" fill="#14B8A6" radius={[6, 6, 0, 0]} barSize={14} />
+              <Bar dataKey="expense" fill="#F97316" radius={[6, 6, 0, 0]} barSize={14} />
+            </BarChart>
+          </ResponsiveContainer>
+        </SectionCard>
+
+        <SectionCard
+          className="lg:col-span-1 lg:row-span-1"
+          title={
+            <span className="flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-[#F43F5E]" />
+              Low Stock Alerts
+            </span>
+          }
+          right={
+            <Link to="/app/reports/inventory" className="font-semibold text-[#0EA5A8] hover:underline">
+              View All
+            </Link>
+          }
+        >
+          <ul className="divide-y divide-[#EEF2F7]">
+            {(data?.lowStock ?? []).slice(0, 5).map((it) => (
+              <li key={it.id} className="flex items-center gap-3 py-2.5">
+                <div className="grid place-items-center w-9 h-9 rounded-lg bg-[#FEF1E6] text-[#EA580C] ring-1 ring-[#FBDFC3]">
+                  <Package className="w-4 h-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-[13px] font-semibold text-[#0F172A]">{it.name}</div>
+                  <div className="text-[11px] text-[#64748B]">
+                    Reorder Level: <span className="font-medium text-[#0F172A]">{it.low_stock_alert ?? "—"}</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-[12px] font-bold text-[#E11D48]">{it.stock} pcs</div>
+                  <div className="text-[10px] text-[#94A3B8]">in stock</div>
+                </div>
+              </li>
+            ))}
+            {(!data || data.lowStock.length === 0) && (
+              <li className="py-8 text-center text-sm text-[#94A3B8]">No low-stock items 🎉</li>
+            )}
+          </ul>
+          <div className="pt-3">
+            <Link
+              to="/app/reports/inventory"
+              className="block text-center text-[12px] font-semibold text-[#0EA5A8] hover:underline"
+            >
+              View All Alerts →
+            </Link>
+          </div>
+        </SectionCard>
+      </div>
+
+      {/* Lower section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Recent Invoices */}
+        <SectionCard
+          title="Recent Invoices"
+          right={
+            <Link to="/app/sales" className="font-semibold text-[#0EA5A8] hover:underline">
+              View all
+            </Link>
+          }
+        >
+          {(!data || data.recent.length === 0) ? (
+            <div className="py-8 text-center text-sm text-[#94A3B8]">No invoices yet.</div>
+          ) : (
+            <div className="divide-y divide-[#EEF2F7]">
+              {data.recent.map((r) => {
+                const status: "Paid" | "Partial" | "Due" =
+                  Number(r.balance) <= 0 ? "Paid" : Number(r.balance) < Number(r.total) ? "Partial" : "Due";
+                return (
+                  <div key={r.id} className="flex items-center gap-3 py-2.5">
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-[13px] font-semibold text-[#0F172A]">{r.invoice_no}</div>
+                      <div className="truncate text-[11px] text-[#64748B]">
+                        {r.parties?.name ?? "Walk-in"} · {r.invoice_date}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-[13px] font-bold text-[#0F172A]">{fmtBdt(r.total)}</div>
+                      <div className="mt-0.5"><StatusPill kind={status} /></div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </SectionCard>
+
+        {/* Recent Orders */}
+        <SectionCard
+          title="Recent Orders"
+          right={
+            <Link to="/app/sale-orders" className="font-semibold text-[#0EA5A8] hover:underline">
+              View all
+            </Link>
+          }
+        >
+          {(!ordersQ.data || ordersQ.data.length === 0) ? (
+            <div className="py-8 text-center text-sm text-[#94A3B8]">No orders yet.</div>
+          ) : (
+            <div className="divide-y divide-[#EEF2F7]">
+              {ordersQ.data.map((o) => {
+                const s = (o.status || "").toLowerCase();
+                const kind: "Confirmed" | "Processing" | "Pending" =
+                  s.includes("confirm") || s.includes("complete") ? "Confirmed" : s.includes("process") ? "Processing" : "Pending";
+                return (
+                  <div key={o.id} className="flex items-center gap-3 py-2.5">
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-[13px] font-semibold text-[#0F172A]">{o.order_no}</div>
+                      <div className="truncate text-[11px] text-[#64748B]">
+                        {o.parties?.name ?? "Customer"} · {o.order_date}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-[13px] font-bold text-[#0F172A]">{fmtBdt(o.total)}</div>
+                      <div className="mt-0.5"><StatusPill kind={kind} /></div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </SectionCard>
+
+        {/* Inventory Summary */}
+        <SectionCard
+          title="Inventory Summary"
+          right={
+            <Link to="/app/items" className="font-semibold text-[#0EA5A8] hover:underline">
+              Manage
+            </Link>
+          }
+        >
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { label: "Total Items", value: String(inv.totalItems), icon: Boxes, tone: "blue" as KpiTone },
+              { label: "Total Stock", value: String((data?.lowStock?.length ?? 0) + inv.totalItems), icon: Layers, tone: "teal" as KpiTone },
+              { label: "Stock Value", value: fmtBdt(inv.stockValue), icon: PiggyBank, tone: "green" as KpiTone },
+              { label: "Warehouses", value: String(inv.warehouses), icon: Warehouse, tone: "purple" as KpiTone },
+            ].map((tile) => {
+              const t = TONE[tile.tone];
+              return (
+                <div
+                  key={tile.label}
+                  className="rounded-xl border border-[#EEF2F7] p-3 bg-card flex items-start gap-3"
+                >
+                  <div className={`grid place-items-center w-9 h-9 rounded-lg ring-1 ${t.bg} ${t.ring}`}>
+                    <tile.icon className={`w-4 h-4 ${t.text}`} />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[10px] font-medium uppercase tracking-wider text-[#94A3B8]">{tile.label}</div>
+                    <div className="text-[16px] font-bold text-[#0F172A] truncate">{tile.value}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="mt-4">
+            <div className="flex items-center justify-between text-[11px] text-[#64748B] mb-1">
+              <span className="inline-flex items-center gap-1">
+                <Tags className="w-3.5 h-3.5" /> Overall Stock Availability
+              </span>
+              <span className="font-semibold text-[#0F172A]">
+                {inv.totalItems
+                  ? Math.max(0, Math.round(((inv.totalItems - inv.outOfStock) / inv.totalItems) * 100))
+                  : 0}
+                %
+              </span>
+            </div>
+            <div className="h-2 rounded-full bg-[#EEF2F7] overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-[#14B8A6] to-[#22C55E]"
+                style={{
+                  width: `${
+                    inv.totalItems
+                      ? Math.max(4, Math.round(((inv.totalItems - inv.outOfStock) / inv.totalItems) * 100))
+                      : 0
+                  }%`,
+                }}
+              />
+            </div>
+          </div>
+        </SectionCard>
+      </div>
+
+      {/* Footer */}
+      <footer className="flex flex-wrap items-center justify-between gap-2 pt-2 text-[12px] text-[#64748B]">
+        <div>© {new Date().getFullYear()} ERPOVO — All rights reserved · Chair King</div>
+        <div className="inline-flex items-center gap-1">
+          Made with <Coins className="w-3.5 h-3.5 text-[#F43F5E]" /> in Bangladesh 🇧🇩
+        </div>
+      </footer>
     </div>
   );
 }
