@@ -88,10 +88,10 @@ export async function syncWooCommerceOrders(
 
 export async function syncWooCommerceProducts(
   settings: WooClientSettings & { websiteId: string },
-): Promise<NormalizedResult<{ added: number; updated: number; failed: number }>> {
+): Promise<NormalizedResult<{ added: number; updated: number; failed: number; fetched: number; pages: number; failedItems: Array<{ wpId: string; name: string; sku: string; reason: string }>; transport?: string }>> {
   const { mode, config } = resolveWoo(settings);
   const r = await woocommerceService.syncProducts(config, settings.websiteId, mode);
-  return normalize(r, mode, { added: r.added, updated: r.updated, failed: r.failed });
+  return normalize(r, mode, { added: r.added, updated: r.updated, failed: r.failed, fetched: r.fetched, pages: r.pages, failedItems: r.failedItems, transport: r.transport });
 }
 
 /* -------------------------------- Steadfast ------------------------------- */
