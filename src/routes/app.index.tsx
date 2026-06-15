@@ -129,7 +129,7 @@ function KpiCard({
   return (
     <Link
       to={to}
-      className="group relative block rounded-2xl border border-[#E5EAF2] bg-card p-4 transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-12px_rgba(15,23,42,0.18)]"
+      className="group relative block rounded-xl border border-[#E5EAF2] bg-card p-3 transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-12px_rgba(15,23,42,0.18)]"
       style={{ boxShadow: "0 1px 2px rgba(15,23,42,0.04)" }}
     >
       <div className="flex items-start justify-between">
