@@ -141,7 +141,8 @@ export function ERPTopbar() {
   // ─────────── Dashboard-only premium header ───────────
   if (isDashboard) {
     const demoUser = getDemoUser();
-    const displayName = demoUser?.name || "Md. Tanvir Hasan";
+    const rawName = demoUser?.name;
+    const displayName = !rawName || rawName === "Demo User" ? "Md. Tanvir Hasan" : rawName;
     const initials = displayName
       .split(" ")
       .map((s) => s[0])
