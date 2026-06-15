@@ -53,11 +53,22 @@ declare global {
 }
 
 async function viaDirectBrowser(url: string, init: TransportInit): Promise<TransportResponse> {
-  const res = await fetch(url, {
-    method: init.method ?? "GET",
-    headers: init.headers,
-    body: init.body,
-  });
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: init.method ?? "GET",
+      headers: init.headers,
+      body: init.body,
+    });
+  } catch (e) {
+    // Browser fetch failures (CORS, mixed-content, SSL, WAF, "Load failed")
+    // surface as TypeError. Normalise so the caller can decide whether to
+    // fall back to the backend proxy.
+    throw new TransportError(
+      `Direct browser fetch failed: ${(e as Error).message || "Load failed"}`,
+      "cors",
+    );
+  }
   const text = await res.text();
   return {
     ok: res.ok,
