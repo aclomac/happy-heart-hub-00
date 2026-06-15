@@ -97,11 +97,11 @@ export function maskSecret(s: string | undefined | null, prefix = 2, suffix = 4)
 /** Inspect a fetch error and classify it. Browser CORS shows up as TypeError "Failed to fetch". */
 export function classifyFetchError(e: unknown): { kind: DiagErrorKind; message: string } {
   const msg = String((e as Error)?.message || e || "Unknown error");
-  if (/Failed to fetch|NetworkError|TypeError: Load failed/i.test(msg)) {
+  if (/Failed to fetch|NetworkError|Load failed|ERR_FAILED|ERR_NETWORK/i.test(msg)) {
     return {
       kind: "cors",
       message:
-        "API request blocked by browser/CORS. Use backend proxy or Electron main-process proxy for live API.",
+        "Browser/network request failed (likely CORS, mixed-content, SSL, or WAF). Switch Integration Mode to 'Backend Proxy' in Ecommerce → Settings, or the app will retry automatically via the secure proxy.",
     };
   }
   if (/timeout|aborted/i.test(msg)) return { kind: "network", message: msg };
