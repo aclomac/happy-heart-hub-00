@@ -90,12 +90,12 @@
   --input: oklch(0.92 0.01 240);
   --ring: oklch(0.5 0.18 255);
 
-  /* Dark navy sidebar */
-  --sidebar-bg: oklch(0.22 0.04 255);
-  --sidebar-fg: oklch(0.92 0.01 240);
-  --sidebar-hover: oklch(0.28 0.05 255);
-  --sidebar-active: oklch(0.5 0.18 255);
-  --sidebar-border-c: oklch(0.3 0.04 255);
+  /* Dark navy sidebar (premium ERP) */
+  --sidebar-bg: oklch(0.21 0.05 252);
+  --sidebar-fg: oklch(0.94 0.01 240);
+  --sidebar-hover: oklch(0.27 0.06 252);
+  --sidebar-active: oklch(0.66 0.13 195);
+  --sidebar-border-c: oklch(0.3 0.05 252);
 
   /* Tables */
   --table-header: oklch(0.96 0.005 240);
