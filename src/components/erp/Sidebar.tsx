@@ -33,10 +33,12 @@ import {
   Activity,
   LifeBuoy,
   LogOut,
-  Crown,
+  Smartphone,
+  ChevronDown as ChevronDownArrow,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { endDemoSession, clearDemoStorage } from "@/lib/demo/localStore";
+import { endDemoSession, clearDemoStorage, getDemoUser } from "@/lib/demo/localStore";
+
 import { useI18n } from "@/lib/i18n";
 import { companies } from "@/lib/mock-data";
 import { useQuery } from "@tanstack/react-query";
