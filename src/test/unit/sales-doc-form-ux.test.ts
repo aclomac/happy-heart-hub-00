@@ -214,11 +214,11 @@ describe("SalesDocForm post-save actions", () => {
     expect(src).toMatch(/const resetForm = \(\) => \{/);
     expect(src).toMatch(/setRows\(\[emptyRow\(\)\]\)/);
     expect(src).toMatch(/setPartyId\(""\)/);
-    expect(src).toMatch(/onClick=\{resetForm\}/);
+    expect(src).toMatch(/resetForm\(\)/);
   });
 
   it("disables print/download until invoice has a valid id", () => {
-    expect(src).toMatch(/disabled=\{!savedInvoiceId \|\| pdfBusy\}/);
+    expect(src).toMatch(/disabled=\{!savedInvoiceId \|\| pdfBusy \|\| popupBusy\}/);
   });
 
   it("shows PDF generation failed toast on error", () => {
