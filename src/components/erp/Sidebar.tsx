@@ -67,9 +67,16 @@ type NavNode = LinkNode | GroupNode;
 
 const nav: NavNode[] = [
   { kind: "link", to: "/app", key: "dashboard", icon: LayoutDashboard, end: true, module: null },
-  { kind: "link", to: "/app/pos", key: "pos", icon: Zap, module: null },
-  { kind: "link", to: "/app/parties", key: "parties", icon: Users, module: null },
-  { kind: "link", to: "/app/party-groups", key: "Party Groups", icon: FolderOpen, module: null },
+  {
+    kind: "group",
+    key: "parties",
+    label: "Parties",
+    icon: Users,
+    children: [
+      { kind: "link", to: "/app/parties", key: "All Parties", icon: Users },
+      { kind: "link", to: "/app/party-groups", key: "Party Groups", icon: FolderOpen },
+    ],
+  },
   {
     kind: "group",
     key: "items",
