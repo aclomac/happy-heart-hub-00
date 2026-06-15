@@ -575,11 +575,11 @@ function Dashboard() {
             >
               <CartesianGrid stroke="#EEF2F7" strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="m" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#94A3B8" }} />
-              <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#94A3B8" }} width={64} tickFormatter={compactBdt} />
-              <Tooltip cursor={{ fill: "rgba(15,23,42,0.04)" }} contentStyle={{ borderRadius: 12, border: "1px solid #E5EAF2", fontSize: 12 }} />
+              <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#94A3B8" }} width={56} tickFormatter={compactBdt} />
+              <Tooltip cursor={{ fill: "rgba(15,23,42,0.04)" }} contentStyle={{ borderRadius: 12, border: "1px solid #E5EAF2", fontSize: 12, boxShadow: "0 8px 24px -12px rgba(15,23,42,0.18)" }} formatter={(v: number) => fmtBdt(v)} />
               <Legend wrapperStyle={{ display: "none" }} />
-              <Bar dataKey="revenue" fill="#14B8A6" radius={[6, 6, 0, 0]} barSize={14} />
-              <Bar dataKey="expense" fill="#F97316" radius={[6, 6, 0, 0]} barSize={14} />
+              <Bar dataKey="revenue" fill="#14B8A6" radius={[6, 6, 0, 0]} barSize={12} />
+              <Bar dataKey="expense" fill="#F97316" radius={[6, 6, 0, 0]} barSize={12} />
             </BarChart>
           </ResponsiveContainer>
         </SectionCard>
