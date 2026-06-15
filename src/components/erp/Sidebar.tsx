@@ -33,6 +33,7 @@ import {
   Activity,
   LifeBuoy,
   LogOut,
+  Crown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { endDemoSession, clearDemoStorage } from "@/lib/demo/localStore";
