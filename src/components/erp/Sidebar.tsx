@@ -384,24 +384,25 @@ export function ERPSidebar() {
         key={n.to + n.key}
         to={linkPath as never}
         hash={hash as never}
-        className={`flex items-center gap-3 transition-colors ${
+        className={`group/link mx-2 my-0.5 flex items-center gap-3 rounded-lg transition-colors ${
           opts.nested
-            ? "font-normal text-[13px] py-1.5 leading-6 text-slate-300"
-            : "font-bold text-[15px] py-2.5 text-slate-100"
+            ? "font-normal text-[13px] py-1.5 leading-6 text-slate-300 hover:bg-white/5"
+            : "font-semibold text-[14px] py-2.5 text-slate-100 hover:bg-white/5"
         }`}
         style={{
           background: active ? "var(--color-sidebar-active)" : "transparent",
           color: active ? "#fff" : undefined,
-          borderLeft: active ? "3px solid #fff" : "3px solid transparent",
+          boxShadow: active ? "0 2px 10px -4px rgba(14,165,168,0.55)" : undefined,
           opacity: locked ? 0.55 : 1,
-          paddingLeft: opts.nested ? 52 : 16,
-          paddingRight: 16,
+          paddingLeft: opts.nested ? 40 : 14,
+          paddingRight: 14,
         }}
       >
-        {!opts.nested && <Icon className="w-4 h-4" />}
+        {!opts.nested && <Icon className="w-4 h-4 shrink-0" />}
         <span className="flex-1 truncate">{labelFor(n)}</span>
         {locked && <Lock className="w-3 h-3 opacity-70" />}
       </Link>
+
     );
   };
 
