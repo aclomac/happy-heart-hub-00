@@ -275,11 +275,17 @@ function Dashboard() {
         const d = getDemoDashboardData();
         const months = { ...emptyMonths };
         const keys = Object.keys(months);
+        // Wavy, natural-looking sample distribution (peaks/dips, not linear).
+        const salePattern = [0.35, 0.55, 0.78, 0.86, 0.95, 1.5, 0.9, 1.24, 1.0];
+        const purchasePattern = [0.4, 0.6, 0.7, 0.8, 0.9, 1.2, 0.85, 1.05, 0.95];
+        const incomePattern = [0.5, 0.6, 0.7, 0.75, 0.85, 1.1, 0.95, 1.15, 1.0];
+        const expensePattern = [0.45, 0.65, 0.75, 0.8, 0.9, 1.05, 0.95, 1.1, 1.0];
         keys.forEach((k, idx) => {
-          months[k].sale = Math.round((d.monthSales / keys.length) * (0.4 + idx * 0.12));
-          months[k].purchase = Math.round((d.monthPurchases / keys.length) * (0.4 + idx * 0.1));
-          months[k].otherIncome = Math.round((d.monthOtherIncome / keys.length) * (0.5 + idx * 0.08));
-          months[k].expense = Math.round((d.monthExpenses / keys.length) * (0.5 + idx * 0.07));
+          const base = d.monthSales / keys.length;
+          months[k].sale = Math.round(base * (salePattern[idx % salePattern.length] ?? 1));
+          months[k].purchase = Math.round((d.monthPurchases / keys.length) * (purchasePattern[idx % purchasePattern.length] ?? 1));
+          months[k].otherIncome = Math.round((d.monthOtherIncome / keys.length) * (incomePattern[idx % incomePattern.length] ?? 1));
+          months[k].expense = Math.round((d.monthExpenses / keys.length) * (expensePattern[idx % expensePattern.length] ?? 1));
         });
         return {
           ...emptyResult,
@@ -492,7 +498,7 @@ function Dashboard() {
   ];
 
   return (
-    <div className="space-y-4 -m-4 p-3 md:p-4 pb-32 md:pb-36 bg-[#F6F8FC] min-h-full">
+    <div className="space-y-4 -m-4 p-3 md:p-4 pb-40 md:pb-44 bg-[#F6F8FC] min-h-full">
       {/* KPI Row */}
       {skeletons ? (
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2.5">
@@ -548,7 +554,7 @@ function Dashboard() {
               <XAxis dataKey="m" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#94A3B8" }} />
               <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#94A3B8" }} width={56} tickFormatter={compactBdt} />
               <Tooltip cursor={{ stroke: "#CBD5E1" }} contentStyle={{ borderRadius: 12, border: "1px solid #E5EAF2", fontSize: 12, boxShadow: "0 8px 24px -12px rgba(15,23,42,0.18)" }} formatter={(v: number) => fmtBdt(v)} />
-              <Area type="monotone" dataKey="sale" stroke="#2563EB" strokeWidth={2.5} fill="url(#gSale)" name="Sales" dot={{ r: 3, fill: "#2563EB", strokeWidth: 0 }} activeDot={{ r: 5 }} />
+              <Area type="natural" dataKey="sale" stroke="#2563EB" strokeWidth={2.5} fill="url(#gSale)" name="Sales" dot={{ r: 3, fill: "#2563EB", strokeWidth: 0 }} activeDot={{ r: 5 }} />
             </AreaChart>
           </ResponsiveContainer>
         </SectionCard>
