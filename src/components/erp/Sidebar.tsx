@@ -375,8 +375,8 @@ export function ERPSidebar() {
         hash={hash as never}
         className={`group/link mx-2 my-0.5 flex items-center gap-3 rounded-lg transition-colors ${
           opts.nested
-            ? "font-normal text-[13px] py-1.5 leading-6 text-slate-300 hover:bg-white/5"
-            : "font-semibold text-[14px] py-2.5 text-slate-100 hover:bg-white/5"
+            ? "font-normal text-[12.5px] py-1 leading-5 text-slate-300 hover:bg-white/5"
+            : "font-semibold text-[13.5px] py-2 text-slate-100 hover:bg-white/5"
         }`}
         style={{
           background: active ? "var(--color-sidebar-active)" : "transparent",
