@@ -535,19 +535,20 @@ function Dashboard() {
               {Math.abs(salesTrend).toFixed(1)}%
             </span>
           </div>
-          <ResponsiveContainer width="100%" height={220}>
+          <ResponsiveContainer width="100%" height={260}>
             <AreaChart data={chart} margin={{ top: 8, right: 8, left: 4, bottom: 0 }}>
               <defs>
                 <linearGradient id="gSale" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#2563EB" stopOpacity={0.35} />
+                  <stop offset="0%" stopColor="#2563EB" stopOpacity={0.45} />
+                  <stop offset="60%" stopColor="#2563EB" stopOpacity={0.12} />
                   <stop offset="100%" stopColor="#2563EB" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid stroke="#EEF2F7" strokeDasharray="3 3" vertical={false} />
               <XAxis dataKey="m" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#94A3B8" }} />
-              <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#94A3B8" }} width={64} tickFormatter={compactBdt} />
-              <Tooltip cursor={{ stroke: "#CBD5E1" }} contentStyle={{ borderRadius: 12, border: "1px solid #E5EAF2", fontSize: 12 }} />
-              <Area type="monotone" dataKey="sale" stroke="#2563EB" strokeWidth={2.5} fill="url(#gSale)" name="Sales" />
+              <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#94A3B8" }} width={56} tickFormatter={compactBdt} />
+              <Tooltip cursor={{ stroke: "#CBD5E1" }} contentStyle={{ borderRadius: 12, border: "1px solid #E5EAF2", fontSize: 12, boxShadow: "0 8px 24px -12px rgba(15,23,42,0.18)" }} formatter={(v: number) => fmtBdt(v)} />
+              <Area type="monotone" dataKey="sale" stroke="#2563EB" strokeWidth={2.5} fill="url(#gSale)" name="Sales" dot={{ r: 3, fill: "#2563EB", strokeWidth: 0 }} activeDot={{ r: 5 }} />
             </AreaChart>
           </ResponsiveContainer>
         </SectionCard>
