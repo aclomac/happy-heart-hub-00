@@ -44,6 +44,7 @@ import { companies } from "@/lib/mock-data";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { checkIsAdmin } from "@/lib/billing.functions";
+import { MobileAppDialog } from "@/components/erp/MobileAppDialog";
 // Subscription/plan gating removed for personal use.
 
 type LinkNode = {
@@ -284,6 +285,7 @@ function pathOf(to: string) {
 
 export function ERPSidebar() {
   const { t } = useI18n();
+  const [mobileAppOpen, setMobileAppOpen] = useState(false);
   
   const companyId = useCurrentCompanyId();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -515,6 +517,7 @@ export function ERPSidebar() {
           </div>
           <button
             type="button"
+            onClick={() => setMobileAppOpen(true)}
             className="w-full rounded-md bg-white/10 hover:bg-white/15 text-white text-[11px] font-semibold py-1.5 transition-colors"
           >
             Get the App
@@ -591,6 +594,7 @@ export function ERPSidebar() {
           v1.0 · Bangladesh 🇧🇩
         </div>
       </div>
+      <MobileAppDialog open={mobileAppOpen} onOpenChange={setMobileAppOpen} />
     </aside>
   );
 }

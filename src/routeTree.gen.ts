@@ -68,6 +68,7 @@ import { Route as AppPartyGroupsRouteImport } from './routes/app.party-groups'
 import { Route as AppPartiesRouteImport } from './routes/app.parties'
 import { Route as AppOtherIncomeRouteImport } from './routes/app.other-income'
 import { Route as AppOnlineStoreRouteImport } from './routes/app.online-store'
+import { Route as AppMobileAppRouteImport } from './routes/app.mobile-app'
 import { Route as AppMarketingToolsRouteImport } from './routes/app.marketing-tools'
 import { Route as AppItemsRouteImport } from './routes/app.items'
 import { Route as AppItemCategoriesRouteImport } from './routes/app.item-categories'
@@ -467,6 +468,11 @@ const AppOtherIncomeRoute = AppOtherIncomeRouteImport.update({
 const AppOnlineStoreRoute = AppOnlineStoreRouteImport.update({
   id: '/online-store',
   path: '/online-store',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMobileAppRoute = AppMobileAppRouteImport.update({
+  id: '/mobile-app',
+  path: '/mobile-app',
   getParentRoute: () => AppRoute,
 } as any)
 const AppMarketingToolsRoute = AppMarketingToolsRouteImport.update({
@@ -1028,6 +1034,7 @@ export interface FileRoutesByFullPath {
   '/app/item-categories': typeof AppItemCategoriesRoute
   '/app/items': typeof AppItemsRouteWithChildren
   '/app/marketing-tools': typeof AppMarketingToolsRoute
+  '/app/mobile-app': typeof AppMobileAppRoute
   '/app/online-store': typeof AppOnlineStoreRoute
   '/app/other-income': typeof AppOtherIncomeRoute
   '/app/parties': typeof AppPartiesRouteWithChildren
@@ -1188,6 +1195,7 @@ export interface FileRoutesByTo {
   '/app/item-categories': typeof AppItemCategoriesRoute
   '/app/items': typeof AppItemsRouteWithChildren
   '/app/marketing-tools': typeof AppMarketingToolsRoute
+  '/app/mobile-app': typeof AppMobileAppRoute
   '/app/online-store': typeof AppOnlineStoreRoute
   '/app/other-income': typeof AppOtherIncomeRoute
   '/app/parties': typeof AppPartiesRouteWithChildren
@@ -1351,6 +1359,7 @@ export interface FileRoutesById {
   '/app/item-categories': typeof AppItemCategoriesRoute
   '/app/items': typeof AppItemsRouteWithChildren
   '/app/marketing-tools': typeof AppMarketingToolsRoute
+  '/app/mobile-app': typeof AppMobileAppRoute
   '/app/online-store': typeof AppOnlineStoreRoute
   '/app/other-income': typeof AppOtherIncomeRoute
   '/app/parties': typeof AppPartiesRouteWithChildren
@@ -1516,6 +1525,7 @@ export interface FileRouteTypes {
     | '/app/item-categories'
     | '/app/items'
     | '/app/marketing-tools'
+    | '/app/mobile-app'
     | '/app/online-store'
     | '/app/other-income'
     | '/app/parties'
@@ -1676,6 +1686,7 @@ export interface FileRouteTypes {
     | '/app/item-categories'
     | '/app/items'
     | '/app/marketing-tools'
+    | '/app/mobile-app'
     | '/app/online-store'
     | '/app/other-income'
     | '/app/parties'
@@ -1838,6 +1849,7 @@ export interface FileRouteTypes {
     | '/app/item-categories'
     | '/app/items'
     | '/app/marketing-tools'
+    | '/app/mobile-app'
     | '/app/online-store'
     | '/app/other-income'
     | '/app/parties'
@@ -2410,6 +2422,13 @@ declare module '@tanstack/react-router' {
       path: '/online-store'
       fullPath: '/app/online-store'
       preLoaderRoute: typeof AppOnlineStoreRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/mobile-app': {
+      id: '/app/mobile-app'
+      path: '/mobile-app'
+      fullPath: '/app/mobile-app'
+      preLoaderRoute: typeof AppMobileAppRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/marketing-tools': {
@@ -3500,6 +3519,7 @@ interface AppRouteChildren {
   AppItemCategoriesRoute: typeof AppItemCategoriesRoute
   AppItemsRoute: typeof AppItemsRouteWithChildren
   AppMarketingToolsRoute: typeof AppMarketingToolsRoute
+  AppMobileAppRoute: typeof AppMobileAppRoute
   AppOnlineStoreRoute: typeof AppOnlineStoreRoute
   AppOtherIncomeRoute: typeof AppOtherIncomeRoute
   AppPartiesRoute: typeof AppPartiesRouteWithChildren
@@ -3556,6 +3576,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppItemCategoriesRoute: AppItemCategoriesRoute,
   AppItemsRoute: AppItemsRouteWithChildren,
   AppMarketingToolsRoute: AppMarketingToolsRoute,
+  AppMobileAppRoute: AppMobileAppRoute,
   AppOnlineStoreRoute: AppOnlineStoreRoute,
   AppOtherIncomeRoute: AppOtherIncomeRoute,
   AppPartiesRoute: AppPartiesRouteWithChildren,
