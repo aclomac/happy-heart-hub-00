@@ -4,7 +4,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { isDemoMode } from "@/lib/demo/localStore";
-import { hasLocalUserSession } from "@/lib/demo/localStore";
 import { cn } from "@/lib/utils";
 
 type Mode = "local" | "cloud" | "offline" | "error" | "loading";
