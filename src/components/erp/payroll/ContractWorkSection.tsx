@@ -22,7 +22,7 @@ import {
   listWorkEntries,
   type ContractWorkEntry,
 } from "@/lib/contract-work";
-import { listLabourRates, pickLabourRate } from "@/lib/labour-rates";
+import { listLabourRates, pickLabourRate, pickLabourUnit, workTypesForItem } from "@/lib/labour-rates";
 
 type Emp = { id: string; code: string | null; name: string; pay_type: string };
 type Item = { id: string; name: string; sku: string | null };
@@ -308,17 +308,24 @@ function NewEntryForm({
   const [employeeId, setEmployeeId] = useState<string>("");
   const [itemId, setItemId] = useState<string>("");
   const [workType, setWorkType] = useState<string>("");
+  const [unit, setUnit] = useState<string>("");
   const [qty, setQty] = useState<string>("0");
   const [rate, setRate] = useState<string>("0");
   const [productionRef, setProductionRef] = useState<string>("");
   const [notes, setNotes] = useState<string>("");
   const [saving, setSaving] = useState(false);
 
-  function autoFillRate(
-    nextItemId = itemId,
-    nextWorkType = workType,
-    nextEmpId = employeeId,
-  ) {
+  // Available work types for the picked product
+  const availableWorkTypes = useMemo(() => {
+    if (!itemId) return [];
+    return workTypesForItem(rates as Parameters<typeof workTypesForItem>[0], {
+      itemId,
+      workDate,
+      employeeId: employeeId || undefined,
+    });
+  }, [itemId, rates, workDate, employeeId]);
+
+  function applyRateFor(nextItemId: string, nextWorkType: string, nextEmpId: string) {
     if (!nextItemId || !nextWorkType || !nextEmpId) return;
     const found = pickLabourRate(rates, {
       itemId: nextItemId,
@@ -326,15 +333,50 @@ function NewEntryForm({
       employeeId: nextEmpId,
       workDate,
     });
+    const u = pickLabourUnit(rates as Parameters<typeof pickLabourUnit>[0], {
+      itemId: nextItemId,
+      workType: nextWorkType,
+      employeeId: nextEmpId,
+      workDate,
+    });
     if (found != null) setRate(String(found));
+    if (u) setUnit(u);
   }
 
-  const total =
-    Math.round((Number(qty) || 0) * (Number(rate) || 0) * 100) / 100;
+  function onPickProduct(v: string) {
+    setItemId(v);
+    const wts = workTypesForItem(rates as Parameters<typeof workTypesForItem>[0], {
+      itemId: v,
+      workDate,
+      employeeId: employeeId || undefined,
+    });
+    // Single-rate shortcut
+    if (wts.length === 1) {
+      const wt = wts[0].work_type;
+      setWorkType(wt);
+      if (wts[0].unit) setUnit(wts[0].unit);
+      applyRateFor(v, wt, employeeId);
+    } else if (workType) {
+      applyRateFor(v, workType, employeeId);
+    }
+  }
+
+  function onPickWorkType(v: string) {
+    setWorkType(v);
+    applyRateFor(itemId, v, employeeId);
+  }
+
+  const noRateWarning =
+    itemId && workType && availableWorkTypes.findIndex(
+      (w) => w.work_type.trim().toLowerCase() === workType.trim().toLowerCase(),
+    ) === -1;
+
+  const total = Math.round((Number(qty) || 0) * (Number(rate) || 0) * 100) / 100;
 
   async function onSubmit() {
     if (!employeeId) return toast.error("Pick a worker");
-    if (!workType.trim()) return toast.error("Enter a work type");
+    if (!itemId) return toast.error("Product is required for contract work.");
+    if (!workType.trim()) return toast.error("Work type is required");
     if (Number(qty) <= 0) return toast.error("Qty must be > 0");
     if (Number(rate) <= 0) return toast.error("Rate must be > 0");
     setSaving(true);
@@ -343,7 +385,7 @@ function NewEntryForm({
         companyId,
         workDate,
         employeeId,
-        itemId: itemId || null,
+        itemId,
         workType: workType.trim(),
         qty: Number(qty),
         rate: Number(rate),
@@ -371,12 +413,12 @@ function NewEntryForm({
           />
         </div>
         <div>
-          <Label className="text-xs">Worker</Label>
+          <Label className="text-xs">Worker *</Label>
           <Select
             value={employeeId}
             onValueChange={(v) => {
               setEmployeeId(v);
-              autoFillRate(itemId, workType, v);
+              if (itemId && workType) applyRateFor(itemId, workType, v);
             }}
           >
             <SelectTrigger>
@@ -392,14 +434,8 @@ function NewEntryForm({
           </Select>
         </div>
         <div>
-          <Label className="text-xs">Product (optional)</Label>
-          <Select
-            value={itemId}
-            onValueChange={(v) => {
-              setItemId(v);
-              autoFillRate(v, workType, employeeId);
-            }}
-          >
+          <Label className="text-xs">Product *</Label>
+          <Select value={itemId} onValueChange={onPickProduct}>
             <SelectTrigger>
               <SelectValue placeholder="Pick product" />
             </SelectTrigger>
@@ -411,18 +447,46 @@ function NewEntryForm({
               ))}
             </SelectContent>
           </Select>
+          {!itemId && (
+            <p className="text-xs text-sale mt-1">Product is required for contract work.</p>
+          )}
         </div>
         <div>
-          <Label className="text-xs">Work Type / Process</Label>
-          <Input
-            value={workType}
-            onChange={(e) => setWorkType(e.target.value)}
-            onBlur={() => autoFillRate(itemId, workType, employeeId)}
-            placeholder="cutting, stitching, polish…"
-          />
+          <Label className="text-xs">Work Type / Process *</Label>
+          {availableWorkTypes.length > 0 ? (
+            <Select value={workType} onValueChange={onPickWorkType}>
+              <SelectTrigger>
+                <SelectValue placeholder="Pick work type" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableWorkTypes.map((w) => (
+                  <SelectItem key={w.work_type} value={w.work_type}>
+                    {w.work_type}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <Input
+              value={workType}
+              onChange={(e) => setWorkType(e.target.value)}
+              onBlur={() => applyRateFor(itemId, workType, employeeId)}
+              placeholder="cutting, stitching, polish…"
+            />
+          )}
+          {itemId && availableWorkTypes.length === 0 && (
+            <p className="text-xs text-warning mt-1">
+              No labour rate found. Add rate in Labour Rates first or enter rate manually.
+            </p>
+          )}
+          {noRateWarning && (
+            <p className="text-xs text-warning mt-1">
+              No labour rate found for this work type.
+            </p>
+          )}
         </div>
         <div>
-          <Label className="text-xs">Qty</Label>
+          <Label className="text-xs">Qty {unit ? `(${unit})` : ""}</Label>
           <Input
             type="number"
             min="0"
@@ -469,7 +533,11 @@ function NewEntryForm({
           <Button variant="ghost" size="sm" onClick={onCancel}>
             Cancel
           </Button>
-          <Button size="sm" onClick={onSubmit} disabled={saving}>
+          <Button
+            size="sm"
+            onClick={onSubmit}
+            disabled={saving || !employeeId || !itemId || !workType.trim() || Number(qty) <= 0 || Number(rate) <= 0}
+          >
             {saving ? "Saving…" : "Save entry"}
           </Button>
         </div>
