@@ -30,6 +30,8 @@ export type LabourRate = {
   notes: string | null;
 };
 
+const norm = (s: string) => (s ?? "").trim().toLowerCase();
+
 /** Pure resolver — exported for unit testing. */
 export function pickLabourRate(
   rates: Pick<
@@ -38,11 +40,12 @@ export function pickLabourRate(
   >[],
   args: { itemId: string; workType: string; employeeId: string; workDate: string },
 ): number | null {
+  const wt = norm(args.workType);
   const matching = rates.filter(
     (r) =>
       r.is_active &&
       r.item_id === args.itemId &&
-      r.work_type === args.workType &&
+      norm(r.work_type) === wt &&
       r.effective_date <= args.workDate,
   );
   if (matching.length === 0) return null;
@@ -59,6 +62,51 @@ export function pickLabourRate(
 
   const defaults = matching.filter((r) => r.employee_id === null).sort(byDateDesc);
   if (defaults[0]) return Number(defaults[0].rate);
+  return null;
+}
+
+/** Returns active work types available for a product on/before workDate. */
+export function workTypesForItem(
+  rates: Pick<
+    LabourRate,
+    "is_active" | "item_id" | "work_type" | "effective_date" | "unit" | "employee_id"
+  >[],
+  args: { itemId: string; workDate: string; employeeId?: string },
+): { work_type: string; unit: string | null | undefined }[] {
+  const map = new Map<string, { work_type: string; unit: string | null | undefined }>();
+  for (const r of rates) {
+    if (!r.is_active) continue;
+    if (r.item_id !== args.itemId) continue;
+    if (r.effective_date > args.workDate) continue;
+    const key = norm(r.work_type);
+    if (!map.has(key)) map.set(key, { work_type: r.work_type.trim(), unit: (r as { unit?: string | null }).unit });
+  }
+  return Array.from(map.values()).sort((a, b) => a.work_type.localeCompare(b.work_type));
+}
+
+/** Pick the unit for the resolved rate, mirroring pickLabourRate precedence. */
+export function pickLabourUnit(
+  rates: Pick<
+    LabourRate,
+    "rate" | "effective_date" | "employee_id" | "is_active" | "item_id" | "work_type" | "unit"
+  >[],
+  args: { itemId: string; workType: string; employeeId: string; workDate: string },
+): string | null {
+  const wt = norm(args.workType);
+  const matching = rates.filter(
+    (r) =>
+      r.is_active &&
+      r.item_id === args.itemId &&
+      norm(r.work_type) === wt &&
+      r.effective_date <= args.workDate,
+  );
+  if (matching.length === 0) return null;
+  const byDateDesc = (a: { effective_date: string }, b: { effective_date: string }) =>
+    a.effective_date < b.effective_date ? 1 : -1;
+  const worker = matching.filter((r) => r.employee_id === args.employeeId).sort(byDateDesc);
+  if (worker[0]) return worker[0].unit ?? null;
+  const defaults = matching.filter((r) => r.employee_id === null).sort(byDateDesc);
+  if (defaults[0]) return defaults[0].unit ?? null;
   return null;
 }
 
