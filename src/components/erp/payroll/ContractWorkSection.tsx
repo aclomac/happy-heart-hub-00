@@ -22,7 +22,7 @@ import {
   listWorkEntries,
   type ContractWorkEntry,
 } from "@/lib/contract-work";
-import { listLabourRates, pickLabourRate } from "@/lib/labour-rates";
+import { listLabourRates, pickLabourRate, pickLabourUnit, workTypesForItem } from "@/lib/labour-rates";
 
 type Emp = { id: string; code: string | null; name: string; pay_type: string };
 type Item = { id: string; name: string; sku: string | null };
