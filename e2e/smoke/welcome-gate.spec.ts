@@ -156,3 +156,75 @@ test.describe("/welcome mode persistence across reloads", () => {
     });
   }
 });
+
+test.describe("/welcome mode persistence across logout", () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  test("chosen mode survives logout and next login skips /welcome", async ({ page }) => {
+    await clearLaunchMode(page);
+
+    // 1. Pick Cloud via the chooser.
+    await page.goto("/welcome");
+    await page.getByRole("button", { name: /continue with cloud/i }).click();
+    await page.waitForURL(/\/signup$/, { timeout: 15_000 });
+
+    // 2. Log in as demo (this establishes an authenticated session).
+    await loginAsDemo(page);
+    await page.waitForURL((url) => url.pathname.startsWith("/app"), {
+      timeout: 30_000,
+    });
+
+    // Confirm the launch-mode flag survived the login.
+    const afterLogin = await page.evaluate(() =>
+      window.localStorage.getItem("erpovo:launch-mode"),
+    );
+    expect(afterLogin).toBe("cloud");
+
+    // 3. Log out — clear all auth-related state but preserve launch-mode.
+    await page.evaluate(() => {
+      const keep = window.localStorage.getItem("erpovo:launch-mode");
+      // Clear Supabase session + demo session + everything else.
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < window.localStorage.length; i++) {
+        const k = window.localStorage.key(i);
+        if (k && k !== "erpovo:launch-mode") keysToRemove.push(k);
+      }
+      for (const k of keysToRemove) window.localStorage.removeItem(k);
+      // Defensive: re-set the preserved value in case of races.
+      if (keep) window.localStorage.setItem("erpovo:launch-mode", keep);
+    });
+    // Clear cookies too so Supabase auth-cookie based sessions are gone.
+    await page.context().clearCookies();
+
+    // 4. Hard reload — we're now unauthenticated but with mode chosen.
+    await page.reload({ waitUntil: "domcontentloaded" });
+
+    const afterLogout = await page.evaluate(() =>
+      window.localStorage.getItem("erpovo:launch-mode"),
+    );
+    expect(afterLogout).toBe("cloud");
+
+    // 5. Visiting /welcome directly now: protected /app should send
+    //    anon-with-mode to /login (NOT /welcome).
+    await page.goto("/app/items");
+    await page.waitForURL(/\/login$/, { timeout: 15_000 });
+
+    // 6. Next login flow: /login is reachable directly, no /welcome gate.
+    await page.goto("/login");
+    await page.waitForURL(/\/login$/, { timeout: 15_000 });
+    await expect(page.getByLabel(/email/i)).toBeVisible({ timeout: 10_000 });
+
+    // 7. Actually log back in and confirm we land in /app, not /welcome.
+    await loginAsDemo(page);
+    await page.waitForURL((url) => url.pathname.startsWith("/app"), {
+      timeout: 30_000,
+    });
+    expect(page.url()).not.toMatch(/\/welcome/);
+
+    const finalValue = await page.evaluate(() =>
+      window.localStorage.getItem("erpovo:launch-mode"),
+    );
+    expect(finalValue).toBe("cloud");
+  });
+});
+
