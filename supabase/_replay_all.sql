@@ -2995,6 +2995,58 @@ USING (public.has_role(auth.uid(), 'admin'::app_role));
 CREATE INDEX idx_contact_requests_status_created ON public.contact_requests (status, created_at DESC);
 
 -- ===== supabase/migrations/20260603142519_2dc3813b-8a4d-403d-8a23-f0c52bb527b7.sql =====
+-- Defensive: stock_transfers / stock_transfer_items were originally created
+-- via the dashboard, so no migration defines them. Recreate idempotently
+-- before any dependent policy/index/grant runs.
+CREATE TABLE IF NOT EXISTS public.stock_transfers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  company_id UUID NOT NULL,
+  from_warehouse_id UUID,
+  to_warehouse_id UUID,
+  transfer_no TEXT,
+  transfer_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  note TEXT,
+  created_by UUID,
+  posted_by UUID,
+  deleted_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_stock_transfers_company ON public.stock_transfers(company_id);
+CREATE INDEX IF NOT EXISTS idx_stock_transfers_date ON public.stock_transfers(company_id, transfer_date DESC);
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.stock_transfers TO authenticated;
+GRANT ALL ON public.stock_transfers TO service_role;
+ALTER TABLE public.stock_transfers ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS st_select ON public.stock_transfers;
+CREATE POLICY st_select ON public.stock_transfers FOR SELECT TO authenticated
+  USING (public.has_company_access(auth.uid(), company_id));
+DROP POLICY IF EXISTS st_write ON public.stock_transfers;
+CREATE POLICY st_write ON public.stock_transfers FOR ALL TO authenticated
+  USING (public.has_company_access(auth.uid(), company_id))
+  WITH CHECK (public.has_company_access(auth.uid(), company_id));
+
+CREATE TABLE IF NOT EXISTS public.stock_transfer_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  transfer_id UUID NOT NULL REFERENCES public.stock_transfers(id) ON DELETE CASCADE,
+  item_id UUID NOT NULL,
+  variant_id UUID,
+  qty NUMERIC NOT NULL DEFAULT 0,
+  unit TEXT NOT NULL DEFAULT 'PCS',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_stock_transfer_items_transfer ON public.stock_transfer_items(transfer_id);
+CREATE INDEX IF NOT EXISTS idx_stock_transfer_items_item ON public.stock_transfer_items(item_id);
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.stock_transfer_items TO authenticated;
+GRANT ALL ON public.stock_transfer_items TO service_role;
+ALTER TABLE public.stock_transfer_items ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS sti_select ON public.stock_transfer_items;
+CREATE POLICY sti_select ON public.stock_transfer_items FOR SELECT TO authenticated
+  USING (EXISTS (
+    SELECT 1 FROM public.stock_transfers t
+    WHERE t.id = stock_transfer_items.transfer_id
+      AND public.has_company_access(auth.uid(), t.company_id)
+  ));
+
 DROP POLICY IF EXISTS sti_write ON public.stock_transfer_items;
 CREATE POLICY sti_write ON public.stock_transfer_items
   AS PERMISSIVE FOR ALL TO authenticated
