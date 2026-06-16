@@ -455,6 +455,57 @@ test.describe("/welcome deep-link gate — Local mode", () => {
   });
 });
 
+test.describe("/welcome Local mode survives post-login refresh", () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  test("Local flag stays set after login + reload, /app/items does not bounce to /welcome", async ({
+    page,
+  }) => {
+    await clearLaunchMode(page);
+
+    // 1. Pick Local, then log in as demo.
+    await page.goto("/welcome");
+    await page.getByRole("button", { name: /continue with local/i }).click();
+    await page.waitForURL(/\/signup$/, { timeout: 15_000 });
+
+    await loginAsDemo(page);
+    await page.waitForURL((url) => url.pathname.startsWith("/app"), {
+      timeout: 30_000,
+    });
+
+    // 2. Navigate to /app/items, then hard reload.
+    await page.goto("/app/items");
+    await page.waitForURL(/\/app\/items/, { timeout: 15_000 });
+
+    await page.reload({ waitUntil: "domcontentloaded" });
+
+    // 3. After refresh: still on /app/items, never bounced to /welcome.
+    await page.waitForURL(/\/app\/items/, { timeout: 15_000 });
+    expect(page.url()).not.toMatch(/\/welcome/);
+
+    // 4. Flag is still "local".
+    const afterReload = await page.evaluate(() =>
+      window.localStorage.getItem("erpovo:launch-mode"),
+    );
+    expect(afterReload).toBe("local");
+
+    // 5. One more navigation round-trip to confirm it sticks.
+    await page.goto("/app");
+    await page.waitForURL(/\/app(\/|$)/, { timeout: 15_000 });
+    expect(page.url()).not.toMatch(/\/welcome/);
+
+    await page.goto("/app/items");
+    await page.waitForURL(/\/app\/items/, { timeout: 15_000 });
+    expect(page.url()).not.toMatch(/\/welcome/);
+
+    const finalValue = await page.evaluate(() =>
+      window.localStorage.getItem("erpovo:launch-mode"),
+    );
+    expect(finalValue).toBe("local");
+  });
+});
+
+
 
 
 
