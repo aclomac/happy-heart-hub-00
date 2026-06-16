@@ -185,10 +185,45 @@ function Signup() {
             </div>
           ) : (
             <>
-              <h2 className="text-2xl font-bold mb-1">Create your local ERPOVO account</h2>
-              <p className="text-sm text-muted-foreground mb-6">
-                Personal ERP account for your business
+              <h2 className="text-2xl font-bold mb-1">Create your ERPOVO account</h2>
+              <p className="text-sm text-muted-foreground mb-4">
+                Choose how you want your data stored
               </p>
+
+              {!pendingSignup && (
+                <div className="grid grid-cols-2 gap-2 mb-5 p-1 bg-muted rounded-md">
+                  <button
+                    type="button"
+                    onClick={() => setMode("local")}
+                    className={`text-xs font-medium py-2 rounded transition-colors ${
+                      mode === "local"
+                        ? "bg-card shadow-sm text-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    📱 Local / Personal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMode("cloud")}
+                    className={`text-xs font-medium py-2 rounded transition-colors ${
+                      mode === "cloud"
+                        ? "bg-card shadow-sm text-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    ☁️ Cloud Sync
+                  </button>
+                </div>
+              )}
+              {!pendingSignup && (
+                <p className="text-[11px] text-muted-foreground mb-4 -mt-2">
+                  {mode === "local"
+                    ? "Data stays on this device only. No internet required after setup."
+                    : "Data syncs across PC, mobile browser, and Android app via Lovable Cloud."}
+                </p>
+              )}
+
 
               {pendingSignup ? (
                 <form className="space-y-3" onSubmit={onVerifyEmail} noValidate>
