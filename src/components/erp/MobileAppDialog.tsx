@@ -35,7 +35,7 @@ export function MobileAppDialog({ open, onOpenChange }: Props) {
   const isHttps = typeof window !== "undefined" && window.location.protocol === "https:";
   const hasSW = typeof navigator !== "undefined" && "serviceWorker" in navigator;
   const demo = isDemoMode();
-  const company = demo ? getDemoCompany()?.name ?? "Chair King" : "Chair King";
+  const company = "Chair King";
 
   useEffect(() => {
     if (!open || !appUrl) return;
