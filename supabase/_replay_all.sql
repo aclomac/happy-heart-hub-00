@@ -2215,6 +2215,36 @@ CREATE POLICY sm_write ON public.stock_movements FOR ALL TO authenticated
   );
 
 -- item_store_stock: derived cache, only admin/owner may touch directly
+-- NOTE: This table was created manually in the original project's dashboard
+-- and was never captured by a historical migration. Re-create it here so the
+-- replay script is self-contained against an empty Cloud DB.
+CREATE TABLE IF NOT EXISTS public.item_store_stock (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  company_id uuid NOT NULL,
+  item_id uuid NOT NULL,
+  variant_id uuid NULL,
+  warehouse_id uuid NOT NULL,
+  qty numeric NOT NULL DEFAULT 0,
+  opening_stock numeric NOT NULL DEFAULT 0,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS item_store_stock_unique
+  ON public.item_store_stock (company_id, item_id, warehouse_id, COALESCE(variant_id, '00000000-0000-0000-0000-000000000000'::uuid));
+CREATE INDEX IF NOT EXISTS item_store_stock_company_idx ON public.item_store_stock (company_id);
+CREATE INDEX IF NOT EXISTS item_store_stock_item_idx ON public.item_store_stock (item_id);
+CREATE INDEX IF NOT EXISTS item_store_stock_warehouse_idx ON public.item_store_stock (warehouse_id);
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.item_store_stock TO authenticated;
+GRANT ALL ON public.item_store_stock TO service_role;
+
+ALTER TABLE public.item_store_stock ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS iss_read ON public.item_store_stock;
+CREATE POLICY iss_read ON public.item_store_stock FOR SELECT TO authenticated
+  USING (public.has_company_access(auth.uid(), company_id));
+
 DROP POLICY IF EXISTS iss_write ON public.item_store_stock;
 CREATE POLICY iss_write ON public.item_store_stock FOR ALL TO authenticated
   USING (public.has_company_role(auth.uid(), company_id, 'admin'))
