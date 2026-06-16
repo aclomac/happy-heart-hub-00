@@ -20,6 +20,7 @@ import {
   DEMO_USER_EMAIL,
   DEMO_COMPANY_ID,
 } from "@/lib/demo/localStore";
+import { hasChosenLaunchMode } from "@/lib/launch-mode";
 
 export type RouteDecision =
   | { status: "loading"; debug: DecisionDebug }
