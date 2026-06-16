@@ -7,6 +7,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { postOnce, reverseOnce } from "@/lib/cash-ledger";
 import { calcTotal, statusFor, type ContractWorkEntry } from "@/lib/contract-work";
 
+// Untyped escape hatch for tables added in the factory-payroll migration that
+// haven't yet been included in the generated Database types.
+const sb = supabase as unknown as { from: (table: string) => any };
+
 export type ContractPaymentInput = {
   companyId: string;
   employeeId: string;
@@ -44,7 +48,6 @@ export async function createContractPayment(input: ContractPaymentInput): Promis
 }> {
   if (!input.amount || input.amount <= 0) throw new Error("Amount must be greater than zero");
 
-  // 1) Post the cash/bank impact first (idempotent through reference_type/id).
   const posted = await postOnce({
     companyId: input.companyId,
     direction: "out",
@@ -56,8 +59,7 @@ export async function createContractPayment(input: ContractPaymentInput): Promis
     notes: input.notes ?? null,
   });
 
-  // 2) Insert the payment row.
-  const { data: payment, error: pErr } = await supabase
+  const { data: payment, error: pErr } = await sb
     .from("contract_payments")
     .insert({
       company_id: input.companyId,
@@ -77,8 +79,7 @@ export async function createContractPayment(input: ContractPaymentInput): Promis
     throw pErr ?? new Error("Failed to create contract payment");
   }
 
-  // 3) FIFO-allocate across this worker's unpaid entries (oldest first).
-  const { data: open } = await supabase
+  const { data: open } = await sb
     .from("contract_work_entries")
     .select("id,total,paid_amount")
     .eq("company_id", input.companyId)
@@ -87,54 +88,61 @@ export async function createContractPayment(input: ContractPaymentInput): Promis
     .in("status", ["unpaid", "partial"])
     .order("work_date", { ascending: true });
 
-  const allocations = allocateFIFO((open ?? []) as ContractWorkEntry[], input.amount);
+  const allocations = allocateFIFO(
+    ((open ?? []) as ContractWorkEntry[]).map((e) => ({
+      id: e.id,
+      total: Number(e.total),
+      paid_amount: Number(e.paid_amount),
+    })),
+    input.amount,
+  );
 
   if (allocations.length > 0) {
-    await supabase.from("contract_payment_allocations").insert(
+    await sb.from("contract_payment_allocations").insert(
       allocations.map((a) => ({
-        payment_id: payment.id,
+        payment_id: payment.id as string,
         work_entry_id: a.workEntryId,
         amount: a.amount,
       })),
     );
     for (const a of allocations) {
-      const entry = (open ?? []).find((e) => e.id === a.workEntryId);
+      const entry = (open ?? []).find((e: ContractWorkEntry) => e.id === a.workEntryId);
       if (!entry) continue;
       const newPaid = Number(entry.paid_amount) + a.amount;
       const newStatus = statusFor(Number(entry.total), newPaid);
-      await supabase
+      await sb
         .from("contract_work_entries")
         .update({ paid_amount: newPaid, status: newStatus })
         .eq("id", a.workEntryId);
     }
   }
 
-  return { paymentId: payment.id, txnId: posted.id, allocations };
+  return { paymentId: payment.id as string, txnId: posted.id, allocations };
 }
 
 /** Reverse a contract payment: undo cash/bank impact, restore work entry balances. */
 export async function reverseContractPayment(paymentId: string): Promise<void> {
-  const { data: payment } = await supabase
+  const { data: payment } = await sb
     .from("contract_payments")
     .select("id,posted_txn_id,status")
     .eq("id", paymentId)
     .maybeSingle();
   if (!payment || payment.status === "reversed") return;
 
-  const { data: allocs } = await supabase
+  const { data: allocs } = await sb
     .from("contract_payment_allocations")
     .select("work_entry_id,amount")
     .eq("payment_id", paymentId);
 
-  for (const a of allocs ?? []) {
-    const { data: entry } = await supabase
+  for (const a of (allocs ?? []) as { work_entry_id: string; amount: number }[]) {
+    const { data: entry } = await sb
       .from("contract_work_entries")
       .select("total,paid_amount")
       .eq("id", a.work_entry_id)
       .maybeSingle();
     if (!entry) continue;
     const newPaid = Math.max(0, Number(entry.paid_amount) - Number(a.amount));
-    await supabase
+    await sb
       .from("contract_work_entries")
       .update({
         paid_amount: newPaid,
@@ -142,25 +150,23 @@ export async function reverseContractPayment(paymentId: string): Promise<void> {
       })
       .eq("id", a.work_entry_id);
   }
-  await supabase.from("contract_payment_allocations").delete().eq("payment_id", paymentId);
+  await sb.from("contract_payment_allocations").delete().eq("payment_id", paymentId);
   if (payment.posted_txn_id) await reverseOnce(payment.posted_txn_id).catch(() => {});
-  await supabase.from("contract_payments").update({ status: "reversed" }).eq("id", paymentId);
+  await sb.from("contract_payments").update({ status: "reversed" }).eq("id", paymentId);
 }
 
-// Convenience for the UI: outstanding due for a worker.
 export async function getWorkerDue(companyId: string, employeeId: string): Promise<number> {
-  const { data } = await supabase
+  const { data } = await sb
     .from("contract_work_entries")
     .select("total,paid_amount")
     .eq("company_id", companyId)
     .eq("employee_id", employeeId)
     .is("deleted_at", null)
     .in("status", ["unpaid", "partial"]);
-  return (data ?? []).reduce(
+  return ((data ?? []) as { total: number; paid_amount: number }[]).reduce(
     (s, e) => s + Math.max(0, Number(e.total) - Number(e.paid_amount)),
     0,
   );
 }
 
-// Re-export so callers don't need to know which module owns the helpers.
 export { calcTotal, statusFor };

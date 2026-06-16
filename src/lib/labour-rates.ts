@@ -6,6 +6,17 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
+// Untyped escape hatch for tables added in the factory-payroll migration
+// that haven't yet been included in the generated Database types.
+const sb = supabase as unknown as {
+  from: (table: string) => {
+    select: (cols?: string) => any;
+    insert: (row: any) => any;
+    update: (row: any) => any;
+    delete: () => any;
+  };
+};
+
 export type LabourRate = {
   id: string;
   company_id: string;
@@ -52,7 +63,7 @@ export function pickLabourRate(
 }
 
 export async function listLabourRates(companyId: string): Promise<LabourRate[]> {
-  const { data, error } = await supabase
+  const { data, error } = await sb
     .from("labour_rates")
     .select("*")
     .eq("company_id", companyId)
@@ -65,7 +76,7 @@ export async function upsertLabourRate(
   row: Omit<LabourRate, "id"> & { id?: string },
 ): Promise<LabourRate> {
   if (row.id) {
-    const { data, error } = await supabase
+    const { data, error } = await sb
       .from("labour_rates")
       .update(row)
       .eq("id", row.id)
@@ -74,7 +85,7 @@ export async function upsertLabourRate(
     if (error) throw error;
     return data as LabourRate;
   }
-  const { data, error } = await supabase
+  const { data, error } = await sb
     .from("labour_rates")
     .insert(row)
     .select()
@@ -84,7 +95,7 @@ export async function upsertLabourRate(
 }
 
 export async function deleteLabourRate(id: string): Promise<void> {
-  const { error } = await supabase.from("labour_rates").delete().eq("id", id);
+  const { error } = await sb.from("labour_rates").delete().eq("id", id);
   if (error) throw error;
 }
 

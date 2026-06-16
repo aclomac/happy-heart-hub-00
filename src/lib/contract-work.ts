@@ -3,6 +3,12 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
+// Untyped escape hatch for the contract_work_entries table — added in the
+// factory-payroll migration; not yet in the generated Database types.
+const sb = supabase as unknown as {
+  from: (table: string) => any;
+};
+
 export type ContractWorkStatus = "unpaid" | "partial" | "paid";
 
 export type ContractWorkEntry = {
@@ -50,7 +56,7 @@ export async function createWorkEntry(input: {
   notes?: string | null;
 }): Promise<ContractWorkEntry> {
   const total = calcTotal(input.qty, input.rate);
-  const { data, error } = await supabase
+  const { data, error } = await sb
     .from("contract_work_entries")
     .insert({
       company_id: input.companyId,
@@ -74,11 +80,16 @@ export async function createWorkEntry(input: {
 
 export async function updateWorkEntry(
   id: string,
-  patch: Partial<Pick<ContractWorkEntry, "qty" | "rate" | "work_type" | "item_id" | "work_date" | "notes" | "production_ref">>,
+  patch: Partial<
+    Pick<
+      ContractWorkEntry,
+      "qty" | "rate" | "work_type" | "item_id" | "work_date" | "notes" | "production_ref"
+    >
+  >,
 ): Promise<ContractWorkEntry> {
   const update: Record<string, unknown> = { ...patch };
   if (patch.qty != null || patch.rate != null) {
-    const { data: cur } = await supabase
+    const { data: cur } = await sb
       .from("contract_work_entries")
       .select("qty,rate,paid_amount")
       .eq("id", id)
@@ -89,7 +100,7 @@ export async function updateWorkEntry(
     update.total = total;
     update.status = statusFor(total, Number(cur?.paid_amount ?? 0));
   }
-  const { data, error } = await supabase
+  const { data, error } = await sb
     .from("contract_work_entries")
     .update(update)
     .eq("id", id)
@@ -101,9 +112,14 @@ export async function updateWorkEntry(
 
 export async function listWorkEntries(
   companyId: string,
-  filters: { employeeId?: string; status?: ContractWorkStatus; from?: string; to?: string } = {},
+  filters: {
+    employeeId?: string;
+    status?: ContractWorkStatus;
+    from?: string;
+    to?: string;
+  } = {},
 ): Promise<ContractWorkEntry[]> {
-  let q = supabase
+  let q = sb
     .from("contract_work_entries")
     .select("*")
     .eq("company_id", companyId)
