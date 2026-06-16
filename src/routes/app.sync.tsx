@@ -231,7 +231,8 @@ function Sync() {
     },
   });
 
-  const currentFp = typeof window !== "undefined" ? localStorage.getItem("erpovo:device_fp") : null;
+  // NOTE: must stay in sync with KEY in src/lib/device-fingerprint.ts
+  const currentFp = typeof window !== "undefined" ? localStorage.getItem("erpovo:device-id") : null;
 
   const logoutDevice = async (id: string, fingerprint: string, isCurrent: boolean) => {
     const msg = isCurrent ? "Log out from this device?" : "Revoke access for this device?";
