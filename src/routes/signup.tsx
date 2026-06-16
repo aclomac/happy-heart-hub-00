@@ -61,6 +61,9 @@ function Signup() {
       return;
     }
 
+    // Persist launch-mode choice so /welcome gate is satisfied.
+    setLaunchMode(mode);
+
     // Cloud sign-up — real Supabase auth, data syncs across devices.
     if (mode === "cloud") {
       setLoading(true);
