@@ -515,6 +515,7 @@ export function ERPSidebar() {
           </div>
           <button
             type="button"
+            onClick={() => setMobileAppOpen(true)}
             className="w-full rounded-md bg-white/10 hover:bg-white/15 text-white text-[11px] font-semibold py-1.5 transition-colors"
           >
             Get the App
