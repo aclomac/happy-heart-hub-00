@@ -356,5 +356,57 @@ test.describe("/welcome redirect → re-pick → no more bouncing", () => {
   }
 });
 
+test.describe("/welcome deep-link gate", () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  test("deep link /app/items with no mode → /welcome → pick → login → /app/items", async ({
+    page,
+  }) => {
+    const bag = attachErrorWatch(page);
+
+    // 1. Cleared launch-mode flag.
+    await clearLaunchMode(page);
+
+    // 2. Open a deep link directly. Must be intercepted by the gate.
+    await page.goto("/app/items");
+    await page.waitForURL(/\/welcome$/, { timeout: 15_000 });
+    await expect(
+      page.getByRole("heading", { name: /how should we store your data/i }),
+    ).toBeVisible();
+
+    // 3. Pick Cloud on the chooser.
+    await page.getByRole("button", { name: /continue with cloud/i }).click();
+    await page.waitForURL(/\/signup$/, { timeout: 15_000 });
+
+    const persisted = await page.evaluate(() =>
+      window.localStorage.getItem("erpovo:launch-mode"),
+    );
+    expect(persisted).toBe("cloud");
+
+    // 4. Re-attempt the same deep link while still anon. With a mode chosen,
+    //    the orchestrator routes anon-with-mode to /login (not /welcome).
+    await page.goto("/app/items");
+    await page.waitForURL(/\/login$/, { timeout: 15_000 });
+    expect(page.url()).not.toMatch(/\/welcome/);
+
+    // 5. Log in as demo and confirm we end up inside /app (and the
+    //    launch-mode survived everything).
+    await loginAsDemo(page);
+    await page.waitForURL((url) => url.pathname.startsWith("/app"), {
+      timeout: 30_000,
+    });
+    expect(page.url()).not.toMatch(/\/welcome/);
+
+    const final = await page.evaluate(() =>
+      window.localStorage.getItem("erpovo:launch-mode"),
+    );
+    expect(final).toBe("cloud");
+
+    // No unexpected runtime errors during the full flow.
+    expect(bag.all()).toEqual([]);
+  });
+});
+
+
 
 
