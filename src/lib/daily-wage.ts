@@ -41,6 +41,8 @@ export type DailyWageRow = {
 
 /** True if employee should appear on the Daily Wage register. */
 export function isDailyWageEmployee(emp: DailyWageEmployee): boolean {
+  // Contract / piece-rate workers are paid from Contract Work, never Daily Wage.
+  if (emp.wage_type === "contract" || emp.pay_type === "contract") return false;
   if (emp.wage_type === "daily") return true;
   if (emp.pay_type === "daily") return true;
   if ((emp.wage_type ?? emp.pay_type) == null && Number(emp.daily_wage) > 0)
