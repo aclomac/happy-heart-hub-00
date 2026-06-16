@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { pickLabourRate } from "@/lib/labour-rates";
+import { pickLabourRate, workTypesForItem, pickLabourUnit } from "@/lib/labour-rates";
 
 const base = {
   is_active: true,
