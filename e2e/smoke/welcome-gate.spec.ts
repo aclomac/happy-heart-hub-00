@@ -110,3 +110,49 @@ test.describe("/welcome with authenticated session", () => {
     expect(page.url()).not.toMatch(/\/welcome$/);
   });
 });
+
+test.describe("/welcome mode persistence across reloads", () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  for (const mode of ["local", "cloud"] as const) {
+    test(`${mode} mode survives full reload and keeps routing away from /welcome`, async ({
+      page,
+    }) => {
+      await clearLaunchMode(page);
+
+      // 1. Pick the mode via the chooser UI.
+      await page.goto("/welcome");
+      const label = mode === "local" ? /continue with local/i : /continue with cloud/i;
+      await page.getByRole("button", { name: label }).click();
+      await page.waitForURL(/\/signup$/, { timeout: 15_000 });
+
+      // 2. Hard reload — full browser reload, not SPA navigation.
+      await page.reload({ waitUntil: "domcontentloaded" });
+
+      // Flag must still be in localStorage.
+      const afterReload = await page.evaluate(() =>
+        window.localStorage.getItem("erpovo:launch-mode"),
+      );
+      expect(afterReload).toBe(mode);
+
+      // 3. Going back to /welcome directly must NOT show the chooser —
+      //    the gate redirects away because a mode is already chosen.
+      await page.goto("/login");
+      await page.waitForURL(/\/login$/, { timeout: 15_000 });
+      await expect(page.getByLabel(/email/i)).toBeVisible({ timeout: 10_000 });
+
+      await page.goto("/signup");
+      await page.waitForURL(/\/signup$/, { timeout: 15_000 });
+
+      // 4. Protected /app no longer redirects to /welcome (anon-with-mode → /login).
+      await page.goto("/app/items");
+      await page.waitForURL(/\/login$/, { timeout: 15_000 });
+
+      // Confirm the flag is still there after all those navigations.
+      const finalValue = await page.evaluate(() =>
+        window.localStorage.getItem("erpovo:launch-mode"),
+      );
+      expect(finalValue).toBe(mode);
+    });
+  }
+});
