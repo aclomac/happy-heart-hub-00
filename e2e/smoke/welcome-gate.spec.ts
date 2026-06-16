@@ -407,6 +407,55 @@ test.describe("/welcome deep-link gate", () => {
   });
 });
 
+test.describe("/welcome deep-link gate — Local mode", () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  test("deep link /app/items with no mode → /welcome → pick Local → /login → /app", async ({
+    page,
+  }) => {
+    const bag = attachErrorWatch(page);
+
+    await clearLaunchMode(page);
+
+    // 1. Deep link must be intercepted by the gate.
+    await page.goto("/app/items");
+    await page.waitForURL(/\/welcome$/, { timeout: 15_000 });
+    await expect(
+      page.getByRole("heading", { name: /how should we store your data/i }),
+    ).toBeVisible();
+
+    // 2. Pick Local on the chooser.
+    await page.getByRole("button", { name: /continue with local/i }).click();
+    await page.waitForURL(/\/signup$/, { timeout: 15_000 });
+
+    const persisted = await page.evaluate(() =>
+      window.localStorage.getItem("erpovo:launch-mode"),
+    );
+    expect(persisted).toBe("local");
+
+    // 3. Re-attempt the deep link while still anon → /login (not /welcome).
+    await page.goto("/app/items");
+    await page.waitForURL(/\/login$/, { timeout: 15_000 });
+    expect(page.url()).not.toMatch(/\/welcome/);
+    await expect(page.getByLabel(/email/i)).toBeVisible({ timeout: 10_000 });
+
+    // 4. Log in and confirm we land inside /app (mode preserved).
+    await loginAsDemo(page);
+    await page.waitForURL((url) => url.pathname.startsWith("/app"), {
+      timeout: 30_000,
+    });
+    expect(page.url()).not.toMatch(/\/welcome/);
+
+    const final = await page.evaluate(() =>
+      window.localStorage.getItem("erpovo:launch-mode"),
+    );
+    expect(final).toBe("local");
+
+    expect(bag.all()).toEqual([]);
+  });
+});
+
+
 
 
 
