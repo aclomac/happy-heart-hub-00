@@ -85,7 +85,7 @@ export function MobileAppDialog({ open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-md max-h-[90vh] overflow-y-auto overflow-x-hidden p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Smartphone className="w-5 h-5" /> Get ERPOVO Mobile App
@@ -96,34 +96,36 @@ export function MobileAppDialog({ open, onOpenChange }: Props) {
         <div className="space-y-4">
           {/* Brand */}
           <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
-            <div className="grid place-items-center w-12 h-12 rounded-xl bg-gradient-to-br from-[#0EA5A8] to-[#2563EB] text-white">
+            <div className="grid place-items-center w-12 h-12 shrink-0 rounded-xl bg-gradient-to-br from-[#0EA5A8] to-[#2563EB] text-white">
               <Smartphone className="w-6 h-6" />
             </div>
-            <div className="min-w-0">
-              <div className="font-semibold">ERPOVO Mobile App</div>
+            <div className="min-w-0 flex-1">
+              <div className="font-semibold truncate">ERPOVO Mobile App</div>
               <div className="text-xs text-muted-foreground truncate">Company: {company}</div>
               <div className="text-xs text-muted-foreground truncate">{appUrl}</div>
             </div>
           </div>
 
+
           {/* QR */}
           <div className="flex flex-col items-center gap-2 p-3 rounded-lg border">
             {!isPublished ? (
-              <div className="text-sm text-amber-600 dark:text-amber-400 flex items-start gap-2">
+              <div className="text-sm text-amber-600 dark:text-amber-400 flex items-start gap-2 w-full">
                 <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
-                <span>Preview links may change. Publish for permanent mobile access.</span>
+                <span className="min-w-0">Preview links may change. Publish for permanent mobile access.</span>
               </div>
             ) : null}
             {qrDataUrl ? (
-              <img src={qrDataUrl} alt="QR code to open ERPOVO on mobile" className="w-48 h-48" />
+              <img src={qrDataUrl} alt="QR code to open ERPOVO on mobile" className="w-40 h-40 sm:w-48 sm:h-48 max-w-full" />
             ) : (
-              <div className="w-48 h-48 grid place-items-center text-xs text-muted-foreground">Generating QR…</div>
+              <div className="w-40 h-40 sm:w-48 sm:h-48 grid place-items-center text-xs text-muted-foreground">Generating QR…</div>
             )}
             <div className="text-xs text-muted-foreground text-center">Scan with your phone camera</div>
           </div>
 
+
           {/* Actions */}
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <Button onClick={handleInstall} disabled={isInstalled} className="w-full">
               <Download className="w-4 h-4 mr-2" />
               {isInstalled ? "Installed" : "Install App"}
