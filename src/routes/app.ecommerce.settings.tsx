@@ -12,14 +12,15 @@ import { DisabledLiveButton } from "@/components/erp/ecommerce/EcommerceUI";
 import { DiagnosticsPanel } from "@/components/erp/ecommerce/DiagnosticsPanel";
 import { LiveIntegrationWizard } from "@/components/erp/ecommerce/LiveIntegrationWizard";
 import { LiveTestChecklist } from "@/components/erp/ecommerce/LiveTestChecklist";
-import { getSettings, setSettings, getCouriers, getWebsites, setWebsites, type EcoSettings } from "@/lib/demo/ecommerce";
+import { getSettings, setSettings, getCouriers, getWebsites, setWebsites, genId, type EcoSettings, type EcoWebsite } from "@/lib/demo/ecommerce";
 import {
-  getWooConfig, setWooConfig, resetWooConfig, wooConfigFromWebsite, type WooConfig,
+  getWooConfig, setWooConfig, resetWooConfig, wooConfigFromWebsite, maskedWooCreds, type WooConfig,
 } from "@/lib/integrations/woocommerce";
 import {
   getSteadfastConfig, setSteadfastConfig, resetSteadfastConfig, type SteadfastConfig,
 } from "@/lib/integrations/steadfast";
 import { testWooCommerceConnection, testSteadfastConnection, describeMode } from "@/lib/integrations/integrationClient";
+import { saveDiagnostic, maskSecret } from "@/lib/integrations/diagnostics";
 
 export const Route = createFileRoute("/app/ecommerce/settings")({ component: SettingsPage });
 
