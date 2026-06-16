@@ -216,10 +216,15 @@ function EmployeeDialog({
                 <SelectItem value="fixed">Fixed Monthly</SelectItem>
                 <SelectItem value="daily">Hajira / Daily Wage</SelectItem>
                 <SelectItem value="hourly">Hourly</SelectItem>
+                <SelectItem value="contract">Contract / Piece Rate</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          {form.pay_type === "fixed" ? (
+          {form.pay_type === "contract" ? (
+            <div className="col-span-1 text-xs text-muted-foreground self-end pb-2">
+              Contract worker payment is calculated from Contract Work entries and Labour Rates.
+            </div>
+          ) : form.pay_type === "fixed" ? (
             <div>
               <Label className="text-xs">Monthly Salary</Label>
               <Input
@@ -229,6 +234,7 @@ function EmployeeDialog({
                 onChange={(e) => setForm({ ...form, base_salary: e.target.value })}
               />
             </div>
+
           ) : (
             <div>
               <Label className="text-xs">Per-day Rate</Label>
