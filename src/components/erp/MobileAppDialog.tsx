@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Smartphone, Download, ExternalLink, Copy, Share2, CheckCircle2, AlertTriangle, Apple, Chrome, Monitor } from "lucide-react";
 import { toast } from "sonner";
 import { usePWA } from "@/hooks/use-pwa";
-import { isDemoMode, getDemoCompany } from "@/lib/demo/localStore";
+import { isDemoMode } from "@/lib/demo/localStore";
 
 interface Props {
   open: boolean;
