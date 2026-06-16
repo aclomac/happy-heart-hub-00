@@ -4141,11 +4141,13 @@ export type Database = {
           id: string
           item_id: string
           movement_date: string
-          notes: string | null
+          note: string | null
           qty: number
           reference_id: string | null
+          reference_no: string | null
           reference_type: string | null
           variant_id: string | null
+          warehouse_id: string | null
         }
         Insert: {
           company_id: string
@@ -4154,11 +4156,13 @@ export type Database = {
           id?: string
           item_id: string
           movement_date?: string
-          notes?: string | null
+          note?: string | null
           qty: number
           reference_id?: string | null
+          reference_no?: string | null
           reference_type?: string | null
           variant_id?: string | null
+          warehouse_id?: string | null
         }
         Update: {
           company_id?: string
@@ -4167,11 +4171,13 @@ export type Database = {
           id?: string
           item_id?: string
           movement_date?: string
-          notes?: string | null
+          note?: string | null
           qty?: number
           reference_id?: string | null
+          reference_no?: string | null
           reference_type?: string | null
           variant_id?: string | null
+          warehouse_id?: string | null
         }
         Relationships: [
           {
@@ -4179,6 +4185,13 @@ export type Database = {
             columns: ["variant_id"]
             isOneToOne: false
             referencedRelation: "item_variants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
             referencedColumns: ["id"]
           },
         ]
