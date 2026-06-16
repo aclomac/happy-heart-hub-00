@@ -1,100 +1,78 @@
-# Factory Employee Payroll & Production Labour
+## Factory Payroll & Production Labour — Revised Implementation Plan
 
-This is a large multi-module feature. Below is the proposed plan — please confirm scope before I implement, since this touches schema, payroll, production, cash/bank, and reports.
+Based on your answers:
+1. ✅ Apply staged SQL migration
+2. ✅ Daily wage uses existing Attendance (present + 0.5 × half)
+3. ✅ Production ref = free-text (optional link later)
+4. ⚠️ **Accrual accounting** for contract labour (was cash-basis in earlier draft — needs rework)
 
-## Scope summary
+### Phase 1 — Database (apply migration)
 
-Add support for 3 employee wage types (Monthly Salary, Daily Wage/Hajira, Contract/Piece-Rate) end-to-end, including product-wise labour rate setup, contract work entries, partial/full payments, accounting impact, and reports.
+Apply `scripts/pending-migrations/20260617_factory_payroll.sql` via the migration tool:
+- `employees`: `wage_type`, `daily_wage`, `overtime_rate`, `payment_method`
+- `labour_rates`, `contract_work_entries`, `contract_payments`, `contract_payment_allocations`
+- All with RLS + GRANTs + `is_company_member` policies
 
-## 1. Database schema (new migration)
+### Phase 2 — Accrual accounting rework
 
-New columns on `employees`:
-- `wage_type` enum: `monthly` | `daily` | `contract` (default `monthly`, backfilled from existing `pay_type`)
-- `overtime_rate`, `payment_method`, `phone`, `address`, `joining_date`, `designation` (added if missing)
+Earlier draft posts cash impact only at payment time. Switch to accrual:
 
-New tables (all with public-schema GRANTs + RLS scoped by `company_id`):
-- `labour_rates` — product_id, work_type, rate, unit, effective_date, employee_id (nullable = default), is_active
-- `contract_work_entries` — date, employee_id, product_id, work_type, qty, rate, total, production_ref, notes, status (`unpaid`/`partial`/`paid`), paid_amount, company_id
-- `contract_payments` — employee_id, payment_date, amount, method, bank_account_id, posted_txn_id, notes
-- `contract_payment_allocations` — payment_id, work_entry_id, amount (for partial allocation)
+- **At work entry creation** → post `labour_expense` (DR) / `labour_payable` (CR) via `postOnce` with `category: 'contract_labour_accrual'`, `referenceType: 'contract_work_entry'`, ref = entry id, `direction: 'accrual'` (no cash movement).
+- **At work entry edit/delete** → `reverseOnce` then re-post if still active.
+- **At payment** → post `labour_payable` (DR) / `cash|bank` (CR) via `postOnce` with `category: 'contract_labour_payment'`. No expense double-count.
+- **FIFO allocation** unchanged: pays oldest unpaid entries first; `paid_amount` + `status` updated.
+- **Reverse payment** → undo cash impact + restore work entry balances.
 
-Reuse existing `attendance`, `salary_slips`, `employee_payments`, `cash_transactions` for monthly/daily flows (already present).
+Touches:
+- `src/lib/cash-ledger.ts` — add `direction: 'accrual'` variant (skip bank balance change but still create journal row) OR add separate `postAccrual` helper. Pick the lighter touch — add `postAccrual` to avoid changing the cash-impact contract.
+- `src/lib/contract-work.ts` — call `postAccrual` on create, `reverseOnce` on delete/qty/rate change then re-post.
+- `src/lib/contract-payments.ts` — change category to `contract_labour_payment`, no longer the expense origin.
 
-## 2. Backend logic (`src/lib/`)
+### Phase 3 — UI tabs
 
-- `src/lib/labour-rates.ts` — CRUD + `resolveRate(employeeId, productId, workType, date)` (worker-specific > default, latest effective_date ≤ work date)
-- `src/lib/contract-work.ts` — create/update/delete entries, recompute status from allocations, reverse on delete
-- `src/lib/contract-payments.ts` — post payment via existing `cash-ledger.postOnce`/`reverseOnce` (category `contract_labour`), allocate FIFO against unpaid entries, update entry statuses
-- Extend `src/lib/soft-delete.ts` MODULES with `contract_work_entries` and `contract_payments` (reverse cash + clear allocations on delete; repost on restore)
-- Extend daily-wage calc in `payroll-setup.ts` is already sufficient; add a helper for date-range daily wage generation
+Extend `src/routes/app.payroll.tsx` TABS with:
+- `daily-wage` — Daily Wage Register (reads existing attendance, shows days × daily_wage + OT, pay button)
+- `contract-work` — Work Entry list + form (date, employee filter wage_type=contract, item, work_type, qty, rate auto-filled from `labour_rates`, total computed, optional production_ref free-text, notes)
+- `contract-payments` — Pay worker form (employee, amount, method, bank, date, notes) → FIFO allocation preview + post
 
-## 3. UI — Payroll tabs (`src/routes/app.payroll.tsx`)
+Extend EmployeesSection form: add `wage_type`, `daily_wage`, `overtime_rate`, `payment_method` fields.
 
-Extend existing tab bar:
-- Employees (add `wage_type` selector, conditional fields)
-- Attendance (existing)
-- Monthly Salary (existing Salary Setup + Payments, filtered to `wage_type=monthly`)
-- **Daily Wage** (new) — date-range generation from attendance × daily_rate + OT
-- **Contract Work** (new) — list + create entries, filter by worker/product/date/status
-- **Payments** (existing, extended) — show monthly, daily, and contract payments; for contract show unpaid entry picker
-- Reports (existing, extended)
+New Production tab module (`src/routes/app.production.tsx`):
+- Labour Rate Setup — CRUD `labour_rates` (item × work_type × rate, optional employee override, effective_date)
+- Work Entry — shortcut to contract-work tab
+- Worker Production — per-worker production summary
+- Product-wise Labour Cost — item × total labour qty/cost
 
-Conditional UI on Employee form: hide monthly fields for daily/contract, show daily rate for daily, etc.
+### Phase 4 — Reports
 
-## 4. UI — Production tabs (`src/routes/app.production.tsx`, new)
+In `PayrollReportsSection`, add report types:
+- Monthly Salary Report (existing)
+- Daily Wage Report (employee × month, days × rate)
+- Contract Payable Report (employee × outstanding due)
+- Worker-wise Production (employee × period × qty × earnings)
+- Product-wise Labour Cost (item × qty × cost)
+- Unpaid Labour Report (entries with status ≠ paid)
+- Payroll Summary (all 3 wage types combined)
+- PDF print for each via existing `print-utils`
 
-- **Labour Rate Setup** — table: product × work_type × rate, with worker-specific overrides
-- **Work Entry** — quick-entry form (date, worker, product, work_type → rate auto-fills, qty, total auto, save). Bulk paste support.
-- **Worker Production** — per-worker daily/weekly production summary
-- **Labour Cost** — per-product labour cost rollup
+### Phase 5 — Tests
 
-## 5. Reports (`src/routes/app.payroll-reports.tsx` extension)
+Update + add:
+- `contract-work.test.ts` — accrual hooks (mock postOnce/reverseOnce)
+- `contract-payments.test.ts` — FIFO + payment category
+- `labour-rates.test.ts` — already exists, keep
+- `daily-wage-calc.test.ts` — new: days_present × daily_wage + OT × overtime_rate
 
-- Monthly Salary Report
-- Daily Wage/Hajira Report
-- Contract Worker Payable Report (unpaid by worker)
-- Worker-wise Payment Report
-- Product-wise Labour Cost Report
-- Unpaid Labour Report
-- Payroll Summary
-- Print/PDF: payslip + contract payment voucher (reuse existing PDF utilities)
+### Phase 6 — Verify
 
-## 6. Accounting / Cash & Bank impact
+- `bunx tsc --noEmit`
+- `bun run qa:critical`
+- `bun run build`
 
-All payments go through `cash-ledger.postOnce` with:
-- `category: "salary"` for monthly/daily (existing)
-- `category: "contract_labour"` (new) for contract payments
-- `reference_type: "contract_payment"` linking back to row
+### What stays untouched
 
-Unpaid contract work entries appear as **Labour Payable** in reports (sum of `total - paid_amount` where status ≠ paid). No GL posting until payment, matching existing payroll behaviour.
+Sales/POS, stock, purchases, ecommerce, Steadfast, backup/restore, dashboard, existing payroll routes for monthly salary employees.
 
-## 7. Tests (`src/test/unit/`)
+### Scope acknowledgement
 
-New files:
-- `labour-rates.test.ts` — rate resolution precedence (worker > default, effective date)
-- `contract-work.test.ts` — total = qty × rate, status transitions
-- `contract-payments.test.ts` — full pay, partial pay, FIFO allocation, no double-post on edit, soft-delete reverses cash exactly once, restore re-applies once
-- `daily-wage-generation.test.ts` — present × rate + OT, advance/deduction
-- Extend `payroll-calc.test.ts` for any new helpers
-
-Run `bunx tsc --noEmit && bun run qa:critical && bun run build` at the end.
-
-## 8. Safety
-
-No changes to: sales/POS, stock posting, purchase, ecommerce sync, backup/restore, existing payroll routes (only additive tabs). Existing `employees.pay_type` kept and mirrored to `wage_type` for backwards compat.
-
-## Technical details
-
-- Migration order: `CREATE TABLE` → `GRANT SELECT,INSERT,UPDATE,DELETE ON ... TO authenticated; GRANT ALL TO service_role;` → `ENABLE RLS` → policies using `company_id IN (SELECT company_id FROM user_companies WHERE user_id = auth.uid())` pattern matching existing tables.
-- Contract payment uses same `postOnce/reverseOnce` symmetry as `salary_payments.test.ts` to guarantee no double stock/cash posting.
-- Labour rate resolution is pure-function and unit-tested without DB.
-
-## Estimated size
-
-~15-20 new files, ~5 file edits, 1 migration. Significant change — I want your go-ahead before starting.
-
-## Questions before I start
-
-1. Should daily wage employees use the existing **Attendance** tab (present/absent/half) as the source for "days present", or do you want a separate Hajira register?
-2. For contract work, should the **production reference** link to an existing production/manufacturing module (which I don't see in the project) or just be a free-text field for now?
-3. Confirm: contract labour cost should appear as **expense at the time of payment** (cash basis, matching current payroll), not at the time of work entry (accrual). OK?
+This is a sizable build (~15-20 files, ~2000 lines). I'll work in the order above, checking in after Phase 1 (migration applied) and after Phase 3 (UI usable) so you can test along the way rather than waiting for everything at once.
