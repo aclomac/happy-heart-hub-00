@@ -245,6 +245,19 @@ export function useRouteDecision(): RouteDecision {
     return { status: "ready", target, debug: { ...debug, redirectTarget: target } };
   }
 
+  // First-launch gate: unauthenticated visitors must pick Local vs Cloud
+  // on /welcome before reaching /login or /signup. The landing page (/)
+  // remains public so marketing/SEO still works.
+  if (
+    !auth.loading &&
+    !auth.userId &&
+    !hasChosenLaunchMode() &&
+    (isLoginRoute || pathname === "/signup")
+  ) {
+    const target = "/welcome";
+    return { status: "ready", target, debug: { ...debug, redirectTarget: target } };
+  }
+
   // Public pass-through pages: never redirect, never splash unless already authed above.
   if (PUBLIC_PASSTHROUGH.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
     return { status: "ready", target: null, debug };
