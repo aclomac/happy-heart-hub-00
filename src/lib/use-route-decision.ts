@@ -268,10 +268,11 @@ export function useRouteDecision(): RouteDecision {
     return { status: "loading", debug };
   }
 
-  // 2) Not authed and trying to reach a protected area → /login.
+  // 2) Not authed and trying to reach a protected area → /welcome (if not
+  //    chosen yet) or /login.
   if (!auth.userId) {
     if (isAppRoute || isCompaniesRoute) {
-      const target = "/login";
+      const target = hasChosenLaunchMode() ? "/login" : "/welcome";
       return { status: "ready", target, debug: { ...debug, redirectTarget: target } };
     }
     return { status: "ready", target: null, debug };
