@@ -44,6 +44,7 @@ import { toast } from "sonner";
 import { NotificationsPanel } from "@/components/erp/NotificationsPanel";
 import { PaymentReminderPanel } from "@/components/erp/PaymentReminderPanel";
 import { PWAInstallButton } from "@/components/erp/PWAInstallButton";
+import { SyncStatusBadge } from "@/components/erp/SyncStatusBadge";
 import { useQuery } from "@tanstack/react-query";
 import { CompanySwitcher } from "@/components/erp/CompanySwitcher";
 import {
