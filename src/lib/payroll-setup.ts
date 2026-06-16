@@ -82,7 +82,27 @@ export type SalaryCalcResult = {
   deduction_breakdown: { name: string; amount: number }[];
 };
 
+export function isContractPayType(payType: string | null | undefined): boolean {
+  return payType === "contract";
+}
+
 export function calcSalary(i: SalaryCalcInput): SalaryCalcResult {
+  // Contract / piece-rate workers are paid from Contract Work entries,
+  // not from monthly/daily salary generation. Return zeros so they are
+  // safely no-ops if accidentally included.
+  if (isContractPayType(i.pay_type)) {
+    return {
+      base: 0,
+      overtime: 0,
+      gross: 0,
+      bonus_total: 0,
+      deduction_total: 0,
+      advance_recovery: 0,
+      net: 0,
+      bonus_breakdown: [],
+      deduction_breakdown: [],
+    };
+  }
   const isFixed = i.pay_type === "fixed";
   const working = isFixed ? Math.max(1, i.setup.fixed.working_days || i.days_total || 26) : 1;
   const base = isFixed
@@ -93,6 +113,7 @@ export function calcSalary(i: SalaryCalcInput): SalaryCalcResult {
     Number(i.setup.overtime.rate_per_hour || 0) *
     Number(i.setup.overtime.multiplier || 1);
   const gross = base + overtime;
+
 
   const apply = (rules: SalaryRule[]) => {
     const breakdown: { name: string; amount: number }[] = [];
