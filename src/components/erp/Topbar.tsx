@@ -44,6 +44,7 @@ import { toast } from "sonner";
 import { NotificationsPanel } from "@/components/erp/NotificationsPanel";
 import { PaymentReminderPanel } from "@/components/erp/PaymentReminderPanel";
 import { PWAInstallButton } from "@/components/erp/PWAInstallButton";
+import { SyncStatusBadge } from "@/components/erp/SyncStatusBadge";
 import { useQuery } from "@tanstack/react-query";
 import { CompanySwitcher } from "@/components/erp/CompanySwitcher";
 import {
@@ -305,6 +306,8 @@ export function ERPTopbar() {
             </TooltipTrigger>
             <TooltipContent>{t("Notifications")}</TooltipContent>
           </Tooltip>
+          <SyncStatusBadge className="hidden sm:inline-flex" />
+
 
           <Tooltip>
             <TooltipTrigger asChild>
@@ -414,6 +417,7 @@ export function ERPTopbar() {
           </Link>
         </Button>
         <PWAInstallButton variant="outline" size="sm" className="hidden md:flex" />
+        <SyncStatusBadge className="hidden sm:inline-flex" />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="utility" size="sm">
