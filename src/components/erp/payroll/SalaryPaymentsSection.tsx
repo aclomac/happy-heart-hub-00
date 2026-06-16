@@ -202,7 +202,9 @@ function GenerateView({ companyId }: { companyId: string }) {
     );
 
   const generate = async () => {
-    const targets = employees.filter((e) => selectedEmps.size === 0 || selectedEmps.has(e.id));
+    const targets = employees
+      .filter((e) => e.pay_type !== "contract") // contract workers are paid from Contract Work
+      .filter((e) => selectedEmps.size === 0 || selectedEmps.has(e.id));
     if (!targets.length) {
       toast.error("No active employees to generate for");
       return;
