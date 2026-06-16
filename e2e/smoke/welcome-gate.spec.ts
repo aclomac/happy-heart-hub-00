@@ -295,4 +295,66 @@ test.describe("/welcome mode cleared on logout", () => {
   });
 });
 
+test.describe("/welcome redirect → re-pick → no more bouncing", () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  for (const mode of ["local", "cloud"] as const) {
+    test(`clear flag → redirected to /welcome → pick ${mode} → routes stop bouncing`, async ({
+      page,
+    }) => {
+      // 1. Start with no launch-mode flag at all.
+      await clearLaunchMode(page);
+      const initial = await page.evaluate(() =>
+        window.localStorage.getItem("erpovo:launch-mode"),
+      );
+      expect(initial).toBeNull();
+
+      // 2. Try to reach a protected /app route — must be redirected to /welcome.
+      await page.goto("/app/items");
+      await page.waitForURL(/\/welcome$/, { timeout: 15_000 });
+      await expect(
+        page.getByRole("heading", { name: /how should we store your data/i }),
+      ).toBeVisible();
+
+      // 3. Also confirm /login and /signup bounce to /welcome.
+      await page.goto("/login");
+      await page.waitForURL(/\/welcome$/, { timeout: 15_000 });
+      await page.goto("/signup");
+      await page.waitForURL(/\/welcome$/, { timeout: 15_000 });
+
+      // 4. Pick the mode on the chooser the user landed on.
+      const label = mode === "local" ? /continue with local/i : /continue with cloud/i;
+      await page.getByRole("button", { name: label }).click();
+      await page.waitForURL(/\/signup$/, { timeout: 15_000 });
+
+      const persisted = await page.evaluate(() =>
+        window.localStorage.getItem("erpovo:launch-mode"),
+      );
+      expect(persisted).toBe(mode);
+
+      // 5. Subsequent navigations must NOT bounce through /welcome any more.
+      await page.goto("/login");
+      await page.waitForURL(/\/login$/, { timeout: 15_000 });
+      expect(page.url()).not.toMatch(/\/welcome/);
+      await expect(page.getByLabel(/email/i)).toBeVisible({ timeout: 10_000 });
+
+      await page.goto("/signup");
+      await page.waitForURL(/\/signup$/, { timeout: 15_000 });
+      expect(page.url()).not.toMatch(/\/welcome/);
+
+      // Protected /app for anon-with-mode → /login (not /welcome).
+      await page.goto("/app/items");
+      await page.waitForURL(/\/login$/, { timeout: 15_000 });
+      expect(page.url()).not.toMatch(/\/welcome/);
+
+      // Flag is still intact after all of that.
+      const final = await page.evaluate(() =>
+        window.localStorage.getItem("erpovo:launch-mode"),
+      );
+      expect(final).toBe(mode);
+    });
+  }
+});
+
+
 
