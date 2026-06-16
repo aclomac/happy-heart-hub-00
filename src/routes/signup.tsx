@@ -12,6 +12,7 @@ import {
   type SignupInput,
 } from "@/lib/demo/signup";
 import { userExists } from "@/lib/demo/localUsers";
+import { setLaunchMode } from "@/lib/launch-mode";
 
 export const Route = createFileRoute("/signup")({
   beforeLoad: async () => {
