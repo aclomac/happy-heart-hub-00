@@ -313,10 +313,18 @@ function Signup() {
                   className="w-full"
                   disabled={loading}
                 >
-                  {loading ? "Creating account..." : "Create Account"}
+                  {loading
+                    ? mode === "cloud"
+                      ? "Creating cloud account…"
+                      : "Creating account..."
+                    : mode === "cloud"
+                      ? "Create Cloud Account"
+                      : "Create Local Account"}
                 </Button>
                 <p className="text-[11px] text-muted-foreground text-center">
-                  Local account stored on this device after email verification.
+                  {mode === "cloud"
+                    ? "Cloud account: data syncs across all your devices."
+                    : "Local account stored on this device after email verification."}
                 </p>
               </form>
               )}
