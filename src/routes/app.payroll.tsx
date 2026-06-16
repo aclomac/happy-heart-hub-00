@@ -17,6 +17,11 @@ import { AttendanceSection } from "@/components/erp/payroll/AttendanceSection";
 import { SalarySetupSection } from "@/components/erp/payroll/SalarySetupSection";
 import { SalaryPaymentsSection } from "@/components/erp/payroll/SalaryPaymentsSection";
 import { PayrollReportsSection } from "@/components/erp/payroll/PayrollReportsSection";
+import { DailyWageSection } from "@/components/erp/payroll/DailyWageSection";
+import { ContractWorkSection } from "@/components/erp/payroll/ContractWorkSection";
+import { ContractPaymentsSection } from "@/components/erp/payroll/ContractPaymentsSection";
+import { LabourRatesSection } from "@/components/erp/payroll/LabourRatesSection";
+import { ProductionReportsSection } from "@/components/erp/payroll/ProductionReportsSection";
 
 export const Route = createFileRoute("/app/payroll")({ component: PayrollShell });
 
@@ -30,6 +35,11 @@ const TABS = [
   { hash: "attendance", label: "Attendance" },
   { hash: "salary-setup", label: "Salary Setup" },
   { hash: "payments", label: "Salary Payments" },
+  { hash: "daily-wage", label: "Daily Wage" },
+  { hash: "contract-work", label: "Contract Work" },
+  { hash: "contract-payments", label: "Contract Payments" },
+  { hash: "labour-rates", label: "Labour Rates" },
+  { hash: "production", label: "Production" },
   { hash: "reports", label: "Payroll Reports" },
 ] as const;
 
@@ -116,6 +126,11 @@ function Payroll() {
         {active === "attendance" && <AttendanceSection companyId={companyId} />}
         {active === "salary-setup" && <SalarySetupSection companyId={companyId} />}
         {active === "payments" && <SalaryPaymentsSection companyId={companyId} />}
+        {active === "daily-wage" && <DailyWageSection companyId={companyId} />}
+        {active === "contract-work" && <ContractWorkSection companyId={companyId} />}
+        {active === "contract-payments" && <ContractPaymentsSection companyId={companyId} />}
+        {active === "labour-rates" && <LabourRatesSection companyId={companyId} />}
+        {active === "production" && <ProductionReportsSection companyId={companyId} />}
         {active === "reports" && <PayrollReportsSection companyId={companyId} />}
       </div>
     </FeatureGate>

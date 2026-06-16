@@ -105,6 +105,13 @@ import {
   getImportHistory, setImportHistory,
   getPrintSettings, setPrintSettings,
 } from "./system";
+import {
+  ensureFactoryPayrollSeed,
+  getLabourRates, setLabourRates,
+  getContractWorkEntries, setContractWorkEntries,
+  getContractPayments, setContractPayments,
+  getContractAllocations, setContractAllocations,
+} from "./factory-payroll";
 
 import { DEMO_COMPANY_ID } from "./constants";
 import { getDemoCompanies, isExplicitDemoMode, setDemoCompanies } from "./localStore";
@@ -162,6 +169,7 @@ function table(name: string): { read: Reader; write: Writer } {
     ensureCashSeed();
     ensurePayrollSeed();
     ensureSystemSeed();
+    ensureFactoryPayrollSeed();
   }
 
   const empty = { read: () => [], write: () => {} };
@@ -212,6 +220,12 @@ function table(name: string): { read: Reader; write: Writer } {
     case "attendance": return { read: getAttendance as Reader, write: setAttendance as unknown as Writer };
     case "salary_slips": return { read: getSalarySlips as Reader, write: setSalarySlips as unknown as Writer };
     case "employee_payments": return { read: getEmployeePayments as Reader, write: setEmployeePayments as unknown as Writer };
+    case "labour_rates": return { read: getLabourRates as Reader, write: setLabourRates as unknown as Writer };
+    case "contract_work_entries": return { read: getContractWorkEntries as Reader, write: setContractWorkEntries as unknown as Writer };
+    case "contract_payments": return { read: getContractPayments as Reader, write: setContractPayments as unknown as Writer };
+    case "contract_payment_allocations": return { read: getContractAllocations as Reader, write: setContractAllocations as unknown as Writer };
+
+
 
 
     case "companies": return {
@@ -630,6 +644,30 @@ function defaults(name: string): Row {
     case "user_roles": return { user_id: null, role: "user" };
     case "import_history": return {
       company_id: DEMO_COMPANY_ID, file_name: "", status: "imported",
+      created_at: nowIso,
+    };
+    case "labour_rates": return {
+      company_id: DEMO_COMPANY_ID, item_id: null, work_type: "",
+      rate: 0, unit: "pcs", effective_date: nowIso.slice(0, 10),
+      employee_id: null, is_active: true, notes: null,
+      created_at: nowIso, updated_at: nowIso,
+    };
+    case "contract_work_entries": return {
+      company_id: DEMO_COMPANY_ID, work_date: nowIso.slice(0, 10),
+      employee_id: null, item_id: null, work_type: "",
+      qty: 0, rate: 0, total: 0, paid_amount: 0,
+      status: "unpaid", production_ref: null, notes: null,
+      deleted_at: null, created_at: nowIso, updated_at: nowIso,
+    };
+    case "contract_payments": return {
+      company_id: DEMO_COMPANY_ID, employee_id: null,
+      payment_date: nowIso.slice(0, 10), amount: 0,
+      method: "cash", bank_account_id: null, posted_txn_id: null,
+      notes: null, status: "posted",
+      deleted_at: null, created_at: nowIso, updated_at: nowIso,
+    };
+    case "contract_payment_allocations": return {
+      payment_id: null, work_entry_id: null, amount: 0,
       created_at: nowIso,
     };
 
