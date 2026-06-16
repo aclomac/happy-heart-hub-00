@@ -284,6 +284,7 @@ function pathOf(to: string) {
 
 export function ERPSidebar() {
   const { t } = useI18n();
+  const [mobileAppOpen, setMobileAppOpen] = useState(false);
   
   const companyId = useCurrentCompanyId();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
