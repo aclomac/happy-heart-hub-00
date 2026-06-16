@@ -34,6 +34,7 @@ export function LabourRatesSection({ companyId }: { companyId: string }) {
       const { data } = await supabase
         .from("items")
         .select("id,name")
+        .is("deleted_at", null)
         .eq("company_id", companyId)
         .eq("is_active", true)
         .order("name");

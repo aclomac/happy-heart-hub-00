@@ -58,6 +58,7 @@ export function ContractPaymentsSection({ companyId }: { companyId: string }) {
       const { data } = await supabase
         .from("bank_accounts")
         .select("id,name")
+        .is("deleted_at", null)
         .eq("company_id", companyId)
         .eq("is_active", true);
       return (data || []) as Bank[];

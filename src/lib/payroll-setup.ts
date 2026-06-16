@@ -3,6 +3,13 @@
 
 export type SalaryRule = { name: string; amount: number; type: "fixed" | "percent" };
 export type AdvanceEntry = { date: string; amount: number; recovered: number; note?: string };
+export type ContractSetup = {
+  default_work_type: string;
+  default_item_id: string;
+  default_rate: number;
+  payment_cycle: "daily" | "weekly" | "monthly" | "on_demand";
+  notes: string;
+};
 export type EmployeeSetup = {
   fixed: { monthly: number; working_days: number };
   daily: { rate: number; default_days: number };
@@ -10,6 +17,7 @@ export type EmployeeSetup = {
   deductions: SalaryRule[];
   overtime: { rate_per_hour: number; multiplier: number };
   advances: AdvanceEntry[];
+  contract: ContractSetup;
   free_notes?: string;
 };
 
@@ -20,7 +28,15 @@ export const DEFAULT_SETUP: EmployeeSetup = {
   deductions: [],
   overtime: { rate_per_hour: 0, multiplier: 1 },
   advances: [],
+  contract: {
+    default_work_type: "",
+    default_item_id: "",
+    default_rate: 0,
+    payment_cycle: "on_demand",
+    notes: "",
+  },
 };
+
 
 const TAG = "__SETUP__:";
 
@@ -66,7 +82,27 @@ export type SalaryCalcResult = {
   deduction_breakdown: { name: string; amount: number }[];
 };
 
+export function isContractPayType(payType: string | null | undefined): boolean {
+  return payType === "contract";
+}
+
 export function calcSalary(i: SalaryCalcInput): SalaryCalcResult {
+  // Contract / piece-rate workers are paid from Contract Work entries,
+  // not from monthly/daily salary generation. Return zeros so they are
+  // safely no-ops if accidentally included.
+  if (isContractPayType(i.pay_type)) {
+    return {
+      base: 0,
+      overtime: 0,
+      gross: 0,
+      bonus_total: 0,
+      deduction_total: 0,
+      advance_recovery: 0,
+      net: 0,
+      bonus_breakdown: [],
+      deduction_breakdown: [],
+    };
+  }
   const isFixed = i.pay_type === "fixed";
   const working = isFixed ? Math.max(1, i.setup.fixed.working_days || i.days_total || 26) : 1;
   const base = isFixed
@@ -77,6 +113,7 @@ export function calcSalary(i: SalaryCalcInput): SalaryCalcResult {
     Number(i.setup.overtime.rate_per_hour || 0) *
     Number(i.setup.overtime.multiplier || 1);
   const gross = base + overtime;
+
 
   const apply = (rules: SalaryRule[]) => {
     const breakdown: { name: string; amount: number }[] = [];
