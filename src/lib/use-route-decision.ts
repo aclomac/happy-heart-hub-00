@@ -43,7 +43,7 @@ const CAME_FROM_LOGIN_KEY = "erpovo:cameFromLogin";
 const AUTH_RESOLVE_TIMEOUT_MS = 8000;
 
 // Public paths the orchestrator never touches (no redirect, no splash).
-const PUBLIC_PASSTHROUGH = ["/", "/signup", "/login", "/forgot-password", "/reset-password", "/store"];
+const PUBLIC_PASSTHROUGH = ["/", "/welcome", "/signup", "/login", "/forgot-password", "/reset-password", "/store"];
 
 // Routes under /app/* that should be reachable even when a guard would
 // normally redirect — so the user can manage billing / devices / admin.
