@@ -44,6 +44,7 @@ import { companies } from "@/lib/mock-data";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { checkIsAdmin } from "@/lib/billing.functions";
+import { MobileAppDialog } from "@/components/erp/MobileAppDialog";
 // Subscription/plan gating removed for personal use.
 
 type LinkNode = {
