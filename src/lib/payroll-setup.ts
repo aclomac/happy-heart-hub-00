@@ -3,6 +3,13 @@
 
 export type SalaryRule = { name: string; amount: number; type: "fixed" | "percent" };
 export type AdvanceEntry = { date: string; amount: number; recovered: number; note?: string };
+export type ContractSetup = {
+  default_work_type: string;
+  default_item_id: string;
+  default_rate: number;
+  payment_cycle: "daily" | "weekly" | "monthly" | "on_demand";
+  notes: string;
+};
 export type EmployeeSetup = {
   fixed: { monthly: number; working_days: number };
   daily: { rate: number; default_days: number };
@@ -10,6 +17,7 @@ export type EmployeeSetup = {
   deductions: SalaryRule[];
   overtime: { rate_per_hour: number; multiplier: number };
   advances: AdvanceEntry[];
+  contract: ContractSetup;
   free_notes?: string;
 };
 
@@ -20,7 +28,15 @@ export const DEFAULT_SETUP: EmployeeSetup = {
   deductions: [],
   overtime: { rate_per_hour: 0, multiplier: 1 },
   advances: [],
+  contract: {
+    default_work_type: "",
+    default_item_id: "",
+    default_rate: 0,
+    payment_cycle: "on_demand",
+    notes: "",
+  },
 };
+
 
 const TAG = "__SETUP__:";
 
