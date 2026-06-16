@@ -57,8 +57,8 @@ export function ContractPaymentsSection({ companyId }: { companyId: string }) {
     queryFn: async () => {
       const { data } = await supabase
         .from("bank_accounts")
-        .is("deleted_at", null)
         .select("id,name")
+        .is("deleted_at", null)
         .eq("company_id", companyId)
         .eq("is_active", true);
       return (data || []) as Bank[];

@@ -59,8 +59,8 @@ export function ContractWorkSection({ companyId }: { companyId: string }) {
     queryFn: async () => {
       const { data } = await supabase
         .from("items")
-        .is("deleted_at", null)
         .select("id,name,sku")
+        .is("deleted_at", null)
         .eq("company_id", companyId)
         .eq("is_active", true)
         .order("name");
