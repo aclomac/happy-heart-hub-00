@@ -67,7 +67,8 @@ export function ContractPaymentsSection({ companyId }: { companyId: string }) {
   const { data: payments = [], isLoading } = useQuery({
     queryKey: ["contract-payments", companyId],
     queryFn: async () => {
-      const { data } = await supabase
+      const sb = supabase as unknown as { from: (t: string) => any };
+      const { data } = await sb
         .from("contract_payments")
         .select("id,employee_id,payment_date,amount,method,bank_account_id,notes,status")
         .eq("company_id", companyId)

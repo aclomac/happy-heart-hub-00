@@ -121,7 +121,8 @@ export function ContractWorkSection({ companyId }: { companyId: string }) {
 
   async function onDelete(id: string) {
     if (!confirm("Delete this work entry? Paid amounts will not be refunded.")) return;
-    await supabase
+    const sb = supabase as unknown as { from: (t: string) => any };
+    await sb
       .from("contract_work_entries")
       .update({ deleted_at: new Date().toISOString() })
       .eq("id", id);
