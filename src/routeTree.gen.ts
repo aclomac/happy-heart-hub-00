@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as SuperAdminRouteImport } from './routes/super-admin'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
@@ -172,6 +173,11 @@ import { Route as ApiIntegrationsSteadfastTrackRouteImport } from './routes/api.
 import { Route as ApiIntegrationsSteadfastTestRouteImport } from './routes/api.integrations.steadfast.test'
 import { Route as ApiIntegrationsSteadfastCreateConsignmentRouteImport } from './routes/api.integrations.steadfast.create-consignment'
 
+const WelcomeRoute = WelcomeRouteImport.update({
+  id: '/welcome',
+  path: '/welcome',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SuperAdminRoute = SuperAdminRouteImport.update({
   id: '/super-admin',
   path: '/super-admin',
@@ -1019,6 +1025,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/super-admin': typeof SuperAdminRouteWithChildren
+  '/welcome': typeof WelcomeRoute
   '/app/attendance': typeof AppAttendanceRoute
   '/app/audit': typeof AppAuditRoute
   '/app/cash': typeof AppCashRouteWithChildren
@@ -1181,6 +1188,7 @@ export interface FileRoutesByTo {
   '/pricing': typeof PricingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/welcome': typeof WelcomeRoute
   '/app/attendance': typeof AppAttendanceRoute
   '/app/audit': typeof AppAuditRoute
   '/app/cash': typeof AppCashRouteWithChildren
@@ -1344,6 +1352,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/super-admin': typeof SuperAdminRouteWithChildren
+  '/welcome': typeof WelcomeRoute
   '/app/attendance': typeof AppAttendanceRoute
   '/app/audit': typeof AppAuditRoute
   '/app/cash': typeof AppCashRouteWithChildren
@@ -1510,6 +1519,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/super-admin'
+    | '/welcome'
     | '/app/attendance'
     | '/app/audit'
     | '/app/cash'
@@ -1672,6 +1682,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/reset-password'
     | '/signup'
+    | '/welcome'
     | '/app/attendance'
     | '/app/audit'
     | '/app/cash'
@@ -1834,6 +1845,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/super-admin'
+    | '/welcome'
     | '/app/attendance'
     | '/app/audit'
     | '/app/cash'
@@ -1999,6 +2011,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
   SuperAdminRoute: typeof SuperAdminRouteWithChildren
+  WelcomeRoute: typeof WelcomeRoute
   StoreSlugRoute: typeof StoreSlugRoute
   ApiIntegrationsProxyRoute: typeof ApiIntegrationsProxyRoute
   ApiIntegrationsSteadfastCreateConsignmentRoute: typeof ApiIntegrationsSteadfastCreateConsignmentRoute
@@ -2011,6 +2024,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/welcome': {
+      id: '/welcome'
+      path: '/welcome'
+      fullPath: '/welcome'
+      preLoaderRoute: typeof WelcomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/super-admin': {
       id: '/super-admin'
       path: '/super-admin'
@@ -3726,6 +3746,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
   SuperAdminRoute: SuperAdminRouteWithChildren,
+  WelcomeRoute: WelcomeRoute,
   StoreSlugRoute: StoreSlugRoute,
   ApiIntegrationsProxyRoute: ApiIntegrationsProxyRoute,
   ApiIntegrationsSteadfastCreateConsignmentRoute:

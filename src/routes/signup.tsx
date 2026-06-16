@@ -12,6 +12,7 @@ import {
   type SignupInput,
 } from "@/lib/demo/signup";
 import { userExists } from "@/lib/demo/localUsers";
+import { setLaunchMode } from "@/lib/launch-mode";
 
 export const Route = createFileRoute("/signup")({
   beforeLoad: async () => {
@@ -59,6 +60,9 @@ function Signup() {
       toast.error(Object.values(next)[0]);
       return;
     }
+
+    // Persist launch-mode choice so /welcome gate is satisfied.
+    setLaunchMode(mode);
 
     // Cloud sign-up — real Supabase auth, data syncs across devices.
     if (mode === "cloud") {

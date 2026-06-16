@@ -20,6 +20,7 @@ import {
   DEMO_USER_EMAIL,
   DEMO_COMPANY_ID,
 } from "@/lib/demo/localStore";
+import { hasChosenLaunchMode } from "@/lib/launch-mode";
 
 export type RouteDecision =
   | { status: "loading"; debug: DecisionDebug }
@@ -42,7 +43,7 @@ const CAME_FROM_LOGIN_KEY = "erpovo:cameFromLogin";
 const AUTH_RESOLVE_TIMEOUT_MS = 8000;
 
 // Public paths the orchestrator never touches (no redirect, no splash).
-const PUBLIC_PASSTHROUGH = ["/", "/signup", "/login", "/forgot-password", "/reset-password", "/store"];
+const PUBLIC_PASSTHROUGH = ["/", "/welcome", "/signup", "/login", "/forgot-password", "/reset-password", "/store"];
 
 // Routes under /app/* that should be reachable even when a guard would
 // normally redirect — so the user can manage billing / devices / admin.
@@ -244,6 +245,19 @@ export function useRouteDecision(): RouteDecision {
     return { status: "ready", target, debug: { ...debug, redirectTarget: target } };
   }
 
+  // First-launch gate: unauthenticated visitors must pick Local vs Cloud
+  // on /welcome before reaching /login or /signup. The landing page (/)
+  // remains public so marketing/SEO still works.
+  if (
+    !auth.loading &&
+    !auth.userId &&
+    !hasChosenLaunchMode() &&
+    (isLoginRoute || pathname === "/signup")
+  ) {
+    const target = "/welcome";
+    return { status: "ready", target, debug: { ...debug, redirectTarget: target } };
+  }
+
   // Public pass-through pages: never redirect, never splash unless already authed above.
   if (PUBLIC_PASSTHROUGH.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
     return { status: "ready", target: null, debug };
@@ -254,10 +268,11 @@ export function useRouteDecision(): RouteDecision {
     return { status: "loading", debug };
   }
 
-  // 2) Not authed and trying to reach a protected area → /login.
+  // 2) Not authed and trying to reach a protected area → /welcome (if not
+  //    chosen yet) or /login.
   if (!auth.userId) {
     if (isAppRoute || isCompaniesRoute) {
-      const target = "/login";
+      const target = hasChosenLaunchMode() ? "/login" : "/welcome";
       return { status: "ready", target, debug: { ...debug, redirectTarget: target } };
     }
     return { status: "ready", target: null, debug };
