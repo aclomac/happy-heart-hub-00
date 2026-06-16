@@ -45,6 +45,7 @@ export function ProductionReportsSection({ companyId }: { companyId: string }) {
     queryFn: async () => {
       const { data } = await supabase
         .from("items")
+        .is("deleted_at", null)
         .select("id,name")
         .eq("company_id", companyId);
       return (data || []) as Item[];
