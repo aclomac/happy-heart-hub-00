@@ -41,6 +41,7 @@ export const Route = createFileRoute("/signup")({
 function Signup() {
   const { signupEnabled, brand } = Route.useLoaderData();
   const nav = useNavigate();
+  const [mode, setMode] = useState<"local" | "cloud">("local");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [mobile, setMobile] = useState("");
@@ -59,6 +60,41 @@ function Signup() {
       return;
     }
 
+    // Cloud sign-up — real Supabase auth, data syncs across devices.
+    if (mode === "cloud") {
+      setLoading(true);
+      try {
+        const redirectUrl = `${window.location.origin}/companies`;
+        const { error } = await supabase.auth.signUp({
+          email: email.trim(),
+          password: pass,
+          options: {
+            emailRedirectTo: redirectUrl,
+            data: { full_name: name, mobile },
+          },
+        });
+        if (error) {
+          const msg = /registered|exists/i.test(error.message)
+            ? "Account already exists. Please sign in."
+            : error.message;
+          setErrs({ email: msg });
+          toast.error(msg);
+          return;
+        }
+        toast.success(
+          "Cloud account created. Check your email to confirm, then sign in.",
+        );
+        nav({ to: "/login" });
+      } catch (err) {
+        const reason = (err as Error)?.message ?? "unknown error";
+        toast.error(`Cloud signup failed: ${reason}`);
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    // Local-mode signup path (existing): local-only account in localStorage.
     if (userExists(email, "")) {
       const reason = "Account already exists. Please sign in.";
       setErrs({ email: reason });
