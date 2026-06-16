@@ -228,3 +228,71 @@ test.describe("/welcome mode persistence across logout", () => {
   });
 });
 
+test.describe("/welcome mode cleared on logout", () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  test("clearing launch-mode on logout forces next login through /welcome", async ({
+    page,
+  }) => {
+    await clearLaunchMode(page);
+
+    // 1. Pick Local via the chooser, then log in as demo.
+    await page.goto("/welcome");
+    await page.getByRole("button", { name: /continue with local/i }).click();
+    await page.waitForURL(/\/signup$/, { timeout: 15_000 });
+
+    await loginAsDemo(page);
+    await page.waitForURL((url) => url.pathname.startsWith("/app"), {
+      timeout: 30_000,
+    });
+
+    const afterLogin = await page.evaluate(() =>
+      window.localStorage.getItem("erpovo:launch-mode"),
+    );
+    expect(afterLogin).toBe("local");
+
+    // 2. Log out AND delete the launch-mode flag (simulating "reset device"
+    //    or a full logout that wipes the first-launch choice).
+    await page.evaluate(() => {
+      window.localStorage.clear();
+    });
+    await page.context().clearCookies();
+    await page.reload({ waitUntil: "domcontentloaded" });
+
+    const afterLogout = await page.evaluate(() =>
+      window.localStorage.getItem("erpovo:launch-mode"),
+    );
+    expect(afterLogout).toBeNull();
+
+    // 3. /login and /signup must now redirect back to /welcome.
+    await page.goto("/login");
+    await page.waitForURL(/\/welcome$/, { timeout: 15_000 });
+    await expect(
+      page.getByRole("heading", { name: /how should we store your data/i }),
+    ).toBeVisible();
+
+    await page.goto("/signup");
+    await page.waitForURL(/\/welcome$/, { timeout: 15_000 });
+
+    // 4. Protected /app routes also redirect to /welcome (not /login).
+    await page.goto("/app/items");
+    await page.waitForURL(/\/welcome$/, { timeout: 15_000 });
+
+    // 5. Pick a (different) mode and proceed; next login lands in /app.
+    await page.getByRole("button", { name: /continue with cloud/i }).click();
+    await page.waitForURL(/\/signup$/, { timeout: 15_000 });
+
+    const reChosen = await page.evaluate(() =>
+      window.localStorage.getItem("erpovo:launch-mode"),
+    );
+    expect(reChosen).toBe("cloud");
+
+    await loginAsDemo(page);
+    await page.waitForURL((url) => url.pathname.startsWith("/app"), {
+      timeout: 30_000,
+    });
+    expect(page.url()).not.toMatch(/\/welcome/);
+  });
+});
+
+
