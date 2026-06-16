@@ -328,10 +328,15 @@ function SettingsPage() {
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button size="sm" onClick={saveWc}>Save Credentials</Button>
-            <Button size="sm" variant="outline" disabled={busy} onClick={testWc}>Test WooCommerce Connection</Button>
-            <Button size="sm" variant="ghost" onClick={() => { resetWooConfig(); setWc(getWooConfig()); toast.success("WooCommerce credentials reset"); }}>Reset Credentials</Button>
+            <Button size="sm" disabled={savingWc} onClick={saveWc}>{savingWc ? "Saving…" : "Save Credentials"}</Button>
+            <Button size="sm" variant="outline" disabled={testingWc} onClick={testWc}>{testingWc ? "Testing…" : "Test WooCommerce Connection"}</Button>
+            <Button size="sm" variant="ghost" onClick={() => { resetWooConfig(); setWc(getWooConfig()); setWcErrors({}); toast.success("WooCommerce credentials reset"); }}>Reset Credentials</Button>
           </div>
+          {Object.keys(wcErrors).length > 0 && (
+            <ul className="text-xs text-destructive list-disc pl-5">
+              {Object.entries(wcErrors).map(([k, v]) => <li key={k}><b>{k}</b>: {v}</li>)}
+            </ul>
+          )}
         </CardContent></Card>
 
         {/* Steadfast */}
