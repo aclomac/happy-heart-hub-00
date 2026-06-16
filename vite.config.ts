@@ -19,15 +19,15 @@ export default defineConfig({
         registerType: "autoUpdate",
         includeAssets: ["favicon.ico", "icon.svg", "apple-touch-icon.png", "offline.html"],
         manifest: {
-          name: "ERPOVO",
+          name: "ERPOVO Business ERP",
           short_name: "ERPOVO",
-          description:
-            "Business ERP for Sales, Stock, POS, Invoices, Purchase, Online Store and Reports",
-          theme_color: "#0EA5E9",
-          background_color: "#ffffff",
+          description: "Smart ERP for Growing Businesses",
+          theme_color: "#061B3A",
+          background_color: "#F6F8FC",
           display: "standalone",
-          start_url: "/",
+          start_url: "/app",
           scope: "/",
+          orientation: "portrait-primary",
           icons: [
             {
               src: "icon.svg",
