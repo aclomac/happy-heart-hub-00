@@ -210,84 +210,176 @@ export function SalarySetupSection({ companyId }: { companyId: string }) {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <Card title="Fixed Salary Setup">
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <Label className="text-xs">Monthly Salary</Label>
-                    <Input
-                      type="number"
-                      className="h-9"
-                      value={setup.fixed.monthly}
-                      onChange={(e) =>
-                        setSetup({
-                          ...setup,
-                          fixed: { ...setup.fixed, monthly: Number(e.target.value) },
-                        })
-                      }
-                    />
+              <Card title="Use this setup as">
+                <Select value={payType} onValueChange={setPayType}>
+                  <SelectTrigger className="h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="fixed">Fixed Monthly</SelectItem>
+                    <SelectItem value="daily">Daily Wage (Hajira)</SelectItem>
+                    <SelectItem value="hourly">Hourly</SelectItem>
+                    <SelectItem value="contract">Contract / Piece Rate</SelectItem>
+                  </SelectContent>
+                </Select>
+                {payType === "contract" && (
+                  <div className="text-xs text-muted-foreground mt-2">
+                    Contract workers are paid from Contract Work entries (quantity × rate). They
+                    are excluded from monthly and daily-wage salary generation.
                   </div>
-                  <div>
-                    <Label className="text-xs">Working Days</Label>
-                    <Input
-                      type="number"
-                      className="h-9"
-                      value={setup.fixed.working_days}
-                      onChange={(e) =>
-                        setSetup({
-                          ...setup,
-                          fixed: { ...setup.fixed, working_days: Number(e.target.value) },
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <Label className="text-xs">Use this setup as</Label>
-                    <Select value={payType} onValueChange={setPayType}>
-                      <SelectTrigger className="h-9">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="fixed">Fixed Monthly</SelectItem>
-                        <SelectItem value="daily">Daily Wage (Hajira)</SelectItem>
-                        <SelectItem value="hourly">Hourly</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
+                )}
               </Card>
 
-              <Card title="Hajira / Daily Wage Setup">
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <Label className="text-xs">Per-day Rate</Label>
-                    <Input
-                      type="number"
-                      className="h-9"
-                      value={setup.daily.rate}
-                      onChange={(e) =>
-                        setSetup({
-                          ...setup,
-                          daily: { ...setup.daily, rate: Number(e.target.value) },
-                        })
-                      }
-                    />
+              {payType !== "contract" && (
+                <Card title="Fixed Salary Setup">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label className="text-xs">Monthly Salary</Label>
+                      <Input
+                        type="number"
+                        className="h-9"
+                        value={setup.fixed.monthly}
+                        onChange={(e) =>
+                          setSetup({
+                            ...setup,
+                            fixed: { ...setup.fixed, monthly: Number(e.target.value) },
+                          })
+                        }
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Working Days</Label>
+                      <Input
+                        type="number"
+                        className="h-9"
+                        value={setup.fixed.working_days}
+                        onChange={(e) =>
+                          setSetup({
+                            ...setup,
+                            fixed: { ...setup.fixed, working_days: Number(e.target.value) },
+                          })
+                        }
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <Label className="text-xs">Default Days/month</Label>
-                    <Input
-                      type="number"
-                      className="h-9"
-                      value={setup.daily.default_days}
-                      onChange={(e) =>
-                        setSetup({
-                          ...setup,
-                          daily: { ...setup.daily, default_days: Number(e.target.value) },
-                        })
-                      }
-                    />
+                </Card>
+              )}
+
+              {payType !== "contract" && (
+                <Card title="Hajira / Daily Wage Setup">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label className="text-xs">Per-day Rate</Label>
+                      <Input
+                        type="number"
+                        className="h-9"
+                        value={setup.daily.rate}
+                        onChange={(e) =>
+                          setSetup({
+                            ...setup,
+                            daily: { ...setup.daily, rate: Number(e.target.value) },
+                          })
+                        }
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Default Days/month</Label>
+                      <Input
+                        type="number"
+                        className="h-9"
+                        value={setup.daily.default_days}
+                        onChange={(e) =>
+                          setSetup({
+                            ...setup,
+                            daily: { ...setup.daily, default_days: Number(e.target.value) },
+                          })
+                        }
+                      />
+                    </div>
                   </div>
-                </div>
-              </Card>
+                </Card>
+              )}
+
+              {payType === "contract" && (
+                <Card title="Contract Worker Setup">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="col-span-2">
+                      <Label className="text-xs">Default Work Type (optional)</Label>
+                      <Input
+                        className="h-9"
+                        placeholder="cutting, stitching, polish…"
+                        value={setup.contract.default_work_type}
+                        onChange={(e) =>
+                          setSetup({
+                            ...setup,
+                            contract: { ...setup.contract, default_work_type: e.target.value },
+                          })
+                        }
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Default Piece Rate (optional)</Label>
+                      <Input
+                        type="number"
+                        className="h-9"
+                        value={setup.contract.default_rate}
+                        onChange={(e) =>
+                          setSetup({
+                            ...setup,
+                            contract: {
+                              ...setup.contract,
+                              default_rate: Number(e.target.value),
+                            },
+                          })
+                        }
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Payment Cycle</Label>
+                      <Select
+                        value={setup.contract.payment_cycle}
+                        onValueChange={(v) =>
+                          setSetup({
+                            ...setup,
+                            contract: {
+                              ...setup.contract,
+                              payment_cycle: v as
+                                | "daily"
+                                | "weekly"
+                                | "monthly"
+                                | "on_demand",
+                            },
+                          })
+                        }
+                      >
+                        <SelectTrigger className="h-9">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="daily">Daily</SelectItem>
+                          <SelectItem value="weekly">Weekly</SelectItem>
+                          <SelectItem value="monthly">Monthly</SelectItem>
+                          <SelectItem value="on_demand">On demand</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="col-span-2">
+                      <Label className="text-xs">Notes</Label>
+                      <Input
+                        className="h-9"
+                        value={setup.contract.notes}
+                        onChange={(e) =>
+                          setSetup({
+                            ...setup,
+                            contract: { ...setup.contract, notes: e.target.value },
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+                </Card>
+              )}
+
 
               <Card
                 title="Bonus"
