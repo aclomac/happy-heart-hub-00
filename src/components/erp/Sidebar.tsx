@@ -593,6 +593,7 @@ export function ERPSidebar() {
           v1.0 · Bangladesh 🇧🇩
         </div>
       </div>
+      <MobileAppDialog open={mobileAppOpen} onOpenChange={setMobileAppOpen} />
     </aside>
   );
 }
