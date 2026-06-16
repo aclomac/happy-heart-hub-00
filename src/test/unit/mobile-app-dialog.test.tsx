@@ -27,7 +27,7 @@ describe("MobileAppDialog", () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.assign(navigator, { clipboard: { writeText } });
     render(<MobileAppDialog open={true} onOpenChange={() => {}} />);
-    fireEvent.click(screen.getByText("Copy Link"));
+    fireEvent.click(screen.getByRole("button", { name: /Copy Link/i }));
     expect(writeText).toHaveBeenCalled();
   });
 });
