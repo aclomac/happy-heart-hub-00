@@ -363,8 +363,8 @@ function SettingsPage() {
             <div><Label>Default Note</Label><Input value={sf.defaultNote ?? ""} onChange={(e) => setSf({ ...sf, defaultNote: e.target.value })} /></div>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button size="sm" onClick={saveSf}>Save Credentials</Button>
-            <Button size="sm" variant="outline" disabled={busy} onClick={testSf}>Test Steadfast Connection</Button>
+            <Button size="sm" disabled={savingSf} onClick={saveSf}>{savingSf ? "Saving…" : "Save Credentials"}</Button>
+            <Button size="sm" variant="outline" disabled={testingSf} onClick={testSf}>{testingSf ? "Testing…" : "Test Steadfast Connection"}</Button>
             <Button size="sm" variant="ghost" onClick={() => { resetSteadfastConfig(); setSf(getSteadfastConfig()); toast.success("Steadfast credentials reset"); }}>Reset Credentials</Button>
           </div>
         </CardContent></Card>
