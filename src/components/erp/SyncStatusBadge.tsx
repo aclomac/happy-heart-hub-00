@@ -28,7 +28,7 @@ export function SyncStatusBadge({ className }: { className?: string }) {
     const resolve = async () => {
       if (typeof window === "undefined") return;
       // Demo or local-user session → always Local Mode (no cloud session)
-      if (isDemoMode() || hasLocalUserSession?.()) {
+      if (isDemoMode()) {
         if (alive) setMode("local");
         return;
       }
@@ -45,7 +45,7 @@ export function SyncStatusBadge({ className }: { className?: string }) {
 
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
       if (!alive) return;
-      if (isDemoMode() || hasLocalUserSession?.()) {
+      if (isDemoMode()) {
         setMode("local");
         return;
       }
