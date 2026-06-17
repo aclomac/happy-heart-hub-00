@@ -38,6 +38,7 @@ const stub = vi.hoisted(() => {
     from(table: string) {
       return {
         select: (_c: string) => ({
+          // Sales lookup chain: .is('deleted_at', null).eq.eq.maybeSingle
           is: (_c0: string, _v0: null) => ({
             eq: (_c1: string, v1: string) => ({
               eq: (_c2: string, v2: string) => ({
@@ -48,6 +49,12 @@ const stub = vi.hoisted(() => {
                   return { data: found ? { id: found.id } : null, error: null };
                 },
               }),
+            }),
+          }),
+          // Stock_movements lookup chain: .eq('company_id').eq('idempotency_key').maybeSingle
+          eq: (_c1: string, _v1: string) => ({
+            eq: (_c2: string, _v2: string) => ({
+              maybeSingle: async () => ({ data: null, error: null }),
             }),
           }),
         }),

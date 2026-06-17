@@ -1,0 +1,2 @@
+ALTER TABLE public.stock_movements ADD COLUMN IF NOT EXISTS idempotency_key text;
+CREATE UNIQUE INDEX IF NOT EXISTS stock_movements_company_idempotency_key_uidx ON public.stock_movements (company_id, idempotency_key) WHERE idempotency_key IS NOT NULL;
