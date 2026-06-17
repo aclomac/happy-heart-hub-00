@@ -364,11 +364,11 @@ export const deletePaymentSetting = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-export const checkIsAdmin = createServerFn({ method: "GET" })
+export const checkBillingAdminSafe = createServerFn({ method: "GET" })
   .handler(async () => {
     const auth = await optionalBillingAuth();
     if (!auth) return { ...BILLING_SAFE_RESULT, isAdmin: false };
-    const { data, error } = await supabaseAdmin.rpc("has_role", {
+    const { data, error } = await auth.supabase.rpc("has_role", {
       _user_id: auth.userId,
       _role: "admin",
     });
