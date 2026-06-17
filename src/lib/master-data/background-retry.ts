@@ -27,6 +27,7 @@ import {
 } from "./index";
 import {
   markFailed,
+  markPendingRetry,
   markSynced,
   markSyncing,
   type MasterEntity,
