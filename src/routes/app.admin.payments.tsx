@@ -6,7 +6,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   approvePaymentRequest,
-  checkBillingAdminSafe,
+  checkIsAdmin,
   listAllPaymentRequests,
   rejectPaymentRequest,
 } from "@/lib/billing.functions";
@@ -23,7 +23,7 @@ export const Route = createFileRoute("/app/admin/payments")({
 type Tab = "pending" | "approved" | "rejected";
 
 function AdminPaymentsPage() {
-  const isAdminFn = useServerFn(checkBillingAdminSafe);
+  const isAdminFn = useServerFn(checkIsAdmin);
   const { isCloudMode, session } = useBillingAuthGuard();
   const adminQ = useQuery({
     queryKey: ["is-admin", "payments", !!session?.access_token],
