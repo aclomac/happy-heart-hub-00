@@ -16,7 +16,28 @@ import type { TxnKind, TxnSyncRecord, TxnSyncState } from "./types";
 const MAP_KEY = "erpovo:txn-sync:map";
 const QUEUE_KEY = "erpovo:txn-sync:queue";
 const QUEUE_STATE_KEY = "erpovo:txn-sync:queue-state";
+const RETENTION_KEY = "erpovo:txn-sync:retention";
 const QUEUE_STATE_VERSION = 1;
+
+/**
+ * Retention policy for the persisted `replayHistory` array.
+ *
+ *   • `maxRuns`     — keep at most this many most-recent runs.
+ *   • `maxAgeDays`  — drop runs whose `at` is older than this many days.
+ *
+ * Both bounds are applied together; whichever prunes first wins. Set
+ * either to `Infinity` to disable that bound, or `0` to disable history
+ * entirely.
+ */
+export type ReplayRetentionPolicy = {
+  maxRuns: number;
+  maxAgeDays: number;
+};
+
+export const DEFAULT_RETENTION: ReplayRetentionPolicy = {
+  maxRuns: 20,
+  maxAgeDays: 7,
+};
 
 /**
  * Persisted metadata about the offline queue. Survives a full page reload
@@ -31,6 +52,11 @@ export type PersistedAttemptLogEntry = {
   durationMs: number;
   error?: string;
   cloudId?: string;
+  at: string;
+};
+
+export type PersistedReplayRun = NonNullable<QueueState["lastReplay"]> & {
+  /** ISO timestamp when this run completed. */
   at: string;
 };
 
@@ -50,6 +76,8 @@ export type QueueState = {
     /** Per-attempt log persisted from the last replay run. */
     attemptsLog?: PersistedAttemptLogEntry[];
   } | null;
+  /** Bounded history of past replay runs (newest first). */
+  replayHistory?: PersistedReplayRun[];
 };
 
 function emptyQueueState(): QueueState {
@@ -60,6 +88,7 @@ function emptyQueueState(): QueueState {
     lastDequeueAt: null,
     lastReplayAt: null,
     lastReplay: null,
+    replayHistory: [],
   };
 }
 
@@ -70,6 +99,7 @@ function readQueueState(): QueueState {
     if (!raw) return emptyQueueState();
     const parsed = JSON.parse(raw) as QueueState;
     if (parsed.version !== QUEUE_STATE_VERSION) return emptyQueueState();
+    if (!Array.isArray(parsed.replayHistory)) parsed.replayHistory = [];
     return parsed;
   } catch {
     return emptyQueueState();
@@ -91,13 +121,93 @@ export function getQueueState(): QueueState {
   return { ...s, size: readQueue().length };
 }
 
+export function getReplayRetentionPolicy(): ReplayRetentionPolicy {
+  if (!isBrowser()) return { ...DEFAULT_RETENTION };
+  try {
+    const raw = localStorage.getItem(RETENTION_KEY);
+    if (!raw) return { ...DEFAULT_RETENTION };
+    const parsed = JSON.parse(raw) as Partial<ReplayRetentionPolicy>;
+    return {
+      maxRuns:
+        typeof parsed.maxRuns === "number" && parsed.maxRuns >= 0
+          ? parsed.maxRuns
+          : DEFAULT_RETENTION.maxRuns,
+      maxAgeDays:
+        typeof parsed.maxAgeDays === "number" && parsed.maxAgeDays >= 0
+          ? parsed.maxAgeDays
+          : DEFAULT_RETENTION.maxAgeDays,
+    };
+  } catch {
+    return { ...DEFAULT_RETENTION };
+  }
+}
+
+export function setReplayRetentionPolicy(
+  policy: Partial<ReplayRetentionPolicy>,
+): ReplayRetentionPolicy {
+  const merged = { ...getReplayRetentionPolicy(), ...policy };
+  if (isBrowser()) {
+    try {
+      localStorage.setItem(RETENTION_KEY, JSON.stringify(merged));
+    } catch {
+      /* ignore quota */
+    }
+  }
+  // Prune existing history against the new policy immediately so the
+  // change is reflected on the next read.
+  const s = readQueueState();
+  const pruned = pruneHistory(s.replayHistory ?? [], merged, Date.now());
+  if (pruned !== s.replayHistory) {
+    writeQueueState({ ...s, replayHistory: pruned });
+  }
+  return merged;
+}
+
+export function getReplayHistory(): PersistedReplayRun[] {
+  return readQueueState().replayHistory ?? [];
+}
+
+export function clearReplayHistory(): void {
+  const s = readQueueState();
+  writeQueueState({ ...s, replayHistory: [] });
+}
+
+function pruneHistory(
+  history: PersistedReplayRun[],
+  policy: ReplayRetentionPolicy,
+  nowMs: number,
+): PersistedReplayRun[] {
+  if (policy.maxRuns <= 0) return [];
+  const ageCutoffMs =
+    Number.isFinite(policy.maxAgeDays) && policy.maxAgeDays >= 0
+      ? nowMs - policy.maxAgeDays * 86_400_000
+      : -Infinity;
+  const filtered = history.filter((run) => {
+    const t = Date.parse(run.at);
+    return Number.isFinite(t) ? t >= ageCutoffMs : true;
+  });
+  if (!Number.isFinite(policy.maxRuns)) return filtered;
+  return filtered.slice(0, Math.max(0, Math.floor(policy.maxRuns)));
+}
+
 export function recordReplayOutcome(report: QueueState["lastReplay"]): void {
   const s = readQueueState();
+  const at = new Date().toISOString();
+  const policy = getReplayRetentionPolicy();
+  const nextHistory =
+    report && policy.maxRuns > 0
+      ? pruneHistory(
+          [{ ...report, at } as PersistedReplayRun, ...(s.replayHistory ?? [])],
+          policy,
+          Date.now(),
+        )
+      : pruneHistory(s.replayHistory ?? [], policy, Date.now());
   writeQueueState({
     ...s,
     size: readQueue().length,
-    lastReplayAt: new Date().toISOString(),
+    lastReplayAt: at,
     lastReplay: report,
+    replayHistory: nextHistory,
   });
 }
 
@@ -327,4 +437,5 @@ export function __resetTxnSyncStore(): void {
   localStorage.removeItem(MAP_KEY);
   localStorage.removeItem(QUEUE_KEY);
   localStorage.removeItem(QUEUE_STATE_KEY);
+  localStorage.removeItem(RETENTION_KEY);
 }
