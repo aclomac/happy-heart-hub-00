@@ -24,6 +24,7 @@ import {
   markSynced,
   markSyncing,
   peekQueue,
+  recordReplayOutcome,
 } from "./idempotency";
 import type { TxnSyncRecord } from "./types";
 
