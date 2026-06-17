@@ -20,7 +20,7 @@ const CRITICAL_FRAGMENTS = [
   "sale-orders-workflow",
   "performance", // cache/benchmark logic tests (if present)
   "duplicate-submit",
-];
+  "master-data-sync",
 
 const TEST_DIRS = ["src/test/unit", "src/test/static"];
 const files: string[] = [];
