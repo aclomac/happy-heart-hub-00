@@ -1,3 +1,4 @@
+import { MasterDataSyncBadge } from "@/components/erp/MasterDataSyncBadge";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -139,15 +140,18 @@ function WarehousesPage() {
         title="Store Management"
         subtitle="Main Store, Branches, Warehouses and Factories"
         actions={
-          <Button
-            onClick={() => {
-              setEditing(null);
-              setOpenForm(true);
-            }}
-            className="bg-primary text-primary-foreground gap-2"
-          >
-            <Plus className="w-4 h-4" /> Add Store
-          </Button>
+          <>
+            <MasterDataSyncBadge entity="warehouses" />
+            <Button
+              onClick={() => {
+                setEditing(null);
+                setOpenForm(true);
+              }}
+              className="bg-primary text-primary-foreground gap-2"
+            >
+              <Plus className="w-4 h-4" /> Add Store
+            </Button>
+          </>
         }
       />
 
