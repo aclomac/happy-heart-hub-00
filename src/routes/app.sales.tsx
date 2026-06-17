@@ -25,6 +25,8 @@ import { InvoiceActionsMenu } from "@/components/erp/InvoiceActions";
 import { ConfirmDialog } from "@/components/erp/ConfirmDialog";
 import { softDeleteWithUndo } from "@/lib/soft-delete";
 import { SaleInvoiceActions } from "@/components/erp/SaleInvoiceActions";
+import { SalesSyncBadge } from "@/components/erp/SalesSyncBadge";
+import { SalesSyncStatusBar } from "@/components/erp/SalesSyncStatusBar";
 
 export const Route = createFileRoute("/app/sales")({ component: SalesRouteShell });
 
@@ -141,6 +143,8 @@ function Sales() {
         </div>
       </div>
 
+      <SalesSyncStatusBar companyId={companyId} />
+
       <div className="bg-card border rounded-md overflow-x-auto">
         {isLoading ? (
           <div className="p-8 text-center text-muted-foreground">
@@ -201,6 +205,7 @@ function Sales() {
                     />
                   </td>
                   <td className="flex items-center gap-1">
+                    <SalesSyncBadge cloudId={s.id} companyId={companyId} />
                     <InvoiceActionsMenu saleId={s.id} companyId={companyId} label="" />
                     <SaleInvoiceActions
                       sale={{
