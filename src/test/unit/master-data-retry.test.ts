@@ -58,6 +58,7 @@ import {
 import {
   getSyncStatus,
   markFailed,
+  markPending,
   type MasterEntity,
 } from "@/lib/master-data/sync-status";
 import { setLaunchMode, clearLaunchMode } from "@/lib/launch-mode";
