@@ -23,6 +23,7 @@ import {
   markSyncing,
   registerTransaction,
 } from "./idempotency";
+import type { Uploader, UploadResult } from "./replay";
 import type { PreflightResult, TxnSyncRecord } from "./types";
 
 const PAYLOAD_KEY = "erpovo:txn-sync:stock-payload";
