@@ -66,6 +66,25 @@ export type ReplayOptions = {
   sleep?: (ms: number) => Promise<void>;
 };
 
+export type AttemptOutcome = "success" | "error";
+
+export type AttemptLogEntry = {
+  localId: string;
+  /** 1-based attempt number for this record. */
+  attempt: number;
+  /** Delay waited BEFORE this attempt (ms). 0 for the first attempt. */
+  delayMs: number;
+  outcome: AttemptOutcome;
+  /** Uploader wall time in ms for this attempt. */
+  durationMs: number;
+  /** Error message when outcome === "error". */
+  error?: string;
+  /** Cloud id returned when outcome === "success". */
+  cloudId?: string;
+  /** ISO timestamp when the attempt resolved. */
+  at: string;
+};
+
 export type ReplayReport = {
   attempted: number;
   succeeded: number;
@@ -73,6 +92,8 @@ export type ReplayReport = {
   skipped: number;
   /** Total uploader invocations across all records (includes retries). */
   attempts: number;
+  /** Per-attempt log, in chronological order. */
+  attemptsLog: AttemptLogEntry[];
   /** Reason the run aborted early, if any. */
   abortedReason?:
     | "offline"
@@ -100,6 +121,7 @@ export async function replayQueue(opts: ReplayOptions): Promise<ReplayReport> {
     failed: 0,
     skipped: 0,
     attempts: 0,
+    attemptsLog: [],
   };
   const retry: Required<RetryPolicy> = { ...DEFAULT_RETRY, ...(opts.retry ?? {}) };
   if (retry.maxAttempts < 1) retry.maxAttempts = 1;
@@ -152,22 +174,42 @@ export async function replayQueue(opts: ReplayOptions): Promise<ReplayReport> {
       let lastErr: string | null = null;
       let ok = false;
       for (let attempt = 1; attempt <= retry.maxAttempts; attempt++) {
+        const delayMs = attempt === 1 ? 0 : computeBackoff(attempt - 1, retry);
+        if (delayMs > 0) await sleep(delayMs);
         report.attempts += 1;
+        const startedAt = now();
         try {
           const result = await opts.uploader({ ...rec });
+          const durationMs = now() - startedAt;
           if (!result?.cloud_id) {
             throw new Error("uploader returned no cloud_id");
           }
           markSynced(localId, result.cloud_id);
           dequeue(localId);
           report.succeeded += 1;
+          report.attemptsLog.push({
+            localId,
+            attempt,
+            delayMs,
+            outcome: "success",
+            durationMs,
+            cloudId: result.cloud_id,
+            at: new Date().toISOString(),
+          });
           ok = true;
           break;
         } catch (err) {
+          const durationMs = now() - startedAt;
           lastErr = err instanceof Error ? err.message : String(err);
-          if (attempt < retry.maxAttempts) {
-            await sleep(computeBackoff(attempt, retry));
-          }
+          report.attemptsLog.push({
+            localId,
+            attempt,
+            delayMs,
+            outcome: "error",
+            durationMs,
+            error: lastErr,
+            at: new Date().toISOString(),
+          });
         }
       }
       if (!ok) {
@@ -186,6 +228,11 @@ export async function replayQueue(opts: ReplayOptions): Promise<ReplayReport> {
 function defaultSleep(ms: number): Promise<void> {
   if (ms <= 0) return Promise.resolve();
   return new Promise((r) => setTimeout(r, ms));
+}
+
+function now(): number {
+  if (typeof performance !== "undefined" && performance.now) return performance.now();
+  return Date.now();
 }
 
 /** Exponential backoff with optional ±50% jitter, capped at maxDelayMs. */

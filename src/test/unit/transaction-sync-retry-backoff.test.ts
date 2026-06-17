@@ -138,4 +138,42 @@ describe("replayQueue retry/backoff", () => {
     expect(computeBackoff(2, policy)).toBe(5000); // would be 10_000, capped
     expect(computeBackoff(5, policy)).toBe(5000);
   });
+
+  test("attemptsLog records attempt number, delay, and outcome per try", async () => {
+    seed("s5");
+    let calls = 0;
+    const uploader: Uploader = () => {
+      calls += 1;
+      if (calls < 3) throw new Error(`boom-${calls}`);
+      return { cloud_id: "cloud-final" };
+    };
+    const report = await replayQueue({
+      companyId: COMPANY,
+      uploader,
+      retry: { maxAttempts: 3, baseDelayMs: 50, factor: 2 },
+      sleep: async () => {},
+    });
+    expect(report.attemptsLog).toHaveLength(3);
+    expect(report.attemptsLog[0]).toMatchObject({
+      localId: "s5",
+      attempt: 1,
+      delayMs: 0,
+      outcome: "error",
+      error: "boom-1",
+    });
+    expect(report.attemptsLog[1]).toMatchObject({
+      localId: "s5",
+      attempt: 2,
+      delayMs: 50,
+      outcome: "error",
+      error: "boom-2",
+    });
+    expect(report.attemptsLog[2]).toMatchObject({
+      localId: "s5",
+      attempt: 3,
+      delayMs: 100,
+      outcome: "success",
+      cloudId: "cloud-final",
+    });
+  });
 });

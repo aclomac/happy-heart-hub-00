@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import {
   getQueueState,
   replayQueue,
+  type AttemptLogEntry,
   type QueueState,
   type ReplayReport,
   type RetryPolicy,
@@ -133,16 +134,19 @@ export function OfflineQueueReplayButton({
 
       {outcome.kind === "success" && (
         <div
-          className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-700"
+          className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-700 space-y-2"
           data-testid="offline-queue-replay-success"
         >
-          Replay completed at {new Date(outcome.at).toLocaleTimeString()} —
-          {" "}attempted {outcome.report.attempted},
-          {" "}succeeded {outcome.report.succeeded},
-          {" "}failed {outcome.report.failed},
-          {" "}skipped {outcome.report.skipped}
-          {" "}· uploader calls {outcome.report.attempts}
-          {" "}(retry up to {retry.maxAttempts}x).
+          <div>
+            Replay completed at {new Date(outcome.at).toLocaleTimeString()} —
+            {" "}attempted {outcome.report.attempted},
+            {" "}succeeded {outcome.report.succeeded},
+            {" "}failed {outcome.report.failed},
+            {" "}skipped {outcome.report.skipped}
+            {" "}· uploader calls {outcome.report.attempts}
+            {" "}(retry up to {retry.maxAttempts}x).
+          </div>
+          <AttemptsTable entries={outcome.report.attemptsLog} />
         </div>
       )}
       {outcome.kind === "error" && (
@@ -154,5 +158,70 @@ export function OfflineQueueReplayButton({
         </div>
       )}
     </div>
+  );
+}
+
+function AttemptsTable({ entries }: { entries: AttemptLogEntry[] }) {
+  if (entries.length === 0) {
+    return (
+      <div className="text-muted-foreground">No attempts ran.</div>
+    );
+  }
+  return (
+    <details open className="text-foreground/90">
+      <summary className="cursor-pointer text-xs text-muted-foreground">
+        Per-attempt log ({entries.length})
+      </summary>
+      <div className="mt-2 overflow-x-auto">
+        <table
+          className="w-full text-[11px] border-collapse"
+          data-testid="offline-queue-attempts-table"
+        >
+          <thead className="text-left text-muted-foreground">
+            <tr>
+              <th className="px-2 py-1 font-medium">#</th>
+              <th className="px-2 py-1 font-medium">Local ID</th>
+              <th className="px-2 py-1 font-medium">Attempt</th>
+              <th className="px-2 py-1 font-medium">Delay</th>
+              <th className="px-2 py-1 font-medium">Took</th>
+              <th className="px-2 py-1 font-medium">Outcome</th>
+              <th className="px-2 py-1 font-medium">Detail</th>
+            </tr>
+          </thead>
+          <tbody>
+            {entries.map((e, i) => (
+              <tr
+                key={`${e.localId}-${e.attempt}-${i}`}
+                className="border-t border-border/40"
+                data-testid={`offline-queue-attempt-row-${i}`}
+              >
+                <td className="px-2 py-1 text-muted-foreground">{i + 1}</td>
+                <td className="px-2 py-1 font-mono truncate max-w-[140px]" title={e.localId}>
+                  {e.localId}
+                </td>
+                <td className="px-2 py-1">#{e.attempt}</td>
+                <td className="px-2 py-1">{e.delayMs}ms</td>
+                <td className="px-2 py-1">{Math.round(e.durationMs)}ms</td>
+                <td
+                  className={
+                    e.outcome === "success"
+                      ? "px-2 py-1 text-emerald-700"
+                      : "px-2 py-1 text-destructive"
+                  }
+                >
+                  {e.outcome === "success" ? "✓ success" : "✗ error"}
+                </td>
+                <td
+                  className="px-2 py-1 truncate max-w-[220px]"
+                  title={e.error ?? e.cloudId ?? ""}
+                >
+                  {e.outcome === "success" ? e.cloudId : e.error}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </details>
   );
 }
