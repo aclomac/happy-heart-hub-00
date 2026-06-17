@@ -31,24 +31,21 @@ const stub = vi.hoisted(() => {
   const inserts: Array<{ table: string; row: Record<string, unknown> }> = [];
   const rows = new Map<string, SalesRow>();
   let nextId = 1;
-  let crashSessionOnce = false;
+  let failSalesInsertOnce = false;
 
   const reset = () => {
     inserts.length = 0;
     rows.clear();
     nextId = 1;
-    crashSessionOnce = false;
+    failSalesInsertOnce = false;
   };
 
   const client = {
     auth: {
-      getSession: vi.fn(async () => {
-        if (crashSessionOnce) {
-          crashSessionOnce = false;
-          throw new Error("auth subsystem crashed mid-flight");
-        }
-        return { data: { session: okSession }, error: null };
-      }),
+      getSession: vi.fn(async () => ({
+        data: { session: okSession },
+        error: null,
+      })),
     },
     from(table: string) {
       return {
@@ -72,6 +69,10 @@ const stub = vi.hoisted(() => {
         insert: (row: Record<string, unknown> | Record<string, unknown>[]) => ({
           select: (_cols: string) => ({
             single: async () => {
+              if (table === "sales" && failSalesInsertOnce) {
+                failSalesInsertOnce = false;
+                return { data: null, error: { message: "transient" } };
+              }
               const r = Array.isArray(row) ? row[0]! : row;
               inserts.push({ table, row: r });
               if (table === "sales") {
@@ -97,8 +98,8 @@ const stub = vi.hoisted(() => {
     inserts,
     rows,
     reset,
-    armSessionCrashOnce() {
-      crashSessionOnce = true;
+    armSalesInsertFailure() {
+      failSalesInsertOnce = true;
     },
   };
 });
