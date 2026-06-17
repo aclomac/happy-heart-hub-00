@@ -30,6 +30,7 @@ import type { Uploader, UploadResult } from "./replay";
 import type { PreflightResult, TxnSyncRecord } from "./types";
 
 const PAYLOAD_KEY = "erpovo:txn-sync:sales-payload";
+const STOCK_LINK_KEY = "erpovo:txn-sync:sales-stock-link";
 
 const isBrowser = () =>
   typeof window !== "undefined" && typeof localStorage !== "undefined";
