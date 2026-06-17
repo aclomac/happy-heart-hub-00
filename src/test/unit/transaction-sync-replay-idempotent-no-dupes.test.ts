@@ -215,7 +215,16 @@ describe("replay with previously enqueued items — idempotent, no duplicate clo
 
     const cloudA = recA1!.cloud_id!;
 
-    // --- Step 3: re-enqueue the SAME logical invoice A with a fresh local id.
+    // --- Step 3: simulate a fresh local cache (different device, wiped
+    // browser storage, etc.) while the cloud still holds the original row.
+    // Re-enqueue the SAME logical invoice A with a fresh local_id — the
+    // local duplicate guard cannot see the prior record, so the request
+    // must be deduped by the uploader against the cloud (company_id,
+    // invoice_no) lookup, not blocked at register time.
+    __resetTxnSyncStore();
+    __resetSalesSyncStore();
+    __resetReplayLatch();
+
     const enqA2 = await enqueueSalesInvoice({
       companyId: CO,
       localId: "local-A-2",
