@@ -69,11 +69,9 @@ function SecurityTestsPage() {
     queryFn: async (): Promise<TestCtx> => {
       const { data: userData } = await supabase.auth.getUser();
       const uid = userData.user?.id ?? "";
-      const { data: cos } = await supabase
-        .from("companies")
-        .select("id")
-        .eq("owner_id", uid)
-        .limit(1);
+      const { data: cos } = uid
+        ? await supabase.from("companies").select("id").eq("owner_id", uid).limit(1)
+        : { data: [] as { id: string }[] };
       const sub = subQ.data!;
       const plan = sub.plan ?? "basic";
       const features = PLAN_FEATURES[plan];
