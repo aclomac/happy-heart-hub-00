@@ -18,6 +18,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Trash2, Loader2 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+import { useBillingAuthGuard, isUnauthorizedError } from "@/lib/billing-guard";
 
 export const Route = createFileRoute("/super-admin/feature-control")({
   component: FeatureControlPage,
@@ -55,7 +56,20 @@ function PlanMatrix() {
   const qc = useQueryClient();
   const fetchMatrix = useServerFn(listFeatureMatrix);
   const toggle = useServerFn(togglePlanFeature);
-  const q = useQuery({ queryKey: ["feature-matrix"], queryFn: () => fetchMatrix() });
+  const { isCloudMode, session } = useBillingAuthGuard();
+  const q = useQuery({
+    queryKey: ["feature-matrix", !!session?.access_token],
+    enabled: isCloudMode && !!session?.access_token,
+    retry: false,
+    queryFn: async () => {
+      try {
+        return await fetchMatrix();
+      } catch (e) {
+        if (isUnauthorizedError(e)) return { plans: [], featureKeys: FEATURE_KEYS };
+        return { plans: [], featureKeys: FEATURE_KEYS };
+      }
+    },
+  });
 
   const m = useMutation({
     mutationFn: (vars: { planId: string; feature: string; enabled: boolean }) =>
@@ -122,7 +136,20 @@ function OverridesPanel() {
   const list = useServerFn(listCompanyOverrides);
   const upsert = useServerFn(upsertCompanyOverride);
   const del = useServerFn(deleteCompanyOverride);
-  const q = useQuery({ queryKey: ["company-overrides"], queryFn: () => list({ data: {} }) });
+  const { isCloudMode, session } = useBillingAuthGuard();
+  const q = useQuery({
+    queryKey: ["company-overrides", !!session?.access_token],
+    enabled: isCloudMode && !!session?.access_token,
+    retry: false,
+    queryFn: async () => {
+      try {
+        return await list({ data: {} });
+      } catch (e) {
+        if (isUnauthorizedError(e)) return { overrides: [] };
+        return { overrides: [] };
+      }
+    },
+  });
 
   const [form, setForm] = useState({
     company_id: "",

@@ -22,6 +22,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Check, X, Eye, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
+import { useBillingAuthGuard, isUnauthorizedError } from "@/lib/billing-guard";
 
 export const Route = createFileRoute("/super-admin/payments")({
   component: PlatformPaymentsShell,
@@ -52,6 +53,7 @@ function PlatformPaymentsPage() {
   const rejectFn = useServerFn(rejectPlatformPayment);
   const reviewFn = useServerFn(setPaymentUnderReview);
   const qc = useQueryClient();
+  const { isCloudMode, session } = useBillingAuthGuard();
 
   const TABS: { value: Status; label: string }[] = [
     { value: "pending", label: t("Pending") },
@@ -68,7 +70,16 @@ function PlatformPaymentsPage() {
 
   const q = useQuery({
     queryKey: ["platform-payments", tab],
-    queryFn: () => listFn({ data: { status: tab } }),
+    enabled: isCloudMode && !!session?.access_token,
+    retry: false,
+    queryFn: async () => {
+      try {
+        return await listFn({ data: { status: tab } });
+      } catch (e) {
+        if (isUnauthorizedError(e)) return { requests: [] };
+        return { requests: [] };
+      }
+    },
   });
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["platform-payments"] });

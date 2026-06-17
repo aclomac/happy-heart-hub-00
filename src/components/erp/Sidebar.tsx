@@ -45,6 +45,7 @@ import { companies } from "@/lib/mock-data";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { checkIsAdmin } from "@/lib/billing.functions";
+import { useBillingAuthGuard } from "@/lib/billing-guard";
 import { MobileAppDialog } from "@/components/erp/MobileAppDialog";
 // Subscription/plan gating removed for personal use.
 
@@ -317,9 +318,11 @@ export function ERPSidebar() {
   const isAdminFn = useServerFn(checkIsAdmin);
   const launchMode = getLaunchMode();
   const skipAdminCheck = isDemoMode() || launchMode !== "cloud";
+  const billingAuth = useBillingAuthGuard();
+  const { isCloudMode, session } = billingAuth;
   const adminQ = useQuery({
-    queryKey: ["is-admin", skipAdminCheck ? "skip" : "cloud"],
-    enabled: !skipAdminCheck,
+    queryKey: ["is-admin", skipAdminCheck ? "skip" : "cloud", !!session?.access_token],
+    enabled: isCloudMode && !!session?.access_token,
     queryFn: async () => {
       try {
         return await isAdminFn();

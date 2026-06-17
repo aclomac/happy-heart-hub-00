@@ -21,6 +21,7 @@ const CRITICAL_FRAGMENTS = [
   "performance", // cache/benchmark logic tests (if present)
   "duplicate-submit",
   "master-data-sync",
+  "billing-auth-guards",
 ];
 
 

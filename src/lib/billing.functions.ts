@@ -1,7 +1,41 @@
 import { createServerFn } from "@tanstack/react-start";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import type { Database } from "@/integrations/supabase/types";
+
+const BILLING_SAFE_RESULT = {
+  planName: "Personal Mode",
+  status: "All features unlocked",
+  isActive: true,
+  isAdmin: false,
+  showManageSubscription: false,
+} as const;
+
+async function optionalBillingAuth(): Promise<{
+  supabase: SupabaseClient<Database>;
+  userId: string;
+} | null> {
+  const { getRequestHeader } = await import("@tanstack/react-start/server");
+  const authHeader = getRequestHeader("authorization");
+  if (!authHeader?.startsWith("Bearer ")) return null;
+  const token = authHeader.replace("Bearer ", "").trim();
+  if (!token) return null;
+
+  const SUPABASE_URL = process.env.SUPABASE_URL;
+  const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY;
+  if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) return null;
+
+  const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+    global: { headers: { Authorization: `Bearer ${token}` } },
+    auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
+  });
+  const { data, error } = await supabase.auth.getClaims(token);
+  const userId = data?.claims?.sub;
+  if (error || !userId) return null;
+  return { supabase, userId };
+}
 
 const PLAN_META = {
   gold: { max_companies: 2, max_devices: 2, amount: 60 },
@@ -66,16 +100,20 @@ export const submitPaymentRequest = createServerFn({ method: "POST" })
   });
 
 export const listMyPaymentRequests = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { supabase, userId } = context;
-    const { data, error } = await supabase
-      .from("payment_requests")
-      .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false });
-    if (error) throw new Error(error.message);
-    return { requests: data ?? [] };
+  .handler(async () => {
+    const auth = await optionalBillingAuth();
+    if (!auth) return { requests: [], ...BILLING_SAFE_RESULT };
+    try {
+      const { data, error } = await auth.supabase
+        .from("payment_requests")
+        .select("*")
+        .eq("user_id", auth.userId)
+        .order("created_at", { ascending: false });
+      if (error) throw new Error(error.message);
+      return { requests: data ?? [] };
+    } catch {
+      return { requests: [], ...BILLING_SAFE_RESULT };
+    }
   });
 
 export const listAllPaymentRequests = createServerFn({ method: "POST" })
@@ -223,31 +261,41 @@ export const rejectPaymentRequest = createServerFn({ method: "POST" })
   });
 
 export const listPaymentMethods = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
   .handler(async () => {
+    const auth = await optionalBillingAuth();
+    if (!auth) return { methods: [], ...BILLING_SAFE_RESULT };
     // Use admin client to read only public-safe columns; the raw table is
     // restricted to platform admins via RLS to protect api_key / webhook_secret.
-    const { data, error } = await supabaseAdmin
-      .from("payment_settings")
-      .select(
-        "id, method, label, account_number, account_name, logo_url, instructions, payment_type, min_amount, max_amount, sort_order, is_active",
-      )
-      .eq("is_active", true)
-      .order("sort_order", { ascending: true });
-    if (error) throw new Error(error.message);
-    return { methods: data ?? [] };
+    try {
+      const { data, error } = await supabaseAdmin
+        .from("payment_settings")
+        .select(
+          "id, method, label, account_number, account_name, logo_url, instructions, payment_type, min_amount, max_amount, sort_order, is_active",
+        )
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true });
+      if (error) throw new Error(error.message);
+      return { methods: data ?? [] };
+    } catch {
+      return { methods: [], ...BILLING_SAFE_RESULT };
+    }
   });
 
 export const listSubscriptionPlans = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
   .handler(async () => {
-    const { data, error } = await supabaseAdmin
-      .from("subscription_plans")
-      .select("id, key, label, monthly_price, yearly_price, price, is_active")
-      .eq("is_active", true)
-      .order("sort_order", { ascending: true });
-    if (error) throw new Error(error.message);
-    return { plans: data ?? [] };
+    const auth = await optionalBillingAuth();
+    if (!auth) return { plans: [], ...BILLING_SAFE_RESULT };
+    try {
+      const { data, error } = await supabaseAdmin
+        .from("subscription_plans")
+        .select("id, key, label, monthly_price, yearly_price, price, is_active")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true });
+      if (error) throw new Error(error.message);
+      return { plans: data ?? [] };
+    } catch {
+      return { plans: [], ...BILLING_SAFE_RESULT };
+    }
   });
 
 export const listAllPaymentMethods = createServerFn({ method: "GET" })
@@ -317,12 +365,13 @@ export const deletePaymentSetting = createServerFn({ method: "POST" })
   });
 
 export const checkIsAdmin = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .handler(async () => {
+    const auth = await optionalBillingAuth();
+    if (!auth) return { ...BILLING_SAFE_RESULT, isAdmin: false };
     const { data, error } = await supabaseAdmin.rpc("has_role", {
-      _user_id: context.userId,
+      _user_id: auth.userId,
       _role: "admin",
     });
-    if (error) throw new Error(error.message);
+    if (error) return { ...BILLING_SAFE_RESULT, isAdmin: false };
     return { isAdmin: !!data };
   });

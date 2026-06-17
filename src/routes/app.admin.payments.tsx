@@ -14,6 +14,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { CheckCircle2, XCircle, Clock, Image as ImageIcon } from "lucide-react";
 import { PlanStatusBadge } from "@/components/erp/PlanStatusBadge";
+import { useBillingAuthGuard, isUnauthorizedError } from "@/lib/billing-guard";
 
 export const Route = createFileRoute("/app/admin/payments")({
   component: AdminPaymentsPage,
@@ -23,7 +24,20 @@ type Tab = "pending" | "approved" | "rejected";
 
 function AdminPaymentsPage() {
   const isAdminFn = useServerFn(checkIsAdmin);
-  const adminQ = useQuery({ queryKey: ["is-admin"], queryFn: () => isAdminFn() });
+  const { isCloudMode, session } = useBillingAuthGuard();
+  const adminQ = useQuery({
+    queryKey: ["is-admin", "payments", !!session?.access_token],
+    enabled: isCloudMode && !!session?.access_token,
+    retry: false,
+    queryFn: async () => {
+      try {
+        return await isAdminFn();
+      } catch (e) {
+        if (isUnauthorizedError(e)) return { isAdmin: false };
+        return { isAdmin: false };
+      }
+    },
+  });
 
   const [tab, setTab] = useState<Tab>("pending");
   const listFn = useServerFn(listAllPaymentRequests);
@@ -33,8 +47,16 @@ function AdminPaymentsPage() {
 
   const listQ = useQuery({
     queryKey: ["all-payment-requests", tab],
-    queryFn: () => listFn({ data: { status: tab } }),
-    enabled: adminQ.data?.isAdmin === true,
+    retry: false,
+    queryFn: async () => {
+      try {
+        return await listFn({ data: { status: tab } });
+      } catch (e) {
+        if (isUnauthorizedError(e)) return { requests: [] };
+        return { requests: [] };
+      }
+    },
+    enabled: isCloudMode && !!session?.access_token && adminQ.data?.isAdmin === true,
   });
 
   const [rejectId, setRejectId] = useState<string | null>(null);
