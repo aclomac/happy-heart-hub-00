@@ -1,0 +1,2 @@
+ALTER TABLE public.payments ADD COLUMN IF NOT EXISTS idempotency_key text;
+CREATE UNIQUE INDEX IF NOT EXISTS payments_company_idempotency_key_uidx ON public.payments (company_id, idempotency_key) WHERE idempotency_key IS NOT NULL;

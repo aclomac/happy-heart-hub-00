@@ -31,6 +31,7 @@ import {
   getLinkedPurchaseStockPayload,
   type PurchaseSyncSupabase,
 } from "./purchases";
+import { createPaymentUploader, type PaymentSyncSupabase } from "./payments";
 import type { Uploader } from "./replay";
 import type { TxnSyncRecord } from "./types";
 
@@ -46,6 +47,12 @@ let disposePurchaseStockHook: (() => void) | null = null;
  *         and enqueues a `stock_movement` (which the Phase C uploader
  *         then syncs — duplicate stock-in is prevented at the DB level
  *         by the unique idempotency_key index).
+ * Phase F: payment_in + payment_out are wired to the real cloud uploader.
+ *         Cash/bank txn rows are NOT mirrored from the cloud uploader —
+ *         local posting already created them; duplicating here would
+ *         double-post. The DB unique index on (company_id, idempotency_key)
+ *         prevents duplicate payment rows; a 23505 race resolves as a
+ *         non-fatal duplicate-success via replay's existing handler.
  */
 export function installSalesUploader(): void {
   if (installed && hasUploader()) return;
@@ -54,10 +61,16 @@ export function installSalesUploader(): void {
   const purchaseUploader = createPurchaseUploader(
     supabase as unknown as PurchaseSyncSupabase,
   );
+  const paymentUploader = createPaymentUploader(
+    supabase as unknown as PaymentSyncSupabase,
+  );
   const dispatch: Uploader = (record: TxnSyncRecord) => {
     if (record.kind === "sale_invoice") return salesUploader(record);
     if (record.kind === "stock_movement") return stockUploader(record);
     if (record.kind === "purchase") return purchaseUploader(record);
+    if (record.kind === "payment_in" || record.kind === "payment_out") {
+      return paymentUploader(record);
+    }
     throw new Error(
       `Cloud sync for "${record.kind}" is not enabled yet. The entry will stay queued.`,
     );

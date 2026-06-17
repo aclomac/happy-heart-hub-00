@@ -2947,6 +2947,7 @@ export type Database = {
           deleted_by: string | null
           direction: string
           id: string
+          idempotency_key: string | null
           method: string
           notes: string | null
           party_id: string | null
@@ -2972,6 +2973,7 @@ export type Database = {
           deleted_by?: string | null
           direction: string
           id?: string
+          idempotency_key?: string | null
           method?: string
           notes?: string | null
           party_id?: string | null
@@ -2997,6 +2999,7 @@ export type Database = {
           deleted_by?: string | null
           direction?: string
           id?: string
+          idempotency_key?: string | null
           method?: string
           notes?: string | null
           party_id?: string | null
