@@ -67,17 +67,20 @@ function ItemCategoriesPage() {
         title="Item Categories"
         subtitle="Organize products and services"
         actions={
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => {
-              setEditing(null);
-              setOpen(true);
-            }}
-          >
-            <Plus className="w-4 h-4" />
-            Add Category
-          </Button>
+          <>
+            <MasterDataSyncBadge entity="item_categories" companyId={companyId} />
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => {
+                setEditing(null);
+                setOpen(true);
+              }}
+            >
+              <Plus className="w-4 h-4" />
+              Add Category
+            </Button>
+          </>
         }
       />
       <div className="bg-card border rounded-md" style={{ boxShadow: "var(--shadow-card)" }}>
