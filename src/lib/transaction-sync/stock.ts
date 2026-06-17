@@ -17,6 +17,7 @@ import { preflightSync, preflightSyncSync } from "./gating";
 import {
   enqueue,
   getRecord,
+  listRecords,
   markFailed,
   markSynced,
   markSyncing,
@@ -194,6 +195,21 @@ export function failStockSync(
 
 export function getStockRecord(localId: string): TxnSyncRecord | null {
   return getRecord(localId);
+}
+
+/** All stock_movement sync records for a company. */
+export function listStockSyncRecords(companyId: string): TxnSyncRecord[] {
+  return listRecords({ kind: "stock_movement", companyId });
+}
+
+/** Look up a stock_movement sync record by its cloud_id, scoped to a company. */
+export function getStockRecordByCloudId(
+  companyId: string,
+  cloudId: string,
+): TxnSyncRecord | null {
+  return (
+    listStockSyncRecords(companyId).find((r) => r.cloud_id === cloudId) ?? null
+  );
 }
 
 /** Test/reset helper. */
