@@ -238,12 +238,14 @@ export function getSalesRecord(localId: string): TxnSyncRecord | null {
 export type SalesSyncSupabase = {
   from: (table: string) => {
     select: (cols: string) => {
-      eq: (col: string, val: string) => {
+      is: (col: string, val: null) => {
         eq: (col: string, val: string) => {
-          maybeSingle: () => Promise<{
-            data: { id: string } | null;
-            error: { message: string } | null;
-          }>;
+          eq: (col: string, val: string) => {
+            maybeSingle: () => Promise<{
+              data: { id: string } | null;
+              error: { message: string } | null;
+            }>;
+          };
         };
       };
     };
