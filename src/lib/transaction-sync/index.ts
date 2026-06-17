@@ -8,3 +8,4 @@ export * from "./gating";
 export * from "./replay";
 export * from "./active-uploader";
 export * from "./payments";
+export * from "./sales";
