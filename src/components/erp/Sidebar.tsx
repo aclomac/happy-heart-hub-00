@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentCompanyId } from "@/lib/use-company";
 import { isDemoMode, getDemoCompany } from "@/lib/demo/localStore";
+import { getLaunchMode } from "@/lib/launch-mode";
 
 import {
   LayoutDashboard,
