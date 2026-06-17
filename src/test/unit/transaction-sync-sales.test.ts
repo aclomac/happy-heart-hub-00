@@ -100,14 +100,16 @@ function makeSupabaseStub(opts: {
       }
       return {
         select: (_cols: string) => ({
-          eq: (_c: string, v1: string) => ({
-            eq: (_c2: string, v2: string) => ({
-              maybeSingle: async () => {
-                const found = [...rows.values()].find(
-                  (r) => r.company_id === v1 && r.invoice_no === v2,
-                );
-                return { data: found ?? null, error: null };
-              },
+          is: (_c0: string, _v0: null) => ({
+            eq: (_c: string, v1: string) => ({
+              eq: (_c2: string, v2: string) => ({
+                maybeSingle: async () => {
+                  const found = [...rows.values()].find(
+                    (r) => r.company_id === v1 && r.invoice_no === v2,
+                  );
+                  return { data: found ?? null, error: null };
+                },
+              }),
             }),
           }),
         }),
