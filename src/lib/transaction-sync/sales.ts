@@ -123,6 +123,73 @@ export function clearSalesPayload(localId: string): void {
 }
 
 // ---------------------------------------------------------------------------
+// Paired stock-movement payloads. A sale invoice's stock posting is
+// registered up front and held in escrow under the sale's local_id.
+// Once the sale's cloud sync succeeds the post-sync hook (see install.ts)
+// drains the escrow and enqueues a `stock_movement` record so it can
+// flow through the same offline queue.
+//
+// We keep the linkage on the SALE side so a single read here lets the
+// hook know whether a paired posting exists, without scanning the stock
+// store. Cleared as soon as the stock movement is enqueued.
+// ---------------------------------------------------------------------------
+
+type StockLinkMap = Record<string, import("./stock").StockMovementPayload>;
+
+function readStockLinks(): StockLinkMap {
+  if (!isBrowser()) return {};
+  try {
+    const raw = localStorage.getItem(STOCK_LINK_KEY);
+    return raw ? (JSON.parse(raw) as StockLinkMap) : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeStockLinks(m: StockLinkMap): void {
+  if (!isBrowser()) return;
+  try {
+    localStorage.setItem(STOCK_LINK_KEY, JSON.stringify(m));
+  } catch {
+    /* ignore quota */
+  }
+}
+
+/**
+ * Attach a stock_movement payload to a sale's local_id. The payload is
+ * held in escrow until the sale's cloud sync succeeds — only then is a
+ * stock_movement record registered and enqueued. This guarantees we
+ * never post inventory ahead of (or without) its parent invoice.
+ */
+export function linkStockMovementToSale(
+  salesLocalId: string,
+  payload: import("./stock").StockMovementPayload,
+): void {
+  const m = readStockLinks();
+  m[salesLocalId] = { ...payload, parent_local_id: salesLocalId };
+  writeStockLinks(m);
+}
+
+export function getLinkedStockPayload(
+  salesLocalId: string,
+): import("./stock").StockMovementPayload | null {
+  return readStockLinks()[salesLocalId] ?? null;
+}
+
+export function clearLinkedStockPayload(salesLocalId: string): void {
+  const m = readStockLinks();
+  if (!(salesLocalId in m)) return;
+  delete m[salesLocalId];
+  writeStockLinks(m);
+}
+
+/** Test/reset helper. */
+export function __resetSalesStockLinks(): void {
+  if (!isBrowser()) return;
+  localStorage.removeItem(STOCK_LINK_KEY);
+}
+
+// ---------------------------------------------------------------------------
 // Preflight + register
 // ---------------------------------------------------------------------------
 
