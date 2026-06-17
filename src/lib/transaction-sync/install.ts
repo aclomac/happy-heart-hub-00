@@ -24,7 +24,7 @@ import {
   getLinkedStockPayload,
   type SalesSyncSupabase,
 } from "./sales";
-import { enqueueStockMovement } from "./stock";
+import { createStockUploader, enqueueStockMovement, type StockSyncSupabase } from "./stock";
 import type { Uploader } from "./replay";
 import type { TxnSyncRecord } from "./types";
 
@@ -33,16 +33,17 @@ let disposeSalesStockHook: (() => void) | null = null;
 
 /**
  * Install the multiplexing uploader that dispatches by `record.kind`.
- * Today only `sale_invoice` is handled directly; `stock_movement`
- * records are queued by the sale's post-sync hook (Phase B integration)
- * but a real cloud uploader for that kind is not enabled yet — it stays
- * queued and surfaces the "not enabled yet" error on the next replay.
+ * Phase C: `stock_movement` is now wired to the real cloud uploader,
+ * gated by the database unique index on (company_id, idempotency_key)
+ * so retries cannot create duplicate stock rows or double stock-out.
  */
 export function installSalesUploader(): void {
   if (installed && hasUploader()) return;
   const salesUploader = createSalesUploader(supabase as unknown as SalesSyncSupabase);
+  const stockUploader = createStockUploader(supabase as unknown as StockSyncSupabase);
   const dispatch: Uploader = (record: TxnSyncRecord) => {
     if (record.kind === "sale_invoice") return salesUploader(record);
+    if (record.kind === "stock_movement") return stockUploader(record);
     throw new Error(
       `Cloud sync for "${record.kind}" is not enabled yet. The entry will stay queued.`,
     );
