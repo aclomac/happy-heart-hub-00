@@ -1,5 +1,5 @@
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
-import { Button } from "@/components/ui/button";
+
 import { Cloud, HardDrive, Check } from "lucide-react";
 import { isDemoMode } from "@/lib/demo/localStore";
 import { supabase } from "@/integrations/supabase/client";
