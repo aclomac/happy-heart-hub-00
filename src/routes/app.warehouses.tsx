@@ -141,7 +141,7 @@ function WarehousesPage() {
         subtitle="Main Store, Branches, Warehouses and Factories"
         actions={
           <>
-            <MasterDataSyncBadge entity="warehouses" />
+            <MasterDataSyncBadge entity="warehouses" companyId={companyId} />
             <Button
               onClick={() => {
                 setEditing(null);
