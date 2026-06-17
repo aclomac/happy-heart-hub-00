@@ -17,6 +17,7 @@ import { preflightSync, preflightSyncSync } from "./gating";
 import {
   enqueue,
   getRecord,
+  listRecords,
   markFailed,
   markSynced,
   markSyncing,
