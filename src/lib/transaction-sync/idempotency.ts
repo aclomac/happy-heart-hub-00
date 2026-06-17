@@ -282,10 +282,25 @@ export function enqueue(localId: string): void {
   if (q.includes(localId)) return;
   q.push(localId);
   writeQueue(q);
+  const s = readQueueState();
+  writeQueueState({
+    ...s,
+    size: q.length,
+    lastEnqueueAt: new Date().toISOString(),
+  });
 }
 
 export function dequeue(localId: string): void {
-  writeQueue(readQueue().filter((x) => x !== localId));
+  const before = readQueue();
+  const after = before.filter((x) => x !== localId);
+  if (after.length === before.length) return;
+  writeQueue(after);
+  const s = readQueueState();
+  writeQueueState({
+    ...s,
+    size: after.length,
+    lastDequeueAt: new Date().toISOString(),
+  });
 }
 
 export function peekQueue(): string[] {
@@ -297,4 +312,5 @@ export function __resetTxnSyncStore(): void {
   if (!isBrowser()) return;
   localStorage.removeItem(MAP_KEY);
   localStorage.removeItem(QUEUE_KEY);
+  localStorage.removeItem(QUEUE_STATE_KEY);
 }
