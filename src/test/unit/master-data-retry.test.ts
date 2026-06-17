@@ -285,7 +285,10 @@ describe("pending-changes counter", () => {
     const final = getSyncStatus("items");
     expect(final.state).toBe("synced");
     expect(final.pendingChanges).toBe(0);
+  });
 });
+
+
 
 // --- Persistence across reloads ----------------------------------------
 
