@@ -90,7 +90,11 @@ const stub = vi.hoisted(() => {
       session = null;
     },
     restoreSession() {
-      session = { access_token: "tok" };
+      session = realSession;
+      dropAfter = Number.POSITIVE_INFINITY;
+    },
+    dropSessionAfter(n: number) {
+      dropAfter = n;
     },
   };
 });
