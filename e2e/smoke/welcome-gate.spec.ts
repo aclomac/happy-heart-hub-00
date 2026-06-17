@@ -555,6 +555,62 @@ test.describe("/welcome Cloud mode survives post-login refresh", () => {
   });
 });
 
+test.describe("/welcome Cloud mode refresh after internal navigation", () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  test("Cloud: arrive at /app/items via internal nav, refresh, no /welcome bounce", async ({
+    page,
+  }) => {
+    await clearLaunchMode(page);
+
+    // 1. Pick Cloud, then log in as demo.
+    await page.goto("/welcome");
+    await page.getByRole("button", { name: /continue with cloud/i }).click();
+    await page.waitForURL(/\/signup$/, { timeout: 15_000 });
+
+    await loginAsDemo(page);
+    await page.waitForURL((url) => url.pathname.startsWith("/app"), {
+      timeout: 30_000,
+    });
+
+    // 2. Land on an internal page that is NOT /app/items first.
+    await page.goto("/app");
+    await page.waitForURL(/\/app(\/|$)/, { timeout: 15_000 });
+    expect(page.url()).not.toMatch(/\/welcome/);
+
+    // 3. Navigate from that internal page to /app/items.
+    await page.goto("/app/items");
+    await page.waitForURL(/\/app\/items/, { timeout: 15_000 });
+    expect(page.url()).not.toMatch(/\/welcome/);
+
+    // 4. Hard reload on /app/items — must not bounce to /welcome.
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.waitForURL(/\/app\/items/, { timeout: 15_000 });
+    expect(page.url()).not.toMatch(/\/welcome/);
+
+    // 5. Flag is still "cloud" after refresh.
+    const afterReload = await page.evaluate(() =>
+      window.localStorage.getItem("erpovo:launch-mode"),
+    );
+    expect(afterReload).toBe("cloud");
+
+    // 6. One more internal hop + reload to be thorough.
+    await page.goto("/app");
+    await page.waitForURL(/\/app(\/|$)/, { timeout: 15_000 });
+    await page.goto("/app/items");
+    await page.waitForURL(/\/app\/items/, { timeout: 15_000 });
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.waitForURL(/\/app\/items/, { timeout: 15_000 });
+    expect(page.url()).not.toMatch(/\/welcome/);
+
+    const finalValue = await page.evaluate(() =>
+      window.localStorage.getItem("erpovo:launch-mode"),
+    );
+    expect(finalValue).toBe("cloud");
+  });
+});
+
+
 
 
 
