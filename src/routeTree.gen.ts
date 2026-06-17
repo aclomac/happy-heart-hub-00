@@ -39,6 +39,7 @@ import { Route as SuperAdminAnnouncementsRouteImport } from './routes/super-admi
 import { Route as StoreSlugRouteImport } from './routes/store.$slug'
 import { Route as AppWarehousesRouteImport } from './routes/app.warehouses'
 import { Route as AppUtilitiesRouteImport } from './routes/app.utilities'
+import { Route as AppSyncCenterRouteImport } from './routes/app.sync-center'
 import { Route as AppSyncRouteImport } from './routes/app.sync'
 import { Route as AppSupportRouteImport } from './routes/app.support'
 import { Route as AppSubscriptionRouteImport } from './routes/app.subscription'
@@ -324,6 +325,11 @@ const AppWarehousesRoute = AppWarehousesRouteImport.update({
 const AppUtilitiesRoute = AppUtilitiesRouteImport.update({
   id: '/utilities',
   path: '/utilities',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSyncCenterRoute = AppSyncCenterRouteImport.update({
+  id: '/sync-center',
+  path: '/sync-center',
   getParentRoute: () => AppRoute,
 } as any)
 const AppSyncRoute = AppSyncRouteImport.update({
@@ -1072,6 +1078,7 @@ export interface FileRoutesByFullPath {
   '/app/subscription': typeof AppSubscriptionRouteWithChildren
   '/app/support': typeof AppSupportRoute
   '/app/sync': typeof AppSyncRoute
+  '/app/sync-center': typeof AppSyncCenterRoute
   '/app/utilities': typeof AppUtilitiesRouteWithChildren
   '/app/warehouses': typeof AppWarehousesRoute
   '/store/$slug': typeof StoreSlugRoute
@@ -1234,6 +1241,7 @@ export interface FileRoutesByTo {
   '/app/subscription': typeof AppSubscriptionRouteWithChildren
   '/app/support': typeof AppSupportRoute
   '/app/sync': typeof AppSyncRoute
+  '/app/sync-center': typeof AppSyncCenterRoute
   '/app/warehouses': typeof AppWarehousesRoute
   '/store/$slug': typeof StoreSlugRoute
   '/super-admin/announcements': typeof SuperAdminAnnouncementsRoute
@@ -1399,6 +1407,7 @@ export interface FileRoutesById {
   '/app/subscription': typeof AppSubscriptionRouteWithChildren
   '/app/support': typeof AppSupportRoute
   '/app/sync': typeof AppSyncRoute
+  '/app/sync-center': typeof AppSyncCenterRoute
   '/app/utilities': typeof AppUtilitiesRouteWithChildren
   '/app/warehouses': typeof AppWarehousesRoute
   '/store/$slug': typeof StoreSlugRoute
@@ -1566,6 +1575,7 @@ export interface FileRouteTypes {
     | '/app/subscription'
     | '/app/support'
     | '/app/sync'
+    | '/app/sync-center'
     | '/app/utilities'
     | '/app/warehouses'
     | '/store/$slug'
@@ -1728,6 +1738,7 @@ export interface FileRouteTypes {
     | '/app/subscription'
     | '/app/support'
     | '/app/sync'
+    | '/app/sync-center'
     | '/app/warehouses'
     | '/store/$slug'
     | '/super-admin/announcements'
@@ -1892,6 +1903,7 @@ export interface FileRouteTypes {
     | '/app/subscription'
     | '/app/support'
     | '/app/sync'
+    | '/app/sync-center'
     | '/app/utilities'
     | '/app/warehouses'
     | '/store/$slug'
@@ -2232,6 +2244,13 @@ declare module '@tanstack/react-router' {
       path: '/utilities'
       fullPath: '/app/utilities'
       preLoaderRoute: typeof AppUtilitiesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/sync-center': {
+      id: '/app/sync-center'
+      path: '/sync-center'
+      fullPath: '/app/sync-center'
+      preLoaderRoute: typeof AppSyncCenterRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/sync': {
@@ -3570,6 +3589,7 @@ interface AppRouteChildren {
   AppSubscriptionRoute: typeof AppSubscriptionRouteWithChildren
   AppSupportRoute: typeof AppSupportRoute
   AppSyncRoute: typeof AppSyncRoute
+  AppSyncCenterRoute: typeof AppSyncCenterRoute
   AppUtilitiesRoute: typeof AppUtilitiesRouteWithChildren
   AppWarehousesRoute: typeof AppWarehousesRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -3627,6 +3647,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppSubscriptionRoute: AppSubscriptionRouteWithChildren,
   AppSupportRoute: AppSupportRoute,
   AppSyncRoute: AppSyncRoute,
+  AppSyncCenterRoute: AppSyncCenterRoute,
   AppUtilitiesRoute: AppUtilitiesRouteWithChildren,
   AppWarehousesRoute: AppWarehousesRoute,
   AppIndexRoute: AppIndexRoute,
@@ -3761,13 +3782,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

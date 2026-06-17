@@ -276,6 +276,7 @@ const adminNav = [
   { to: "/app/admin/access-matrix", labelKey: "Access Matrix", icon: Lock },
   { to: "/app/admin/security-tests", labelKey: "Security Tests", icon: ShieldCheck },
   { to: "/app/audit", labelKey: "Audit History", icon: Lock },
+  { to: "/app/sync-center", labelKey: "Sync Center", icon: RefreshCw },
 ] as const;
 
 const STORAGE_KEY = "erpovo.sidebar.groups";

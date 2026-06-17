@@ -11,4 +11,5 @@ export * from "./payments";
 export * from "./sales";
 export * from "./stock";
 export * from "./purchases";
+export * from "./payments";
 export * from "./install";
