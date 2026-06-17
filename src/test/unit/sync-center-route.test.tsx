@@ -1,4 +1,6 @@
 /** @vitest-environment jsdom */
+import "@testing-library/jest-dom/vitest";
+import type React from "react";
 /**
  * Sync Center route smoke test.
  *
