@@ -220,6 +220,7 @@ function Parties() {
         subtitle="Customers, Suppliers & Party Groups"
         actions={
           <>
+            <MasterDataSyncBadge entity="parties" />
             <Link to="/app/party-groups">
               <Button variant="outline" size="sm">
                 <FolderOpen className="w-4 h-4" />
