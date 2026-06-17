@@ -66,6 +66,11 @@ export function markSynced(entity: MasterEntity): void {
   });
 }
 
+export function markSyncing(entity: MasterEntity): void {
+  const cur = getSyncStatus(entity);
+  writeStatus(entity, { ...cur, state: "syncing", error: null });
+}
+
 export function markPending(entity: MasterEntity, deltaCount = 1): void {
   const cur = getSyncStatus(entity);
   writeStatus(entity, {
