@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  checkIsAdmin,
+  checkBillingAdminSafe,
   deletePaymentSetting,
   listAllPaymentMethods,
   upsertPaymentSetting,
@@ -41,7 +41,7 @@ const EMPTY: FormState = {
 };
 
 function AdminPaymentSettingsPage() {
-  const isAdminFn = useServerFn(checkIsAdmin);
+  const isAdminFn = useServerFn(checkBillingAdminSafe);
   const { isCloudMode, session } = useBillingAuthGuard();
   const adminQ = useQuery({
     queryKey: ["is-admin", "payment-settings", !!session?.access_token],
