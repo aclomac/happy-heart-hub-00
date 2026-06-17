@@ -288,3 +288,53 @@ describe("pending-changes counter", () => {
   });
 });
 
+
+
+// --- Persistence across reloads ----------------------------------------
+
+describe("pendingChanges persistence across reloads", () => {
+  test("pendingChanges survives a simulated page reload (localStorage)", () => {
+    markPending("items", 7);
+    expect(getSyncStatus("items").pendingChanges).toBe(7);
+
+    // Simulate a reload: the module-level state is irrelevant because
+    // getSyncStatus reads localStorage on every call. Verify the raw key
+    // is present and that a fresh read still reports the same counter.
+    const raw = localStorage.getItem("erpovo:sync:items");
+    expect(raw).not.toBeNull();
+    const parsed = JSON.parse(raw!);
+    expect(parsed.pendingChanges).toBe(7);
+    expect(parsed.state).toBe("pending");
+
+    // Fresh read (as if a new tab just mounted the badge).
+    const restored = getSyncStatus("items");
+    expect(restored.pendingChanges).toBe(7);
+    expect(restored.state).toBe("pending");
+  });
+
+  test("pendingChanges persists across multiple entities independently", () => {
+    markPending("items", 2);
+    markPending("parties", 5);
+    markPending("warehouses", 1);
+
+    expect(getSyncStatus("items").pendingChanges).toBe(2);
+    expect(getSyncStatus("parties").pendingChanges).toBe(5);
+    expect(getSyncStatus("warehouses").pendingChanges).toBe(1);
+    // Each entity has its own localStorage key.
+    expect(localStorage.getItem("erpovo:sync:items")).not.toBeNull();
+    expect(localStorage.getItem("erpovo:sync:parties")).not.toBeNull();
+    expect(localStorage.getItem("erpovo:sync:warehouses")).not.toBeNull();
+  });
+
+  test("failed-state with pendingChanges is restored after reload", () => {
+    markPending("items", 4);
+    markFailed("items", "network down");
+
+    const restored = getSyncStatus("items");
+    expect(restored.state).toBe("failed");
+    expect(restored.pendingChanges).toBe(4);
+    expect(restored.error).toBe("network down");
+  });
+});
+
+
