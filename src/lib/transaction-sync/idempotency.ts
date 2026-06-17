@@ -23,6 +23,17 @@ const QUEUE_STATE_VERSION = 1;
  * so the next session can tell when the queue was last drained, how many
  * entries are outstanding, and what the last replay outcome was.
  */
+export type PersistedAttemptLogEntry = {
+  localId: string;
+  attempt: number;
+  delayMs: number;
+  outcome: "success" | "error";
+  durationMs: number;
+  error?: string;
+  cloudId?: string;
+  at: string;
+};
+
 export type QueueState = {
   version: number;
   size: number;
@@ -36,6 +47,8 @@ export type QueueState = {
     skipped: number;
     attempts?: number;
     abortedReason?: string;
+    /** Per-attempt log persisted from the last replay run. */
+    attemptsLog?: PersistedAttemptLogEntry[];
   } | null;
 };
 

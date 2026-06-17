@@ -43,6 +43,31 @@ export const DEFAULT_MANUAL_RETRY: RetryPolicy = {
   jitter: true,
 };
 
+/**
+ * Rebuild an Outcome from the persisted queue state so the result table
+ * is visible immediately after a page reload, before the user clicks
+ * "Replay offline queue" again.
+ */
+function hydrateOutcomeFromQueue(state: QueueState): Outcome {
+  const last = state.lastReplay;
+  const at = state.lastReplayAt;
+  if (!last || !at) return { kind: "idle" };
+  const report: ReplayReport = {
+    attempted: last.attempted,
+    succeeded: last.succeeded,
+    failed: last.failed,
+    skipped: last.skipped,
+    attempts: last.attempts ?? 0,
+    attemptsLog: (last.attemptsLog ?? []) as ReplayReport["attemptsLog"],
+    abortedReason: last.abortedReason as ReplayReport["abortedReason"],
+  };
+  if (report.abortedReason) {
+    const msg = ABORT_MESSAGE[report.abortedReason] ?? report.abortedReason;
+    return { kind: "error", message: msg, at, report };
+  }
+  return { kind: "success", report, at };
+}
+
 export function OfflineQueueReplayButton({
   companyId,
   className,
@@ -53,15 +78,25 @@ export function OfflineQueueReplayButton({
   retry?: RetryPolicy;
 }) {
   const [busy, setBusy] = useState(false);
-  const [outcome, setOutcome] = useState<Outcome>({ kind: "idle" });
+  const [outcome, setOutcome] = useState<Outcome>(() =>
+    hydrateOutcomeFromQueue(getQueueState()),
+  );
   const [queue, setQueue] = useState<QueueState>(() => getQueueState());
 
   // Re-read queue state on mount + after each click + when storage changes
-  // from another tab.
+  // from another tab. Rehydrate the outcome panel from the persisted
+  // lastReplay so the per-attempt table survives a full page reload.
   useEffect(() => {
-    setQueue(getQueueState());
+    const s = getQueueState();
+    setQueue(s);
+    setOutcome((current) =>
+      current.kind === "idle" ? hydrateOutcomeFromQueue(s) : current,
+    );
     if (typeof window === "undefined") return;
-    const onStorage = () => setQueue(getQueueState());
+    const onStorage = () => {
+      const next = getQueueState();
+      setQueue(next);
+    };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
   }, []);
