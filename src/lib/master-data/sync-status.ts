@@ -86,6 +86,18 @@ export function markFailed(entity: MasterEntity, error: string): void {
   writeStatus(entity, { ...cur, state: "failed", error });
 }
 
+/**
+ * Mark an entity as "pending retry" — used when a sync failed and a
+ * background retry has been scheduled. Preserves the pendingChanges count
+ * (local writes still queued) and clears the error tone so the badge shows
+ * the amber "N pending" state instead of the red "failed" state while the
+ * retry timer is waiting.
+ */
+export function markPendingRetry(entity: MasterEntity): void {
+  const cur = getSyncStatus(entity);
+  writeStatus(entity, { ...cur, state: "pending", error: null });
+}
+
 export function resetSyncStatus(entity: MasterEntity): void {
   writeStatus(entity, defaultStatus());
 }

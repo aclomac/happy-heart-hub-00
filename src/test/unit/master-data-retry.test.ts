@@ -58,6 +58,7 @@ import {
 import {
   getSyncStatus,
   markFailed,
+  markPending,
   type MasterEntity,
 } from "@/lib/master-data/sync-status";
 import { setLaunchMode, clearLaunchMode } from "@/lib/launch-mode";
@@ -217,3 +218,73 @@ describe("scheduleRetry — background retry with safe backoff", () => {
     expect(getSyncStatus("items").state).toBe("synced");
   });
 });
+
+// --- Pending-changes counter -------------------------------------------
+
+describe("pending-changes counter", () => {
+  test("markPending increments and successful sync clears it", async () => {
+    setLaunchMode("cloud");
+    markPending("items");
+    markPending("items");
+    markPending("items", 3);
+    expect(getSyncStatus("items").pendingChanges).toBe(5);
+    expect(getSyncStatus("items").state).toBe("pending");
+
+    const res = await runResync("items", COMPANY);
+    expect(res.ok).toBe(true);
+    expect(getSyncStatus("items").state).toBe("synced");
+    expect(getSyncStatus("items").pendingChanges).toBe(0);
+  });
+
+  test("failed sync preserves the pending-changes counter (not lost)", async () => {
+    setLaunchMode("cloud");
+    markPending("parties", 2);
+    listersMock.parties.mockRejectedValueOnce(new Error("network"));
+    const res = await runResync("parties", COMPANY);
+    expect(res.ok).toBe(false);
+    expect(getSyncStatus("parties").state).toBe("failed");
+    // Pending count must NOT be reset on failure — local writes still queued.
+    expect(getSyncStatus("parties").pendingChanges).toBe(2);
+  });
+
+  test("scheduleRetry flips state to pending while preserving counter", () => {
+    vi.useFakeTimers();
+    markFailed("warehouses", "boom");
+    markPending("warehouses", 4);
+    // markPending overrides state to pending; force back to failed to
+    // simulate the post-failure-with-queued-writes scenario.
+    markFailed("warehouses", "boom");
+    expect(getSyncStatus("warehouses").state).toBe("failed");
+    expect(getSyncStatus("warehouses").pendingChanges).toBe(4);
+
+    const scheduled = scheduleRetry("warehouses", async () => undefined);
+    expect(scheduled).toBe(true);
+    const status = getSyncStatus("warehouses");
+    expect(status.state).toBe("pending");
+    expect(status.pendingChanges).toBe(4);
+    expect(status.error).toBeNull();
+  });
+
+  test("retry-triggered pending clears once retry runner succeeds", async () => {
+    vi.useFakeTimers();
+    setLaunchMode("cloud");
+    markPending("items", 3);
+    markFailed("items", "boom");
+    expect(getSyncStatus("items").pendingChanges).toBe(3);
+
+    scheduleRetry("items", () =>
+      runResync("items", COMPANY, { requireSession: false }),
+    );
+    // Immediately after scheduling, badge shows pending (not failed).
+    expect(getSyncStatus("items").state).toBe("pending");
+    expect(getSyncStatus("items").pendingChanges).toBe(3);
+
+    await vi.advanceTimersByTimeAsync(RETRY_BACKOFFS_MS[0]);
+    await vi.runAllTimersAsync();
+
+    const final = getSyncStatus("items");
+    expect(final.state).toBe("synced");
+    expect(final.pendingChanges).toBe(0);
+  });
+});
+
