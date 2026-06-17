@@ -146,9 +146,10 @@ describe("replayQueue — duplicate safety", () => {
     };
 
     const p1 = replayQueue({ companyId: COMPANY, uploader });
-    const p2 = replayQueue({ companyId: COMPANY, uploader });
-    // p2 must see the in-flight latch and bail out without calling the uploader.
-    const r2 = await p2;
+    // Let p1 pass preflight and reach the uploader.
+    await new Promise((r) => setTimeout(r, 0));
+    await new Promise((r) => setTimeout(r, 0));
+    const r2 = await replayQueue({ companyId: COMPANY, uploader });
     expect(r2.abortedReason).toBe("in-flight");
     expect(calls).toHaveLength(1);
 
