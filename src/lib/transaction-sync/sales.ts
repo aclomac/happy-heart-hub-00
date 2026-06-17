@@ -292,6 +292,7 @@ export function createSalesUploader(sb: SalesSyncSupabase): Uploader {
     const existing = await sb
       .from("sales")
       .select("id")
+      .is("deleted_at", null)
       .eq("company_id", payload.company_id)
       .eq("invoice_no", payload.invoice_no)
       .maybeSingle();
