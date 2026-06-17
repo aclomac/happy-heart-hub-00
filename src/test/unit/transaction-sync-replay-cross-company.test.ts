@@ -225,8 +225,9 @@ describe("replay does NOT deduplicate across different company_id values", () =>
     expect(cloud2?.company_id).toBe(CO_2);
 
     // Re-draining must remain a no-op — queue empty, no extra inserts.
-    const report2 = await replayQueue({ companyId: CO_1, uploader });
-    expect(report2.attempted).toBe(0);
+    const r1b = await replayQueue({ companyId: CO_1, uploader });
+    const r2b = await replayQueue({ companyId: CO_2, uploader });
+    expect(r1b.attempted + r2b.attempted).toBe(0);
     expect(stub.inserts.filter((i) => i.table === "sales")).toHaveLength(2);
   });
 });
