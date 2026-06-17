@@ -15,6 +15,7 @@ import { validateCoupon } from "@/lib/platform-coupons.functions";
 import { PLAN_LIMITS, type PlanKey } from "@/lib/use-subscription";
 import { useCurrentCompanyId } from "@/lib/use-company";
 import { supabase } from "@/integrations/supabase/client";
+import { useBillingAuthGuard, isUnauthorizedError } from "@/lib/billing-guard";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ArrowLeft, Upload, CheckCircle2, Tag, X } from "lucide-react";
@@ -30,12 +31,37 @@ function UpgradePage() {
   const planKey = (plan === "gold" || plan === "pro" ? plan : "gold") as Exclude<PlanKey, "basic">;
   const meta = PLAN_LIMITS[planKey];
   const companyId = useCurrentCompanyId();
+  const { isCloudMode, session, canCallBilling } = useBillingAuthGuard();
 
   const listFn = useServerFn(listPaymentMethods);
-  const methodsQ = useQuery({ queryKey: ["payment-methods"], queryFn: () => listFn() });
+  const methodsQ = useQuery({
+    queryKey: ["payment-methods", !!session?.access_token],
+    enabled: isCloudMode && !!session?.access_token,
+    retry: false,
+    queryFn: async () => {
+      try {
+        return await listFn();
+      } catch (e) {
+        if (isUnauthorizedError(e)) return { methods: [] };
+        return { methods: [] };
+      }
+    },
+  });
 
   const plansFn = useServerFn(listSubscriptionPlans);
-  const plansQ = useQuery({ queryKey: ["subscription-plans"], queryFn: () => plansFn() });
+  const plansQ = useQuery({
+    queryKey: ["subscription-plans", !!session?.access_token],
+    enabled: isCloudMode && !!session?.access_token,
+    retry: false,
+    queryFn: async () => {
+      try {
+        return await plansFn();
+      } catch (e) {
+        if (isUnauthorizedError(e)) return { plans: [] };
+        return { plans: [] };
+      }
+    },
+  });
 
   const submitFn = useServerFn(submitPaymentRequest);
   const [method, setMethod] = useState<string>("");
@@ -80,6 +106,10 @@ function UpgradePage() {
 
   async function applyCoupon() {
     if (!couponCode.trim()) return;
+    if (!canCallBilling) {
+      setCouponError("Sign in to Cloud Mode before applying a coupon");
+      return;
+    }
     if (!companyId) {
       setCouponError("Select a company first");
       return;
@@ -125,6 +155,9 @@ function UpgradePage() {
 
   const submit = useMutation({
     mutationFn: async () => {
+      if (!canCallBilling) {
+        throw new Error("Sign in to Cloud Mode before submitting a payment request");
+      }
       if (!method || !transactionId || !senderInfo) {
         throw new Error("Please fill in all required fields");
       }

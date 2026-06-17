@@ -15,6 +15,7 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 import { Trash2, Plus, Edit } from "lucide-react";
+import { useBillingAuthGuard, isUnauthorizedError } from "@/lib/billing-guard";
 
 export const Route = createFileRoute("/app/admin/payment-settings")({
   component: AdminPaymentSettingsPage,
@@ -41,7 +42,20 @@ const EMPTY: FormState = {
 
 function AdminPaymentSettingsPage() {
   const isAdminFn = useServerFn(checkIsAdmin);
-  const adminQ = useQuery({ queryKey: ["is-admin"], queryFn: () => isAdminFn() });
+  const { isCloudMode, session } = useBillingAuthGuard();
+  const adminQ = useQuery({
+    queryKey: ["is-admin", "payment-settings", !!session?.access_token],
+    enabled: isCloudMode && !!session?.access_token,
+    retry: false,
+    queryFn: async () => {
+      try {
+        return await isAdminFn();
+      } catch (e) {
+        if (isUnauthorizedError(e)) return { isAdmin: false };
+        return { isAdmin: false };
+      }
+    },
+  });
 
   const listFn = useServerFn(listAllPaymentMethods);
   const upsertFn = useServerFn(upsertPaymentSetting);
@@ -50,8 +64,16 @@ function AdminPaymentSettingsPage() {
 
   const listQ = useQuery({
     queryKey: ["all-payment-methods"],
-    queryFn: () => listFn(),
-    enabled: adminQ.data?.isAdmin === true,
+    retry: false,
+    queryFn: async () => {
+      try {
+        return await listFn();
+      } catch (e) {
+        if (isUnauthorizedError(e)) return { methods: [] };
+        return { methods: [] };
+      }
+    },
+    enabled: isCloudMode && !!session?.access_token && adminQ.data?.isAdmin === true,
   });
 
   const [form, setForm] = useState<FormState>(EMPTY);

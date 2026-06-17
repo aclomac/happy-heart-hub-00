@@ -31,6 +31,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { useI18n } from "@/lib/i18n";
+import { useBillingAuthGuard, isUnauthorizedError } from "@/lib/billing-guard";
 
 export const Route = createFileRoute("/super-admin/payment-gateways")({
   component: PaymentGatewaysPage,
@@ -89,8 +90,21 @@ function PaymentGatewaysPage() {
   const upsertFn = useServerFn(upsertPaymentGateway);
   const deleteFn = useServerFn(deletePaymentGateway);
   const qc = useQueryClient();
+  const { isCloudMode, session } = useBillingAuthGuard();
 
-  const gwQ = useQuery({ queryKey: ["platform-gateways"], queryFn: () => listFn() });
+  const gwQ = useQuery({
+    queryKey: ["platform-gateways", !!session?.access_token],
+    enabled: isCloudMode && !!session?.access_token,
+    retry: false,
+    queryFn: async () => {
+      try {
+        return await listFn();
+      } catch (e) {
+        if (isUnauthorizedError(e)) return { gateways: [] };
+        return { gateways: [] };
+      }
+    },
+  });
 
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(EMPTY);
