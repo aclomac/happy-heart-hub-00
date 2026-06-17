@@ -83,7 +83,9 @@ function Welcome() {
               <li className="flex items-center gap-2"><Check className="w-4 h-4 text-success" /> Fastest performance</li>
               <li className="flex items-center gap-2"><Check className="w-4 h-4 text-success" /> Manual backup &amp; restore</li>
             </ul>
-            <Button variant="outline" className="w-full">Continue with Local</Button>
+            <span className="inline-flex w-full items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors">
+              Continue with Local
+            </span>
           </button>
 
           <button
