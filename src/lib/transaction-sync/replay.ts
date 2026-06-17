@@ -20,6 +20,7 @@ import {
   dequeue,
   enqueue,
   getRecord,
+  markDuplicateResolved,
   markFailed,
   markSynced,
   markSyncing,
@@ -201,6 +202,28 @@ export async function replayQueue(opts: ReplayOptions): Promise<ReplayReport> {
         } catch (err) {
           const durationMs = now() - startedAt;
           lastErr = err instanceof Error ? err.message : String(err);
+
+          // Postgres 23505 unique_violation — the row is already in the
+          // cloud (won by another writer or an earlier in-flight retry
+          // whose response we never saw). The replay's job is done; do
+          // NOT retry, do NOT mark failed. Dequeue and count as a
+          // succeeded attempt so dashboards reflect reality.
+          if (isUniqueViolation(err, lastErr)) {
+            markDuplicateResolved(localId);
+            dequeue(localId);
+            report.succeeded += 1;
+            report.attemptsLog.push({
+              localId,
+              attempt,
+              delayMs,
+              outcome: "success",
+              durationMs,
+              at: new Date().toISOString(),
+            });
+            ok = true;
+            break;
+          }
+
           report.attemptsLog.push({
             localId,
             attempt,
@@ -223,6 +246,28 @@ export async function replayQueue(opts: ReplayOptions): Promise<ReplayReport> {
 
   recordReplayOutcome(report);
   return report;
+}
+
+/**
+ * Detect a Postgres 23505 unique_violation surfaced through either:
+ *   • A PostgrestError-shaped object with `code: "23505"`.
+ *   • An Error whose message contains the SQLSTATE or the canonical
+ *     "duplicate key value violates unique constraint" prefix.
+ *
+ * The uploader normalizes Supabase errors to `new Error(error.message)`,
+ * so message-sniffing is the reliable signal in practice; the object
+ * check covers callers that re-throw the raw error verbatim.
+ */
+export function isUniqueViolation(err: unknown, message: string): boolean {
+  if (err && typeof err === "object") {
+    const code = (err as { code?: unknown }).code;
+    if (code === "23505") return true;
+  }
+  const m = message.toLowerCase();
+  return (
+    m.includes("23505") ||
+    m.includes("duplicate key value violates unique constraint")
+  );
 }
 
 function defaultSleep(ms: number): Promise<void> {

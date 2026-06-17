@@ -203,7 +203,7 @@ beforeEach(() => {
 });
 
 describe("replay — DB unique constraint (company_id, doc_type, invoice_no) violation handled cleanly", () => {
-  test("23505 from sales insert is reported as a failed attempt and the next replay reuses the winner row", async () => {
+  test("23505 from sales insert is treated as non-fatal: dequeued, succeeded, no retry, no second insert", async () => {
     const uploader = createSalesUploader(stub.client);
 
     const enq = await enqueueSalesInvoice({
@@ -215,43 +215,47 @@ describe("replay — DB unique constraint (company_id, doc_type, invoice_no) vio
     if (!enq.ok) throw new Error(`gate denied: ${enq.reason}`);
     expect(peekQueue()).toEqual(["local-dup-1"]);
 
-    // --- Run 1: simulate race — lookup says "no row", insert hits the
-    // unique index and Postgres returns 23505. -----------------------------
+    // Simulate a race: lookup says "no row", insert hits the unique
+    // index and Postgres returns 23505.
     stub.armUniqueViolation();
 
     const r1 = await replayQueue({
       companyId: CO,
       uploader,
-      retry: { maxAttempts: 1, baseDelayMs: 0, maxDelayMs: 0, factor: 1 },
+      // Allow 3 attempts to prove 23505 short-circuits the retry loop.
+      retry: { maxAttempts: 3, baseDelayMs: 0, maxDelayMs: 0, factor: 1 },
     });
 
-    expect(r1.succeeded).toBe(0);
-    expect(r1.failed).toBe(1);
+    // Treated as successfully processed, even though no cloud_id came
+    // back from the failed insert.
+    expect(r1.succeeded).toBe(1);
+    expect(r1.failed).toBe(0);
+    expect(r1.attempted).toBe(1);
+    // No unnecessary retries — exactly ONE uploader call.
+    expect(r1.attempts).toBe(1);
     expect(r1.abortedReason).toBeUndefined();
-    // No cloud row was created.
+
+    // Attempt log records the 23505 as a success outcome (no cloudId).
+    expect(r1.attemptsLog).toHaveLength(1);
+    expect(r1.attemptsLog[0]!.outcome).toBe("success");
+    expect(r1.attemptsLog[0]!.cloudId).toBeUndefined();
+    expect(r1.attemptsLog[0]!.error).toBeUndefined();
+
+    // No cloud row was created by THIS uploader (the winner row, if any,
+    // belongs to the concurrent writer that owns the cloud-side slot).
     expect(stub.inserts.filter((i) => i.table === "sales")).toHaveLength(0);
     expect(stub.rows.size).toBe(0);
-    // Record stayed queued and is marked failed with the DB error string.
-    expect(peekQueue()).toEqual(["local-dup-1"]);
-    const rec1 = getSalesRecord("local-dup-1");
-    expect(rec1?.status).toBe("failed");
-    expect(rec1?.last_error ?? "").toContain(
-      "sales_company_doc_invoice_no_active_uidx",
-    );
 
-    // --- Run 2: the concurrent winner now exists. The (company_id,
-    // invoice_no) lookup returns its id; the uploader reuses it and
-    // issues NO new insert. ------------------------------------------------
-    stub.primeLookup("cloud-winner");
-
-    const r2 = await replayQueue({ companyId: CO, uploader });
-    expect(r2.succeeded).toBe(1);
-    expect(r2.failed).toBe(0);
+    // Queue is drained; record flipped to `synced` with last_error cleared.
     expect(peekQueue()).toEqual([]);
-    expect(stub.inserts.filter((i) => i.table === "sales")).toHaveLength(0);
+    const rec1 = getSalesRecord("local-dup-1");
+    expect(rec1?.status).toBe("synced");
+    expect(rec1?.last_error).toBeNull();
 
-    const rec2 = getSalesRecord("local-dup-1");
-    expect(rec2?.status).toBe("synced");
-    expect(rec2?.cloud_id).toBe("cloud-winner");
+    // A follow-up replay is a true no-op — nothing requeued, no inserts.
+    const r2 = await replayQueue({ companyId: CO, uploader });
+    expect(r2.attempted).toBe(0);
+    expect(r2.attempts).toBe(0);
+    expect(stub.inserts.filter((i) => i.table === "sales")).toHaveLength(0);
   });
 });
