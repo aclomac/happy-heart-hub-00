@@ -1,78 +1,93 @@
-## Factory Payroll & Production Labour — Revised Implementation Plan
 
-Based on your answers:
-1. ✅ Apply staged SQL migration
-2. ✅ Daily wage uses existing Attendance (present + 0.5 × half)
-3. ✅ Production ref = free-text (optional link later)
-4. ⚠️ **Accrual accounting** for contract labour (was cash-basis in earlier draft — needs rework)
+# Phase 2 — Master Data Cloud Sync
 
-### Phase 1 — Database (apply migration)
+## Current state (what already exists)
 
-Apply `scripts/pending-migrations/20260617_factory_payroll.sql` via the migration tool:
-- `employees`: `wage_type`, `daily_wage`, `overtime_rate`, `payment_method`
-- `labour_rates`, `contract_work_entries`, `contract_payments`, `contract_payment_allocations`
-- All with RLS + GRANTs + `is_company_member` policies
+The existing `/app/items`, `/app/parties`, `/app/warehouses`, `/app/item-categories`, and `/app/party-groups` routes already use the real Supabase client with `.eq("company_id", companyId)` filters and `.is("deleted_at", null)` soft-delete checks. Cloud Mode users (signed in via Supabase Auth) already get cross-device sync today through RLS. Local Mode users continue to use the demo localStorage path (`src/lib/demo/*`) untouched.
 
-### Phase 2 — Accrual accounting rework
+So Phase 2 is mostly about **formalizing the adapter boundary, adding sync-status UX, and locking the behavior down with tests** — not rewriting the data layer.
 
-Earlier draft posts cash impact only at payment time. Switch to accrual:
+## Scope of this phase
 
-- **At work entry creation** → post `labour_expense` (DR) / `labour_payable` (CR) via `postOnce` with `category: 'contract_labour_accrual'`, `referenceType: 'contract_work_entry'`, ref = entry id, `direction: 'accrual'` (no cash movement).
-- **At work entry edit/delete** → `reverseOnce` then re-post if still active.
-- **At payment** → post `labour_payable` (DR) / `cash|bank` (CR) via `postOnce` with `category: 'contract_labour_payment'`. No expense double-count.
-- **FIFO allocation** unchanged: pays oldest unpaid entries first; `paid_amount` + `status` updated.
-- **Reverse payment** → undo cash impact + restore work entry balances.
+Only the five master-data tables: `items`, `item_categories`, `parties`, `party_groups`, `warehouses`. Zero changes to: sales / POS / stock movements / purchases / payments / payroll / ecommerce / backup / dashboard / invoice popup.
 
-Touches:
-- `src/lib/cash-ledger.ts` — add `direction: 'accrual'` variant (skip bank balance change but still create journal row) OR add separate `postAccrual` helper. Pick the lighter touch — add `postAccrual` to avoid changing the cash-impact contract.
-- `src/lib/contract-work.ts` — call `postAccrual` on create, `reverseOnce` on delete/qty/rate change then re-post.
-- `src/lib/contract-payments.ts` — change category to `contract_labour_payment`, no longer the expense origin.
+## Changes
 
-### Phase 3 — UI tabs
+### 1. New `src/lib/master-data/` module (adapter layer)
 
-Extend `src/routes/app.payroll.tsx` TABS with:
-- `daily-wage` — Daily Wage Register (reads existing attendance, shows days × daily_wage + OT, pay button)
-- `contract-work` — Work Entry list + form (date, employee filter wage_type=contract, item, work_type, qty, rate auto-filled from `labour_rates`, total computed, optional production_ref free-text, notes)
-- `contract-payments` — Pay worker form (employee, amount, method, bank, date, notes) → FIFO allocation preview + post
+Thin, typed wrappers that pick the backend by launch mode. Each file exports `list`, `upsert`, `softDelete`, `getById`:
 
-Extend EmployeesSection form: add `wage_type`, `daily_wage`, `overtime_rate`, `payment_method` fields.
+```
+src/lib/master-data/
+  index.ts              -- re-exports + `useMasterDataSyncStatus()` hook
+  items.ts              -- listItems / upsertItem / softDeleteItem
+  item-categories.ts
+  parties.ts
+  party-groups.ts
+  warehouses.ts
+  sync-status.ts        -- last-synced timestamps + pending counter in localStorage
+  upload-adapter.ts     -- Phase-5 prep: `prepareLocalMasterDataForUpload()` reads
+                           all demo records and returns cloud-shaped payloads
+                           (DOES NOT upload yet)
+```
 
-New Production tab module (`src/routes/app.production.tsx`):
-- Labour Rate Setup — CRUD `labour_rates` (item × work_type × rate, optional employee override, effective_date)
-- Work Entry — shortcut to contract-work tab
-- Worker Production — per-worker production summary
-- Product-wise Labour Cost — item × total labour qty/cost
+Routing rule inside each adapter:
+- `getLaunchMode() === "cloud"` AND signed-in → real Supabase
+- otherwise → existing demo localStorage helpers (`getItems`, `getParties`, `getWarehouses`)
 
-### Phase 4 — Reports
+This is additive. The existing routes continue to compile and work as-is; the adapter is what new code (and tests) call.
 
-In `PayrollReportsSection`, add report types:
-- Monthly Salary Report (existing)
-- Daily Wage Report (employee × month, days × rate)
-- Contract Payable Report (employee × outstanding due)
-- Worker-wise Production (employee × period × qty × earnings)
-- Product-wise Labour Cost (item × qty × cost)
-- Unpaid Labour Report (entries with status ≠ paid)
-- Payroll Summary (all 3 wage types combined)
-- PDF print for each via existing `print-utils`
+### 2. Sync status indicator
 
-### Phase 5 — Tests
+- `src/lib/master-data/sync-status.ts` records `last_synced_at` and `pending_changes` per entity in `localStorage` under `erpovo:sync:<entity>`.
+- New tiny component `src/components/erp/MasterDataSyncBadge.tsx` shows: ✓ Synced · "Last synced 2m ago" / ⏳ Pending / ⚠ Sync failed.
+- Mount it once in the header of `/app/items`, `/app/parties`, `/app/warehouses` (one line per page, no layout shift).
 
-Update + add:
-- `contract-work.test.ts` — accrual hooks (mock postOnce/reverseOnce)
-- `contract-payments.test.ts` — FIFO + payment category
-- `labour-rates.test.ts` — already exists, keep
-- `daily-wage-calc.test.ts` — new: days_present × daily_wage + OT × overtime_rate
+### 3. Duplicate / idempotency guards (already partly there)
 
-### Phase 6 — Verify
+- Items: existing SKU dedup stays; adapter calls the same SQL pattern (`ilike sku` + `company_id` + `deleted_at IS NULL`).
+- Parties: existing phone dedup (in `QuickAddCustomerDialog`) stays; adapter `upsertParty` also checks name-fallback when phone is empty.
+- Warehouses: adapter `upsertWarehouse` rejects same-name duplicates per company.
 
-- `bunx tsc --noEmit`
-- `bun run qa:critical`
-- `bun run build`
+### 4. Cross-company isolation
 
-### What stays untouched
+Cloud reads always include `.eq("company_id", currentCompanyId)`. RLS policies on `items` / `parties` / `warehouses` already use `has_company_access(auth.uid(), company_id)`, so a wrong company_id from the client cannot leak data. A test asserts that switching `companyId` re-queries.
 
-Sales/POS, stock, purchases, ecommerce, Steadfast, backup/restore, dashboard, existing payroll routes for monthly salary employees.
+### 5. Tests (new file `src/test/unit/master-data-sync.test.ts`)
 
-### Scope acknowledgement
+Covers:
+1. Local mode → `listItems` reads from `getItems()` localStorage, never calls supabase.
+2. Local mode → `upsertItem` writes to `setItems()`, sets `pending_changes` flag.
+3. Cloud mode → `listItems` calls `supabase.from("items").select().eq("company_id", X)`.
+4. Cloud mode → `upsertItem` payload always contains `company_id`.
+5. Cloud mode parties read scoped by `company_id`.
+6. Cloud mode parties write contains `company_id`.
+7. Cloud mode warehouses read scoped by `company_id`.
+8. Wrong company → adapter never returns rows for a different `company_id`.
+9. Duplicate SKU rejected with clear error.
+10. Soft delete sets `deleted_at` and the next `list` call excludes the row.
 
-This is a sizable build (~15-20 files, ~2000 lines). I'll work in the order above, checking in after Phase 1 (migration applied) and after Phase 3 (UI usable) so you can test along the way rather than waiting for everything at once.
+Supabase calls are stubbed with a fake client (already-used pattern in `src/test/unit/`).
+
+### 6. Phase 5 prep (no behavior change)
+
+`upload-adapter.ts` exports `prepareLocalMasterDataForUpload(companyId)` returning `{ items, parties, warehouses, categories, groups }` — pure read of local demo store, no network. Phase 5 will consume this.
+
+## What is intentionally NOT touched
+
+- POS, sales, purchases, stock, payroll, payments, ecommerce, backup/restore code paths.
+- Existing routes' inline supabase queries (left as-is; adapter is parallel).
+- Auth flow, RLS policies, migrations.
+- Google OAuth (deferred).
+- In-app Local↔Cloud toggle UI (still Phase 2-or-later candidate; out of this slice).
+
+## Verification
+
+After the edits run, in order:
+1. `bunx tsc --noEmit` — must pass
+2. `bun run qa:critical` — must remain 128/128 + new master-data tests
+3. `bun run build` — must pass
+
+## Reporting
+
+Final status block in the same format you used after Phase 1: Items/Parties/Warehouses cloud-sync verdict, local-mode-still-works verdict, Phase 2 complete YES/NO, Phase 3 readiness.
