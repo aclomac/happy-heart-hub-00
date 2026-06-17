@@ -1,3 +1,4 @@
+import { MasterDataSyncBadge } from "@/components/erp/MasterDataSyncBadge";
 import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
 import { PageHeader } from "@/components/erp/PageHeader";
 import { SummaryCards } from "@/components/erp/SummaryCards";
