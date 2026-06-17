@@ -16,7 +16,28 @@ import type { TxnKind, TxnSyncRecord, TxnSyncState } from "./types";
 const MAP_KEY = "erpovo:txn-sync:map";
 const QUEUE_KEY = "erpovo:txn-sync:queue";
 const QUEUE_STATE_KEY = "erpovo:txn-sync:queue-state";
-const QUEUE_STATE_VERSION = 1;
+const RETENTION_KEY = "erpovo:txn-sync:retention";
+const QUEUE_STATE_VERSION = 2;
+
+/**
+ * Retention policy for the persisted `replayHistory` array.
+ *
+ *   • `maxRuns`     — keep at most this many most-recent runs.
+ *   • `maxAgeDays`  — drop runs whose `at` is older than this many days.
+ *
+ * Both bounds are applied together; whichever prunes first wins. Set
+ * either to `Infinity` to disable that bound, or `0` to disable history
+ * entirely.
+ */
+export type ReplayRetentionPolicy = {
+  maxRuns: number;
+  maxAgeDays: number;
+};
+
+export const DEFAULT_RETENTION: ReplayRetentionPolicy = {
+  maxRuns: 20,
+  maxAgeDays: 7,
+};
 
 /**
  * Persisted metadata about the offline queue. Survives a full page reload
