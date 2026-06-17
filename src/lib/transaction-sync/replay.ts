@@ -66,6 +66,25 @@ export type ReplayOptions = {
   sleep?: (ms: number) => Promise<void>;
 };
 
+export type AttemptOutcome = "success" | "error";
+
+export type AttemptLogEntry = {
+  localId: string;
+  /** 1-based attempt number for this record. */
+  attempt: number;
+  /** Delay waited BEFORE this attempt (ms). 0 for the first attempt. */
+  delayMs: number;
+  outcome: AttemptOutcome;
+  /** Uploader wall time in ms for this attempt. */
+  durationMs: number;
+  /** Error message when outcome === "error". */
+  error?: string;
+  /** Cloud id returned when outcome === "success". */
+  cloudId?: string;
+  /** ISO timestamp when the attempt resolved. */
+  at: string;
+};
+
 export type ReplayReport = {
   attempted: number;
   succeeded: number;
@@ -73,6 +92,8 @@ export type ReplayReport = {
   skipped: number;
   /** Total uploader invocations across all records (includes retries). */
   attempts: number;
+  /** Per-attempt log, in chronological order. */
+  attemptsLog: AttemptLogEntry[];
   /** Reason the run aborted early, if any. */
   abortedReason?:
     | "offline"
