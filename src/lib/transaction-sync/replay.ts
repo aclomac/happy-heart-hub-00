@@ -99,7 +99,11 @@ export async function replayQueue(opts: ReplayOptions): Promise<ReplayReport> {
     succeeded: 0,
     failed: 0,
     skipped: 0,
+    attempts: 0,
   };
+  const retry: Required<RetryPolicy> = { ...DEFAULT_RETRY, ...(opts.retry ?? {}) };
+  if (retry.maxAttempts < 1) retry.maxAttempts = 1;
+  const sleep = opts.sleep ?? defaultSleep;
 
   if (inFlight) return { ...report, abortedReason: "in-flight" };
   const isOnline = opts.isOnline ?? defaultIsOnline;
@@ -144,18 +148,30 @@ export async function replayQueue(opts: ReplayOptions): Promise<ReplayReport> {
 
       report.attempted += 1;
       markSyncing(localId);
-      try {
-        const result = await opts.uploader({ ...rec });
-        if (!result?.cloud_id) {
-          throw new Error("uploader returned no cloud_id");
+
+      let lastErr: string | null = null;
+      let ok = false;
+      for (let attempt = 1; attempt <= retry.maxAttempts; attempt++) {
+        report.attempts += 1;
+        try {
+          const result = await opts.uploader({ ...rec });
+          if (!result?.cloud_id) {
+            throw new Error("uploader returned no cloud_id");
+          }
+          markSynced(localId, result.cloud_id);
+          dequeue(localId);
+          report.succeeded += 1;
+          ok = true;
+          break;
+        } catch (err) {
+          lastErr = err instanceof Error ? err.message : String(err);
+          if (attempt < retry.maxAttempts) {
+            await sleep(computeBackoff(attempt, retry));
+          }
         }
-        markSynced(localId, result.cloud_id);
-        dequeue(localId);
-        report.succeeded += 1;
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        markFailed(localId, msg);
-        // Stay queued so the next reconnect retries it.
+      }
+      if (!ok) {
+        markFailed(localId, lastErr ?? "unknown error");
         report.failed += 1;
       }
     }
@@ -165,6 +181,23 @@ export async function replayQueue(opts: ReplayOptions): Promise<ReplayReport> {
 
   recordReplayOutcome(report);
   return report;
+}
+
+function defaultSleep(ms: number): Promise<void> {
+  if (ms <= 0) return Promise.resolve();
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+/** Exponential backoff with optional ±50% jitter, capped at maxDelayMs. */
+export function computeBackoff(
+  attempt: number,
+  policy: Required<RetryPolicy>,
+): number {
+  const raw = policy.baseDelayMs * Math.pow(policy.factor, attempt - 1);
+  const capped = Math.min(raw, policy.maxDelayMs);
+  if (!policy.jitter) return Math.max(0, Math.round(capped));
+  const j = capped * (0.5 + Math.random()); // 0.5x – 1.5x
+  return Math.max(0, Math.round(Math.min(j, policy.maxDelayMs)));
 }
 
 /**
