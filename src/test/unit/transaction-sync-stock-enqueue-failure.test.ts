@@ -39,7 +39,11 @@ const stub = vi.hoisted(() => {
   };
   const client = {
     auth: {
-      getSession: vi.fn(async () => ({ data: { session }, error: null })),
+      getSession: vi.fn(async () => {
+        sessionCalls += 1;
+        const active = sessionCalls > dropAfter ? null : session;
+        return { data: { session: active }, error: null };
+      }),
     },
     from(table: string) {
       return {
