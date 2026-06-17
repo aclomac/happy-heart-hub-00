@@ -248,6 +248,28 @@ export async function replayQueue(opts: ReplayOptions): Promise<ReplayReport> {
   return report;
 }
 
+/**
+ * Detect a Postgres 23505 unique_violation surfaced through either:
+ *   • A PostgrestError-shaped object with `code: "23505"`.
+ *   • An Error whose message contains the SQLSTATE or the canonical
+ *     "duplicate key value violates unique constraint" prefix.
+ *
+ * The uploader normalizes Supabase errors to `new Error(error.message)`,
+ * so message-sniffing is the reliable signal in practice; the object
+ * check covers callers that re-throw the raw error verbatim.
+ */
+export function isUniqueViolation(err: unknown, message: string): boolean {
+  if (err && typeof err === "object") {
+    const code = (err as { code?: unknown }).code;
+    if (code === "23505") return true;
+  }
+  const m = message.toLowerCase();
+  return (
+    m.includes("23505") ||
+    m.includes("duplicate key value violates unique constraint")
+  );
+}
+
 function defaultSleep(ms: number): Promise<void> {
   if (ms <= 0) return Promise.resolve();
   return new Promise((r) => setTimeout(r, ms));
