@@ -53,15 +53,25 @@ export function OfflineQueueReplayButton({
   retry?: RetryPolicy;
 }) {
   const [busy, setBusy] = useState(false);
-  const [outcome, setOutcome] = useState<Outcome>({ kind: "idle" });
+  const [outcome, setOutcome] = useState<Outcome>(() =>
+    hydrateOutcomeFromQueue(getQueueState()),
+  );
   const [queue, setQueue] = useState<QueueState>(() => getQueueState());
 
   // Re-read queue state on mount + after each click + when storage changes
-  // from another tab.
+  // from another tab. Rehydrate the outcome panel from the persisted
+  // lastReplay so the per-attempt table survives a full page reload.
   useEffect(() => {
-    setQueue(getQueueState());
+    const s = getQueueState();
+    setQueue(s);
+    setOutcome((current) =>
+      current.kind === "idle" ? hydrateOutcomeFromQueue(s) : current,
+    );
     if (typeof window === "undefined") return;
-    const onStorage = () => setQueue(getQueueState());
+    const onStorage = () => {
+      const next = getQueueState();
+      setQueue(next);
+    };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
   }, []);
