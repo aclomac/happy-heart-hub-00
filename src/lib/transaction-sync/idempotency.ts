@@ -15,6 +15,77 @@ import type { TxnKind, TxnSyncRecord, TxnSyncState } from "./types";
 
 const MAP_KEY = "erpovo:txn-sync:map";
 const QUEUE_KEY = "erpovo:txn-sync:queue";
+const QUEUE_STATE_KEY = "erpovo:txn-sync:queue-state";
+const QUEUE_STATE_VERSION = 1;
+
+/**
+ * Persisted metadata about the offline queue. Survives a full page reload
+ * so the next session can tell when the queue was last drained, how many
+ * entries are outstanding, and what the last replay outcome was.
+ */
+export type QueueState = {
+  version: number;
+  size: number;
+  lastEnqueueAt: string | null;
+  lastDequeueAt: string | null;
+  lastReplayAt: string | null;
+  lastReplay: {
+    attempted: number;
+    succeeded: number;
+    failed: number;
+    skipped: number;
+    abortedReason?: string;
+  } | null;
+};
+
+function emptyQueueState(): QueueState {
+  return {
+    version: QUEUE_STATE_VERSION,
+    size: 0,
+    lastEnqueueAt: null,
+    lastDequeueAt: null,
+    lastReplayAt: null,
+    lastReplay: null,
+  };
+}
+
+function readQueueState(): QueueState {
+  if (!isBrowser()) return emptyQueueState();
+  try {
+    const raw = localStorage.getItem(QUEUE_STATE_KEY);
+    if (!raw) return emptyQueueState();
+    const parsed = JSON.parse(raw) as QueueState;
+    if (parsed.version !== QUEUE_STATE_VERSION) return emptyQueueState();
+    return parsed;
+  } catch {
+    return emptyQueueState();
+  }
+}
+
+function writeQueueState(s: QueueState): void {
+  if (!isBrowser()) return;
+  try {
+    localStorage.setItem(QUEUE_STATE_KEY, JSON.stringify(s));
+  } catch {
+    /* ignore quota */
+  }
+}
+
+export function getQueueState(): QueueState {
+  const s = readQueueState();
+  // Keep `size` honest even if a writer forgot to update it.
+  return { ...s, size: readQueue().length };
+}
+
+export function recordReplayOutcome(report: QueueState["lastReplay"]): void {
+  const s = readQueueState();
+  writeQueueState({
+    ...s,
+    size: readQueue().length,
+    lastReplayAt: new Date().toISOString(),
+    lastReplay: report,
+  });
+}
 
 const isBrowser = () =>
   typeof window !== "undefined" && typeof localStorage !== "undefined";
