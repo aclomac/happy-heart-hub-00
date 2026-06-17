@@ -186,11 +186,12 @@ describe("replay does NOT deduplicate across different company_id values", () =>
     const key2 = enq2.prepared.idempotencyKey;
     expect(key1).not.toBe(key2);
 
-    // Replay needs a companyId, but the uploader inserts using each record's
-    // own payload.company_id — so a single drain covers both records.
-    const report = await replayQueue({ companyId: CO_1, uploader });
-    expect(report.succeeded).toBe(2);
-    expect(report.failed).toBe(0);
+    // `replayQueue` scopes a drain to the given companyId, so run it per
+    // tenant. Both runs share the same uploader.
+    const r1 = await replayQueue({ companyId: CO_1, uploader });
+    const r2 = await replayQueue({ companyId: CO_2, uploader });
+    expect(r1.succeeded + r2.succeeded).toBe(2);
+    expect(r1.failed + r2.failed).toBe(0);
     expect(peekQueue()).toEqual([]);
 
     // Two sales inserts — one per (company_id, invoice_no).
