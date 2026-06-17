@@ -22,6 +22,7 @@ const CRITICAL_FRAGMENTS = [
   "duplicate-submit",
   "master-data-sync",
   "billing-auth-guards",
+  "transaction-sync",
 ];
 
 
