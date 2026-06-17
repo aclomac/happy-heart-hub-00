@@ -72,7 +72,7 @@ describe("Sync Center route", () => {
     setLaunchMode("cloud");
 
     // Seed one record per kind so counts are non-zero.
-    await enqueueSale({
+    await enqueueSalesInvoice({
       companyId: "co-sc",
       localId: "S-1",
       invoiceNo: "INV-1",
