@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader } from "@/components/erp/PageHeader";
+import { MasterDataSyncBadge } from "@/components/erp/MasterDataSyncBadge";
 import { NoCompanySelected } from "@/components/erp/NoCompanySelected";
 import { EmptyState } from "@/components/erp/EmptyState";
 import { TableSkeleton } from "@/components/erp/TableSkeleton";
@@ -66,17 +67,20 @@ function ItemCategoriesPage() {
         title="Item Categories"
         subtitle="Organize products and services"
         actions={
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => {
-              setEditing(null);
-              setOpen(true);
-            }}
-          >
-            <Plus className="w-4 h-4" />
-            Add Category
-          </Button>
+          <>
+            <MasterDataSyncBadge entity="item_categories" companyId={companyId} />
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => {
+                setEditing(null);
+                setOpen(true);
+              }}
+            >
+              <Plus className="w-4 h-4" />
+              Add Category
+            </Button>
+          </>
         }
       />
       <div className="bg-card border rounded-md" style={{ boxShadow: "var(--shadow-card)" }}>
