@@ -148,6 +148,11 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   useEffect(() => {
+    // Wire the Cloud Mode sales uploader so the manual replay button
+    // and the online-event auto-replay can drain queued invoices.
+    import("@/lib/transaction-sync/install").then(({ installSalesUploader }) => {
+      installSalesUploader();
+    });
     let mounted = true;
     let lastUserId: string | null | undefined = undefined;
     import("@/integrations/supabase/client").then(({ supabase }) => {
