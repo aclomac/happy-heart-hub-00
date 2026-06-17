@@ -202,6 +202,28 @@ export async function replayQueue(opts: ReplayOptions): Promise<ReplayReport> {
         } catch (err) {
           const durationMs = now() - startedAt;
           lastErr = err instanceof Error ? err.message : String(err);
+
+          // Postgres 23505 unique_violation — the row is already in the
+          // cloud (won by another writer or an earlier in-flight retry
+          // whose response we never saw). The replay's job is done; do
+          // NOT retry, do NOT mark failed. Dequeue and count as a
+          // succeeded attempt so dashboards reflect reality.
+          if (isUniqueViolation(err, lastErr)) {
+            markDuplicateResolved(localId);
+            dequeue(localId);
+            report.succeeded += 1;
+            report.attemptsLog.push({
+              localId,
+              attempt,
+              delayMs,
+              outcome: "success",
+              durationMs,
+              at: new Date().toISOString(),
+            });
+            ok = true;
+            break;
+          }
+
           report.attemptsLog.push({
             localId,
             attempt,
