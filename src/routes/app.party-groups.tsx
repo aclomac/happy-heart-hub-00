@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader } from "@/components/erp/PageHeader";
+import { MasterDataSyncBadge } from "@/components/erp/MasterDataSyncBadge";
 import { NoCompanySelected } from "@/components/erp/NoCompanySelected";
 import { EmptyState } from "@/components/erp/EmptyState";
 import { TableSkeleton } from "@/components/erp/TableSkeleton";
@@ -67,17 +68,20 @@ function PartyGroupsPage() {
         title="Party Groups"
         subtitle="Segment customers and suppliers"
         actions={
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => {
-              setEditing(null);
-              setOpen(true);
-            }}
-          >
-            <Plus className="w-4 h-4" />
-            Add Group
-          </Button>
+          <div className="flex items-center gap-2">
+            <MasterDataSyncBadge entity="party_groups" companyId={companyId} />
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => {
+                setEditing(null);
+                setOpen(true);
+              }}
+            >
+              <Plus className="w-4 h-4" />
+              Add Group
+            </Button>
+          </div>
         }
       />
       <div className="bg-card border rounded-md" style={{ boxShadow: "var(--shadow-card)" }}>
