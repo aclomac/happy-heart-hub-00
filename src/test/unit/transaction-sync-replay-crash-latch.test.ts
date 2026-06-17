@@ -188,12 +188,24 @@ describe("replay crash mid-flight — in-flight latch is released", () => {
     const idempotencyKey = enq.prepared.idempotencyKey;
     expect(peekQueue()).toEqual(["local-crash-1"]);
 
-    // --- Crash mid-flight: preflight (await getSession) throws AFTER the
-    // in-flight latch is set. The promise rejects to the caller.
-    stub.armSessionCrashOnce();
-    await expect(replayQueue({ companyId: CO, uploader })).rejects.toThrow(
-      /auth subsystem crashed mid-flight/,
-    );
+    // --- Crash mid-flight: the FIRST upload attempt fails (caught by the
+    // per-attempt retry), then `sleep()` between attempt 1 and attempt 2
+    // throws. `sleep` runs INSIDE the outer `try/finally` but OUTSIDE the
+    // per-attempt inner `try/catch`, so the throw escapes the run and
+    // rejects to the caller — exactly the "crash mid-flight" path.
+    stub.armSalesInsertFailure();
+    const crashingSleep = vi.fn(async () => {
+      throw new Error("sleep crashed mid-flight");
+    });
+    await expect(
+      replayQueue({
+        companyId: CO,
+        uploader,
+        retry: { maxAttempts: 3, baseDelayMs: 5, maxDelayMs: 5, factor: 1 },
+        sleep: crashingSleep,
+      }),
+    ).rejects.toThrow(/sleep crashed mid-flight/);
+    expect(crashingSleep).toHaveBeenCalled();
 
     // Nothing was uploaded, queue still holds the record.
     expect(stub.inserts.filter((i) => i.table === "sales")).toHaveLength(0);
