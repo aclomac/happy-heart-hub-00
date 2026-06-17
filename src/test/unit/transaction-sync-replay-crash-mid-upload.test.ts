@@ -185,16 +185,19 @@ describe("replay crash mid-upload — in-flight latch is released", () => {
     let uploaderCalls = 0;
     const crashingUploader: Uploader = async () => {
       uploaderCalls += 1;
-      class EvilError extends Error {
-        constructor() {
-          super("ignored");
-        }
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        get message(): string {
+      // Build an Error-shaped object whose OWN `message` accessor throws.
+      // `instanceof Error` is true (prototype chain), so the catch branch
+      // reads `err.message` — and that read crashes, escaping the
+      // per-attempt try/catch exactly like a real mid-upload crash.
+      const evil: object = Object.create(Error.prototype);
+      Object.defineProperty(evil, "message", {
+        get() {
           throw new Error("crash while reading error message");
-        }
-      }
-      throw new EvilError();
+        },
+        configurable: true,
+        enumerable: true,
+      });
+      throw evil;
     };
 
     await expect(
