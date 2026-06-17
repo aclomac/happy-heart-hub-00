@@ -43,6 +43,31 @@ export const DEFAULT_MANUAL_RETRY: RetryPolicy = {
   jitter: true,
 };
 
+/**
+ * Rebuild an Outcome from the persisted queue state so the result table
+ * is visible immediately after a page reload, before the user clicks
+ * "Replay offline queue" again.
+ */
+function hydrateOutcomeFromQueue(state: QueueState): Outcome {
+  const last = state.lastReplay;
+  const at = state.lastReplayAt;
+  if (!last || !at) return { kind: "idle" };
+  const report: ReplayReport = {
+    attempted: last.attempted,
+    succeeded: last.succeeded,
+    failed: last.failed,
+    skipped: last.skipped,
+    attempts: last.attempts ?? 0,
+    attemptsLog: (last.attemptsLog ?? []) as ReplayReport["attemptsLog"],
+    abortedReason: last.abortedReason as ReplayReport["abortedReason"],
+  };
+  if (report.abortedReason) {
+    const msg = ABORT_MESSAGE[report.abortedReason] ?? report.abortedReason;
+    return { kind: "error", message: msg, at, report };
+  }
+  return { kind: "success", report, at };
+}
+
 export function OfflineQueueReplayButton({
   companyId,
   className,
