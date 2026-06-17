@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentCompanyId } from "@/lib/use-company";
 import { isDemoMode, getDemoCompany } from "@/lib/demo/localStore";
+import { getLaunchMode } from "@/lib/launch-mode";
 
 import {
   LayoutDashboard,
@@ -314,10 +315,21 @@ export function ERPSidebar() {
   });
 
   const isAdminFn = useServerFn(checkIsAdmin);
+  const launchMode = getLaunchMode();
+  const skipAdminCheck = isDemoMode() || launchMode !== "cloud";
   const adminQ = useQuery({
-    queryKey: ["is-admin"],
-    queryFn: () => isAdminFn(),
+    queryKey: ["is-admin", skipAdminCheck ? "skip" : "cloud"],
+    enabled: !skipAdminCheck,
+    queryFn: async () => {
+      try {
+        return await isAdminFn();
+      } catch (err) {
+        console.warn("[sidebar] checkIsAdmin failed, defaulting to non-admin", err);
+        return { isAdmin: false };
+      }
+    },
     staleTime: 5 * 60_000,
+    retry: false,
   });
   // Personal mode: subscription/plan gating disabled — everything unlocked.
   // Personal mode: subscription/plan gating disabled — everything unlocked.
