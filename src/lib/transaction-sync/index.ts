@@ -9,3 +9,4 @@ export * from "./replay";
 export * from "./active-uploader";
 export * from "./payments";
 export * from "./sales";
+export * from "./install";
