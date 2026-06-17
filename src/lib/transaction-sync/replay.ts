@@ -26,6 +26,7 @@ import {
   markSyncing,
   peekQueue,
   recordReplayOutcome,
+  runPostSyncHooks,
 } from "./idempotency";
 import type { TxnSyncRecord } from "./types";
 
@@ -185,7 +186,7 @@ export async function replayQueue(opts: ReplayOptions): Promise<ReplayReport> {
           if (!result?.cloud_id) {
             throw new Error("uploader returned no cloud_id");
           }
-          markSynced(localId, result.cloud_id);
+          const synced = markSynced(localId, result.cloud_id);
           dequeue(localId);
           report.succeeded += 1;
           report.attemptsLog.push({
@@ -197,6 +198,11 @@ export async function replayQueue(opts: ReplayOptions): Promise<ReplayReport> {
             cloudId: result.cloud_id,
             at: new Date().toISOString(),
           });
+          // Chain follow-up work (e.g. enqueue paired stock movement)
+          // only AFTER the parent record is durably marked synced and
+          // removed from the queue. A throwing hook is swallowed inside
+          // runPostSyncHooks so it cannot poison the rest of the run.
+          await runPostSyncHooks(synced);
           ok = true;
           break;
         } catch (err) {
@@ -209,7 +215,7 @@ export async function replayQueue(opts: ReplayOptions): Promise<ReplayReport> {
           // NOT retry, do NOT mark failed. Dequeue and count as a
           // succeeded attempt so dashboards reflect reality.
           if (isUniqueViolation(err, lastErr)) {
-            markDuplicateResolved(localId);
+            const resolved = markDuplicateResolved(localId);
             dequeue(localId);
             report.succeeded += 1;
             report.attemptsLog.push({
@@ -220,6 +226,7 @@ export async function replayQueue(opts: ReplayOptions): Promise<ReplayReport> {
               durationMs,
               at: new Date().toISOString(),
             });
+            if (resolved) await runPostSyncHooks(resolved);
             ok = true;
             break;
           }

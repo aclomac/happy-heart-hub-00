@@ -412,6 +412,58 @@ export function markDuplicateResolved(localId: string): TxnSyncRecord | null {
   return patch(localId, { status: "synced", last_error: null });
 }
 
+// ---------------------------------------------------------------------------
+// Post-sync hooks — fired AFTER a record flips to `synced` (or is resolved
+// by a duplicate-key constraint). Used to chain follow-up work such as
+// enqueuing a paired stock_movement once its parent sale has landed.
+// ---------------------------------------------------------------------------
+
+export type PostSyncHook = (
+  record: TxnSyncRecord,
+) => void | Promise<void>;
+
+const postSyncHooks: Map<TxnKind, PostSyncHook[]> = new Map();
+
+export function registerPostSyncHook(kind: TxnKind, fn: PostSyncHook): () => void {
+  const arr = postSyncHooks.get(kind) ?? [];
+  arr.push(fn);
+  postSyncHooks.set(kind, arr);
+  return () => {
+    const cur = postSyncHooks.get(kind);
+    if (!cur) return;
+    postSyncHooks.set(
+      kind,
+      cur.filter((h) => h !== fn),
+    );
+  };
+}
+
+export function clearPostSyncHooks(kind?: TxnKind): void {
+  if (kind) postSyncHooks.delete(kind);
+  else postSyncHooks.clear();
+}
+
+/**
+ * Run all post-sync hooks registered for `record.kind`. Hooks run
+ * sequentially; a hook that throws is swallowed and logged via console
+ * so a flaky chained step never blocks the replay loop from draining
+ * the rest of the queue.
+ */
+export async function runPostSyncHooks(record: TxnSyncRecord): Promise<void> {
+  const hooks = postSyncHooks.get(record.kind);
+  if (!hooks || hooks.length === 0) return;
+  for (const fn of hooks) {
+    try {
+      await fn(record);
+    } catch (err) {
+      // Do NOT rethrow — a failing follow-up must not corrupt the
+      // already-successful parent sync. Swallow and surface via console.
+      // eslint-disable-next-line no-console
+      console.error("[txn-sync] post-sync hook failed", err);
+    }
+  }
+}
+
 /** Queue (FIFO of localIds awaiting upload). Dedups on enqueue. */
 export function enqueue(localId: string): void {
   const q = readQueue();
