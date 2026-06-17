@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
   getQueueState,
+  getReplayRetentionPolicy,
   replayQueue,
   type AttemptLogEntry,
   type QueueState,
@@ -192,7 +193,59 @@ export function OfflineQueueReplayButton({
           {outcome.message}
         </div>
       )}
+
+      <ReplayHistoryPanel history={queue.replayHistory ?? []} />
     </div>
+  );
+}
+
+function ReplayHistoryPanel({
+  history,
+}: {
+  history: NonNullable<QueueState["replayHistory"]>;
+}) {
+  const policy = getReplayRetentionPolicy();
+  if (history.length === 0) {
+    return (
+      <div className="text-[11px] text-muted-foreground" data-testid="replay-history-empty">
+        No replay history yet · retention keeps last {policy.maxRuns} runs / {policy.maxAgeDays}d.
+      </div>
+    );
+  }
+  return (
+    <details className="text-xs" data-testid="replay-history">
+      <summary className="cursor-pointer text-muted-foreground">
+        Replay history ({history.length}) · retention {policy.maxRuns} runs / {policy.maxAgeDays}d
+      </summary>
+      <ul className="mt-2 space-y-1">
+        {history.map((run, i) => (
+          <li
+            key={`${run.at}-${i}`}
+            className="flex flex-wrap items-center gap-x-3 gap-y-0.5 border-t border-border/40 pt-1 first:border-t-0 first:pt-0"
+            data-testid={`replay-history-row-${i}`}
+          >
+            <span className="text-muted-foreground">
+              {new Date(run.at).toLocaleString()}
+            </span>
+            {run.abortedReason ? (
+              <span className="text-destructive">aborted · {run.abortedReason}</span>
+            ) : (
+              <span>
+                <span className="text-emerald-700">✓ {run.succeeded}</span>
+                {" / "}
+                <span className="text-destructive">✗ {run.failed}</span>
+                {" / "}
+                <span className="text-muted-foreground">skip {run.skipped}</span>
+                {" · "}
+                <span className="text-muted-foreground">
+                  {run.attempts ?? run.attempted} calls
+                </span>
+              </span>
+            )}
+          </li>
+        ))}
+      </ul>
+    </details>
   );
 }
 
