@@ -60,7 +60,7 @@ export async function upsertItemCategory(input: {
       if (input.id) {
         const { data, error } = await supabase
           .from("item_categories")
-          .update(payload)
+          .update(payload as any)
           .eq("id", input.id)
           .eq("company_id", input.company_id)
           .select("*")
@@ -70,7 +70,7 @@ export async function upsertItemCategory(input: {
       } else {
         const { data, error } = await supabase
           .from("item_categories")
-          .insert(payload)
+          .insert(payload as any)
           .select("*")
           .single();
         if (error) throw error;

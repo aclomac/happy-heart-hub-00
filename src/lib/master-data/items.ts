@@ -102,7 +102,7 @@ export async function upsertItem(input: ItemUpsert): Promise<Item> {
       if (input.id) {
         const { data, error } = await supabase
           .from("items")
-          .update(payload)
+          .update(payload as any)
           .eq("id", input.id)
           .eq("company_id", input.company_id)
           .select("*")
@@ -112,7 +112,7 @@ export async function upsertItem(input: ItemUpsert): Promise<Item> {
       } else {
         const { data, error } = await supabase
           .from("items")
-          .insert(payload)
+          .insert(payload as any)
           .select("*")
           .single();
         if (error) throw error;

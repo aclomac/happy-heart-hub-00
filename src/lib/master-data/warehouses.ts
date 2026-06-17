@@ -86,7 +86,7 @@ export async function upsertWarehouse(
       if (input.id) {
         const { data, error } = await supabase
           .from("warehouses")
-          .update(input)
+          .update(input as any)
           .eq("id", input.id)
           .eq("company_id", input.company_id)
           .select("*")
@@ -96,7 +96,7 @@ export async function upsertWarehouse(
       } else {
         const { data, error } = await supabase
           .from("warehouses")
-          .insert(input)
+          .insert(input as any)
           .select("*")
           .single();
         if (error) throw error;

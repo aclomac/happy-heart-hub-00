@@ -88,7 +88,7 @@ export async function upsertParty(input: PartyUpsert): Promise<Party> {
       if (input.id) {
         const { data, error } = await supabase
           .from("parties")
-          .update(input)
+          .update(input as any)
           .eq("id", input.id)
           .eq("company_id", input.company_id)
           .select("*")
@@ -98,7 +98,7 @@ export async function upsertParty(input: PartyUpsert): Promise<Party> {
       } else {
         const { data, error } = await supabase
           .from("parties")
-          .insert(input)
+          .insert(input as any)
           .select("*")
           .single();
         if (error) throw error;
