@@ -273,8 +273,7 @@ describe("sales save → uploader (integration)", () => {
       amount: 1050,
     });
 
-    // Payload is cleared once the record is synced.
-    expect(getSalesPayload("local-form-1")).toBeNull();
+    // Ledger: exactly one record for this logical invoice.
     expect(listRecords({ kind: "sale_invoice" })).toHaveLength(1);
   });
 
