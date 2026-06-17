@@ -87,7 +87,13 @@ test.describe("Logged-out admin/billing pages render safely", () => {
       // The whole point of this suite: no thrown runtime errors. Console /
       // network filters in `attachErrorWatch` already tolerate 401/403, so
       // anything that survives is a real crash.
-      const errs = bag.all();
+      // Filter dev-server noise: when the route guard redirects mid-load,
+      // Vite cancels in-flight ESM module fetches and reports them as
+      // net::ERR_ABORTED. Those aren't runtime errors, just navigation churn.
+      const errs = bag.all().filter((e) => {
+        if (/net::ERR_ABORTED/.test(e) && /\/node_modules\//.test(e)) return false;
+        return true;
+      });
       const unauthorized = errs.filter((e) =>
         /Unauthorized: No authorization header/i.test(e),
       );
