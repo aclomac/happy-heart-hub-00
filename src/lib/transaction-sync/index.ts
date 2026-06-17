@@ -7,3 +7,4 @@ export * from "./idempotency";
 export * from "./gating";
 export * from "./replay";
 export * from "./active-uploader";
+export * from "./payments";
