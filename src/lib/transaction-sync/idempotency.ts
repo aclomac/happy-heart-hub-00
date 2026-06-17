@@ -400,6 +400,18 @@ export function markFailed(localId: string, error: string): TxnSyncRecord | null
   return patch(localId, { status: "failed", last_error: error });
 }
 
+/**
+ * Mark a transaction as resolved by a duplicate-key constraint at the
+ * cloud (Postgres 23505). The row already exists from a prior writer —
+ * the replay's job is done, but we have no cloud_id from the failed
+ * insert. Status flips to `synced`, `cloud_id` is left as-is (null
+ * unless a later lookup fills it in), and `last_error` is cleared so
+ * dashboards don't surface a stale error.
+ */
+export function markDuplicateResolved(localId: string): TxnSyncRecord | null {
+  return patch(localId, { status: "synced", last_error: null });
+}
+
 /** Queue (FIFO of localIds awaiting upload). Dedups on enqueue. */
 export function enqueue(localId: string): void {
   const q = readQueue();
