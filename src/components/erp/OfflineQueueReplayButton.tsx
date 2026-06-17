@@ -16,13 +16,14 @@ import {
   replayQueue,
   type QueueState,
   type ReplayReport,
+  type RetryPolicy,
 } from "@/lib/transaction-sync";
 import { getActiveUploader } from "@/lib/transaction-sync/active-uploader";
 
 type Outcome =
   | { kind: "idle" }
   | { kind: "success"; report: ReplayReport; at: string }
-  | { kind: "error"; message: string; at: string };
+  | { kind: "error"; message: string; at: string; report?: ReplayReport };
 
 const ABORT_MESSAGE: Record<NonNullable<ReplayReport["abortedReason"]>, string> = {
   offline: "You're offline — replay will run automatically when you reconnect.",
@@ -32,12 +33,23 @@ const ABORT_MESSAGE: Record<NonNullable<ReplayReport["abortedReason"]>, string> 
   "in-flight": "Replay is already in progress.",
 };
 
+/** Sensible default for a user-initiated manual retry. */
+export const DEFAULT_MANUAL_RETRY: RetryPolicy = {
+  maxAttempts: 3,
+  baseDelayMs: 500,
+  maxDelayMs: 5_000,
+  factor: 2,
+  jitter: true,
+};
+
 export function OfflineQueueReplayButton({
   companyId,
   className,
+  retry = DEFAULT_MANUAL_RETRY,
 }: {
   companyId?: string | null;
   className?: string;
+  retry?: RetryPolicy;
 }) {
   const [busy, setBusy] = useState(false);
   const [outcome, setOutcome] = useState<Outcome>({ kind: "idle" });
