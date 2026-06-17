@@ -356,7 +356,7 @@ function Items() {
         subtitle="Products, Services & Inventory"
         actions={
           <>
-            <MasterDataSyncBadge entity="items" />
+            <MasterDataSyncBadge entity="items" companyId={companyId} />
             <Link to="/app/item-categories">
               <Button variant="outline" size="sm">
                 <Tag className="w-4 h-4" />
