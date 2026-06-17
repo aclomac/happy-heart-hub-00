@@ -327,7 +327,7 @@ export function ERPSidebar() {
       try {
         return await isAdminFn();
       } catch (err) {
-        console.warn("[sidebar] checkIsAdmin failed, defaulting to non-admin", err);
+        console.warn("[sidebar] billing admin check failed, defaulting to non-admin", err);
         return { isAdmin: false };
       }
     },

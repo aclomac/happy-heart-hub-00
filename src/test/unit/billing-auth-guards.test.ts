@@ -19,6 +19,7 @@ describe("billing auth guards", () => {
   it("keeps /app sidebar billing admin check disabled until Cloud has an access token", () => {
     const sidebar = src("src/components/erp/Sidebar.tsx");
     expect(sidebar).toContain("useBillingAuthGuard");
+    expect(sidebar).toContain("checkIsAdmin");
     expect(sidebar).toContain("enabled: isCloudMode && !!session?.access_token");
     expect(sidebar).toContain("retry: false");
   });
@@ -48,6 +49,8 @@ describe("billing auth guards", () => {
     expect(billing).toContain("if (!auth) return { methods: [], ...BILLING_SAFE_RESULT }");
     expect(billing).toContain("if (!auth) return { plans: [], ...BILLING_SAFE_RESULT }");
     expect(billing).toContain("if (!auth) return { ...BILLING_SAFE_RESULT, isAdmin: false }");
+    expect(billing).toContain("export const checkIsAdmin");
+    expect(billing).toContain("await auth.supabase.rpc");
   });
 
   it("Settings billing UI uses safe fallback badge/link rather than server functions", () => {
