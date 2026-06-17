@@ -41,7 +41,13 @@
     "qa:release": "bun run scripts/qa-release.ts",
     "qa:manifest": "bun run scripts/validate-qa-manifest.ts",
     "qa:manifest:hash": "bun run scripts/hash-qa-manifest.ts",
-    "qa:manifest:verify": "bun run scripts/verify-qa-manifest.ts"
+    "qa:manifest:verify": "bun run scripts/verify-qa-manifest.ts",
+    "cap:add:android": "cap add android",
+    "cap:sync": "cap sync android",
+    "cap:open:android": "cap open android",
+    "cap:copy": "cap copy android",
+    "android:build:debug": "cd android && ./gradlew assembleDebug",
+    "android:build:release": "cd android && ./gradlew assembleRelease"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [
@@ -53,6 +59,11 @@
     ]
   },
   "dependencies": {
+    "@capacitor/android": "^8.4.0",
+    "@capacitor/app": "^8.1.0",
+    "@capacitor/cli": "^8.4.0",
+    "@capacitor/core": "^8.4.0",
+    "@capacitor/splash-screen": "^8.0.1",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",
