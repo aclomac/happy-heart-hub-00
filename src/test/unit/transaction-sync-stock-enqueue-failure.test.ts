@@ -244,7 +244,7 @@ describe("stock enqueue failure after sale sync preserves escrow", () => {
       stockPayload({ reference_no: "INV-FAIL-2" }),
     );
 
-    stub.dropSession();
+    stub.dropSessionAfter(2);
     await replayQueue({ companyId: CO, uploader: getActiveUploader()! });
 
     // Precondition for retry: escrow still present, no stock yet.
