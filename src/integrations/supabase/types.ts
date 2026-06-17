@@ -3382,6 +3382,7 @@ export type Database = {
           doc_type: string
           due_date: string | null
           id: string
+          idempotency_key: string | null
           notes: string | null
           paid: number
           party_id: string | null
@@ -3410,6 +3411,7 @@ export type Database = {
           doc_type?: string
           due_date?: string | null
           id?: string
+          idempotency_key?: string | null
           notes?: string | null
           paid?: number
           party_id?: string | null
@@ -3438,6 +3440,7 @@ export type Database = {
           doc_type?: string
           due_date?: string | null
           id?: string
+          idempotency_key?: string | null
           notes?: string | null
           paid?: number
           party_id?: string | null

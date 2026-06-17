@@ -10,4 +10,5 @@ export * from "./active-uploader";
 export * from "./payments";
 export * from "./sales";
 export * from "./stock";
+export * from "./purchases";
 export * from "./install";

@@ -25,48 +25,74 @@ import {
   type SalesSyncSupabase,
 } from "./sales";
 import { createStockUploader, enqueueStockMovement, type StockSyncSupabase } from "./stock";
+import {
+  clearLinkedPurchaseStockPayload,
+  createPurchaseUploader,
+  getLinkedPurchaseStockPayload,
+  type PurchaseSyncSupabase,
+} from "./purchases";
 import type { Uploader } from "./replay";
 import type { TxnSyncRecord } from "./types";
 
 let installed = false;
 let disposeSalesStockHook: (() => void) | null = null;
+let disposePurchaseStockHook: (() => void) | null = null;
 
 /**
  * Install the multiplexing uploader that dispatches by `record.kind`.
- * Phase C: `stock_movement` is now wired to the real cloud uploader,
- * gated by the database unique index on (company_id, idempotency_key)
- * so retries cannot create duplicate stock rows or double stock-out.
+ * Phase C: stock_movement is wired to the real cloud uploader.
+ * Phase D: purchase header + lines are wired.
+ * Phase E: purchase post-sync hook drains the escrowed stock-in payload
+ *         and enqueues a `stock_movement` (which the Phase C uploader
+ *         then syncs — duplicate stock-in is prevented at the DB level
+ *         by the unique idempotency_key index).
  */
 export function installSalesUploader(): void {
   if (installed && hasUploader()) return;
   const salesUploader = createSalesUploader(supabase as unknown as SalesSyncSupabase);
   const stockUploader = createStockUploader(supabase as unknown as StockSyncSupabase);
+  const purchaseUploader = createPurchaseUploader(
+    supabase as unknown as PurchaseSyncSupabase,
+  );
   const dispatch: Uploader = (record: TxnSyncRecord) => {
     if (record.kind === "sale_invoice") return salesUploader(record);
     if (record.kind === "stock_movement") return stockUploader(record);
+    if (record.kind === "purchase") return purchaseUploader(record);
     throw new Error(
       `Cloud sync for "${record.kind}" is not enabled yet. The entry will stay queued.`,
     );
   };
   registerUploader(dispatch);
 
-  // Re-register the post-sync hook idempotently.
+  // Re-register the sale post-sync hook idempotently.
   disposeSalesStockHook?.();
   disposeSalesStockHook = registerPostSyncHook(
     "sale_invoice",
     async (rec) => {
       const payload = getLinkedStockPayload(rec.local_id);
-      if (!payload) return; // Sale had no inventory side-effect — nothing to do.
+      if (!payload) return;
       const res = await enqueueStockMovement({
         companyId: rec.company_id,
         referenceNo: rec.reference_no ?? payload.reference_no ?? null,
         payload: { ...payload, parent_local_id: rec.local_id },
       });
-      // Only clear the escrow once the stock_movement is durably
-      // registered + queued. A `not ok` result (e.g. preflight denied)
-      // leaves the escrow intact so a later replay/online event can
-      // retry it without losing the payload.
       if (res.ok) clearLinkedStockPayload(rec.local_id);
+    },
+  );
+
+  // Phase E: purchase → stock-in hook. Same escrow contract as sales.
+  disposePurchaseStockHook?.();
+  disposePurchaseStockHook = registerPostSyncHook(
+    "purchase",
+    async (rec) => {
+      const payload = getLinkedPurchaseStockPayload(rec.local_id);
+      if (!payload) return;
+      const res = await enqueueStockMovement({
+        companyId: rec.company_id,
+        referenceNo: rec.reference_no ?? payload.reference_no ?? null,
+        payload: { ...payload, parent_local_id: rec.local_id },
+      });
+      if (res.ok) clearLinkedPurchaseStockPayload(rec.local_id);
     },
   );
 
@@ -78,5 +104,8 @@ export function __resetUploaderInstall(): void {
   installed = false;
   disposeSalesStockHook?.();
   disposeSalesStockHook = null;
+  disposePurchaseStockHook?.();
+  disposePurchaseStockHook = null;
   clearPostSyncHooks("sale_invoice");
+  clearPostSyncHooks("purchase");
 }
