@@ -44,6 +44,13 @@ export default defineConfig({
           ],
         },
         workbox: {
+          // Force the new SW to activate immediately on update so the Android
+          // WebView (and PWA browsers) never serve a stale JS bundle after a
+          // deploy. Combined with registerType: "autoUpdate" this guarantees
+          // returning users pick up the latest build on next launch.
+          skipWaiting: true,
+          clientsClaim: true,
+          cleanupOutdatedCaches: true,
           globPatterns: ["**/*.{js,css,html,ico,png,svg,webmanifest}"],
           navigateFallback: "index.html",
           navigateFallbackDenylist: [
@@ -61,6 +68,30 @@ export default defineConfig({
           // Custom offline page
           offlineGoogleAnalytics: false,
           runtimeCaching: [
+            {
+              // HTML navigations — always try network first so updated app
+              // shells reach users (and the Android WebView) immediately.
+              // Falls back to cache only when offline.
+              urlPattern: ({ request }) => request.mode === "navigate",
+              handler: "NetworkFirst",
+              options: {
+                cacheName: "html-navigations",
+                networkTimeoutSeconds: 3,
+                expiration: { maxEntries: 32, maxAgeSeconds: 60 * 60 * 24 },
+              },
+            },
+            {
+              // JS/CSS assets — network first with a short timeout, so a new
+              // deploy supersedes the precached copy on the next request.
+              urlPattern: ({ request }) =>
+                request.destination === "script" || request.destination === "style",
+              handler: "NetworkFirst",
+              options: {
+                cacheName: "static-assets",
+                networkTimeoutSeconds: 3,
+                expiration: { maxEntries: 64, maxAgeSeconds: 60 * 60 * 24 * 7 },
+              },
+            },
             {
               urlPattern: /^https:\/\/.*\.supabase\.co\/.*$/,
               handler: "NetworkOnly",
@@ -82,6 +113,7 @@ export default defineConfig({
             },
           ],
         },
+
       }),
     ],
   },
