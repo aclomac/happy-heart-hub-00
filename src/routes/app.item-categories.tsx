@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageHeader } from "@/components/erp/PageHeader";
+import { MasterDataSyncBadge } from "@/components/erp/MasterDataSyncBadge";
 import { NoCompanySelected } from "@/components/erp/NoCompanySelected";
 import { EmptyState } from "@/components/erp/EmptyState";
 import { TableSkeleton } from "@/components/erp/TableSkeleton";
