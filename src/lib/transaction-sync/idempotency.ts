@@ -437,4 +437,5 @@ export function __resetTxnSyncStore(): void {
   localStorage.removeItem(MAP_KEY);
   localStorage.removeItem(QUEUE_KEY);
   localStorage.removeItem(QUEUE_STATE_KEY);
+  localStorage.removeItem(RETENTION_KEY);
 }
