@@ -505,6 +505,57 @@ test.describe("/welcome Local mode survives post-login refresh", () => {
   });
 });
 
+test.describe("/welcome Cloud mode survives post-login refresh", () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  test("Cloud flag stays set after login + reload, /app/items does not bounce to /welcome", async ({
+    page,
+  }) => {
+    await clearLaunchMode(page);
+
+    // 1. Pick Cloud, then log in as demo.
+    await page.goto("/welcome");
+    await page.getByRole("button", { name: /continue with cloud/i }).click();
+    await page.waitForURL(/\/signup$/, { timeout: 15_000 });
+
+    await loginAsDemo(page);
+    await page.waitForURL((url) => url.pathname.startsWith("/app"), {
+      timeout: 30_000,
+    });
+
+    // 2. Navigate to /app/items, then hard reload.
+    await page.goto("/app/items");
+    await page.waitForURL(/\/app\/items/, { timeout: 15_000 });
+
+    await page.reload({ waitUntil: "domcontentloaded" });
+
+    // 3. After refresh: still on /app/items, never bounced to /welcome.
+    await page.waitForURL(/\/app\/items/, { timeout: 15_000 });
+    expect(page.url()).not.toMatch(/\/welcome/);
+
+    // 4. Flag is still "cloud".
+    const afterReload = await page.evaluate(() =>
+      window.localStorage.getItem("erpovo:launch-mode"),
+    );
+    expect(afterReload).toBe("cloud");
+
+    // 5. One more navigation round-trip to confirm it sticks.
+    await page.goto("/app");
+    await page.waitForURL(/\/app(\/|$)/, { timeout: 15_000 });
+    expect(page.url()).not.toMatch(/\/welcome/);
+
+    await page.goto("/app/items");
+    await page.waitForURL(/\/app\/items/, { timeout: 15_000 });
+    expect(page.url()).not.toMatch(/\/welcome/);
+
+    const finalValue = await page.evaluate(() =>
+      window.localStorage.getItem("erpovo:launch-mode"),
+    );
+    expect(finalValue).toBe("cloud");
+  });
+});
+
+
 
 
 
