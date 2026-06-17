@@ -20,6 +20,7 @@ import {
   dequeue,
   enqueue,
   getRecord,
+  markDuplicateResolved,
   markFailed,
   markSynced,
   markSyncing,
