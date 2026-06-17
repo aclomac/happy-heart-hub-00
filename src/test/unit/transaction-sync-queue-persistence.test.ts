@@ -150,4 +150,60 @@ describe("offline queue — persistence across reload", () => {
     expect(s.size).toBe(0);
     expect(s.lastReplay).toBeNull();
   });
+
+  test("attemptsLog from the last replay survives a full reload", async () => {
+    setLaunchMode("cloud");
+    const rec = registerTransaction({
+      kind: "sale_invoice",
+      localId: "log-1",
+      companyId: COMPANY,
+      referenceNo: "LOG-1",
+    });
+    enqueue(rec.local_id);
+
+    let calls = 0;
+    const uploader: Uploader = () => {
+      calls += 1;
+      if (calls < 2) throw new Error("transient-x");
+      return { cloud_id: "cloud-log-1" };
+    };
+    await replayQueue({
+      companyId: COMPANY,
+      uploader,
+      retry: { maxAttempts: 2, baseDelayMs: 25 },
+      sleep: async () => {},
+    });
+
+    // Simulate a full page reload: persisted localStorage is read again.
+    const raw = localStorage.getItem(STATE_KEY)!;
+    expect(raw).toBeTruthy();
+    const persisted = JSON.parse(raw) as {
+      lastReplay: {
+        attemptsLog: Array<{
+          attempt: number;
+          outcome: string;
+          delayMs: number;
+          cloudId?: string;
+          error?: string;
+        }>;
+      };
+    };
+    expect(persisted.lastReplay.attemptsLog).toHaveLength(2);
+    expect(persisted.lastReplay.attemptsLog[0]).toMatchObject({
+      attempt: 1,
+      outcome: "error",
+      delayMs: 0,
+      error: "transient-x",
+    });
+    expect(persisted.lastReplay.attemptsLog[1]).toMatchObject({
+      attempt: 2,
+      outcome: "success",
+      delayMs: 25,
+      cloudId: "cloud-log-1",
+    });
+
+    // getQueueState re-reads from storage and exposes the same log.
+    const rehydrated = getQueueState();
+    expect(rehydrated.lastReplay?.attemptsLog).toHaveLength(2);
+  });
 });
