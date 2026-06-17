@@ -41,7 +41,13 @@
     "qa:release": "bun run scripts/qa-release.ts",
     "qa:manifest": "bun run scripts/validate-qa-manifest.ts",
     "qa:manifest:hash": "bun run scripts/hash-qa-manifest.ts",
-    "qa:manifest:verify": "bun run scripts/verify-qa-manifest.ts"
+    "qa:manifest:verify": "bun run scripts/verify-qa-manifest.ts",
+    "cap:add:android": "cap add android",
+    "cap:sync": "cap sync android",
+    "cap:open:android": "cap open android",
+    "cap:copy": "cap copy android",
+    "android:build:debug": "cd android && ./gradlew assembleDebug",
+    "android:build:release": "cd android && ./gradlew assembleRelease"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [
