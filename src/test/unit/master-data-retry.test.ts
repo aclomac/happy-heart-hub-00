@@ -141,9 +141,11 @@ describe("runResync — Sync Now", () => {
   test("Sync Now invalidates the matching React Query cache key", async () => {
     setLaunchMode("cloud");
     const invalidate = vi.fn();
-    const fakeClient = { invalidateQueries: invalidate } as unknown as Parameters<
-      typeof runResync
-    >[2]["queryClient"];
+    const fakeClient = {
+      invalidateQueries: invalidate,
+    } as unknown as NonNullable<
+      Parameters<typeof runResync>[2]
+    >["queryClient"];
     await runResync("items", COMPANY, { queryClient: fakeClient });
     expect(invalidate).toHaveBeenCalledWith({ queryKey: ["items", COMPANY] });
   });
