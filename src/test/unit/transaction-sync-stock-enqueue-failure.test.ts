@@ -206,7 +206,7 @@ describe("stock enqueue failure after sale sync preserves escrow", () => {
     // BEFORE the post-sync hook fires. The sales insert path itself
     // does not call getSession, so the sale will still upload — but
     // the stock-movement preflight inside the hook will be denied.
-    stub.dropSession();
+    stub.dropSessionAfter(2);
 
     const r = await replayQueue({
       companyId: CO,
