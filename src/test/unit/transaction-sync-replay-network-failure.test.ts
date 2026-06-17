@@ -204,7 +204,7 @@ describe("replay network failure — retries without duplicate cloud rows", () =
 
     // Record is in error state but still tracked locally.
     const afterFail = getSalesRecord("local-net-1");
-    expect(afterFail?.status).toBe("error");
+    expect(afterFail?.status).toBe("failed");
     expect(afterFail?.last_error).toMatch(/Failed to fetch/);
     // Queue still holds the entry (markFailed does not dequeue).
     expect(peekQueue()).toEqual(["local-net-1"]);
