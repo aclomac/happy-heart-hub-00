@@ -20,6 +20,7 @@ import { preflightSync, preflightSyncSync } from "./gating";
 import {
   enqueue,
   getRecord,
+  listRecords,
   markFailed,
   markSynced,
   markSyncing,
@@ -225,6 +226,25 @@ export function failSalesSync(
 
 export function getSalesRecord(localId: string): TxnSyncRecord | null {
   return getRecord(localId);
+}
+
+/** All sale_invoice sync records for a company. */
+export function listSalesSyncRecords(companyId: string): TxnSyncRecord[] {
+  return listRecords({ kind: "sale_invoice", companyId });
+}
+
+/**
+ * Look up the local sync record by its cloud_id, scoped to a company.
+ * Returns null when no local record points at that cloud row — that's
+ * the normal case for cloud rows created on another device.
+ */
+export function getSalesRecordByCloudId(
+  companyId: string,
+  cloudId: string,
+): TxnSyncRecord | null {
+  return (
+    listSalesSyncRecords(companyId).find((r) => r.cloud_id === cloudId) ?? null
+  );
 }
 
 // ---------------------------------------------------------------------------
