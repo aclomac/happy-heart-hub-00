@@ -81,7 +81,7 @@ function PartyGroupsPage() {
               <Plus className="w-4 h-4" />
               Add Group
             </Button>
-          </Button>
+          </div>
         }
       />
       <div className="bg-card border rounded-md" style={{ boxShadow: "var(--shadow-card)" }}>
