@@ -136,6 +136,7 @@ export async function replayQueue(opts: ReplayOptions): Promise<ReplayReport> {
     inFlight = false;
   }
 
+  recordReplayOutcome(report);
   return report;
 }
 
