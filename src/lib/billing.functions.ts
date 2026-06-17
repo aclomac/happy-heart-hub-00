@@ -364,7 +364,7 @@ export const deletePaymentSetting = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-export const checkBillingAdminSafe = createServerFn({ method: "GET" })
+export const checkIsAdmin = createServerFn({ method: "GET" })
   .handler(async () => {
     const auth = await optionalBillingAuth();
     if (!auth) return { ...BILLING_SAFE_RESULT, isAdmin: false };
