@@ -20,6 +20,7 @@ import {
   type FullErpovoManifest,
   type VerifyResult,
 } from "@/lib/erpovo-backup";
+import { OfflineQueueReplayButton } from "@/components/erp/OfflineQueueReplayButton";
 
 export const Route = createFileRoute("/app/sync")({ component: Sync });
 
@@ -522,6 +523,18 @@ function Sync() {
         </section>
       </div>
 
+      {/* Offline transaction queue */}
+      <section className="bg-card border rounded-md p-5 mb-3">
+        <div className="flex items-center gap-2 mb-1">
+          <RefreshCw className="w-4 h-4 text-primary" />
+          <h2 className="font-semibold">Offline transaction queue</h2>
+        </div>
+        <p className="text-xs text-muted-foreground mb-3">
+          Transactions created while offline are queued locally and replayed
+          automatically when you reconnect. Use this button to retry on demand.
+        </p>
+        <OfflineQueueReplayButton companyId={companyId} />
+      </section>
 
       {/* Devices */}
       <section className="bg-card border rounded-md p-5">
