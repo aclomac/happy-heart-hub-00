@@ -77,11 +77,11 @@ export async function replayQueue(opts: ReplayOptions): Promise<ReplayReport> {
   const isOnline = opts.isOnline ?? defaultIsOnline;
   if (!isOnline()) return { ...report, abortedReason: "offline" };
 
-  const pre = await preflightSync(opts.companyId);
-  if (!pre.ok) return { ...report, abortedReason: pre.reason };
-
+  // Latch BEFORE any await so a re-entrant call can't slip past preflight.
   inFlight = true;
   try {
+    const pre = await preflightSync(opts.companyId);
+    if (!pre.ok) return { ...report, abortedReason: pre.reason };
     // Snapshot the queue — new enqueues during the run are picked up on
     // the next replay rather than mutating our iteration.
     const ids = peekQueue();
