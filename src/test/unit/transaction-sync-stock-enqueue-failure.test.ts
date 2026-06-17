@@ -22,7 +22,10 @@
 import { describe, test, expect, beforeEach, vi } from "vitest";
 
 const stub = vi.hoisted(() => {
-  let session: { access_token: string } | null = { access_token: "tok" };
+  const realSession = { access_token: "tok" };
+  let session: { access_token: string } | null = realSession;
+  let dropAfter = Number.POSITIVE_INFINITY;
+  let sessionCalls = 0;
   const inserts: Array<{ table: string; row: Record<string, unknown> }> = [];
   const rows = new Map<string, { id: string; company_id: string; invoice_no: string }>();
   let nextId = 1;
@@ -30,7 +33,9 @@ const stub = vi.hoisted(() => {
     inserts.length = 0;
     rows.clear();
     nextId = 1;
-    session = { access_token: "tok" };
+    session = realSession;
+    dropAfter = Number.POSITIVE_INFINITY;
+    sessionCalls = 0;
   };
   const client = {
     auth: {
