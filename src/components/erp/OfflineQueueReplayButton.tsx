@@ -75,6 +75,7 @@ export function OfflineQueueReplayButton({
       const report = await replayQueue({
         companyId,
         uploader: getActiveUploader(),
+        retry,
       });
       setQueue(getQueueState());
       const at = new Date().toISOString();
@@ -139,7 +140,9 @@ export function OfflineQueueReplayButton({
           {" "}attempted {outcome.report.attempted},
           {" "}succeeded {outcome.report.succeeded},
           {" "}failed {outcome.report.failed},
-          {" "}skipped {outcome.report.skipped}.
+          {" "}skipped {outcome.report.skipped}
+          {" "}· uploader calls {outcome.report.attempts}
+          {" "}(retry up to {retry.maxAttempts}x).
         </div>
       )}
       {outcome.kind === "error" && (
