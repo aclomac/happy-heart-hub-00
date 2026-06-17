@@ -45,10 +45,9 @@ beforeEach(() => {
 function seed(localId: string): void {
   registerTransaction({
     kind: "sale_invoice",
-    local_id: localId,
-    company_id: COMPANY,
-    reference_no: localId,
-    payload: {},
+    localId,
+    companyId: COMPANY,
+    referenceNo: localId,
   });
   enqueue(localId);
 }
