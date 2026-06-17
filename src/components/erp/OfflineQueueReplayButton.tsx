@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import {
   getQueueState,
   replayQueue,
+  type AttemptLogEntry,
   type QueueState,
   type ReplayReport,
   type RetryPolicy,
@@ -133,16 +134,19 @@ export function OfflineQueueReplayButton({
 
       {outcome.kind === "success" && (
         <div
-          className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-700"
+          className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-700 space-y-2"
           data-testid="offline-queue-replay-success"
         >
-          Replay completed at {new Date(outcome.at).toLocaleTimeString()} —
-          {" "}attempted {outcome.report.attempted},
-          {" "}succeeded {outcome.report.succeeded},
-          {" "}failed {outcome.report.failed},
-          {" "}skipped {outcome.report.skipped}
-          {" "}· uploader calls {outcome.report.attempts}
-          {" "}(retry up to {retry.maxAttempts}x).
+          <div>
+            Replay completed at {new Date(outcome.at).toLocaleTimeString()} —
+            {" "}attempted {outcome.report.attempted},
+            {" "}succeeded {outcome.report.succeeded},
+            {" "}failed {outcome.report.failed},
+            {" "}skipped {outcome.report.skipped}
+            {" "}· uploader calls {outcome.report.attempts}
+            {" "}(retry up to {retry.maxAttempts}x).
+          </div>
+          <AttemptsTable entries={outcome.report.attemptsLog} />
         </div>
       )}
       {outcome.kind === "error" && (
