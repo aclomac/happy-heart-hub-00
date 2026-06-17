@@ -962,6 +962,70 @@ export function SalesDocForm({
       qc.invalidateQueries({ queryKey: ["item-movements"] });
       qc.invalidateQueries({ queryKey: ["item-sale-lines"] });
 
+      // Phase 3 — register the saved invoice with the transaction-sync
+      // ledger and enqueue for cloud upload. Skipped in demo/local mode
+      // (preflight inside `enqueueSalesInvoice` enforces this).
+      // The uploader's `(company_id, invoice_no)` lookup reuses the row
+      // we just inserted via `saveSaleInvoice`, so retries are safe and
+      // never produce a duplicate invoice.
+      if (!isDemoMode() && newId && kind === "invoice") {
+        try {
+          const { enqueueSalesInvoice, replayQueue, getActiveUploader } =
+            await import("@/lib/transaction-sync");
+          const enq = await enqueueSalesInvoice({
+            companyId: companyId!,
+            localId: newId,
+            invoiceNo: finalInvoiceNo,
+            payload: {
+              company_id: companyId!,
+              invoice_no: finalInvoiceNo,
+              invoice_date: payload.invoice_date,
+              due_date: payload.due_date ?? null,
+              party_id: payload.party_id,
+              billing_name: payload.billing_name ?? null,
+              notes: payload.notes ?? null,
+              status: payload.status ?? null,
+              subtotal: payload.subtotal,
+              discount: payload.discount,
+              tax: payload.tax,
+              delivery_charge: payload.delivery_charge ?? 0,
+              labor_charge: payload.labor_cost ?? 0,
+              total: payload.total,
+              paid: payload.paid ?? 0,
+              balance: payload.balance ?? 0,
+              payment_method: payload.payment_method ?? null,
+              doc_type: payload.doc_type ?? "invoice",
+              reference_sale_id: payload.reference_sale_id ?? null,
+              po_no: payload.po_no ?? null,
+              po_date: payload.po_date ?? null,
+              items: payload.items.map((li) => ({
+                item_id: li.item_id,
+                item_code: li.item_code ?? null,
+                item_name: li.item_name,
+                description: li.description ?? null,
+                qty: li.qty,
+                unit: li.unit,
+                price: li.price,
+                discount_pct: li.discount_pct,
+                tax_pct: li.tax_pct,
+                amount: li.amount,
+              })),
+            },
+          });
+          if (enq.ok) {
+            // Fire-and-forget; failures stay queued for manual replay.
+            void replayQueue({
+              companyId: companyId!,
+              uploader: getActiveUploader(),
+            }).catch(() => {});
+          }
+        } catch (syncErr) {
+          // Never block the save UX on sync wiring errors.
+          console.warn("[txn-sync] enqueue sales invoice failed", syncErr);
+        }
+      }
+
+
       // Phase 2 — flush pending attachments uploaded before the invoice existed.
       if (newId && attachmentsRef.current) {
         try {
