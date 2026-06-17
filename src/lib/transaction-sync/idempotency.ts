@@ -34,6 +34,7 @@ export type QueueState = {
     succeeded: number;
     failed: number;
     skipped: number;
+    attempts?: number;
     abortedReason?: string;
   } | null;
 };
