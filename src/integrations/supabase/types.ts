@@ -4139,6 +4139,7 @@ export type Database = {
           created_at: string
           direction: string
           id: string
+          idempotency_key: string | null
           item_id: string
           movement_date: string
           note: string | null
@@ -4154,6 +4155,7 @@ export type Database = {
           created_at?: string
           direction: string
           id?: string
+          idempotency_key?: string | null
           item_id: string
           movement_date?: string
           note?: string | null
@@ -4169,6 +4171,7 @@ export type Database = {
           created_at?: string
           direction?: string
           id?: string
+          idempotency_key?: string | null
           item_id?: string
           movement_date?: string
           note?: string | null
