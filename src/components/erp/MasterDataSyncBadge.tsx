@@ -3,11 +3,19 @@
  *
  * Inline indicator + manual resync button shown in master-data page
  * headers. Reflects the adapter's per-entity sync state from localStorage.
- * In Cloud Mode, surfaces the last sync error and lets the user retry the
- * cloud read on demand (also invalidates the matching React-Query cache so
- * the page re-renders with fresh rows).
+ *
+ * Behaviour by launch mode:
+ *
+ *   • Local Mode: cloud sync is disabled, button is hidden, the badge
+ *     explains that Cloud Sync only runs in Cloud Mode.
+ *   • Cloud Mode: clicking "Sync Now" re-fetches the entity from Supabase,
+ *     invalidates the matching React Query cache, and updates the badge.
+ *     If a sync fails we keep the failed state, surface the error, and
+ *     start a bounded background-retry timer (see `background-retry.ts`).
+ *     If there is no authenticated session or no active company, we render
+ *     a safe warning instead of crashing.
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Check,
@@ -21,16 +29,15 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getLaunchMode } from "@/lib/launch-mode";
 import {
-  listItems,
-  listItemCategories,
-  listParties,
-  listPartyGroups,
-  listWarehouses,
   useMasterDataSyncStatus,
-  markFailed,
-  markSynced,
   type MasterEntity,
 } from "@/lib/master-data";
+import {
+  ENTITY_LISTERS,
+  resetRetryAttempts,
+  runResync,
+  scheduleRetry,
+} from "@/lib/master-data/background-retry";
 
 function relativeTime(iso: string | null): string {
   if (!iso) return "—";
@@ -44,17 +51,6 @@ function relativeTime(iso: string | null): string {
   if (hr < 24) return `${hr}h ago`;
   return `${Math.floor(hr / 24)}d ago`;
 }
-
-const ENTITY_LISTERS: Record<
-  MasterEntity,
-  (companyId: string) => Promise<unknown>
-> = {
-  items: listItems,
-  item_categories: listItemCategories,
-  parties: listParties,
-  party_groups: listPartyGroups,
-  warehouses: listWarehouses,
-};
 
 const ENTITY_LABEL: Record<MasterEntity, string> = {
   items: "Items",
@@ -79,26 +75,53 @@ export function MasterDataSyncBadge({
   const [retrying, setRetrying] = useState(false);
 
   async function handleRetry() {
-    if (!companyId) {
-      toast.error("No active company. Cannot resync.");
-      return;
-    }
     setRetrying(true);
     try {
-      await ENTITY_LISTERS[entity](companyId);
-      // Match the route's useQuery keys: ["<entity>", companyId].
-      qc.invalidateQueries({ queryKey: [entity, companyId] });
-      markSynced(entity);
-      toast.success(`${ENTITY_LABEL[entity]} resynced`);
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "Resync failed";
-      markFailed(entity, msg);
-      toast.error(`Resync failed: ${msg}`);
+      // Manual "Sync Now" — clear any pending backoff so the user's click
+      // takes effect immediately and starts a fresh attempt cycle.
+      resetRetryAttempts(entity);
+      const res = await runResync(entity, companyId ?? null, {
+        queryClient: qc,
+      });
+      if (res.ok) {
+        toast.success(`${ENTITY_LABEL[entity]} synced`);
+        return;
+      }
+      if (res.reason === "no-company") {
+        toast.error("No active company. Cannot resync.");
+      } else if (res.reason === "no-session") {
+        toast.error("Sign in to sync with cloud.");
+      } else if (res.reason === "local-mode") {
+        toast.error("Cloud Sync is only available in Cloud Mode.");
+      } else {
+        toast.error(`Resync failed: ${res.error ?? "Unknown error"}`);
+      }
     } finally {
       setRetrying(false);
     }
   }
 
+  // Background retry: when a sync is in the "failed" state and we're in
+  // Cloud Mode with a company, schedule a bounded backoff retry. The runner
+  // skips the session check so the timer can fire silently when the user
+  // briefly drops a connection; if there's still no session, runResync will
+  // mark the entity failed again and the next backoff step fires.
+  useEffect(() => {
+    if (mode !== "cloud" || !companyId) return;
+    if (status.state === "synced") {
+      resetRetryAttempts(entity);
+      return;
+    }
+    if (status.state !== "failed") return;
+    scheduleRetry(entity, () =>
+      runResync(entity, companyId, {
+        queryClient: qc,
+        requireSession: false,
+      }),
+    );
+  }, [status.state, mode, companyId, entity, qc]);
+
+  // Local Mode badge.
   if (mode === "local") {
     const pending = status.pendingChanges;
     return (
@@ -107,11 +130,30 @@ export function MasterDataSyncBadge({
           "inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground",
           className,
         )}
-        title="Local mode — changes are stored on this device only"
+        title="Cloud Sync is only available in Cloud Mode."
         data-testid={`sync-badge-${entity}`}
+        data-mode="local"
       >
         <CloudOff className="h-3 w-3" />
-        Local{pending > 0 ? ` · ${pending} pending` : ""}
+        Local Mode{pending > 0 ? ` · ${pending} pending` : ""}
+      </span>
+    );
+  }
+
+  // Cloud Mode (no company yet) — safe warning, no crash, no button.
+  if (!companyId) {
+    return (
+      <span
+        className={cn(
+          "inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground",
+          className,
+        )}
+        title="Select a company to enable Cloud Sync."
+        data-testid={`sync-badge-${entity}`}
+        data-mode="cloud-nocompany"
+      >
+        <CloudOff className="h-3 w-3" />
+        No company
       </span>
     );
   }
@@ -119,7 +161,6 @@ export function MasterDataSyncBadge({
   const base =
     "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs";
 
-  // Cloud mode — render badge + retry button as a single group.
   let body: React.ReactNode;
   let tone = "bg-muted text-muted-foreground";
 
@@ -174,6 +215,7 @@ export function MasterDataSyncBadge({
     <span
       className={cn("inline-flex items-center gap-1", className)}
       data-testid={`sync-badge-${entity}`}
+      data-mode="cloud"
     >
       <span className={cn(base, tone)} title={tooltip}>
         {body}
@@ -195,8 +237,8 @@ export function MasterDataSyncBadge({
           "inline-flex h-6 w-6 items-center justify-center rounded-full border border-input bg-background text-muted-foreground transition-colors",
           "hover:bg-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60",
         )}
-        title="Resync from cloud"
-        aria-label={`Resync ${ENTITY_LABEL[entity]} from cloud`}
+        title="Sync Now"
+        aria-label={`Sync ${ENTITY_LABEL[entity]} now`}
         data-testid={`sync-retry-${entity}`}
       >
         <RefreshCw
@@ -207,3 +249,6 @@ export function MasterDataSyncBadge({
     </span>
   );
 }
+
+// Keep listers re-exported from here for any legacy importers.
+export { ENTITY_LISTERS };
