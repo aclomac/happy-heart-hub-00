@@ -137,19 +137,32 @@ describe("payment sync gates — cash/bank double posting", () => {
     });
     expect(first.ok).toBe(true);
 
-    // Different localId → different logical payment trying to post the
-    // SAME cash movement. Must be refused by the gate.
-    const dup = await preparePaymentSync({
-      kind: "payment_in",
-      companyId: CO,
-      referenceNo: "PI-A",
-      account: { kind: "cash", id: "cash-1" },
-      amount: 1000,
-    });
-    // Reference-no guard fires before the posting guard for a brand-new
-    // localId — that's still a duplicate-post refusal, just via the
-    // earlier gate.
-    expect(dup.ok).toBe(false);
+    // A second logical payment trying to post the SAME cash movement
+    // (different localId, same ref-no) must be refused. The ref-no guard
+    // fires first; either way the duplicate post cannot land.
+    await expect(
+      preparePaymentSync({
+        kind: "payment_in",
+        companyId: CO,
+        referenceNo: "PI-A",
+        account: { kind: "cash", id: "cash-1" },
+        amount: 1000,
+      }),
+    ).rejects.toThrow(/Duplicate/);
+
+    // And the same posting key cannot be claimed by a different localId
+    // even when ref-no differs (raw double-post guard).
+    const { markPaymentPosted, postingKey: pk } = await import(
+      "@/lib/transaction-sync"
+    );
+    const key = pk(
+      "payment_in",
+      CO,
+      { kind: "cash", id: "cash-1" },
+      1000,
+      "PI-A",
+    );
+    expect(markPaymentPosted(key, "some-other-local-id")).toBe(false);
   });
 
   test("retrying the SAME payment against the same bank posting is allowed", async () => {
