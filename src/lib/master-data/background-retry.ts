@@ -66,6 +66,10 @@ export function scheduleRetry(
   const attempt = attempts.get(entity) ?? 0;
   if (attempt >= RETRY_BACKOFFS_MS.length) return false;
   const delay = RETRY_BACKOFFS_MS[attempt];
+  // Reflect "awaiting auto-retry" in the badge — preserves pendingChanges
+  // and clears the red failed tone so the user sees a pending state until
+  // the timer fires.
+  markPendingRetry(entity);
   const t = setTimeout(() => {
     timers.delete(entity);
     attempts.set(entity, attempt + 1);
