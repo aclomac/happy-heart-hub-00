@@ -383,7 +383,17 @@ export function ERPTopbar() {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <header className="h-12 bg-card border-b flex items-center gap-2 px-4 sticky top-0 z-30 print:hidden">
+      <header className="h-12 bg-card border-b flex items-center gap-1.5 px-2 sm:gap-2 sm:px-4 sticky top-0 z-30 print:hidden">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-9 w-9 md:hidden"
+          aria-label="Open menu"
+          onClick={() => mobileNavStore.set(true)}
+        >
+          <Menu className="w-5 h-5" />
+        </Button>
+
         <GlobalSearch />
         <div className="flex-1 flex items-center gap-2 pl-4">
           <Button
