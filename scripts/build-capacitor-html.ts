@@ -17,6 +17,27 @@
  */
 import fs from "node:fs";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
+
+type RouterManagedTag = {
+  tag?: string;
+  attrs?: Record<string, unknown>;
+  children?: string;
+};
+
+type StartManifest = {
+  clientEntry?: string;
+  routes?: Record<
+    string,
+    {
+      preloads?: string[];
+      assets?: RouterManagedTag[];
+      children?: string[];
+      filePath?: string;
+    }
+  >;
+  inlineCss?: unknown;
+};
 
 const distClient = path.resolve("dist/client");
 const distServer = path.resolve("dist/server");
@@ -28,25 +49,50 @@ if (!fs.existsSync(distClient)) {
   process.exit(1);
 }
 
-// 1. Find root entry from the TanStack Start manifest
-const manifestFile = fs
-  .readdirSync(distServer)
-  .find((f) => f.startsWith("_tanstack-start-manifest_v-"));
-
-let rootPreloads: string[] = [];
-if (manifestFile) {
-  const src = fs.readFileSync(path.join(distServer, manifestFile), "utf8");
-  // Pull the __root__ "preloads" array out of the manifest source
-  const rootMatch = src.match(/__root__:\s*\{[^}]*preloads:\s*\[([^\]]*)\]/);
-  if (rootMatch) {
-    rootPreloads = Array.from(rootMatch[1].matchAll(/"([^"]+)"/g)).map(
-      (m) => m[1],
-    );
+function toRelativeAssetPath(value: string) {
+  if (
+    /^(?:[a-z][a-z0-9+.-]*:|#)/i.test(value) ||
+    value.startsWith("data:") ||
+    value.startsWith("mailto:") ||
+    value.startsWith("tel:")
+  ) {
+    return value;
   }
+  if (value.startsWith("/")) return `.${value}`;
+  if (value.startsWith("./") || value.startsWith("../")) return value;
+  return `./${value}`;
 }
 
-// Fallback: scan client assets for the largest index-*.js (main bundle)
-if (rootPreloads.length === 0) {
+function normalizeManifestPaths<T>(value: T): T {
+  if (Array.isArray(value)) return value.map((item) => normalizeManifestPaths(item)) as T;
+  if (!value || typeof value !== "object") return value;
+
+  const out: Record<string, unknown> = {};
+  for (const [key, item] of Object.entries(value)) {
+    out[key] =
+      typeof item === "string" && (key === "href" || key === "src" || key === "clientEntry")
+        ? toRelativeAssetPath(item)
+        : normalizeManifestPaths(item);
+  }
+  return out as T;
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
+function jsonForInlineScript(value: unknown) {
+  return JSON.stringify(value)
+    .replaceAll("<", "\\u003c")
+    .replaceAll("\u2028", "\\u2028")
+    .replaceAll("\u2029", "\\u2029");
+}
+
+function findFallbackEntry() {
   const assets = fs.readdirSync(path.join(distClient, "assets"));
   const indexJs = assets
     .filter((f) => /^index-[A-Za-z0-9_-]+\.js$/.test(f))
@@ -55,29 +101,86 @@ if (rootPreloads.length === 0) {
       size: fs.statSync(path.join(distClient, "assets", f)).size,
     }))
     .sort((a, b) => b.size - a.size)[0];
-  if (indexJs) rootPreloads = [`/assets/${indexJs.f}`];
+  return indexJs ? `/assets/${indexJs.f}` : undefined;
 }
 
-if (rootPreloads.length === 0) {
+async function readStartManifest(): Promise<StartManifest> {
+  const manifestFile = fs
+    .readdirSync(distServer)
+    .find((f) => f.startsWith("_tanstack-start-manifest_v-"));
+
+  if (!manifestFile) return {};
+
+  const manifestPath = path.join(distServer, manifestFile);
+  try {
+    const mod = (await import(pathToFileURL(manifestPath).href)) as {
+      tsrStartManifest?: () => StartManifest;
+    };
+    return mod.tsrStartManifest?.() ?? {};
+  } catch (error) {
+    console.warn("[build-capacitor-html] could not import Start manifest, falling back", error);
+    const src = fs.readFileSync(manifestPath, "utf8");
+    const clientEntry = src.match(/clientEntry:\s*"([^"]+)"/)?.[1];
+    const rootMatch = src.match(/__root__:\s*\{[^}]*preloads:\s*\[([^\]]*)\]/);
+    const preloads = rootMatch
+      ? Array.from(rootMatch[1].matchAll(/"([^"]+)"/g)).map((m) => m[1])
+      : [];
+    return { clientEntry, routes: { __root__: { preloads } } };
+  }
+}
+
+function collectCssHrefs(manifest: StartManifest) {
+  const hrefs = new Set<string>();
+
+  for (const route of Object.values(manifest.routes ?? {})) {
+    for (const asset of route.assets ?? []) {
+      const href = asset.attrs?.href;
+      const rel = asset.attrs?.rel;
+      if (asset.tag === "link" && rel === "stylesheet" && typeof href === "string") {
+        hrefs.add(toRelativeAssetPath(href));
+      }
+    }
+  }
+
+  for (const file of fs.readdirSync(path.join(distClient, "assets"))) {
+    if (file.endsWith(".css")) hrefs.add(`./assets/${file}`);
+  }
+
+  return [...hrefs];
+}
+
+const rawManifest = await readStartManifest();
+const normalizedManifest = normalizeManifestPaths(rawManifest);
+const entry = toRelativeAssetPath(rawManifest.clientEntry ?? findFallbackEntry() ?? "");
+
+if (!entry || !entry.endsWith(".js") || !entry.includes("/assets/")) {
   console.error("[build-capacitor-html] could not locate client entry.");
   process.exit(1);
 }
 
-// 2. Find CSS
-const cssFile = fs
-  .readdirSync(path.join(distClient, "assets"))
-  .find((f) => f.endsWith(".css"));
-
-const entry = rootPreloads[0];
-const extraPreloads = rootPreloads.slice(1);
+const rootPreloads = rawManifest.routes?.__root__?.preloads ?? [];
+const extraPreloads = rootPreloads
+  .map(toRelativeAssetPath)
+  .filter((p) => p !== entry && p.endsWith(".js"));
+const cssHrefs = collectCssHrefs(rawManifest);
 
 const preloadLinks = extraPreloads
-  .map((p) => `    <link rel="modulepreload" href="${p}" />`)
+  .map((p) => `    <link rel="modulepreload" href="${escapeHtml(p)}" />`)
   .join("\n");
 
-const cssLink = cssFile
-  ? `    <link rel="stylesheet" href="/assets/${cssFile}" />`
-  : "";
+const cssLinks = cssHrefs
+  .map((href) => `    <link rel="stylesheet" href="${escapeHtml(href)}" />`)
+  .join("\n");
+
+const now = Date.now();
+const staticRouterBootstrap = {
+  manifest: normalizedManifest,
+  matches: [
+    { i: "__root__\u0000", u: now, s: "success", ssr: true },
+    { i: "\u0000\u0000", u: now, s: "success", ssr: false },
+  ],
+  lastMatchId: "\u0000\u0000",
+};
 
 const html = `<!doctype html>
 <html lang="en">
@@ -91,15 +194,89 @@ const html = `<!doctype html>
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#061B3A" />
     <title>ERPOVO</title>
-    <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
-${cssLink}
-    <link rel="modulepreload" href="${entry}" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+${cssLinks}
+    <link rel="modulepreload" href="${escapeHtml(entry)}" />
 ${preloadLinks}
+    <style>
+      .erpovo-capacitor-boot { min-height: 100vh; display: grid; place-items: center; padding: 24px; font: 14px/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #0f172a; background: #f6f8fc; }
+      .erpovo-capacitor-boot-card { width: min(100%, 420px); border: 1px solid #dbe3ef; border-radius: 10px; background: #fff; box-shadow: 0 12px 32px rgba(15, 23, 42, .12); padding: 22px; }
+      .erpovo-capacitor-brand { display: flex; align-items: center; gap: 10px; font-weight: 800; color: #061b3a; margin-bottom: 10px; }
+      .erpovo-capacitor-logo { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 8px; background: #061b3a; color: #fff; }
+      .erpovo-capacitor-muted { color: #64748b; margin: 0; }
+      .erpovo-capacitor-error { margin-top: 14px; padding: 12px; border-radius: 8px; background: #fff1f2; color: #991b1b; border: 1px solid #fecdd3; }
+      .erpovo-capacitor-error pre { white-space: pre-wrap; word-break: break-word; margin: 8px 0 0; font-size: 12px; }
+    </style>
+    <script>
+      (function () {
+        window.__ERPOVO_CAPACITOR_BUNDLED__ = true;
+        window.__ERPOVO_BOOT_OK__ = false;
+
+        function textFrom(reason) {
+          if (!reason) return "Unknown startup error";
+          if (typeof reason === "string") return reason;
+          if (reason && reason.stack) return String(reason.stack);
+          if (reason && reason.message) return String(reason.message);
+          try { return JSON.stringify(reason); } catch (_) { return String(reason); }
+        }
+
+        function showStartupError(reason) {
+          if (window.__ERPOVO_BOOT_OK__) return;
+          var panel = document.getElementById("erpovo-capacitor-boot-error");
+          var detail = document.getElementById("erpovo-capacitor-boot-error-detail");
+          if (!panel || !detail) return;
+          detail.textContent = textFrom(reason);
+          panel.hidden = false;
+        }
+
+        window.__ERPOVO_SHOW_STARTUP_ERROR__ = showStartupError;
+        window.addEventListener("error", function (event) {
+          showStartupError(event.error || event.message || "Window error");
+        });
+        window.addEventListener("unhandledrejection", function (event) {
+          showStartupError(event.reason || "Unhandled promise rejection");
+        });
+        window.addEventListener("DOMContentLoaded", function () {
+          var observer = new MutationObserver(function () {
+            if (!document.getElementById("erpovo-capacitor-boot")) {
+              window.__ERPOVO_BOOT_OK__ = true;
+              observer.disconnect();
+            }
+          });
+          observer.observe(document.documentElement, { childList: true, subtree: true });
+        });
+        setTimeout(function () {
+          if (!window.__ERPOVO_BOOT_OK__ && document.getElementById("erpovo-capacitor-boot")) {
+            showStartupError("ERPOVO did not finish starting after 12 seconds. Open Android WebView logs for the original stack trace.");
+          }
+        }, 12000);
+      })();
+    </script>
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="${entry}"></script>
+    <div id="erpovo-capacitor-boot" class="erpovo-capacitor-boot">
+      <div class="erpovo-capacitor-boot-card">
+        <div class="erpovo-capacitor-brand"><span class="erpovo-capacitor-logo">E</span><span>ERPOVO</span></div>
+        <p class="erpovo-capacitor-muted">Starting workspace…</p>
+        <div id="erpovo-capacitor-boot-error" class="erpovo-capacitor-error" hidden>
+          <strong>Startup error</strong>
+          <pre id="erpovo-capacitor-boot-error-detail"></pre>
+        </div>
+      </div>
+    </div>
+    <script class="$tsr" id="$tsr-stream-barrier">
+      (self.$R=self.$R||{})["tsr"]=[];
+      self.$_TSR={h(){this.hydrated=!0,this.c()},e(){this.streamEnded=!0,this.c()},c(){this.hydrated&&this.streamEnded&&(delete self.$_TSR,delete self.$R.tsr)},p(e){this.initialized?e():this.buffer.push(e)},buffer:[]};
+      self.$_TSR.router=${jsonForInlineScript(staticRouterBootstrap)};
+      self.$_TSR.e();
+      document.currentScript.remove();
+    </script>
+    <script type="module">
+      import(${jsonForInlineScript(entry)}).catch(function (error) {
+        window.__ERPOVO_SHOW_STARTUP_ERROR__ && window.__ERPOVO_SHOW_STARTUP_ERROR__(error);
+      });
+    </script>
   </body>
 </html>
 `;
@@ -107,6 +284,6 @@ ${preloadLinks}
 fs.writeFileSync(path.join(distClient, "index.html"), html);
 console.log(
   `[build-capacitor-html] wrote dist/client/index.html (entry=${entry}${
-    cssFile ? `, css=/assets/${cssFile}` : ""
+    cssHrefs.length ? `, css=${cssHrefs.join(",")}` : ""
   })`,
 );

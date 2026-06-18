@@ -11,6 +11,15 @@ const PWAContext = createContext<PWAContextType>({ isOffline: false });
 
 export const usePWAStatus = () => useContext(PWAContext);
 
+function isCapacitorBundledRuntime() {
+  if (typeof window === "undefined") return false;
+  return (
+    Boolean((window as unknown as { Capacitor?: unknown }).Capacitor) ||
+    Boolean((window as unknown as { __ERPOVO_CAPACITOR_BUNDLED__?: boolean })
+      .__ERPOVO_CAPACITOR_BUNDLED__)
+  );
+}
+
 export function PWAProvider({ children }: { children: React.ReactNode }) {
   const { t } = useI18n();
   const [isOffline, setIsOffline] = useState(false);
@@ -47,6 +56,7 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (typeof window === "undefined" || !("serviceWorker" in navigator) || !import.meta.env.PROD)
       return;
+    if (isCapacitorBundledRuntime()) return;
 
     const registration = navigator.serviceWorker.getRegistration();
     registration.then((reg) => {
