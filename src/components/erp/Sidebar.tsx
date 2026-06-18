@@ -4,6 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCurrentCompanyId } from "@/lib/use-company";
 import { isDemoMode, getDemoCompany } from "@/lib/demo/localStore";
 import { getLaunchMode } from "@/lib/launch-mode";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { mobileNavStore, useMobileNavOpen } from "@/lib/mobile-nav";
+
 
 import {
   LayoutDashboard,
@@ -456,14 +459,15 @@ export function ERPSidebar() {
     );
   };
 
-  return (
-    <aside
-      className="w-60 shrink-0 flex flex-col h-screen sticky top-0"
-      style={{
-        background: "linear-gradient(180deg, #061B3A 0%, #082B56 100%)",
-        color: "var(--color-sidebar-fg)",
-      }}
-    >
+  // Close the mobile drawer when the route changes.
+  const mobileOpen = useMobileNavOpen();
+  useEffect(() => {
+    mobileNavStore.set(false);
+  }, [pathname]);
+
+  const asideInner = (
+    <>
+
       <div className="px-4 py-4 border-b" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#0EA5A8] to-[#2563EB] flex items-center justify-center font-bold text-white text-sm shadow-md">
@@ -611,7 +615,32 @@ export function ERPSidebar() {
         </div>
       </div>
       <MobileAppDialog open={mobileAppOpen} onOpenChange={setMobileAppOpen} />
-    </aside>
+    </>
+  );
+
+  const baseStyle = {
+    background: "linear-gradient(180deg, #061B3A 0%, #082B56 100%)",
+    color: "var(--color-sidebar-fg)",
+  } as React.CSSProperties;
+
+  return (
+    <>
+      <aside
+        className="hidden md:flex w-60 shrink-0 flex-col h-screen sticky top-0"
+        style={baseStyle}
+      >
+        {asideInner}
+      </aside>
+      <Sheet open={mobileOpen} onOpenChange={(v) => mobileNavStore.set(v)}>
+        <SheetContent
+          side="left"
+          className="p-0 w-72 max-w-[85vw] border-0 [&>button]:text-white [&>button]:z-10 flex flex-col"
+          style={baseStyle}
+        >
+          {asideInner}
+        </SheetContent>
+      </Sheet>
+    </>
   );
 }
 
