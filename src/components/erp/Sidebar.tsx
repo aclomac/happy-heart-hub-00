@@ -4,6 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCurrentCompanyId } from "@/lib/use-company";
 import { isDemoMode, getDemoCompany } from "@/lib/demo/localStore";
 import { getLaunchMode } from "@/lib/launch-mode";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { mobileNavStore, useMobileNavOpen } from "@/lib/mobile-nav";
+
 
 import {
   LayoutDashboard,
