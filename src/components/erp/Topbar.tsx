@@ -18,7 +18,10 @@ import {
   HelpCircle,
   Calendar,
   User as UserIcon,
+  Menu,
 } from "lucide-react";
+import { mobileNavStore } from "@/lib/mobile-nav";
+
 import { GlobalSearch } from "@/components/erp/GlobalSearch";
 import { Button } from "@/components/ui/button";
 
