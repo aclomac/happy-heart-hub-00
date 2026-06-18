@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WelcomeRouteImport } from './routes/welcome'
+import { Route as TrustRouteImport } from './routes/trust'
 import { Route as SuperAdminRouteImport } from './routes/super-admin'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
@@ -177,6 +178,11 @@ import { Route as ApiIntegrationsSteadfastCreateConsignmentRouteImport } from '.
 const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
   path: '/welcome',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TrustRoute = TrustRouteImport.update({
+  id: '/trust',
+  path: '/trust',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SuperAdminRoute = SuperAdminRouteImport.update({
@@ -1031,6 +1037,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/super-admin': typeof SuperAdminRouteWithChildren
+  '/trust': typeof TrustRoute
   '/welcome': typeof WelcomeRoute
   '/app/attendance': typeof AppAttendanceRoute
   '/app/audit': typeof AppAuditRoute
@@ -1195,6 +1202,7 @@ export interface FileRoutesByTo {
   '/pricing': typeof PricingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/trust': typeof TrustRoute
   '/welcome': typeof WelcomeRoute
   '/app/attendance': typeof AppAttendanceRoute
   '/app/audit': typeof AppAuditRoute
@@ -1360,6 +1368,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/super-admin': typeof SuperAdminRouteWithChildren
+  '/trust': typeof TrustRoute
   '/welcome': typeof WelcomeRoute
   '/app/attendance': typeof AppAttendanceRoute
   '/app/audit': typeof AppAuditRoute
@@ -1528,6 +1537,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/super-admin'
+    | '/trust'
     | '/welcome'
     | '/app/attendance'
     | '/app/audit'
@@ -1692,6 +1702,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/reset-password'
     | '/signup'
+    | '/trust'
     | '/welcome'
     | '/app/attendance'
     | '/app/audit'
@@ -1856,6 +1867,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/super-admin'
+    | '/trust'
     | '/welcome'
     | '/app/attendance'
     | '/app/audit'
@@ -2023,6 +2035,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
   SuperAdminRoute: typeof SuperAdminRouteWithChildren
+  TrustRoute: typeof TrustRoute
   WelcomeRoute: typeof WelcomeRoute
   StoreSlugRoute: typeof StoreSlugRoute
   ApiIntegrationsProxyRoute: typeof ApiIntegrationsProxyRoute
@@ -2041,6 +2054,13 @@ declare module '@tanstack/react-router' {
       path: '/welcome'
       fullPath: '/welcome'
       preLoaderRoute: typeof WelcomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/trust': {
+      id: '/trust'
+      path: '/trust'
+      fullPath: '/trust'
+      preLoaderRoute: typeof TrustRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/super-admin': {
@@ -3767,6 +3787,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
   SuperAdminRoute: SuperAdminRouteWithChildren,
+  TrustRoute: TrustRoute,
   WelcomeRoute: WelcomeRoute,
   StoreSlugRoute: StoreSlugRoute,
   ApiIntegrationsProxyRoute: ApiIntegrationsProxyRoute,
