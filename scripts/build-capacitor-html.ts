@@ -63,8 +63,14 @@ function toRelativeAssetPath(value: string) {
   return `./${value}`;
 }
 
-function normalizeManifestPaths<T>(value: T): T {
-  if (Array.isArray(value)) return value.map((item) => normalizeManifestPaths(item)) as T;
+function normalizeManifestPaths<T>(value: T, parentKey = ""): T {
+  if (Array.isArray(value)) {
+    return value.map((item) =>
+      typeof item === "string" && parentKey === "preloads"
+        ? toRelativeAssetPath(item)
+        : normalizeManifestPaths(item, parentKey),
+    ) as T;
+  }
   if (!value || typeof value !== "object") return value;
 
   const out: Record<string, unknown> = {};
@@ -72,7 +78,7 @@ function normalizeManifestPaths<T>(value: T): T {
     out[key] =
       typeof item === "string" && (key === "href" || key === "src" || key === "clientEntry")
         ? toRelativeAssetPath(item)
-        : normalizeManifestPaths(item);
+        : normalizeManifestPaths(item, key);
   }
   return out as T;
 }
@@ -105,6 +111,8 @@ function findFallbackEntry() {
 }
 
 async function readStartManifest(): Promise<StartManifest> {
+  if (!fs.existsSync(distServer)) return {};
+
   const manifestFile = fs
     .readdirSync(distServer)
     .find((f) => f.startsWith("_tanstack-start-manifest_v-"));
@@ -150,6 +158,11 @@ function collectCssHrefs(manifest: StartManifest) {
 }
 
 const rawManifest = await readStartManifest();
+if (rawManifest.routes?.__root__?.assets) {
+  rawManifest.routes.__root__.assets = rawManifest.routes.__root__.assets.filter(
+    (asset) => asset.tag !== "script",
+  );
+}
 const normalizedManifest = normalizeManifestPaths(rawManifest);
 const entry = toRelativeAssetPath(rawManifest.clientEntry ?? findFallbackEntry() ?? "");
 
@@ -176,10 +189,10 @@ const now = Date.now();
 const staticRouterBootstrap = {
   manifest: normalizedManifest,
   matches: [
-    { i: "__root__\u0000", u: now, s: "success", ssr: true },
-    { i: "\u0000\u0000", u: now, s: "success", ssr: false },
+    { i: "__root__\0", u: now, s: "success", ssr: true },
+    { i: "\0\0", u: now, s: "success", ssr: false },
   ],
-  lastMatchId: "\u0000\u0000",
+  lastMatchId: "\0\0",
 };
 
 const html = `<!doctype html>
