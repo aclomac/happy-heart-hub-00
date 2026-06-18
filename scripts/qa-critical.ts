@@ -24,6 +24,7 @@ const CRITICAL_FRAGMENTS = [
   "billing-auth-guards",
   "transaction-sync",
   "mobile-layout-safety",
+  "capacitor-bundled-html",
 ];
 
 
