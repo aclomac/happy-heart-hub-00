@@ -615,7 +615,32 @@ export function ERPSidebar() {
         </div>
       </div>
       <MobileAppDialog open={mobileAppOpen} onOpenChange={setMobileAppOpen} />
-    </aside>
+    </>
+  );
+
+  const baseStyle = {
+    background: "linear-gradient(180deg, #061B3A 0%, #082B56 100%)",
+    color: "var(--color-sidebar-fg)",
+  } as React.CSSProperties;
+
+  return (
+    <>
+      <aside
+        className="hidden md:flex w-60 shrink-0 flex-col h-screen sticky top-0"
+        style={baseStyle}
+      >
+        {asideInner}
+      </aside>
+      <Sheet open={mobileOpen} onOpenChange={(v) => mobileNavStore.set(v)}>
+        <SheetContent
+          side="left"
+          className="p-0 w-72 max-w-[85vw] border-0 [&>button]:text-white [&>button]:z-10 flex flex-col"
+          style={baseStyle}
+        >
+          {asideInner}
+        </SheetContent>
+      </Sheet>
+    </>
   );
 }
 
