@@ -33,7 +33,10 @@ const overrideUrl = process.env.CAP_SERVER_URL?.trim();
 const baseConfig: CapacitorConfig = {
   appId: "com.chairking.erpovo",
   appName: "ERPOVO",
-  webDir: "dist",
+  // dist/client is the SPA folder. `bun run build` runs Vite/Nitro (SSR);
+  // the postbuild step `build-capacitor-html.ts` writes dist/client/index.html
+  // so this folder is a complete static SPA the WebView can load offline.
+  webDir: "dist/client",
   android: {
     allowMixedContent: false,
     captureInput: true,
