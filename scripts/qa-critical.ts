@@ -23,6 +23,7 @@ const CRITICAL_FRAGMENTS = [
   "master-data-sync",
   "billing-auth-guards",
   "transaction-sync",
+  "mobile-layout-safety",
 ];
 
 
