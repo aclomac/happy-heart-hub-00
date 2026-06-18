@@ -282,3 +282,30 @@
 .-rotate-y-2 {
   transform: rotateY(-2deg);
 }
+
+/* ============================================================
+ * Mobile Layout Safety Net (Android WebView / phones < 768px)
+ * Forces off-canvas sidebar + no horizontal overflow even if a
+ * stray utility class breaks the Tailwind responsive flow.
+ * ============================================================ */
+@media (max-width: 767px) {
+  html, body, #root {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+  /* Desktop sidebar <aside> must never push content on phones */
+  aside.hidden.md\:flex {
+    display: none !important;
+  }
+  /* Main content full width */
+  main {
+    width: 100% !important;
+    max-width: 100vw !important;
+    margin-left: 0 !important;
+    overflow-x: hidden;
+  }
+  /* Prevent tables from forcing body scroll — wrap them */
+  table {
+    max-width: 100%;
+  }
+}
