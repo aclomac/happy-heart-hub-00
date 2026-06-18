@@ -26,7 +26,13 @@ function AppLayout() {
             <ERPTopbar />
             <DemoModeBanner />
             <AnnouncementBanner />
-            <main className="flex-1 p-4 overflow-x-auto">
+            <main
+              className="flex-1 p-3 sm:p-4 min-w-0 overflow-x-hidden"
+              style={{
+                paddingTop: "max(0.75rem, env(safe-area-inset-top))",
+                paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
+              }}
+            >
               <RouteOrchestrator>
                 <RouteAccessGuard>
                   <Outlet />
@@ -37,6 +43,7 @@ function AppLayout() {
           <SupportChatWidget />
         </div>
       </MaintenanceGate>
+
     </I18nProvider>
   );
 }
