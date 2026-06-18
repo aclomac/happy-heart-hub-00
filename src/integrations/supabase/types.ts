@@ -3303,6 +3303,48 @@ export type Database = {
         }
         Relationships: []
       }
+      public_online_store_settings: {
+        Row: {
+          company_id: string
+          cover_url: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          logo_url: string | null
+          slug: string
+          store_name: string
+          updated_at: string
+          view_count: number
+        }
+        Insert: {
+          company_id: string
+          cover_url?: string | null
+          created_at: string
+          description?: string | null
+          id: string
+          is_active?: boolean
+          logo_url?: string | null
+          slug: string
+          store_name: string
+          updated_at: string
+          view_count?: number
+        }
+        Update: {
+          company_id?: string
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          slug?: string
+          store_name?: string
+          updated_at?: string
+          view_count?: number
+        }
+        Relationships: []
+      }
       purchase_items: {
         Row: {
           amount: number
