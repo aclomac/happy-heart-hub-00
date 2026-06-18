@@ -3,41 +3,37 @@ import type { CapacitorConfig } from "@capacitor/cli";
 /**
  * Capacitor configuration for the ERPOVO Android wrapper.
  *
- * DEFAULT (production APK): load the bundled `dist/` build that ships
- * inside the APK. This makes the app start instantly, work offline, and
- * avoid "Web page not available" errors caused by network/Cloudflare
- * bot-challenges against the Android WebView on first launch.
+ * The APK ALWAYS loads the bundled `dist/` web assets baked into the
+ * APK. There is intentionally NO `server.url` here — pointing the
+ * WebView at the remote Lovable URL caused "Web page not available /
+ * net::ERR_CONNECTION_CLOSED" on first launch (Cloudflare bot-challenge
+ * against the fresh Android WebView, captive portals, or simply no
+ * network at app start).
  *
- * OVERRIDE (development): set CAP_SERVER_URL before `bun run cap:sync`
- * to point the WebView at a remote URL instead, e.g.
- *   CAP_SERVER_URL=http://10.0.2.2:8080         (local Vite on emulator)
- *   CAP_SERVER_URL=https://happy-heart-hub-00.lovable.app  (live cloud)
+ * Cloud Mode sync still works: the bundled app makes normal HTTPS
+ * calls to Supabase / REST APIs from inside the WebView. Local Mode
+ * remains device-local IndexedDB.
  *
- * The published Cloud-Mode URL is kept here for reference / override:
- *   https://happy-heart-hub-00.lovable.app
+ * Developers who explicitly want to point a debug build at a remote
+ * URL (live reload against Vite, or testing the published web build)
+ * can set CAP_SERVER_URL before `bun run cap:sync`:
+ *
+ *   CAP_SERVER_URL=http://10.0.2.2:8080 bun run cap:sync
+ *
+ * This override is OFF by default and is never written into a release
+ * APK build pipeline.
  *
  * IMPORTANT:
  *  - This file only changes how the WebView loads the existing PWA.
- *  - It does NOT touch sales, stock, purchase, payment sync, or Local Mode.
- *  - Local Mode keeps using IndexedDB inside the WebView and stays
- *    device-local; no cloud calls are introduced here.
+ *  - It does NOT touch sales, stock, purchase, payment sync, or
+ *    Local/Cloud mode behavior.
  */
 const overrideUrl = process.env.CAP_SERVER_URL?.trim();
 
-const config: CapacitorConfig = {
+const baseConfig: CapacitorConfig = {
   appId: "com.chairking.erpovo",
   appName: "ERPOVO",
   webDir: "dist",
-  server: overrideUrl
-    ? {
-        url: overrideUrl,
-        cleartext: overrideUrl.startsWith("http://"),
-        androidScheme: "https",
-      }
-    : {
-        // No `url` => Capacitor serves the bundled webDir from the APK.
-        androidScheme: "https",
-      },
   android: {
     allowMixedContent: false,
     captureInput: true,
@@ -52,5 +48,15 @@ const config: CapacitorConfig = {
     },
   },
 };
+
+const config: CapacitorConfig = overrideUrl
+  ? {
+      ...baseConfig,
+      server: {
+        url: overrideUrl,
+        cleartext: overrideUrl.startsWith("http://"),
+      },
+    }
+  : baseConfig;
 
 export default config;
