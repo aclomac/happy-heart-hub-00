@@ -4630,6 +4630,51 @@ export type Database = {
         }
         Relationships: []
       }
+      public_online_store_settings: {
+        Row: {
+          company_id: string | null
+          cover_url: string | null
+          created_at: string | null
+          description: string | null
+          id: string | null
+          is_active: boolean | null
+          logo_url: string | null
+          settings: Json | null
+          slug: string | null
+          store_name: string | null
+          updated_at: string | null
+          view_count: number | null
+        }
+        Insert: {
+          company_id?: string | null
+          cover_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          logo_url?: string | null
+          settings?: Json | null
+          slug?: string | null
+          store_name?: string | null
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Update: {
+          company_id?: string | null
+          cover_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          logo_url?: string | null
+          settings?: Json | null
+          slug?: string | null
+          store_name?: string | null
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       add_platform_admin_by_email: { Args: { _email: string }; Returns: string }
