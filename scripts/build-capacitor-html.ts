@@ -1,16 +1,25 @@
 /**
  * Generate a static SPA index.html into dist/client for Capacitor.
  *
- * TanStack Start's normal build is SSR (Nitro/Cloudflare worker) and does
- * not emit a static index.html. The Capacitor Android wrapper needs a
- * real index.html in its webDir so the WebView can load local assets.
+ * TanStack Start's normal build is SSR (Nitro / Cloudflare worker) and does
+ * not emit a static index.html. The Capacitor Android wrapper needs a real
+ * index.html in its webDir so the WebView can load local assets.
  *
- * This script:
- *   1. Reads the TanStack Start manifest to find the root client entry +
- *      preload chunks.
- *   2. Finds the emitted CSS file.
- *   3. Writes dist/client/index.html — a minimal SPA shell that lets the
- *      router boot client-side in the WebView.
+ * Boot model
+ * ----------
+ * The HTML this script writes is a *pure SPA* shell:
+ *   - <div id="root"></div> host element
+ *   - window.__ERPOVO_CAPACITOR_BUNDLED__ = true (set BEFORE the entry runs)
+ *   - relative ./assets/* paths so the WebView can load them via file://
+ *   - viewport meta + visible startup-error panel
+ *
+ * The matching code in `src/client.tsx` reads
+ * `window.__ERPOVO_CAPACITOR_BUNDLED__` and, when true, mounts the router
+ * with `createRoot(#root)` + <RouterProvider> directly — bypassing
+ * hydrateStart/dehydrated-router data entirely. That avoids the
+ *   "Cannot read properties of undefined (reading '__root__')"
+ * crash that hydrateStart throws when no SSR pass has populated
+ * `window.$_TSR.router`.
  *
  * It does NOT touch business logic, sync, Local/Cloud mode, DB, or the
  * Android package id.
@@ -61,26 +70,6 @@ function toRelativeAssetPath(value: string) {
   if (value.startsWith("/")) return `.${value}`;
   if (value.startsWith("./") || value.startsWith("../")) return value;
   return `./${value}`;
-}
-
-function normalizeManifestPaths<T>(value: T, parentKey = ""): T {
-  if (Array.isArray(value)) {
-    return value.map((item) =>
-      typeof item === "string" && parentKey === "preloads"
-        ? toRelativeAssetPath(item)
-        : normalizeManifestPaths(item, parentKey),
-    ) as T;
-  }
-  if (!value || typeof value !== "object") return value;
-
-  const out: Record<string, unknown> = {};
-  for (const [key, item] of Object.entries(value)) {
-    out[key] =
-      typeof item === "string" && (key === "href" || key === "src" || key === "clientEntry")
-        ? toRelativeAssetPath(item)
-        : normalizeManifestPaths(item, key);
-  }
-  return out as T;
 }
 
 function escapeHtml(value: string) {
@@ -158,12 +147,6 @@ function collectCssHrefs(manifest: StartManifest) {
 }
 
 const rawManifest = await readStartManifest();
-if (rawManifest.routes?.__root__?.assets) {
-  rawManifest.routes.__root__.assets = rawManifest.routes.__root__.assets.filter(
-    (asset) => asset.tag !== "script",
-  );
-}
-const normalizedManifest = normalizeManifestPaths(rawManifest);
 const entry = toRelativeAssetPath(rawManifest.clientEntry ?? findFallbackEntry() ?? "");
 
 if (!entry || !entry.endsWith(".js") || !entry.includes("/assets/")) {
@@ -185,16 +168,6 @@ const cssLinks = cssHrefs
   .map((href) => `    <link rel="stylesheet" href="${escapeHtml(href)}" />`)
   .join("\n");
 
-const now = Date.now();
-const staticRouterBootstrap = {
-  manifest: normalizedManifest,
-  matches: [
-    { i: "__root__\0", u: now, s: "success", ssr: true },
-    { i: "\0\0", u: now, s: "success", ssr: false },
-  ],
-  lastMatchId: "\0\0",
-};
-
 const html = `<!doctype html>
 <html lang="en">
   <head>
@@ -213,6 +186,8 @@ ${cssLinks}
     <link rel="modulepreload" href="${escapeHtml(entry)}" />
 ${preloadLinks}
     <style>
+      html, body, #root { height: 100%; }
+      body { margin: 0; }
       .erpovo-capacitor-boot { min-height: 100vh; display: grid; place-items: center; padding: 24px; font: 14px/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #0f172a; background: #f6f8fc; }
       .erpovo-capacitor-boot-card { width: min(100%, 420px); border: 1px solid #dbe3ef; border-radius: 10px; background: #fff; box-shadow: 0 12px 32px rgba(15, 23, 42, .12); padding: 22px; }
       .erpovo-capacitor-brand { display: flex; align-items: center; gap: 10px; font-weight: 800; color: #061b3a; margin-bottom: 10px; }
@@ -223,6 +198,8 @@ ${preloadLinks}
     </style>
     <script>
       (function () {
+        // CRITICAL: set BEFORE the client entry module evaluates so
+        // src/client.tsx picks the Capacitor SPA branch on first read.
         window.__ERPOVO_CAPACITOR_BUNDLED__ = true;
         window.__ERPOVO_BOOT_OK__ = false;
 
@@ -251,16 +228,20 @@ ${preloadLinks}
           showStartupError(event.reason || "Unhandled promise rejection");
         });
         window.addEventListener("DOMContentLoaded", function () {
+          var host = document.getElementById("root");
+          if (!host) return;
           var observer = new MutationObserver(function () {
-            if (!document.getElementById("erpovo-capacitor-boot")) {
+            if (host.childElementCount > 0) {
               window.__ERPOVO_BOOT_OK__ = true;
+              var boot = document.getElementById("erpovo-capacitor-boot");
+              if (boot && boot.parentNode) boot.parentNode.removeChild(boot);
               observer.disconnect();
             }
           });
-          observer.observe(document.documentElement, { childList: true, subtree: true });
+          observer.observe(host, { childList: true });
         });
         setTimeout(function () {
-          if (!window.__ERPOVO_BOOT_OK__ && document.getElementById("erpovo-capacitor-boot")) {
+          if (!window.__ERPOVO_BOOT_OK__) {
             showStartupError("ERPOVO did not finish starting after 12 seconds. Open Android WebView logs for the original stack trace.");
           }
         }, 12000);
@@ -268,6 +249,7 @@ ${preloadLinks}
     </script>
   </head>
   <body>
+    <div id="root"></div>
     <div id="erpovo-capacitor-boot" class="erpovo-capacitor-boot">
       <div class="erpovo-capacitor-boot-card">
         <div class="erpovo-capacitor-brand"><span class="erpovo-capacitor-logo">E</span><span>ERPOVO</span></div>
@@ -278,13 +260,6 @@ ${preloadLinks}
         </div>
       </div>
     </div>
-    <script class="$tsr" id="$tsr-stream-barrier">
-      (self.$R=self.$R||{})["tsr"]=[];
-      self.$_TSR={h(){this.hydrated=!0,this.c()},e(){this.streamEnded=!0,this.c()},c(){this.hydrated&&this.streamEnded&&(delete self.$_TSR,delete self.$R.tsr)},p(e){this.initialized?e():this.buffer.push(e)},buffer:[]};
-      self.$_TSR.router=${jsonForInlineScript(staticRouterBootstrap)};
-      self.$_TSR.e();
-      document.currentScript.remove();
-    </script>
     <script type="module">
       import(${jsonForInlineScript(entry)}).catch(function (error) {
         window.__ERPOVO_SHOW_STARTUP_ERROR__ && window.__ERPOVO_SHOW_STARTUP_ERROR__(error);
