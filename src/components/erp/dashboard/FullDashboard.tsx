@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { NoCompanySelected } from "@/components/erp/NoCompanySelected";
 import { PageHeader } from "@/components/erp/PageHeader";
@@ -39,8 +39,6 @@ import { useQuery } from "@tanstack/react-query";
 import { isDemoMode, isExplicitDemoMode, getDemoDashboardData } from "@/lib/demo/localStore";
 import { isEmergencyLocalDemoMode } from "@/lib/emergency-local-demo";
 import { ensureInventorySeed, getAdjustments, getItems, getStoreStock, getTransfers, getWarehouses } from "@/lib/demo/inventory";
-
-export const Route = createFileRoute("/app/")({ component: Dashboard });
 
 // ───────────────────────────────────────────────────────── helpers ─────
 const fmtBdt = (n: number) =>
@@ -206,7 +204,7 @@ function StatusPill({ kind }: { kind: "Paid" | "Partial" | "Due" | "Confirmed" |
 }
 
 // ───────────────────────────────────────────────────────── page ────────
-function Dashboard() {
+export default function FullDashboard() {
   const companyId = useCurrentCompanyId();
   const emergencyLocalDemo = isEmergencyLocalDemoMode();
   const [deferredDashboardReady, setDeferredDashboardReady] = useState(!emergencyLocalDemo);
