@@ -22,7 +22,7 @@
  *    same `getRouter()` factory and route tree the web build uses, so
  *    business logic, sync logic, and Local/Cloud mode are unchanged.
  */
-import { StrictMode, startTransition } from "react";
+import { StrictMode, Suspense, startTransition } from "react";
 import { createRoot, hydrateRoot } from "react-dom/client";
 import { RouterProvider } from "@tanstack/react-router";
 import { StartClient } from "@tanstack/react-start/client";
@@ -58,6 +58,28 @@ function isStaticHostinger(): boolean {
 
 function shouldUseSpaMount(): boolean {
   return isCapacitorBundled() || isStaticHostinger();
+}
+
+function hasSearchFlag(name: string): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return new URLSearchParams(window.location.search).get(name) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function NoRouterDiagnostic() {
+  return (
+    <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: 24 }}>
+      <section style={{ width: "min(640px, 100%)", border: "1px solid #cbd5e1", borderRadius: 8, padding: 24, background: "#fff" }}>
+        <h1 style={{ marginTop: 0 }}>ERPOVO No-Router Diagnostic</h1>
+        <p>The main bundle loaded, but TanStack Router and app providers were not created.</p>
+        <input aria-label="No router test input" placeholder="Type here" style={{ width: "100%", boxSizing: "border-box", padding: 10, marginBottom: 12 }} />
+        <button type="button" onClick={() => alert("No-router diagnostic is responsive")}>Click test</button>
+      </section>
+    </main>
+  );
 }
 
 function bootLog(name: string) {
@@ -109,6 +131,18 @@ if (shouldUseSpaMount()) {
         `SPA mount (${mode}) requires <div id="root"> in dist/client/index.html`,
       );
     }
+    if (hasSearchFlag("noRouter")) {
+      bootLog("ERPOVO_ROUTER_SKIPPED_NO_ROUTER");
+      startTransition(() => {
+        createRoot(host).render(
+          <StrictMode>
+            <NoRouterDiagnostic />
+          </StrictMode>,
+        );
+        window.__ERPOVO_BOOT_READY__ = true;
+        bootLog("ERPOVO_BOOT_READY");
+      });
+    } else {
     bootLog("ERPOVO_ROUTER_CREATE_START");
     const router = getRouter();
     bootLog("ERPOVO_ROUTER_CREATED");
@@ -122,7 +156,9 @@ if (shouldUseSpaMount()) {
       bootLog("ERPOVO_APP_RENDER_START");
       createRoot(host).render(
         <StrictMode>
-          <RouterProvider router={router} />
+          <Suspense fallback={null}>
+            <RouterProvider router={router} />
+          </Suspense>
         </StrictMode>,
       );
       window.__ERPOVO_BOOT_READY__ = true;
@@ -135,6 +171,7 @@ if (shouldUseSpaMount()) {
         swVersion: ERPOVO_SW_CACHE_VERSION,
       });
     });
+    }
   } catch (error) {
     reportStartupError(error);
     throw error;
