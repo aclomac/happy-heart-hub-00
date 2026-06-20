@@ -8,6 +8,7 @@ import { AnnouncementBanner } from "@/components/erp/AnnouncementBanner";
 import { DemoModeBanner } from "@/components/erp/DemoModeBanner";
 import { SupportChatWidget } from "@/components/erp/SupportChatWidget";
 import { I18nProvider } from "@/lib/i18n";
+import { isStartupDisabled } from "@/lib/startup-switches";
 
 // Auth/company/subscription/device gating is handled centrally by
 // GlobalRouteOrchestrator in __root.tsx. Do NOT add beforeLoad redirects
@@ -17,6 +18,7 @@ export const Route = createFileRoute("/app")({
 });
 
 function AppLayout() {
+  const chatDisabled = isStartupDisabled("chat");
   return (
     <I18nProvider>
       <MaintenanceGate>
@@ -40,7 +42,7 @@ function AppLayout() {
               </RouteOrchestrator>
             </main>
           </div>
-          <SupportChatWidget />
+          {!chatDisabled && <SupportChatWidget />}
         </div>
       </MaintenanceGate>
 
