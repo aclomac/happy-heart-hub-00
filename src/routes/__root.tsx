@@ -275,7 +275,7 @@ function RootComponent() {
 }
 
 function RouteReadyLogger() {
-  const pathname = useLocation({ select: (s) => s.pathname });
+  const pathname = useLocation({ select: (s: { pathname: string }) => s.pathname });
   useEffect(() => {
     console.log("ERPOVO_ROUTE_READY", pathname);
   }, [pathname]);
