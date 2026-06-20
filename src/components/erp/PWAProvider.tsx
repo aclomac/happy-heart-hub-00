@@ -54,19 +54,46 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
   }, [t]);
 
   // Handle service worker registration and stale cache eviction.
+  // Runs ONCE at mount, deferred until the browser is idle so /login and
+  // other public routes never block their first paint on SW work.
   useEffect(() => {
     if (typeof window === "undefined" || !("serviceWorker" in navigator) || !import.meta.env.PROD)
       return;
     if (isCapacitorBundledRuntime()) return;
 
     let disposed = false;
+    let idleHandle: number | null = null;
+    let timeoutHandle: number | null = null;
 
-    registerErpovoServiceWorker().then((reg) => {
-      if (disposed || !reg) return;
-      if (reg?.waiting) {
-        reg.waiting.postMessage({ type: "SKIP_WAITING" });
-      }
-    });
+    const t0 = performance.now();
+    const runRegistration = () => {
+      if (disposed) return;
+      console.info("ERPOVO_SW_REGISTER_START", {
+        route: window.location.pathname,
+        version: ERPOVO_SW_CACHE_VERSION,
+      });
+      registerErpovoServiceWorker()
+        .then((reg) => {
+          if (disposed || !reg) return;
+          if (reg?.waiting) {
+            reg.waiting.postMessage({ type: "SKIP_WAITING" });
+          }
+          const dt = Math.round(performance.now() - t0);
+          console.info("ERPOVO_SW_REGISTER_DONE", { ms: dt });
+        })
+        .catch((err) => {
+          console.warn("ERPOVO_SW_REGISTER_FAILED", err);
+        });
+    };
+
+    const ric = (window as unknown as {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+    }).requestIdleCallback;
+    if (typeof ric === "function") {
+      idleHandle = ric(runRegistration, { timeout: 4000 });
+    } else {
+      timeoutHandle = window.setTimeout(runRegistration, 2000);
+    }
 
     const handleUpdate = () => {
       console.info("ERPOVO_SW_CONTROLLER_CHANGE", { version: ERPOVO_SW_CACHE_VERSION });
@@ -85,10 +112,17 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
     navigator.serviceWorker.addEventListener("message", handleMessage);
     return () => {
       disposed = true;
+      if (idleHandle !== null) {
+        const cic = (window as unknown as {
+          cancelIdleCallback?: (h: number) => void;
+        }).cancelIdleCallback;
+        if (typeof cic === "function") cic(idleHandle);
+      }
+      if (timeoutHandle !== null) window.clearTimeout(timeoutHandle);
       navigator.serviceWorker.removeEventListener("controllerchange", handleUpdate);
       navigator.serviceWorker.removeEventListener("message", handleMessage);
     };
-  }, [t]);
+  }, []);
 
   return (
     <PWAContext.Provider value={{ isOffline }}>
