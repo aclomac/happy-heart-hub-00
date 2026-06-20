@@ -187,6 +187,7 @@ function RootComponent() {
         supabase.auth.getUser().then(({ data }) => {
           lastUserId = data.user?.id ?? null;
           if (data.user) registerDevice(data.user.id).catch(() => {});
+          bootStep("ERPOVO_PROVIDER_AUTH_READY");
         });
       });
 
@@ -280,17 +281,21 @@ function RootComponent() {
       const sub = (window as unknown as { __erpovoSub?: { unsubscribe: () => void } }).__erpovoSub;
       sub?.unsubscribe();
     };
-  }, [queryClient]);
+  }, [queryClient, pathname, disableAuth, disableSync]);
+
+  const appContent = (
+    <>
+      <StartupWatchdog />
+      <RouteReadyLogger />
+      {/* Required: nested routes render here. */}
+      <Outlet />
+    </>
+  );
 
   return (
     <QueryClientProvider client={queryClient}>
       <GlobalRouteOrchestrator>
-        <PWAProvider>
-          <StartupWatchdog />
-          <RouteReadyLogger />
-          {/* Required: nested routes render here. */}
-          <Outlet />
-        </PWAProvider>
+        {disablePWA ? appContent : <PWAProvider>{appContent}</PWAProvider>}
       </GlobalRouteOrchestrator>
     </QueryClientProvider>
   );
