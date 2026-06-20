@@ -15,6 +15,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { GlobalRouteOrchestrator } from "@/components/erp/GlobalRouteOrchestrator";
 import { PWAProvider } from "@/components/erp/PWAProvider";
 import { StartupWatchdog } from "@/components/erp/StartupWatchdog";
+import { bootStep, isHardSafeMode, isPublicStartupPath, isStartupDisabled } from "@/lib/startup-switches";
 
 function NotFoundComponent() {
   return (
@@ -149,27 +150,38 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 
 function isSafeModeUrl() {
-  if (typeof window === "undefined") return false;
-  try {
-    return new URLSearchParams(window.location.search).get("safe") === "1";
-  } catch {
-    return false;
-  }
+  return isHardSafeMode();
 }
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const pathname = useLocation({ select: (s: { pathname: string }) => s.pathname });
+  const publicStartupPath = isPublicStartupPath(pathname);
+  const disableAuth = isStartupDisabled("auth") || publicStartupPath;
+  const disableSync = isStartupDisabled("sync") || publicStartupPath;
+  const disablePWA = isStartupDisabled("pwa") || publicStartupPath;
 
   useEffect(() => {
-    if (isSafeModeUrl()) {
-      console.info("ERPOVO_SAFE_MODE_ACTIVE — skipping supabase auth wiring");
+    bootStep("ERPOVO_PROVIDER_AUTH_START", { pathname, disabled: disableAuth });
+    if (isSafeModeUrl() || disableAuth) {
+      bootStep("ERPOVO_PROVIDER_AUTH_READY", { skipped: true });
+      bootStep("ERPOVO_PROVIDER_SYNC_START", { disabled: true });
+      bootStep("ERPOVO_PROVIDER_SYNC_READY", { skipped: true });
+      if (disablePWA) bootStep("ERPOVO_PROVIDER_PWA_READY", { skipped: true });
+      console.info("ERPOVO_AUTH_WIRING_SKIPPED", { pathname });
       return;
     }
-    // Wire the Cloud Mode sales uploader so the manual replay button
-    // and the online-event auto-replay can drain queued invoices.
-    import("@/lib/transaction-sync/install").then(({ installSalesUploader }) => {
-      installSalesUploader();
-    });
+    bootStep("ERPOVO_PROVIDER_SYNC_START", { disabled: disableSync });
+    if (!disableSync) {
+      // Wire the Cloud Mode sales uploader so the manual replay button
+      // and the online-event auto-replay can drain queued invoices.
+      import("@/lib/transaction-sync/install").then(({ installSalesUploader }) => {
+        installSalesUploader();
+        bootStep("ERPOVO_PROVIDER_SYNC_READY");
+      });
+    } else {
+      bootStep("ERPOVO_PROVIDER_SYNC_READY", { skipped: true });
+    }
     let mounted = true;
     let lastUserId: string | null | undefined = undefined;
     import("@/integrations/supabase/client").then(({ supabase }) => {
@@ -178,6 +190,7 @@ function RootComponent() {
         supabase.auth.getUser().then(({ data }) => {
           lastUserId = data.user?.id ?? null;
           if (data.user) registerDevice(data.user.id).catch(() => {});
+          bootStep("ERPOVO_PROVIDER_AUTH_READY");
         });
       });
 
@@ -271,17 +284,21 @@ function RootComponent() {
       const sub = (window as unknown as { __erpovoSub?: { unsubscribe: () => void } }).__erpovoSub;
       sub?.unsubscribe();
     };
-  }, [queryClient]);
+  }, [queryClient, pathname, disableAuth, disableSync]);
+
+  const appContent = (
+    <>
+      <StartupWatchdog />
+      <RouteReadyLogger />
+      {/* Required: nested routes render here. */}
+      <Outlet />
+    </>
+  );
 
   return (
     <QueryClientProvider client={queryClient}>
       <GlobalRouteOrchestrator>
-        <PWAProvider>
-          <StartupWatchdog />
-          <RouteReadyLogger />
-          {/* Required: nested routes render here. */}
-          <Outlet />
-        </PWAProvider>
+        {disablePWA ? appContent : <PWAProvider>{appContent}</PWAProvider>}
       </GlobalRouteOrchestrator>
     </QueryClientProvider>
   );

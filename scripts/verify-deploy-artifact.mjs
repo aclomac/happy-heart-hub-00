@@ -15,6 +15,7 @@ const required = [
   ".htaccess",
   "manifest.webmanifest",
   "offline.html",
+  "health.html",
 ];
 
 const missing = [];
@@ -50,6 +51,11 @@ const badRefs = [...indexHtml.matchAll(/(?:src|href)\s*=\s*"([^"]+)"/g)]
 if (badRefs.length) {
   console.error("[verify-deploy-artifact] index.html has non-absolute asset refs:");
   for (const r of badRefs) console.error("  - " + r);
+  process.exit(1);
+}
+
+if (!indexHtml.includes("ERPOVO_MAIN_BUNDLE_SKIPPED") || !indexHtml.includes("ERPOVO Safe Mode")) {
+  console.error("[verify-deploy-artifact] index.html missing hard safe-mode bootstrap.");
   process.exit(1);
 }
 

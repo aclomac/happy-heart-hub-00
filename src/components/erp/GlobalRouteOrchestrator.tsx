@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useRouteDecision } from "@/lib/use-route-decision";
 import { AppBootSplash } from "@/components/erp/AppBootSplash";
 import { RouteDebugPanel } from "@/components/erp/RouteDebugPanel";
+import { bootStep, isStartupDisabled } from "@/lib/startup-switches";
 
 /**
  * Root-level orchestrator. The ONLY component allowed to call navigate()
@@ -48,10 +49,19 @@ function isLightweightPath(pathname: string) {
 
 export function GlobalRouteOrchestrator({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
-  if (isLightweightPath(pathname) || isSafeMode()) {
+  const bypassFullOrchestrator =
+    isLightweightPath(pathname) ||
+    isSafeMode() ||
+    isStartupDisabled("auth") ||
+    isStartupDisabled("mode") ||
+    isStartupDisabled("company");
+  if (bypassFullOrchestrator) {
     if (typeof window !== "undefined") {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (window as any).__ERPOVO_LIGHTWEIGHT_ROUTE__ = true;
+      bootStep("ERPOVO_PROVIDER_AUTH_READY", { skipped: true, pathname });
+      bootStep("ERPOVO_PROVIDER_MODE_READY", { skipped: true, pathname });
+      bootStep("ERPOVO_PROVIDER_COMPANY_READY", { skipped: true, pathname });
       console.info("ERPOVO_LIGHTWEIGHT_BOOT", { pathname, safe: isSafeMode() });
     }
     return <>{children}</>;
