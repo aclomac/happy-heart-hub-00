@@ -63,8 +63,8 @@ function useAuthUser() {
     // Synchronously honor a demo session so the very first render is
     // already authenticated — prevents a brief "no user → /login" flicker
     // after refresh.
-    if (typeof window !== "undefined" && isDemoMode()) {
-      if (hasRestorableDemoCookie() && !window.localStorage.getItem(DEMO_SESSION_KEY)) {
+    if (typeof window !== "undefined" && !isStartupDisabled("mode") && isDemoMode()) {
+      if (!isStartupDisabled("demoSeed") && hasRestorableDemoCookie() && !window.localStorage.getItem(DEMO_SESSION_KEY)) {
         startDemoSession();
       }
       const s = getDemoSession();
@@ -167,12 +167,12 @@ function useAuthUser() {
 
 function useCompaniesCount(userId: string | null) {
   return useQuery({
-    queryKey: ["companies-count", userId, isDemoMode() ? "demo" : "live"],
+    queryKey: ["companies-count", userId, !isStartupDisabled("mode") && isDemoMode() ? "demo" : "live"],
     enabled: !!userId,
     staleTime: 30_000,
     queryFn: async () => {
       // Demo mode: read entirely from localStorage.
-      if (isDemoMode()) {
+      if (!isStartupDisabled("mode") && isDemoMode()) {
         const list = getVisibleDemoCompanies(userId ?? undefined);
         return { count: list.length, firstId: list[0]?.id ?? null };
       }
