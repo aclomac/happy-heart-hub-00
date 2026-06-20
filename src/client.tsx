@@ -29,6 +29,10 @@ import { StartClient } from "@tanstack/react-start/client";
 
 import { getRouter } from "./router";
 import {
+  primeEmergencyLocalDemo,
+  redirectDisabledLoginToApp,
+} from "./lib/emergency-local-demo";
+import {
   DEPLOYED_BUILD_HASH,
   DEPLOYED_BUILD_TIMESTAMP,
   DEPLOYED_BUILD_VERSION,
@@ -107,6 +111,8 @@ function showBootWatchdogPanel() {
 }
 
 if (typeof window !== "undefined") {
+  primeEmergencyLocalDemo();
+  redirectDisabledLoginToApp();
   window.__ERPOVO_BOOT_READY__ = false;
   bootStep("ERPOVO_BOOT_START", {
     route: window.location.pathname,
