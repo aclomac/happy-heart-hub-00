@@ -51,7 +51,8 @@ console.log("ERPOVO Critical QA — running:");
 for (const f of files) console.log(`  · ${f}`);
 console.log("");
 
-const r = spawnSync("bunx", ["vitest", "run", ...files, "--reporter=default"], {
+const runner = process.platform === "win32" ? "npx.cmd" : "npx";
+const r = spawnSync(runner, ["vitest", "run", ...files, "--reporter=default"], {
   stdio: "inherit",
   encoding: "utf-8",
 });

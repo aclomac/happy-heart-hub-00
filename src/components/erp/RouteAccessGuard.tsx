@@ -27,6 +27,11 @@ function GuardLoader() {
 export function RouteAccessGuard({ children }: { children: ReactNode }) {
   if (isEmergencyLocalDemoMode()) return <>{children}</>;
 
+  return <RouteAccessGuardInner>{children}</RouteAccessGuardInner>;
+}
+
+function RouteAccessGuardInner({ children }: { children: ReactNode }) {
+
   const { pathname } = useLocation();
   const subQ = useSubscription();
   const roleQ = useCurrentRole();
