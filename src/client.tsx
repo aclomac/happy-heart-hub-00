@@ -38,12 +38,31 @@ import {
 declare global {
   interface Window {
     __ERPOVO_CAPACITOR_BUNDLED__?: boolean;
+    __ERPOVO_STATIC_HOSTINGER__?: boolean;
+    __ERPOVO_RUNTIME_MODE__?: string;
     __ERPOVO_SHOW_STARTUP_ERROR__?: (reason: unknown) => void;
+    __ERPOVO_BOOT__?: { log?: (name: string) => void };
   }
 }
 
 function isCapacitorBundled(): boolean {
   return typeof window !== "undefined" && window.__ERPOVO_CAPACITOR_BUNDLED__ === true;
+}
+
+function isStaticHostinger(): boolean {
+  return typeof window !== "undefined" && window.__ERPOVO_STATIC_HOSTINGER__ === true;
+}
+
+function shouldUseSpaMount(): boolean {
+  return isCapacitorBundled() || isStaticHostinger();
+}
+
+function bootLog(name: string) {
+  try {
+    window.__ERPOVO_BOOT__?.log?.(name);
+  } catch {
+    /* ignore */
+  }
 }
 
 function reportStartupError(error: unknown): void {
@@ -76,28 +95,36 @@ if (typeof window !== "undefined") {
   window.setTimeout(showBootWatchdogPanel, 8000);
 }
 
-if (isCapacitorBundled()) {
+if (shouldUseSpaMount()) {
+  const mode = isCapacitorBundled() ? "capacitor-bundled" : "hostinger-static";
   try {
     const host = document.getElementById("root");
     if (!host) {
       throw new Error(
-        "Capacitor bundled boot requires <div id=\"root\"> in dist/client/index.html",
+        `SPA mount (${mode}) requires <div id="root"> in dist/client/index.html`,
       );
     }
+    bootLog("ERPOVO_CLIENT_ENTRY_LOADED");
     const router = getRouter();
+    bootLog("ERPOVO_ROUTER_CREATED");
     console.info("ERPOVO_ROUTE_MATCH", {
+      mode,
       route: window.location.pathname,
       buildHash: DEPLOYED_BUILD_HASH,
       swVersion: ERPOVO_SW_CACHE_VERSION,
     });
     startTransition(() => {
+      bootLog("ERPOVO_ROUTER_PROVIDER_RENDER_START");
       createRoot(host).render(
         <StrictMode>
           <RouterProvider router={router} />
         </StrictMode>,
       );
       window.__ERPOVO_BOOT_READY__ = true;
+      bootLog("ERPOVO_APP_RENDERED");
+      bootLog("ERPOVO_BOOT_READY");
       console.info("ERPOVO_BOOT_READY", {
+        mode,
         route: window.location.pathname,
         buildVersion: DEPLOYED_BUILD_VERSION,
         swVersion: ERPOVO_SW_CACHE_VERSION,
