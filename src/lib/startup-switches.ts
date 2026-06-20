@@ -2,6 +2,12 @@ const SWITCH_PREFIX = "disable";
 
 export type StartupSwitch = "auth" | "mode" | "company" | "sync" | "pwa" | "chat" | "demoSeed";
 
+declare global {
+  interface Window {
+    __ERPOVO_BOOT__?: { steps?: Array<{ name: string; t: number }>; log?: (name: string) => void };
+  }
+}
+
 function readSearchParams(): URLSearchParams | null {
   if (typeof window === "undefined") return null;
   try {
