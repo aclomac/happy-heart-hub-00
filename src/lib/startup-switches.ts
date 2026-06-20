@@ -62,7 +62,8 @@ export function isLiteDashboardMode(): boolean {
   const params = readSearchParams();
   if (!params) return true;
   if (params.get("fullDashboard") === "1") return false;
-  return params.get("lite") === "1" || true;
+  if (params.get("lite") === "1") return true;
+  return true;
 }
 
 export function isFullDashboardRequested(): boolean {
