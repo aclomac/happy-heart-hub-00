@@ -43,7 +43,7 @@ declare global {
     __ERPOVO_RUNTIME_MODE__?: string;
     __ERPOVO_SHOW_STARTUP_ERROR__?: (reason: unknown) => void;
     __ERPOVO_SHOW_ERROR__?: (reason: unknown) => void;
-    __ERPOVO_BOOT__?: { log?: (name: string) => void };
+    __ERPOVO_BOOT__?: { steps?: Array<{ name: string; t: number }>; log?: (name: string) => void };
     __ERPOVO_BOOT_READY__?: boolean;
   }
 }
