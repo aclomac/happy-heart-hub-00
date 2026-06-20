@@ -34,6 +34,7 @@ describe("emergency lightweight feature pages", () => {
       const route = read(file);
       expect(route.includes("LightweightFeaturePage") || route.includes("AdvancedModuleButton")).toBe(true);
       expect(lightweightComponent).toContain("AdvancedModuleButton");
+      expect(lightweightComponent).toContain("Load advanced version");
       expect(route).not.toContain("useQuery");
       expect(route).not.toContain("from \"recharts\"");
       expect(route).not.toContain("ensureInventorySeed");
