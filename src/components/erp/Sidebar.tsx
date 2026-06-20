@@ -1,5 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { recordNavClick } from "@/lib/nav-safe";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentCompanyId } from "@/lib/use-company";
 import { isDemoMode, getDemoCompany } from "@/lib/demo/localStore";
