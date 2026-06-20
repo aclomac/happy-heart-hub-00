@@ -165,6 +165,9 @@ function RootComponent() {
     bootStep("ERPOVO_PROVIDER_AUTH_START", { pathname, disabled: disableAuth });
     if (isSafeModeUrl() || disableAuth) {
       bootStep("ERPOVO_PROVIDER_AUTH_READY", { skipped: true });
+      bootStep("ERPOVO_PROVIDER_SYNC_START", { disabled: true });
+      bootStep("ERPOVO_PROVIDER_SYNC_READY", { skipped: true });
+      if (disablePWA) bootStep("ERPOVO_PROVIDER_PWA_READY", { skipped: true });
       console.info("ERPOVO_AUTH_WIRING_SKIPPED", { pathname });
       return;
     }

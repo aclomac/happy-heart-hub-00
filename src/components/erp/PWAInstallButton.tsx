@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { usePWA } from "@/hooks/use-pwa";
 import { useI18n } from "@/lib/i18n";
-import { isPublicStartupPath, isStartupDisabled } from "@/lib/startup-switches";
+import { isStartupDisabled } from "@/lib/startup-switches";
 
 interface PWAInstallButtonProps {
   variant?: "default" | "outline" | "ghost" | "secondary";
@@ -17,7 +17,7 @@ export function PWAInstallButton({
   className,
   showIcon = true,
 }: PWAInstallButtonProps) {
-  if (typeof window !== "undefined" && (isStartupDisabled("pwa") || isPublicStartupPath())) {
+  if (typeof window !== "undefined" && isStartupDisabled("pwa")) {
     return null;
   }
   return <PWAInstallButtonInner variant={variant} size={size} className={className} showIcon={showIcon} />;
