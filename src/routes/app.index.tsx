@@ -206,6 +206,7 @@ function StatusPill({ kind }: { kind: "Paid" | "Partial" | "Due" | "Confirmed" |
 // ───────────────────────────────────────────────────────── page ────────
 function Dashboard() {
   const companyId = useCurrentCompanyId();
+  useDashboardMountLog();
 
   const invQ = useQuery({
     queryKey: ["dashboard-inventory", companyId, isDemoMode() ? "demo" : "live"],
