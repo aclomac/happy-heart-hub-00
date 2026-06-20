@@ -16,7 +16,50 @@ import { RouteDebugPanel } from "@/components/erp/RouteDebugPanel";
  *  - Hard stop: > 3 redirects within 5s halts all navigation and shows a
  *    visible red debug banner with the exact reason.
  */
+// Lightweight public routes that must NOT trigger the heavy route-decision
+// pipeline (auth/role/subscription/device/companies queries). The login page
+// was hanging on Hostinger because those queries fired before user input.
+const LIGHTWEIGHT_PATHS = new Set<string>([
+  "/",
+  "/login",
+  "/signup",
+  "/welcome",
+  "/forgot-password",
+  "/reset-password",
+  "/contact",
+  "/pricing",
+  "/trust",
+]);
+
+function isSafeMode() {
+  if (typeof window === "undefined") return false;
+  try {
+    return new URLSearchParams(window.location.search).get("safe") === "1";
+  } catch {
+    return false;
+  }
+}
+
+function isLightweightPath(pathname: string) {
+  if (LIGHTWEIGHT_PATHS.has(pathname)) return true;
+  if (pathname.startsWith("/store/")) return true;
+  return false;
+}
+
 export function GlobalRouteOrchestrator({ children }: { children: ReactNode }) {
+  const { pathname } = useLocation();
+  if (isLightweightPath(pathname) || isSafeMode()) {
+    if (typeof window !== "undefined") {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (window as any).__ERPOVO_LIGHTWEIGHT_ROUTE__ = true;
+      console.info("ERPOVO_LIGHTWEIGHT_BOOT", { pathname, safe: isSafeMode() });
+    }
+    return <>{children}</>;
+  }
+  return <FullOrchestrator>{children}</FullOrchestrator>;
+}
+
+function FullOrchestrator({ children }: { children: ReactNode }) {
   const decision = useRouteDecision();
   const { pathname } = useLocation();
   const navigate = useNavigate();
