@@ -25,6 +25,8 @@ const CRITICAL_FRAGMENTS = [
   "transaction-sync",
   "mobile-layout-safety",
   "capacitor-bundled-html",
+  "pwa-hardening",
+  "production-routes-versioning",
 ];
 
 

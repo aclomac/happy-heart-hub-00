@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { useI18n } from "@/lib/i18n";
 import { toast } from "sonner";
 import { WifiOff } from "lucide-react";
+import { registerErpovoServiceWorker, ERPOVO_SW_CACHE_VERSION } from "@/lib/pwa-cache-control";
 
 interface PWAContextType {
   isOffline: boolean;
@@ -52,39 +53,41 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
     };
   }, [t]);
 
-  // Handle service worker updates
+  // Handle service worker registration and stale cache eviction.
   useEffect(() => {
     if (typeof window === "undefined" || !("serviceWorker" in navigator) || !import.meta.env.PROD)
       return;
     if (isCapacitorBundledRuntime()) return;
 
-    const registration = navigator.serviceWorker.getRegistration();
-    registration.then((reg) => {
+    let disposed = false;
+
+    registerErpovoServiceWorker().then((reg) => {
+      if (disposed || !reg) return;
       if (reg?.waiting) {
-        showUpdateToast();
+        reg.waiting.postMessage({ type: "SKIP_WAITING" });
       }
     });
 
     const handleUpdate = () => {
-      showUpdateToast();
+      console.info("ERPOVO_SW_CONTROLLER_CHANGE", { version: ERPOVO_SW_CACHE_VERSION });
     };
 
-    function showUpdateToast() {
-      toast(t("New version available"), {
-        description: t("Refresh to update"),
-        action: {
-          label: t("Refresh"),
-          onClick: () => {
-            // Unregister old worker if needed or just reload
-            window.location.reload();
-          },
-        },
-        duration: Infinity,
-      });
+    function handleMessage(event: MessageEvent) {
+      if (event.data?.type === "ERPOVO_SW_VERSION") {
+        console.info("ERPOVO_SW_VERSION", { version: event.data.version });
+      }
+      if (event.data?.type === "ERPOVO_SW_ACTIVATED") {
+        console.info("ERPOVO_SW_ACTIVATED", { version: event.data.version });
+      }
     }
 
     navigator.serviceWorker.addEventListener("controllerchange", handleUpdate);
-    return () => navigator.serviceWorker.removeEventListener("controllerchange", handleUpdate);
+    navigator.serviceWorker.addEventListener("message", handleMessage);
+    return () => {
+      disposed = true;
+      navigator.serviceWorker.removeEventListener("controllerchange", handleUpdate);
+      navigator.serviceWorker.removeEventListener("message", handleMessage);
+    };
   }, [t]);
 
   return (

@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { GlobalRouteOrchestrator } from "@/components/erp/GlobalRouteOrchestrator";
 import { PWAProvider } from "@/components/erp/PWAProvider";
+import { StartupWatchdog } from "@/components/erp/StartupWatchdog";
 
 function NotFoundComponent() {
   return (
@@ -262,6 +263,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <GlobalRouteOrchestrator>
         <PWAProvider>
+          <StartupWatchdog />
           {/* Required: nested routes render here. */}
           <Outlet />
         </PWAProvider>

@@ -50,6 +50,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { checkIsAdmin } from "@/lib/billing.functions";
 import { useBillingAuthGuard } from "@/lib/billing-guard";
 import { MobileAppDialog } from "@/components/erp/MobileAppDialog";
+import { BuildVersionBadge } from "@/components/erp/BuildVersionBadge";
 // Subscription/plan gating removed for personal use.
 
 type LinkNode = {
@@ -609,10 +610,7 @@ export function ERPSidebar() {
           {t("Logout")}
         </Button>
 
-        {/* Footer credit */}
-        <div className="pt-1 text-center text-[10px] opacity-50">
-          v1.0 · Bangladesh 🇧🇩
-        </div>
+        <BuildVersionBadge />
       </div>
       <MobileAppDialog open={mobileAppOpen} onOpenChange={setMobileAppOpen} />
     </>
