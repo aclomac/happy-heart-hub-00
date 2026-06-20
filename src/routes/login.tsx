@@ -22,6 +22,7 @@ import {
 
 import { findUserByEmailOrMobile, getLocalUsers, setLocalUsers } from "@/lib/demo/localUsers";
 import { bootStep, isStartupDisabled } from "@/lib/startup-switches";
+import { isEmergencyLocalDemoMode } from "@/lib/emergency-local-demo";
 
 const DEMO_SEED_ONCE_KEY = "erpovo:demoSeedAttempted:v1";
 
@@ -29,6 +30,9 @@ import { isMinimalMode } from "@/lib/startup-switches";
 
 export const Route = createFileRoute("/login")({
   beforeLoad: (ctx: any) => {
+    if (isEmergencyLocalDemoMode()) {
+      throw redirect({ to: "/app" });
+    }
     // Minimal mode: skip ALL pre-route work (no localStorage reads, no demo
     // detection, no redirect). Render plain login form only.
     if (isMinimalMode()) return;

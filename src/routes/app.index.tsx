@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { NoCompanySelected } from "@/components/erp/NoCompanySelected";
 import { PageHeader } from "@/components/erp/PageHeader";
 import { loadInventoryDashboard } from "@/lib/inventory-stats";
@@ -37,6 +37,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCurrentCompanyId } from "@/lib/use-company";
 import { useQuery } from "@tanstack/react-query";
 import { isDemoMode, isExplicitDemoMode, getDemoDashboardData } from "@/lib/demo/localStore";
+import { isEmergencyLocalDemoMode } from "@/lib/emergency-local-demo";
 
 export const Route = createFileRoute("/app/")({ component: Dashboard });
 
@@ -206,13 +207,31 @@ function StatusPill({ kind }: { kind: "Paid" | "Partial" | "Due" | "Confirmed" |
 // ───────────────────────────────────────────────────────── page ────────
 function Dashboard() {
   const companyId = useCurrentCompanyId();
+  const emergencyLocalDemo = isEmergencyLocalDemoMode();
+  const [deferredDashboardReady, setDeferredDashboardReady] = useState(!emergencyLocalDemo);
   useEffect(() => {
     console.log("ERPOVO_DASHBOARD_MOUNT", { pathname: typeof window !== "undefined" ? window.location.pathname : "" });
   }, []);
+  useEffect(() => {
+    if (!emergencyLocalDemo || typeof window === "undefined") return;
+    const run = () => setDeferredDashboardReady(true);
+    const idle = (window as Window & { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number }).requestIdleCallback;
+    let timeoutId: number | null = null;
+    let idleId: number | null = null;
+    if (typeof idle === "function") idleId = idle(run, { timeout: 2500 });
+    else timeoutId = window.setTimeout(run, 1200);
+    return () => {
+      if (timeoutId !== null) window.clearTimeout(timeoutId);
+      if (idleId !== null) {
+        const cancelIdle = (window as Window & { cancelIdleCallback?: (id: number) => void }).cancelIdleCallback;
+        cancelIdle?.(idleId);
+      }
+    };
+  }, [emergencyLocalDemo]);
 
   const invQ = useQuery({
     queryKey: ["dashboard-inventory", companyId, isDemoMode() ? "demo" : "live"],
-    enabled: !!companyId,
+    enabled: !!companyId && deferredDashboardReady,
     retry: false,
     queryFn: async () => {
       try {
@@ -232,7 +251,7 @@ function Dashboard() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["dashboard", companyId, isDemoMode() ? "demo" : "live"],
-    enabled: !!companyId,
+    enabled: !!companyId && deferredDashboardReady,
     retry: false,
     queryFn: async () => {
       const cid = companyId!;
