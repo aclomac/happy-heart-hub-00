@@ -64,7 +64,7 @@ export function AppShell() {
             >
               <RouteOrchestrator>
                 <RouteAccessGuard>
-                  <Outlet />
+                  <NavSafeOutlet />
                 </RouteAccessGuard>
               </RouteOrchestrator>
             </main>
@@ -88,7 +88,7 @@ export function AppShell() {
               >
                 <RouteOrchestrator>
                   <RouteAccessGuard>
-                    <Outlet />
+                    <NavSafeOutlet />
                   </RouteAccessGuard>
                 </RouteOrchestrator>
               </main>
