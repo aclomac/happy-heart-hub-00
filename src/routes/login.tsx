@@ -25,8 +25,13 @@ import { bootStep, isStartupDisabled } from "@/lib/startup-switches";
 
 const DEMO_SEED_ONCE_KEY = "erpovo:demoSeedAttempted:v1";
 
+import { isMinimalMode } from "@/lib/startup-switches";
+
 export const Route = createFileRoute("/login")({
   beforeLoad: (ctx: any) => {
+    // Minimal mode: skip ALL pre-route work (no localStorage reads, no demo
+    // detection, no redirect). Render plain login form only.
+    if (isMinimalMode()) return;
     if (ctx.serverContext?.demoAuth || isDemoMode()) {
       if (import.meta.env.DEV) {
         console.log("[demo-auth] /login route redirected demo user to /app");
@@ -36,6 +41,7 @@ export const Route = createFileRoute("/login")({
   },
   component: Login,
 });
+
 
 function Login() {
   const nav = useNavigate();
