@@ -1,7 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useLocation } from "@tanstack/react-router";
 import { LightweightFeaturePage } from "@/components/erp/LightweightFeaturePage";
 
-export const Route = createFileRoute("/app/items")({ component: ItemsPage });
+export const Route = createFileRoute("/app/items")({ component: ItemsShell });
+
+function ItemsShell() {
+  const { pathname } = useLocation();
+  return pathname === "/app/items" ? <ItemsPage /> : <Outlet />;
+}
 
 function ItemsPage() {
   return (
