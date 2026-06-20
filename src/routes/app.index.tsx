@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { NoCompanySelected } from "@/components/erp/NoCompanySelected";
 import { PageHeader } from "@/components/erp/PageHeader";
 import { loadInventoryDashboard } from "@/lib/inventory-stats";
