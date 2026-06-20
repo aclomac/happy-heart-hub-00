@@ -44,24 +44,15 @@ import { Route as AppSyncCenterRouteImport } from './routes/app.sync-center'
 import { Route as AppSyncRouteImport } from './routes/app.sync'
 import { Route as AppSupportRouteImport } from './routes/app.support'
 import { Route as AppSubscriptionRouteImport } from './routes/app.subscription'
-import { Route as AppStockTransfersRouteImport } from './routes/app.stock-transfers'
-import { Route as AppStockMovementsRouteImport } from './routes/app.stock-movements'
-import { Route as AppStockAdjustmentsRouteImport } from './routes/app.stock-adjustments'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
-import { Route as AppSalesReportsRouteImport } from './routes/app.sales-reports'
-import { Route as AppSalesRouteImport } from './routes/app.sales'
 import { Route as AppSaleOrdersRouteImport } from './routes/app.sale-orders'
 import { Route as AppSaleInvoiceSettingsRouteImport } from './routes/app.sale-invoice-settings'
 import { Route as AppSalarySetupRouteImport } from './routes/app.salary-setup'
 import { Route as AppSalaryPaymentsRouteImport } from './routes/app.salary-payments'
-import { Route as AppReportsRouteImport } from './routes/app.reports'
 import { Route as AppRecycleBinRouteImport } from './routes/app.recycle-bin'
-import { Route as AppPurchasesRouteImport } from './routes/app.purchases'
-import { Route as AppPurchaseReportsRouteImport } from './routes/app.purchase-reports'
 import { Route as AppPurchaseOrdersRouteImport } from './routes/app.purchase-orders'
 import { Route as AppPurchaseBillSettingsRouteImport } from './routes/app.purchase-bill-settings'
 import { Route as AppPrintTransactionsRouteImport } from './routes/app.print-transactions'
-import { Route as AppPosRouteImport } from './routes/app.pos'
 import { Route as AppPlansRouteImport } from './routes/app.plans'
 import { Route as AppPayrollReportsRouteImport } from './routes/app.payroll-reports'
 import { Route as AppPayrollRouteImport } from './routes/app.payroll'
@@ -73,7 +64,6 @@ import { Route as AppOtherIncomeRouteImport } from './routes/app.other-income'
 import { Route as AppOnlineStoreRouteImport } from './routes/app.online-store'
 import { Route as AppMobileAppRouteImport } from './routes/app.mobile-app'
 import { Route as AppMarketingToolsRouteImport } from './routes/app.marketing-tools'
-import { Route as AppItemsRouteImport } from './routes/app.items'
 import { Route as AppItemCategoriesRouteImport } from './routes/app.item-categories'
 import { Route as AppExpensesRouteImport } from './routes/app.expenses'
 import { Route as AppExpenseCategoriesRouteImport } from './routes/app.expense-categories'
@@ -84,7 +74,6 @@ import { Route as AppDeviceLimitRouteImport } from './routes/app.device-limit'
 import { Route as AppDeliveryChallansRouteImport } from './routes/app.delivery-challans'
 import { Route as AppDebitNotesRouteImport } from './routes/app.debit-notes'
 import { Route as AppCreditNotesRouteImport } from './routes/app.credit-notes'
-import { Route as AppCashRouteImport } from './routes/app.cash'
 import { Route as AppAuditRouteImport } from './routes/app.audit'
 import { Route as AppAttendanceRouteImport } from './routes/app.attendance'
 import { Route as AppUtilitiesIndexRouteImport } from './routes/app.utilities.index'
@@ -113,7 +102,6 @@ import { Route as AppUtilitiesBarcodeGeneratorRouteImport } from './routes/app.u
 import { Route as AppUpgradePlanRouteImport } from './routes/app.upgrade.$plan'
 import { Route as AppSalesNewRouteImport } from './routes/app.sales.new'
 import { Route as AppSaleOrdersNewRouteImport } from './routes/app.sale-orders.new'
-import { Route as AppReportsInventoryRouteImport } from './routes/app.reports.inventory'
 import { Route as AppPurchasesNewRouteImport } from './routes/app.purchases.new'
 import { Route as AppPurchaseOrdersNewRouteImport } from './routes/app.purchase-orders.new'
 import { Route as AppPaymentsInNewRouteImport } from './routes/app.payments-in.new'
@@ -353,34 +341,9 @@ const AppSubscriptionRoute = AppSubscriptionRouteImport.update({
   path: '/subscription',
   getParentRoute: () => AppRoute,
 } as any)
-const AppStockTransfersRoute = AppStockTransfersRouteImport.update({
-  id: '/stock-transfers',
-  path: '/stock-transfers',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppStockMovementsRoute = AppStockMovementsRouteImport.update({
-  id: '/stock-movements',
-  path: '/stock-movements',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppStockAdjustmentsRoute = AppStockAdjustmentsRouteImport.update({
-  id: '/stock-adjustments',
-  path: '/stock-adjustments',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppSalesReportsRoute = AppSalesReportsRouteImport.update({
-  id: '/sales-reports',
-  path: '/sales-reports',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppSalesRoute = AppSalesRouteImport.update({
-  id: '/sales',
-  path: '/sales',
   getParentRoute: () => AppRoute,
 } as any)
 const AppSaleOrdersRoute = AppSaleOrdersRouteImport.update({
@@ -403,24 +366,9 @@ const AppSalaryPaymentsRoute = AppSalaryPaymentsRouteImport.update({
   path: '/salary-payments',
   getParentRoute: () => AppRoute,
 } as any)
-const AppReportsRoute = AppReportsRouteImport.update({
-  id: '/reports',
-  path: '/reports',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppRecycleBinRoute = AppRecycleBinRouteImport.update({
   id: '/recycle-bin',
   path: '/recycle-bin',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppPurchasesRoute = AppPurchasesRouteImport.update({
-  id: '/purchases',
-  path: '/purchases',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppPurchaseReportsRoute = AppPurchaseReportsRouteImport.update({
-  id: '/purchase-reports',
-  path: '/purchase-reports',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPurchaseOrdersRoute = AppPurchaseOrdersRouteImport.update({
@@ -436,11 +384,6 @@ const AppPurchaseBillSettingsRoute = AppPurchaseBillSettingsRouteImport.update({
 const AppPrintTransactionsRoute = AppPrintTransactionsRouteImport.update({
   id: '/print-transactions',
   path: '/print-transactions',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppPosRoute = AppPosRouteImport.update({
-  id: '/pos',
-  path: '/pos',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPlansRoute = AppPlansRouteImport.update({
@@ -498,11 +441,6 @@ const AppMarketingToolsRoute = AppMarketingToolsRouteImport.update({
   path: '/marketing-tools',
   getParentRoute: () => AppRoute,
 } as any)
-const AppItemsRoute = AppItemsRouteImport.update({
-  id: '/items',
-  path: '/items',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppItemCategoriesRoute = AppItemCategoriesRouteImport.update({
   id: '/item-categories',
   path: '/item-categories',
@@ -551,11 +489,6 @@ const AppDebitNotesRoute = AppDebitNotesRouteImport.update({
 const AppCreditNotesRoute = AppCreditNotesRouteImport.update({
   id: '/credit-notes',
   path: '/credit-notes',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppCashRoute = AppCashRouteImport.update({
-  id: '/cash',
-  path: '/cash',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAuditRoute = AppAuditRouteImport.update({
@@ -701,24 +634,19 @@ const AppUpgradePlanRoute = AppUpgradePlanRouteImport.update({
   getParentRoute: () => AppRoute,
 } as any)
 const AppSalesNewRoute = AppSalesNewRouteImport.update({
-  id: '/new',
-  path: '/new',
-  getParentRoute: () => AppSalesRoute,
+  id: '/sales/new',
+  path: '/sales/new',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppSaleOrdersNewRoute = AppSaleOrdersNewRouteImport.update({
   id: '/new',
   path: '/new',
   getParentRoute: () => AppSaleOrdersRoute,
 } as any)
-const AppReportsInventoryRoute = AppReportsInventoryRouteImport.update({
-  id: '/inventory',
-  path: '/inventory',
-  getParentRoute: () => AppReportsRoute,
-} as any)
 const AppPurchasesNewRoute = AppPurchasesNewRouteImport.update({
-  id: '/new',
-  path: '/new',
-  getParentRoute: () => AppPurchasesRoute,
+  id: '/purchases/new',
+  path: '/purchases/new',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppPurchaseOrdersNewRoute = AppPurchaseOrdersNewRouteImport.update({
   id: '/new',
@@ -741,9 +669,9 @@ const AppPartiesIdRoute = AppPartiesIdRouteImport.update({
   getParentRoute: () => AppPartiesRoute,
 } as any)
 const AppItemsIdRoute = AppItemsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => AppItemsRoute,
+  id: '/items/$id',
+  path: '/items/$id',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppExpensesNewRoute = AppExpensesNewRouteImport.update({
   id: '/new',
@@ -883,20 +811,20 @@ const AppSubscriptionReceiptIdRoute =
     getParentRoute: () => AppSubscriptionRoute,
   } as any)
 const AppStockTransfersIdEditRoute = AppStockTransfersIdEditRouteImport.update({
-  id: '/$id/edit',
-  path: '/$id/edit',
-  getParentRoute: () => AppStockTransfersRoute,
+  id: '/stock-transfers/$id/edit',
+  path: '/stock-transfers/$id/edit',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppStockAdjustmentsIdEditRoute =
   AppStockAdjustmentsIdEditRouteImport.update({
-    id: '/$id/edit',
-    path: '/$id/edit',
-    getParentRoute: () => AppStockAdjustmentsRoute,
+    id: '/stock-adjustments/$id/edit',
+    path: '/stock-adjustments/$id/edit',
+    getParentRoute: () => AppRoute,
   } as any)
 const AppSalesIdEditRoute = AppSalesIdEditRouteImport.update({
-  id: '/$id/edit',
-  path: '/$id/edit',
-  getParentRoute: () => AppSalesRoute,
+  id: '/sales/$id/edit',
+  path: '/sales/$id/edit',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppSaleOrdersIdEditRoute = AppSaleOrdersIdEditRouteImport.update({
   id: '/$id/edit',
@@ -904,9 +832,9 @@ const AppSaleOrdersIdEditRoute = AppSaleOrdersIdEditRouteImport.update({
   getParentRoute: () => AppSaleOrdersRoute,
 } as any)
 const AppPurchasesIdEditRoute = AppPurchasesIdEditRouteImport.update({
-  id: '/$id/edit',
-  path: '/$id/edit',
-  getParentRoute: () => AppPurchasesRoute,
+  id: '/purchases/$id/edit',
+  path: '/purchases/$id/edit',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppPurchaseOrdersIdEditRoute = AppPurchaseOrdersIdEditRouteImport.update({
   id: '/$id/edit',
@@ -976,19 +904,19 @@ const AppCreditNotesIdEditRoute = AppCreditNotesIdEditRouteImport.update({
   getParentRoute: () => AppCreditNotesRoute,
 } as any)
 const AppCashTransfersIdRoute = AppCashTransfersIdRouteImport.update({
-  id: '/transfers/$id',
-  path: '/transfers/$id',
-  getParentRoute: () => AppCashRoute,
+  id: '/cash/transfers/$id',
+  path: '/cash/transfers/$id',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppCashLoanPaymentsIdRoute = AppCashLoanPaymentsIdRouteImport.update({
-  id: '/loan-payments/$id',
-  path: '/loan-payments/$id',
-  getParentRoute: () => AppCashRoute,
+  id: '/cash/loan-payments/$id',
+  path: '/cash/loan-payments/$id',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppCashChequesIdRoute = AppCashChequesIdRouteImport.update({
-  id: '/cheques/$id',
-  path: '/cheques/$id',
-  getParentRoute: () => AppCashRoute,
+  id: '/cash/cheques/$id',
+  path: '/cash/cheques/$id',
+  getParentRoute: () => AppRoute,
 } as any)
 const ApiIntegrationsWoocommerceTestRoute =
   ApiIntegrationsWoocommerceTestRouteImport.update({
@@ -1041,7 +969,6 @@ export interface FileRoutesByFullPath {
   '/welcome': typeof WelcomeRoute
   '/app/attendance': typeof AppAttendanceRoute
   '/app/audit': typeof AppAuditRoute
-  '/app/cash': typeof AppCashRouteWithChildren
   '/app/credit-notes': typeof AppCreditNotesRouteWithChildren
   '/app/debit-notes': typeof AppDebitNotesRouteWithChildren
   '/app/delivery-challans': typeof AppDeliveryChallansRouteWithChildren
@@ -1052,7 +979,6 @@ export interface FileRoutesByFullPath {
   '/app/expense-categories': typeof AppExpenseCategoriesRoute
   '/app/expenses': typeof AppExpensesRouteWithChildren
   '/app/item-categories': typeof AppItemCategoriesRoute
-  '/app/items': typeof AppItemsRouteWithChildren
   '/app/marketing-tools': typeof AppMarketingToolsRoute
   '/app/mobile-app': typeof AppMobileAppRoute
   '/app/online-store': typeof AppOnlineStoreRoute
@@ -1064,24 +990,15 @@ export interface FileRoutesByFullPath {
   '/app/payroll': typeof AppPayrollRouteWithChildren
   '/app/payroll-reports': typeof AppPayrollReportsRoute
   '/app/plans': typeof AppPlansRoute
-  '/app/pos': typeof AppPosRoute
   '/app/print-transactions': typeof AppPrintTransactionsRoute
   '/app/purchase-bill-settings': typeof AppPurchaseBillSettingsRoute
   '/app/purchase-orders': typeof AppPurchaseOrdersRouteWithChildren
-  '/app/purchase-reports': typeof AppPurchaseReportsRoute
-  '/app/purchases': typeof AppPurchasesRouteWithChildren
   '/app/recycle-bin': typeof AppRecycleBinRoute
-  '/app/reports': typeof AppReportsRouteWithChildren
   '/app/salary-payments': typeof AppSalaryPaymentsRoute
   '/app/salary-setup': typeof AppSalarySetupRoute
   '/app/sale-invoice-settings': typeof AppSaleInvoiceSettingsRoute
   '/app/sale-orders': typeof AppSaleOrdersRouteWithChildren
-  '/app/sales': typeof AppSalesRouteWithChildren
-  '/app/sales-reports': typeof AppSalesReportsRoute
   '/app/settings': typeof AppSettingsRoute
-  '/app/stock-adjustments': typeof AppStockAdjustmentsRouteWithChildren
-  '/app/stock-movements': typeof AppStockMovementsRoute
-  '/app/stock-transfers': typeof AppStockTransfersRouteWithChildren
   '/app/subscription': typeof AppSubscriptionRouteWithChildren
   '/app/support': typeof AppSupportRoute
   '/app/sync': typeof AppSyncRoute
@@ -1138,7 +1055,6 @@ export interface FileRoutesByFullPath {
   '/app/payments-in/new': typeof AppPaymentsInNewRoute
   '/app/purchase-orders/new': typeof AppPurchaseOrdersNewRoute
   '/app/purchases/new': typeof AppPurchasesNewRoute
-  '/app/reports/inventory': typeof AppReportsInventoryRoute
   '/app/sale-orders/new': typeof AppSaleOrdersNewRoute
   '/app/sales/new': typeof AppSalesNewRoute
   '/app/upgrade/$plan': typeof AppUpgradePlanRoute
@@ -1206,7 +1122,6 @@ export interface FileRoutesByTo {
   '/welcome': typeof WelcomeRoute
   '/app/attendance': typeof AppAttendanceRoute
   '/app/audit': typeof AppAuditRoute
-  '/app/cash': typeof AppCashRouteWithChildren
   '/app/credit-notes': typeof AppCreditNotesRouteWithChildren
   '/app/debit-notes': typeof AppDebitNotesRouteWithChildren
   '/app/delivery-challans': typeof AppDeliveryChallansRouteWithChildren
@@ -1216,7 +1131,6 @@ export interface FileRoutesByTo {
   '/app/expense-categories': typeof AppExpenseCategoriesRoute
   '/app/expenses': typeof AppExpensesRouteWithChildren
   '/app/item-categories': typeof AppItemCategoriesRoute
-  '/app/items': typeof AppItemsRouteWithChildren
   '/app/marketing-tools': typeof AppMarketingToolsRoute
   '/app/mobile-app': typeof AppMobileAppRoute
   '/app/online-store': typeof AppOnlineStoreRoute
@@ -1228,24 +1142,15 @@ export interface FileRoutesByTo {
   '/app/payroll': typeof AppPayrollRouteWithChildren
   '/app/payroll-reports': typeof AppPayrollReportsRoute
   '/app/plans': typeof AppPlansRoute
-  '/app/pos': typeof AppPosRoute
   '/app/print-transactions': typeof AppPrintTransactionsRoute
   '/app/purchase-bill-settings': typeof AppPurchaseBillSettingsRoute
   '/app/purchase-orders': typeof AppPurchaseOrdersRouteWithChildren
-  '/app/purchase-reports': typeof AppPurchaseReportsRoute
-  '/app/purchases': typeof AppPurchasesRouteWithChildren
   '/app/recycle-bin': typeof AppRecycleBinRoute
-  '/app/reports': typeof AppReportsRouteWithChildren
   '/app/salary-payments': typeof AppSalaryPaymentsRoute
   '/app/salary-setup': typeof AppSalarySetupRoute
   '/app/sale-invoice-settings': typeof AppSaleInvoiceSettingsRoute
   '/app/sale-orders': typeof AppSaleOrdersRouteWithChildren
-  '/app/sales': typeof AppSalesRouteWithChildren
-  '/app/sales-reports': typeof AppSalesReportsRoute
   '/app/settings': typeof AppSettingsRoute
-  '/app/stock-adjustments': typeof AppStockAdjustmentsRouteWithChildren
-  '/app/stock-movements': typeof AppStockMovementsRoute
-  '/app/stock-transfers': typeof AppStockTransfersRouteWithChildren
   '/app/subscription': typeof AppSubscriptionRouteWithChildren
   '/app/support': typeof AppSupportRoute
   '/app/sync': typeof AppSyncRoute
@@ -1301,7 +1206,6 @@ export interface FileRoutesByTo {
   '/app/payments-in/new': typeof AppPaymentsInNewRoute
   '/app/purchase-orders/new': typeof AppPurchaseOrdersNewRoute
   '/app/purchases/new': typeof AppPurchasesNewRoute
-  '/app/reports/inventory': typeof AppReportsInventoryRoute
   '/app/sale-orders/new': typeof AppSaleOrdersNewRoute
   '/app/sales/new': typeof AppSalesNewRoute
   '/app/upgrade/$plan': typeof AppUpgradePlanRoute
@@ -1372,7 +1276,6 @@ export interface FileRoutesById {
   '/welcome': typeof WelcomeRoute
   '/app/attendance': typeof AppAttendanceRoute
   '/app/audit': typeof AppAuditRoute
-  '/app/cash': typeof AppCashRouteWithChildren
   '/app/credit-notes': typeof AppCreditNotesRouteWithChildren
   '/app/debit-notes': typeof AppDebitNotesRouteWithChildren
   '/app/delivery-challans': typeof AppDeliveryChallansRouteWithChildren
@@ -1383,7 +1286,6 @@ export interface FileRoutesById {
   '/app/expense-categories': typeof AppExpenseCategoriesRoute
   '/app/expenses': typeof AppExpensesRouteWithChildren
   '/app/item-categories': typeof AppItemCategoriesRoute
-  '/app/items': typeof AppItemsRouteWithChildren
   '/app/marketing-tools': typeof AppMarketingToolsRoute
   '/app/mobile-app': typeof AppMobileAppRoute
   '/app/online-store': typeof AppOnlineStoreRoute
@@ -1395,24 +1297,15 @@ export interface FileRoutesById {
   '/app/payroll': typeof AppPayrollRouteWithChildren
   '/app/payroll-reports': typeof AppPayrollReportsRoute
   '/app/plans': typeof AppPlansRoute
-  '/app/pos': typeof AppPosRoute
   '/app/print-transactions': typeof AppPrintTransactionsRoute
   '/app/purchase-bill-settings': typeof AppPurchaseBillSettingsRoute
   '/app/purchase-orders': typeof AppPurchaseOrdersRouteWithChildren
-  '/app/purchase-reports': typeof AppPurchaseReportsRoute
-  '/app/purchases': typeof AppPurchasesRouteWithChildren
   '/app/recycle-bin': typeof AppRecycleBinRoute
-  '/app/reports': typeof AppReportsRouteWithChildren
   '/app/salary-payments': typeof AppSalaryPaymentsRoute
   '/app/salary-setup': typeof AppSalarySetupRoute
   '/app/sale-invoice-settings': typeof AppSaleInvoiceSettingsRoute
   '/app/sale-orders': typeof AppSaleOrdersRouteWithChildren
-  '/app/sales': typeof AppSalesRouteWithChildren
-  '/app/sales-reports': typeof AppSalesReportsRoute
   '/app/settings': typeof AppSettingsRoute
-  '/app/stock-adjustments': typeof AppStockAdjustmentsRouteWithChildren
-  '/app/stock-movements': typeof AppStockMovementsRoute
-  '/app/stock-transfers': typeof AppStockTransfersRouteWithChildren
   '/app/subscription': typeof AppSubscriptionRouteWithChildren
   '/app/support': typeof AppSupportRoute
   '/app/sync': typeof AppSyncRoute
@@ -1469,7 +1362,6 @@ export interface FileRoutesById {
   '/app/payments-in/new': typeof AppPaymentsInNewRoute
   '/app/purchase-orders/new': typeof AppPurchaseOrdersNewRoute
   '/app/purchases/new': typeof AppPurchasesNewRoute
-  '/app/reports/inventory': typeof AppReportsInventoryRoute
   '/app/sale-orders/new': typeof AppSaleOrdersNewRoute
   '/app/sales/new': typeof AppSalesNewRoute
   '/app/upgrade/$plan': typeof AppUpgradePlanRoute
@@ -1541,7 +1433,6 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/app/attendance'
     | '/app/audit'
-    | '/app/cash'
     | '/app/credit-notes'
     | '/app/debit-notes'
     | '/app/delivery-challans'
@@ -1552,7 +1443,6 @@ export interface FileRouteTypes {
     | '/app/expense-categories'
     | '/app/expenses'
     | '/app/item-categories'
-    | '/app/items'
     | '/app/marketing-tools'
     | '/app/mobile-app'
     | '/app/online-store'
@@ -1564,24 +1454,15 @@ export interface FileRouteTypes {
     | '/app/payroll'
     | '/app/payroll-reports'
     | '/app/plans'
-    | '/app/pos'
     | '/app/print-transactions'
     | '/app/purchase-bill-settings'
     | '/app/purchase-orders'
-    | '/app/purchase-reports'
-    | '/app/purchases'
     | '/app/recycle-bin'
-    | '/app/reports'
     | '/app/salary-payments'
     | '/app/salary-setup'
     | '/app/sale-invoice-settings'
     | '/app/sale-orders'
-    | '/app/sales'
-    | '/app/sales-reports'
     | '/app/settings'
-    | '/app/stock-adjustments'
-    | '/app/stock-movements'
-    | '/app/stock-transfers'
     | '/app/subscription'
     | '/app/support'
     | '/app/sync'
@@ -1638,7 +1519,6 @@ export interface FileRouteTypes {
     | '/app/payments-in/new'
     | '/app/purchase-orders/new'
     | '/app/purchases/new'
-    | '/app/reports/inventory'
     | '/app/sale-orders/new'
     | '/app/sales/new'
     | '/app/upgrade/$plan'
@@ -1706,7 +1586,6 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/app/attendance'
     | '/app/audit'
-    | '/app/cash'
     | '/app/credit-notes'
     | '/app/debit-notes'
     | '/app/delivery-challans'
@@ -1716,7 +1595,6 @@ export interface FileRouteTypes {
     | '/app/expense-categories'
     | '/app/expenses'
     | '/app/item-categories'
-    | '/app/items'
     | '/app/marketing-tools'
     | '/app/mobile-app'
     | '/app/online-store'
@@ -1728,24 +1606,15 @@ export interface FileRouteTypes {
     | '/app/payroll'
     | '/app/payroll-reports'
     | '/app/plans'
-    | '/app/pos'
     | '/app/print-transactions'
     | '/app/purchase-bill-settings'
     | '/app/purchase-orders'
-    | '/app/purchase-reports'
-    | '/app/purchases'
     | '/app/recycle-bin'
-    | '/app/reports'
     | '/app/salary-payments'
     | '/app/salary-setup'
     | '/app/sale-invoice-settings'
     | '/app/sale-orders'
-    | '/app/sales'
-    | '/app/sales-reports'
     | '/app/settings'
-    | '/app/stock-adjustments'
-    | '/app/stock-movements'
-    | '/app/stock-transfers'
     | '/app/subscription'
     | '/app/support'
     | '/app/sync'
@@ -1801,7 +1670,6 @@ export interface FileRouteTypes {
     | '/app/payments-in/new'
     | '/app/purchase-orders/new'
     | '/app/purchases/new'
-    | '/app/reports/inventory'
     | '/app/sale-orders/new'
     | '/app/sales/new'
     | '/app/upgrade/$plan'
@@ -1871,7 +1739,6 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/app/attendance'
     | '/app/audit'
-    | '/app/cash'
     | '/app/credit-notes'
     | '/app/debit-notes'
     | '/app/delivery-challans'
@@ -1882,7 +1749,6 @@ export interface FileRouteTypes {
     | '/app/expense-categories'
     | '/app/expenses'
     | '/app/item-categories'
-    | '/app/items'
     | '/app/marketing-tools'
     | '/app/mobile-app'
     | '/app/online-store'
@@ -1894,24 +1760,15 @@ export interface FileRouteTypes {
     | '/app/payroll'
     | '/app/payroll-reports'
     | '/app/plans'
-    | '/app/pos'
     | '/app/print-transactions'
     | '/app/purchase-bill-settings'
     | '/app/purchase-orders'
-    | '/app/purchase-reports'
-    | '/app/purchases'
     | '/app/recycle-bin'
-    | '/app/reports'
     | '/app/salary-payments'
     | '/app/salary-setup'
     | '/app/sale-invoice-settings'
     | '/app/sale-orders'
-    | '/app/sales'
-    | '/app/sales-reports'
     | '/app/settings'
-    | '/app/stock-adjustments'
-    | '/app/stock-movements'
-    | '/app/stock-transfers'
     | '/app/subscription'
     | '/app/support'
     | '/app/sync'
@@ -1968,7 +1825,6 @@ export interface FileRouteTypes {
     | '/app/payments-in/new'
     | '/app/purchase-orders/new'
     | '/app/purchases/new'
-    | '/app/reports/inventory'
     | '/app/sale-orders/new'
     | '/app/sales/new'
     | '/app/upgrade/$plan'
@@ -2294,46 +2150,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSubscriptionRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/stock-transfers': {
-      id: '/app/stock-transfers'
-      path: '/stock-transfers'
-      fullPath: '/app/stock-transfers'
-      preLoaderRoute: typeof AppStockTransfersRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/stock-movements': {
-      id: '/app/stock-movements'
-      path: '/stock-movements'
-      fullPath: '/app/stock-movements'
-      preLoaderRoute: typeof AppStockMovementsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/stock-adjustments': {
-      id: '/app/stock-adjustments'
-      path: '/stock-adjustments'
-      fullPath: '/app/stock-adjustments'
-      preLoaderRoute: typeof AppStockAdjustmentsRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/app/settings': {
       id: '/app/settings'
       path: '/settings'
       fullPath: '/app/settings'
       preLoaderRoute: typeof AppSettingsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/sales-reports': {
-      id: '/app/sales-reports'
-      path: '/sales-reports'
-      fullPath: '/app/sales-reports'
-      preLoaderRoute: typeof AppSalesReportsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/sales': {
-      id: '/app/sales'
-      path: '/sales'
-      fullPath: '/app/sales'
-      preLoaderRoute: typeof AppSalesRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/sale-orders': {
@@ -2364,32 +2185,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSalaryPaymentsRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/reports': {
-      id: '/app/reports'
-      path: '/reports'
-      fullPath: '/app/reports'
-      preLoaderRoute: typeof AppReportsRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/app/recycle-bin': {
       id: '/app/recycle-bin'
       path: '/recycle-bin'
       fullPath: '/app/recycle-bin'
       preLoaderRoute: typeof AppRecycleBinRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/purchases': {
-      id: '/app/purchases'
-      path: '/purchases'
-      fullPath: '/app/purchases'
-      preLoaderRoute: typeof AppPurchasesRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/purchase-reports': {
-      id: '/app/purchase-reports'
-      path: '/purchase-reports'
-      fullPath: '/app/purchase-reports'
-      preLoaderRoute: typeof AppPurchaseReportsRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/purchase-orders': {
@@ -2411,13 +2211,6 @@ declare module '@tanstack/react-router' {
       path: '/print-transactions'
       fullPath: '/app/print-transactions'
       preLoaderRoute: typeof AppPrintTransactionsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/pos': {
-      id: '/app/pos'
-      path: '/pos'
-      fullPath: '/app/pos'
-      preLoaderRoute: typeof AppPosRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/plans': {
@@ -2497,13 +2290,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppMarketingToolsRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/items': {
-      id: '/app/items'
-      path: '/items'
-      fullPath: '/app/items'
-      preLoaderRoute: typeof AppItemsRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/app/item-categories': {
       id: '/app/item-categories'
       path: '/item-categories'
@@ -2572,13 +2358,6 @@ declare module '@tanstack/react-router' {
       path: '/credit-notes'
       fullPath: '/app/credit-notes'
       preLoaderRoute: typeof AppCreditNotesRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/cash': {
-      id: '/app/cash'
-      path: '/cash'
-      fullPath: '/app/cash'
-      preLoaderRoute: typeof AppCashRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/audit': {
@@ -2765,10 +2544,10 @@ declare module '@tanstack/react-router' {
     }
     '/app/sales/new': {
       id: '/app/sales/new'
-      path: '/new'
+      path: '/sales/new'
       fullPath: '/app/sales/new'
       preLoaderRoute: typeof AppSalesNewRouteImport
-      parentRoute: typeof AppSalesRoute
+      parentRoute: typeof AppRoute
     }
     '/app/sale-orders/new': {
       id: '/app/sale-orders/new'
@@ -2777,19 +2556,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSaleOrdersNewRouteImport
       parentRoute: typeof AppSaleOrdersRoute
     }
-    '/app/reports/inventory': {
-      id: '/app/reports/inventory'
-      path: '/inventory'
-      fullPath: '/app/reports/inventory'
-      preLoaderRoute: typeof AppReportsInventoryRouteImport
-      parentRoute: typeof AppReportsRoute
-    }
     '/app/purchases/new': {
       id: '/app/purchases/new'
-      path: '/new'
+      path: '/purchases/new'
       fullPath: '/app/purchases/new'
       preLoaderRoute: typeof AppPurchasesNewRouteImport
-      parentRoute: typeof AppPurchasesRoute
+      parentRoute: typeof AppRoute
     }
     '/app/purchase-orders/new': {
       id: '/app/purchase-orders/new'
@@ -2821,10 +2593,10 @@ declare module '@tanstack/react-router' {
     }
     '/app/items/$id': {
       id: '/app/items/$id'
-      path: '/$id'
+      path: '/items/$id'
       fullPath: '/app/items/$id'
       preLoaderRoute: typeof AppItemsIdRouteImport
-      parentRoute: typeof AppItemsRoute
+      parentRoute: typeof AppRoute
     }
     '/app/expenses/new': {
       id: '/app/expenses/new'
@@ -3017,24 +2789,24 @@ declare module '@tanstack/react-router' {
     }
     '/app/stock-transfers/$id/edit': {
       id: '/app/stock-transfers/$id/edit'
-      path: '/$id/edit'
+      path: '/stock-transfers/$id/edit'
       fullPath: '/app/stock-transfers/$id/edit'
       preLoaderRoute: typeof AppStockTransfersIdEditRouteImport
-      parentRoute: typeof AppStockTransfersRoute
+      parentRoute: typeof AppRoute
     }
     '/app/stock-adjustments/$id/edit': {
       id: '/app/stock-adjustments/$id/edit'
-      path: '/$id/edit'
+      path: '/stock-adjustments/$id/edit'
       fullPath: '/app/stock-adjustments/$id/edit'
       preLoaderRoute: typeof AppStockAdjustmentsIdEditRouteImport
-      parentRoute: typeof AppStockAdjustmentsRoute
+      parentRoute: typeof AppRoute
     }
     '/app/sales/$id/edit': {
       id: '/app/sales/$id/edit'
-      path: '/$id/edit'
+      path: '/sales/$id/edit'
       fullPath: '/app/sales/$id/edit'
       preLoaderRoute: typeof AppSalesIdEditRouteImport
-      parentRoute: typeof AppSalesRoute
+      parentRoute: typeof AppRoute
     }
     '/app/sale-orders/$id/edit': {
       id: '/app/sale-orders/$id/edit'
@@ -3045,10 +2817,10 @@ declare module '@tanstack/react-router' {
     }
     '/app/purchases/$id/edit': {
       id: '/app/purchases/$id/edit'
-      path: '/$id/edit'
+      path: '/purchases/$id/edit'
       fullPath: '/app/purchases/$id/edit'
       preLoaderRoute: typeof AppPurchasesIdEditRouteImport
-      parentRoute: typeof AppPurchasesRoute
+      parentRoute: typeof AppRoute
     }
     '/app/purchase-orders/$id/edit': {
       id: '/app/purchase-orders/$id/edit'
@@ -3143,24 +2915,24 @@ declare module '@tanstack/react-router' {
     }
     '/app/cash/transfers/$id': {
       id: '/app/cash/transfers/$id'
-      path: '/transfers/$id'
+      path: '/cash/transfers/$id'
       fullPath: '/app/cash/transfers/$id'
       preLoaderRoute: typeof AppCashTransfersIdRouteImport
-      parentRoute: typeof AppCashRoute
+      parentRoute: typeof AppRoute
     }
     '/app/cash/loan-payments/$id': {
       id: '/app/cash/loan-payments/$id'
-      path: '/loan-payments/$id'
+      path: '/cash/loan-payments/$id'
       fullPath: '/app/cash/loan-payments/$id'
       preLoaderRoute: typeof AppCashLoanPaymentsIdRouteImport
-      parentRoute: typeof AppCashRoute
+      parentRoute: typeof AppRoute
     }
     '/app/cash/cheques/$id': {
       id: '/app/cash/cheques/$id'
-      path: '/cheques/$id'
+      path: '/cash/cheques/$id'
       fullPath: '/app/cash/cheques/$id'
       preLoaderRoute: typeof AppCashChequesIdRouteImport
-      parentRoute: typeof AppCashRoute
+      parentRoute: typeof AppRoute
     }
     '/api/integrations/woocommerce/test': {
       id: '/api/integrations/woocommerce/test'
@@ -3206,21 +2978,6 @@ declare module '@tanstack/react-router' {
     }
   }
 }
-
-interface AppCashRouteChildren {
-  AppCashChequesIdRoute: typeof AppCashChequesIdRoute
-  AppCashLoanPaymentsIdRoute: typeof AppCashLoanPaymentsIdRoute
-  AppCashTransfersIdRoute: typeof AppCashTransfersIdRoute
-}
-
-const AppCashRouteChildren: AppCashRouteChildren = {
-  AppCashChequesIdRoute: AppCashChequesIdRoute,
-  AppCashLoanPaymentsIdRoute: AppCashLoanPaymentsIdRoute,
-  AppCashTransfersIdRoute: AppCashTransfersIdRoute,
-}
-
-const AppCashRouteWithChildren =
-  AppCashRoute._addFileChildren(AppCashRouteChildren)
 
 interface AppCreditNotesRouteChildren {
   AppCreditNotesNewRoute: typeof AppCreditNotesNewRoute
@@ -3335,30 +3092,6 @@ const AppExpensesRouteWithChildren = AppExpensesRoute._addFileChildren(
   AppExpensesRouteChildren,
 )
 
-interface AppItemsIdRouteChildren {
-  AppItemsIdEditRoute: typeof AppItemsIdEditRoute
-}
-
-const AppItemsIdRouteChildren: AppItemsIdRouteChildren = {
-  AppItemsIdEditRoute: AppItemsIdEditRoute,
-}
-
-const AppItemsIdRouteWithChildren = AppItemsIdRoute._addFileChildren(
-  AppItemsIdRouteChildren,
-)
-
-interface AppItemsRouteChildren {
-  AppItemsIdRoute: typeof AppItemsIdRouteWithChildren
-}
-
-const AppItemsRouteChildren: AppItemsRouteChildren = {
-  AppItemsIdRoute: AppItemsIdRouteWithChildren,
-}
-
-const AppItemsRouteWithChildren = AppItemsRoute._addFileChildren(
-  AppItemsRouteChildren,
-)
-
 interface AppPartiesRouteChildren {
   AppPartiesIdRoute: typeof AppPartiesIdRoute
 }
@@ -3430,32 +3163,6 @@ const AppPurchaseOrdersRouteChildren: AppPurchaseOrdersRouteChildren = {
 const AppPurchaseOrdersRouteWithChildren =
   AppPurchaseOrdersRoute._addFileChildren(AppPurchaseOrdersRouteChildren)
 
-interface AppPurchasesRouteChildren {
-  AppPurchasesNewRoute: typeof AppPurchasesNewRoute
-  AppPurchasesIdEditRoute: typeof AppPurchasesIdEditRoute
-}
-
-const AppPurchasesRouteChildren: AppPurchasesRouteChildren = {
-  AppPurchasesNewRoute: AppPurchasesNewRoute,
-  AppPurchasesIdEditRoute: AppPurchasesIdEditRoute,
-}
-
-const AppPurchasesRouteWithChildren = AppPurchasesRoute._addFileChildren(
-  AppPurchasesRouteChildren,
-)
-
-interface AppReportsRouteChildren {
-  AppReportsInventoryRoute: typeof AppReportsInventoryRoute
-}
-
-const AppReportsRouteChildren: AppReportsRouteChildren = {
-  AppReportsInventoryRoute: AppReportsInventoryRoute,
-}
-
-const AppReportsRouteWithChildren = AppReportsRoute._addFileChildren(
-  AppReportsRouteChildren,
-)
-
 interface AppSaleOrdersRouteChildren {
   AppSaleOrdersNewRoute: typeof AppSaleOrdersNewRoute
   AppSaleOrdersIdEditRoute: typeof AppSaleOrdersIdEditRoute
@@ -3469,42 +3176,6 @@ const AppSaleOrdersRouteChildren: AppSaleOrdersRouteChildren = {
 const AppSaleOrdersRouteWithChildren = AppSaleOrdersRoute._addFileChildren(
   AppSaleOrdersRouteChildren,
 )
-
-interface AppSalesRouteChildren {
-  AppSalesNewRoute: typeof AppSalesNewRoute
-  AppSalesIdEditRoute: typeof AppSalesIdEditRoute
-}
-
-const AppSalesRouteChildren: AppSalesRouteChildren = {
-  AppSalesNewRoute: AppSalesNewRoute,
-  AppSalesIdEditRoute: AppSalesIdEditRoute,
-}
-
-const AppSalesRouteWithChildren = AppSalesRoute._addFileChildren(
-  AppSalesRouteChildren,
-)
-
-interface AppStockAdjustmentsRouteChildren {
-  AppStockAdjustmentsIdEditRoute: typeof AppStockAdjustmentsIdEditRoute
-}
-
-const AppStockAdjustmentsRouteChildren: AppStockAdjustmentsRouteChildren = {
-  AppStockAdjustmentsIdEditRoute: AppStockAdjustmentsIdEditRoute,
-}
-
-const AppStockAdjustmentsRouteWithChildren =
-  AppStockAdjustmentsRoute._addFileChildren(AppStockAdjustmentsRouteChildren)
-
-interface AppStockTransfersRouteChildren {
-  AppStockTransfersIdEditRoute: typeof AppStockTransfersIdEditRoute
-}
-
-const AppStockTransfersRouteChildren: AppStockTransfersRouteChildren = {
-  AppStockTransfersIdEditRoute: AppStockTransfersIdEditRoute,
-}
-
-const AppStockTransfersRouteWithChildren =
-  AppStockTransfersRoute._addFileChildren(AppStockTransfersRouteChildren)
 
 interface AppSubscriptionRouteChildren {
   AppSubscriptionReceiptIdRoute: typeof AppSubscriptionReceiptIdRoute
@@ -3562,10 +3233,21 @@ const AppUtilitiesRouteWithChildren = AppUtilitiesRoute._addFileChildren(
   AppUtilitiesRouteChildren,
 )
 
+interface AppItemsIdRouteChildren {
+  AppItemsIdEditRoute: typeof AppItemsIdEditRoute
+}
+
+const AppItemsIdRouteChildren: AppItemsIdRouteChildren = {
+  AppItemsIdEditRoute: AppItemsIdEditRoute,
+}
+
+const AppItemsIdRouteWithChildren = AppItemsIdRoute._addFileChildren(
+  AppItemsIdRouteChildren,
+)
+
 interface AppRouteChildren {
   AppAttendanceRoute: typeof AppAttendanceRoute
   AppAuditRoute: typeof AppAuditRoute
-  AppCashRoute: typeof AppCashRouteWithChildren
   AppCreditNotesRoute: typeof AppCreditNotesRouteWithChildren
   AppDebitNotesRoute: typeof AppDebitNotesRouteWithChildren
   AppDeliveryChallansRoute: typeof AppDeliveryChallansRouteWithChildren
@@ -3576,7 +3258,6 @@ interface AppRouteChildren {
   AppExpenseCategoriesRoute: typeof AppExpenseCategoriesRoute
   AppExpensesRoute: typeof AppExpensesRouteWithChildren
   AppItemCategoriesRoute: typeof AppItemCategoriesRoute
-  AppItemsRoute: typeof AppItemsRouteWithChildren
   AppMarketingToolsRoute: typeof AppMarketingToolsRoute
   AppMobileAppRoute: typeof AppMobileAppRoute
   AppOnlineStoreRoute: typeof AppOnlineStoreRoute
@@ -3588,24 +3269,15 @@ interface AppRouteChildren {
   AppPayrollRoute: typeof AppPayrollRouteWithChildren
   AppPayrollReportsRoute: typeof AppPayrollReportsRoute
   AppPlansRoute: typeof AppPlansRoute
-  AppPosRoute: typeof AppPosRoute
   AppPrintTransactionsRoute: typeof AppPrintTransactionsRoute
   AppPurchaseBillSettingsRoute: typeof AppPurchaseBillSettingsRoute
   AppPurchaseOrdersRoute: typeof AppPurchaseOrdersRouteWithChildren
-  AppPurchaseReportsRoute: typeof AppPurchaseReportsRoute
-  AppPurchasesRoute: typeof AppPurchasesRouteWithChildren
   AppRecycleBinRoute: typeof AppRecycleBinRoute
-  AppReportsRoute: typeof AppReportsRouteWithChildren
   AppSalaryPaymentsRoute: typeof AppSalaryPaymentsRoute
   AppSalarySetupRoute: typeof AppSalarySetupRoute
   AppSaleInvoiceSettingsRoute: typeof AppSaleInvoiceSettingsRoute
   AppSaleOrdersRoute: typeof AppSaleOrdersRouteWithChildren
-  AppSalesRoute: typeof AppSalesRouteWithChildren
-  AppSalesReportsRoute: typeof AppSalesReportsRoute
   AppSettingsRoute: typeof AppSettingsRoute
-  AppStockAdjustmentsRoute: typeof AppStockAdjustmentsRouteWithChildren
-  AppStockMovementsRoute: typeof AppStockMovementsRoute
-  AppStockTransfersRoute: typeof AppStockTransfersRouteWithChildren
   AppSubscriptionRoute: typeof AppSubscriptionRouteWithChildren
   AppSupportRoute: typeof AppSupportRoute
   AppSyncRoute: typeof AppSyncRoute
@@ -3617,13 +3289,22 @@ interface AppRouteChildren {
   AppAdminPaymentSettingsRoute: typeof AppAdminPaymentSettingsRoute
   AppAdminPaymentsRoute: typeof AppAdminPaymentsRoute
   AppAdminSecurityTestsRoute: typeof AppAdminSecurityTestsRoute
+  AppItemsIdRoute: typeof AppItemsIdRouteWithChildren
+  AppPurchasesNewRoute: typeof AppPurchasesNewRoute
+  AppSalesNewRoute: typeof AppSalesNewRoute
   AppUpgradePlanRoute: typeof AppUpgradePlanRoute
+  AppCashChequesIdRoute: typeof AppCashChequesIdRoute
+  AppCashLoanPaymentsIdRoute: typeof AppCashLoanPaymentsIdRoute
+  AppCashTransfersIdRoute: typeof AppCashTransfersIdRoute
+  AppPurchasesIdEditRoute: typeof AppPurchasesIdEditRoute
+  AppSalesIdEditRoute: typeof AppSalesIdEditRoute
+  AppStockAdjustmentsIdEditRoute: typeof AppStockAdjustmentsIdEditRoute
+  AppStockTransfersIdEditRoute: typeof AppStockTransfersIdEditRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppAttendanceRoute: AppAttendanceRoute,
   AppAuditRoute: AppAuditRoute,
-  AppCashRoute: AppCashRouteWithChildren,
   AppCreditNotesRoute: AppCreditNotesRouteWithChildren,
   AppDebitNotesRoute: AppDebitNotesRouteWithChildren,
   AppDeliveryChallansRoute: AppDeliveryChallansRouteWithChildren,
@@ -3634,7 +3315,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppExpenseCategoriesRoute: AppExpenseCategoriesRoute,
   AppExpensesRoute: AppExpensesRouteWithChildren,
   AppItemCategoriesRoute: AppItemCategoriesRoute,
-  AppItemsRoute: AppItemsRouteWithChildren,
   AppMarketingToolsRoute: AppMarketingToolsRoute,
   AppMobileAppRoute: AppMobileAppRoute,
   AppOnlineStoreRoute: AppOnlineStoreRoute,
@@ -3646,24 +3326,15 @@ const AppRouteChildren: AppRouteChildren = {
   AppPayrollRoute: AppPayrollRouteWithChildren,
   AppPayrollReportsRoute: AppPayrollReportsRoute,
   AppPlansRoute: AppPlansRoute,
-  AppPosRoute: AppPosRoute,
   AppPrintTransactionsRoute: AppPrintTransactionsRoute,
   AppPurchaseBillSettingsRoute: AppPurchaseBillSettingsRoute,
   AppPurchaseOrdersRoute: AppPurchaseOrdersRouteWithChildren,
-  AppPurchaseReportsRoute: AppPurchaseReportsRoute,
-  AppPurchasesRoute: AppPurchasesRouteWithChildren,
   AppRecycleBinRoute: AppRecycleBinRoute,
-  AppReportsRoute: AppReportsRouteWithChildren,
   AppSalaryPaymentsRoute: AppSalaryPaymentsRoute,
   AppSalarySetupRoute: AppSalarySetupRoute,
   AppSaleInvoiceSettingsRoute: AppSaleInvoiceSettingsRoute,
   AppSaleOrdersRoute: AppSaleOrdersRouteWithChildren,
-  AppSalesRoute: AppSalesRouteWithChildren,
-  AppSalesReportsRoute: AppSalesReportsRoute,
   AppSettingsRoute: AppSettingsRoute,
-  AppStockAdjustmentsRoute: AppStockAdjustmentsRouteWithChildren,
-  AppStockMovementsRoute: AppStockMovementsRoute,
-  AppStockTransfersRoute: AppStockTransfersRouteWithChildren,
   AppSubscriptionRoute: AppSubscriptionRouteWithChildren,
   AppSupportRoute: AppSupportRoute,
   AppSyncRoute: AppSyncRoute,
@@ -3675,7 +3346,17 @@ const AppRouteChildren: AppRouteChildren = {
   AppAdminPaymentSettingsRoute: AppAdminPaymentSettingsRoute,
   AppAdminPaymentsRoute: AppAdminPaymentsRoute,
   AppAdminSecurityTestsRoute: AppAdminSecurityTestsRoute,
+  AppItemsIdRoute: AppItemsIdRouteWithChildren,
+  AppPurchasesNewRoute: AppPurchasesNewRoute,
+  AppSalesNewRoute: AppSalesNewRoute,
   AppUpgradePlanRoute: AppUpgradePlanRoute,
+  AppCashChequesIdRoute: AppCashChequesIdRoute,
+  AppCashLoanPaymentsIdRoute: AppCashLoanPaymentsIdRoute,
+  AppCashTransfersIdRoute: AppCashTransfersIdRoute,
+  AppPurchasesIdEditRoute: AppPurchasesIdEditRoute,
+  AppSalesIdEditRoute: AppSalesIdEditRoute,
+  AppStockAdjustmentsIdEditRoute: AppStockAdjustmentsIdEditRoute,
+  AppStockTransfersIdEditRoute: AppStockTransfersIdEditRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
@@ -3803,13 +3484,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
