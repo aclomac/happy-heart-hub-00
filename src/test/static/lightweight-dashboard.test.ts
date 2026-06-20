@@ -40,7 +40,7 @@ describe("emergency lightweight dashboard", () => {
     expect(route).toContain('to: "/app/items"');
     expect(route).toContain('to: "/app/sales"');
     expect(route).toMatch(/Add Sale[^]*\/app\/sales\/new/);
-    expect(route).toMatch(/data-variant=\{q\.variant\}/);
+    expect(route).toMatch(/variant=\{q\.variant\}[^>]*asChild/);
   });
 
   it("defers emergency demo seed until after first user interaction", () => {
