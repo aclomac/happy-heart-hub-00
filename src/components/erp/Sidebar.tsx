@@ -398,6 +398,7 @@ export function ERPSidebar() {
         key={n.to + n.key}
         to={linkPath as never}
         hash={hash as never}
+        onClick={() => recordNavClick(n.to)}
         className={`group/link mx-2 my-0.5 flex items-center gap-3 rounded-lg transition-colors ${
           opts.nested
             ? "font-normal text-[12.5px] py-1 leading-5 text-slate-300 hover:bg-white/5"
