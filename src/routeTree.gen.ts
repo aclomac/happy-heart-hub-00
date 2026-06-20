@@ -55,6 +55,7 @@ import { Route as AppPurchasesRouteImport } from './routes/app.purchases'
 import { Route as AppPurchaseOrdersRouteImport } from './routes/app.purchase-orders'
 import { Route as AppPurchaseBillSettingsRouteImport } from './routes/app.purchase-bill-settings'
 import { Route as AppPrintTransactionsRouteImport } from './routes/app.print-transactions'
+import { Route as AppPosRouteImport } from './routes/app.pos'
 import { Route as AppPlansRouteImport } from './routes/app.plans'
 import { Route as AppPayrollReportsRouteImport } from './routes/app.payroll-reports'
 import { Route as AppPayrollRouteImport } from './routes/app.payroll'
@@ -397,6 +398,11 @@ const AppPurchaseBillSettingsRoute = AppPurchaseBillSettingsRouteImport.update({
 const AppPrintTransactionsRoute = AppPrintTransactionsRouteImport.update({
   id: '/print-transactions',
   path: '/print-transactions',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPosRoute = AppPosRouteImport.update({
+  id: '/pos',
+  path: '/pos',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPlansRoute = AppPlansRouteImport.update({
@@ -1009,6 +1015,7 @@ export interface FileRoutesByFullPath {
   '/app/payroll': typeof AppPayrollRouteWithChildren
   '/app/payroll-reports': typeof AppPayrollReportsRoute
   '/app/plans': typeof AppPlansRoute
+  '/app/pos': typeof AppPosRoute
   '/app/print-transactions': typeof AppPrintTransactionsRoute
   '/app/purchase-bill-settings': typeof AppPurchaseBillSettingsRoute
   '/app/purchase-orders': typeof AppPurchaseOrdersRouteWithChildren
@@ -1164,6 +1171,7 @@ export interface FileRoutesByTo {
   '/app/payroll': typeof AppPayrollRouteWithChildren
   '/app/payroll-reports': typeof AppPayrollReportsRoute
   '/app/plans': typeof AppPlansRoute
+  '/app/pos': typeof AppPosRoute
   '/app/print-transactions': typeof AppPrintTransactionsRoute
   '/app/purchase-bill-settings': typeof AppPurchaseBillSettingsRoute
   '/app/purchase-orders': typeof AppPurchaseOrdersRouteWithChildren
@@ -1322,6 +1330,7 @@ export interface FileRoutesById {
   '/app/payroll': typeof AppPayrollRouteWithChildren
   '/app/payroll-reports': typeof AppPayrollReportsRoute
   '/app/plans': typeof AppPlansRoute
+  '/app/pos': typeof AppPosRoute
   '/app/print-transactions': typeof AppPrintTransactionsRoute
   '/app/purchase-bill-settings': typeof AppPurchaseBillSettingsRoute
   '/app/purchase-orders': typeof AppPurchaseOrdersRouteWithChildren
@@ -1482,6 +1491,7 @@ export interface FileRouteTypes {
     | '/app/payroll'
     | '/app/payroll-reports'
     | '/app/plans'
+    | '/app/pos'
     | '/app/print-transactions'
     | '/app/purchase-bill-settings'
     | '/app/purchase-orders'
@@ -1637,6 +1647,7 @@ export interface FileRouteTypes {
     | '/app/payroll'
     | '/app/payroll-reports'
     | '/app/plans'
+    | '/app/pos'
     | '/app/print-transactions'
     | '/app/purchase-bill-settings'
     | '/app/purchase-orders'
@@ -1794,6 +1805,7 @@ export interface FileRouteTypes {
     | '/app/payroll'
     | '/app/payroll-reports'
     | '/app/plans'
+    | '/app/pos'
     | '/app/print-transactions'
     | '/app/purchase-bill-settings'
     | '/app/purchase-orders'
@@ -2261,6 +2273,13 @@ declare module '@tanstack/react-router' {
       path: '/print-transactions'
       fullPath: '/app/print-transactions'
       preLoaderRoute: typeof AppPrintTransactionsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/pos': {
+      id: '/app/pos'
+      path: '/pos'
+      fullPath: '/app/pos'
+      preLoaderRoute: typeof AppPosRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/plans': {
@@ -3367,6 +3386,7 @@ interface AppRouteChildren {
   AppPayrollRoute: typeof AppPayrollRouteWithChildren
   AppPayrollReportsRoute: typeof AppPayrollReportsRoute
   AppPlansRoute: typeof AppPlansRoute
+  AppPosRoute: typeof AppPosRoute
   AppPrintTransactionsRoute: typeof AppPrintTransactionsRoute
   AppPurchaseBillSettingsRoute: typeof AppPurchaseBillSettingsRoute
   AppPurchaseOrdersRoute: typeof AppPurchaseOrdersRouteWithChildren
@@ -3422,6 +3442,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppPayrollRoute: AppPayrollRouteWithChildren,
   AppPayrollReportsRoute: AppPayrollReportsRoute,
   AppPlansRoute: AppPlansRoute,
+  AppPosRoute: AppPosRoute,
   AppPrintTransactionsRoute: AppPrintTransactionsRoute,
   AppPurchaseBillSettingsRoute: AppPurchaseBillSettingsRoute,
   AppPurchaseOrdersRoute: AppPurchaseOrdersRouteWithChildren,

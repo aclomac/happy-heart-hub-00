@@ -15,7 +15,7 @@ export function POS() {
   const saveCustomer = async () => {
     if (!customerName.trim()) return;
     await supabase.from("parties").insert({
-      company_id: companyId,
+      company_id: companyId ?? "demo-company",
       name: customerName.trim(),
       type: "customer",
     });
