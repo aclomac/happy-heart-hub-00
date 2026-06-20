@@ -77,6 +77,45 @@ async function ensureOldCachesDoNotControlPage() {
   window.location.reload();
 }
 
+function getControllerServiceWorkerVersion(timeoutMs = 1200) {
+  const controller = navigator.serviceWorker.controller;
+  if (!controller) return Promise.resolve<string | null>(null);
+
+  return new Promise<string | null>((resolve) => {
+    const timeout = window.setTimeout(() => {
+      navigator.serviceWorker.removeEventListener("message", handleMessage);
+      resolve(null);
+    }, timeoutMs);
+
+    function handleMessage(event: MessageEvent) {
+      if (event.data?.type !== "ERPOVO_SW_VERSION") return;
+      window.clearTimeout(timeout);
+      navigator.serviceWorker.removeEventListener("message", handleMessage);
+      resolve(typeof event.data.version === "string" ? event.data.version : null);
+    }
+
+    navigator.serviceWorker.addEventListener("message", handleMessage);
+    controller.postMessage({ type: "ERPOVO_GET_SW_VERSION" });
+  });
+}
+
+async function ensureCurrentControllerVersion() {
+  if (!navigator.serviceWorker.controller) return;
+  const controllerVersion = await getControllerServiceWorkerVersion();
+  if (controllerVersion === ERPOVO_SW_CACHE_VERSION) return;
+  if (sessionStorage.getItem(RELOAD_FLAG) === ERPOVO_SW_CACHE_VERSION) return;
+  sessionStorage.setItem(RELOAD_FLAG, ERPOVO_SW_CACHE_VERSION);
+  const unregistered = await unregisterMatchingWorkers();
+  const oldCaches = await deleteOldErpovoCaches();
+  console.warn("ERPOVO_SW_CONTROLLER_EVICT", {
+    expected: ERPOVO_SW_CACHE_VERSION,
+    controllerVersion,
+    unregistered,
+    oldCaches,
+  });
+  window.location.reload();
+}
+
 export async function registerErpovoServiceWorker() {
   if (!shouldUseServiceWorker()) {
     if (typeof window !== "undefined" && "serviceWorker" in navigator) {
@@ -89,7 +128,7 @@ export async function registerErpovoServiceWorker() {
   await ensureOldCachesDoNotControlPage();
   const registration = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
   registration.update().catch(() => undefined);
-  navigator.serviceWorker.controller?.postMessage({ type: "ERPOVO_GET_SW_VERSION" });
+  await ensureCurrentControllerVersion();
   console.info("ERPOVO_SW_REGISTERED", { version: ERPOVO_SW_CACHE_VERSION });
   return registration;
 }
