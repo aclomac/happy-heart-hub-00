@@ -15,6 +15,7 @@ declare global {
   interface Window {
     __ERPOVO_STATIC_HOSTINGER__?: boolean;
     __ERPOVO_EMERGENCY_LOCAL_DEMO__?: boolean;
+    __ERPOVO_DEMO_SEED_ARMED__?: boolean;
   }
 }
 
@@ -104,14 +105,18 @@ export function redirectDisabledLoginToApp(): void {
 
 export function scheduleDeferredEmergencyDemoSeed(): void {
   if (!isEmergencyLocalDemoMode() || typeof window === "undefined") return;
+  if (window.__ERPOVO_DEMO_SEED_ARMED__) return;
+  window.__ERPOVO_DEMO_SEED_ARMED__ = true;
   const run = () => {
     void import("@/lib/demo/localStore")
       .then(({ ensureDemoSeed }) => ensureDemoSeed())
       .catch(() => {});
   };
-  const idle = (window as Window & {
-    requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
-  }).requestIdleCallback;
-  if (typeof idle === "function") idle(run, { timeout: 2500 });
-  else window.setTimeout(run, 1200);
+  const arm = () => {
+    window.removeEventListener("pointerdown", arm);
+    window.removeEventListener("keydown", arm);
+    window.setTimeout(run, 1500);
+  };
+  window.addEventListener("pointerdown", arm, { once: true, passive: true });
+  window.addEventListener("keydown", arm, { once: true });
 }

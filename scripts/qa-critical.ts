@@ -27,6 +27,7 @@ const CRITICAL_FRAGMENTS = [
   "capacitor-bundled-html",
   "pwa-hardening",
   "production-routes-versioning",
+  "lightweight-dashboard",
 ];
 
 

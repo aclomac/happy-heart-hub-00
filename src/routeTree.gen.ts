@@ -21,6 +21,7 @@ import { Route as CompaniesRouteImport } from './routes/companies'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SuperAdminIndexRouteImport } from './routes/super-admin.index'
+import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as SuperAdminSupportRouteImport } from './routes/super-admin.support'
 import { Route as SuperAdminSubscriptionsRouteImport } from './routes/super-admin.subscriptions'
 import { Route as SuperAdminSettingsRouteImport } from './routes/super-admin.settings'
@@ -233,6 +234,11 @@ const SuperAdminIndexRoute = SuperAdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => SuperAdminRoute,
+} as any)
+const AppIndexRoute = AppIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppRoute,
 } as any)
 const SuperAdminSupportRoute = SuperAdminSupportRouteImport.update({
   id: '/support',
@@ -1098,6 +1104,7 @@ export interface FileRoutesByFullPath {
   '/super-admin/settings': typeof SuperAdminSettingsRoute
   '/super-admin/subscriptions': typeof SuperAdminSubscriptionsRoute
   '/super-admin/support': typeof SuperAdminSupportRoute
+  '/app/': typeof AppIndexRoute
   '/super-admin/': typeof SuperAdminIndexRoute
   '/api/integrations/proxy': typeof ApiIntegrationsProxyRoute
   '/app/admin/access-matrix': typeof AppAdminAccessMatrixRoute
@@ -1189,7 +1196,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/app': typeof AppRouteWithChildren
   '/companies': typeof CompaniesRoute
   '/contact': typeof ContactRoute
   '/login': typeof LoginRoute
@@ -1261,6 +1267,7 @@ export interface FileRoutesByTo {
   '/super-admin/settings': typeof SuperAdminSettingsRoute
   '/super-admin/subscriptions': typeof SuperAdminSubscriptionsRoute
   '/super-admin/support': typeof SuperAdminSupportRoute
+  '/app': typeof AppIndexRoute
   '/super-admin': typeof SuperAdminIndexRoute
   '/api/integrations/proxy': typeof ApiIntegrationsProxyRoute
   '/app/admin/access-matrix': typeof AppAdminAccessMatrixRoute
@@ -1428,6 +1435,7 @@ export interface FileRoutesById {
   '/super-admin/settings': typeof SuperAdminSettingsRoute
   '/super-admin/subscriptions': typeof SuperAdminSubscriptionsRoute
   '/super-admin/support': typeof SuperAdminSupportRoute
+  '/app/': typeof AppIndexRoute
   '/super-admin/': typeof SuperAdminIndexRoute
   '/api/integrations/proxy': typeof ApiIntegrationsProxyRoute
   '/app/admin/access-matrix': typeof AppAdminAccessMatrixRoute
@@ -1596,6 +1604,7 @@ export interface FileRouteTypes {
     | '/super-admin/settings'
     | '/super-admin/subscriptions'
     | '/super-admin/support'
+    | '/app/'
     | '/super-admin/'
     | '/api/integrations/proxy'
     | '/app/admin/access-matrix'
@@ -1687,7 +1696,6 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/app'
     | '/companies'
     | '/contact'
     | '/login'
@@ -1759,6 +1767,7 @@ export interface FileRouteTypes {
     | '/super-admin/settings'
     | '/super-admin/subscriptions'
     | '/super-admin/support'
+    | '/app'
     | '/super-admin'
     | '/api/integrations/proxy'
     | '/app/admin/access-matrix'
@@ -1925,6 +1934,7 @@ export interface FileRouteTypes {
     | '/super-admin/settings'
     | '/super-admin/subscriptions'
     | '/super-admin/support'
+    | '/app/'
     | '/super-admin/'
     | '/api/integrations/proxy'
     | '/app/admin/access-matrix'
@@ -2122,6 +2132,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/super-admin/'
       preLoaderRoute: typeof SuperAdminIndexRouteImport
       parentRoute: typeof SuperAdminRoute
+    }
+    '/app/': {
+      id: '/app/'
+      path: '/'
+      fullPath: '/app/'
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
     }
     '/super-admin/support': {
       id: '/super-admin/support'
@@ -3595,6 +3612,7 @@ interface AppRouteChildren {
   AppSyncCenterRoute: typeof AppSyncCenterRoute
   AppUtilitiesRoute: typeof AppUtilitiesRouteWithChildren
   AppWarehousesRoute: typeof AppWarehousesRoute
+  AppIndexRoute: typeof AppIndexRoute
   AppAdminAccessMatrixRoute: typeof AppAdminAccessMatrixRoute
   AppAdminPaymentSettingsRoute: typeof AppAdminPaymentSettingsRoute
   AppAdminPaymentsRoute: typeof AppAdminPaymentsRoute
@@ -3652,6 +3670,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppSyncCenterRoute: AppSyncCenterRoute,
   AppUtilitiesRoute: AppUtilitiesRouteWithChildren,
   AppWarehousesRoute: AppWarehousesRoute,
+  AppIndexRoute: AppIndexRoute,
   AppAdminAccessMatrixRoute: AppAdminAccessMatrixRoute,
   AppAdminPaymentSettingsRoute: AppAdminPaymentSettingsRoute,
   AppAdminPaymentsRoute: AppAdminPaymentsRoute,
