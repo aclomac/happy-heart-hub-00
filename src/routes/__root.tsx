@@ -148,10 +148,23 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+function isSafeModeUrl() {
+  if (typeof window === "undefined") return false;
+  try {
+    return new URLSearchParams(window.location.search).get("safe") === "1";
+  } catch {
+    return false;
+  }
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   useEffect(() => {
+    if (isSafeModeUrl()) {
+      console.info("ERPOVO_SAFE_MODE_ACTIVE — skipping supabase auth wiring");
+      return;
+    }
     // Wire the Cloud Mode sales uploader so the manual replay button
     // and the online-event auto-replay can drain queued invoices.
     import("@/lib/transaction-sync/install").then(({ installSalesUploader }) => {
