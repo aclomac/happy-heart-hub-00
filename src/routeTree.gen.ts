@@ -45,11 +45,13 @@ import { Route as AppSyncRouteImport } from './routes/app.sync'
 import { Route as AppSupportRouteImport } from './routes/app.support'
 import { Route as AppSubscriptionRouteImport } from './routes/app.subscription'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
+import { Route as AppSalesRouteImport } from './routes/app.sales'
 import { Route as AppSaleOrdersRouteImport } from './routes/app.sale-orders'
 import { Route as AppSaleInvoiceSettingsRouteImport } from './routes/app.sale-invoice-settings'
 import { Route as AppSalarySetupRouteImport } from './routes/app.salary-setup'
 import { Route as AppSalaryPaymentsRouteImport } from './routes/app.salary-payments'
 import { Route as AppRecycleBinRouteImport } from './routes/app.recycle-bin'
+import { Route as AppPurchasesRouteImport } from './routes/app.purchases'
 import { Route as AppPurchaseOrdersRouteImport } from './routes/app.purchase-orders'
 import { Route as AppPurchaseBillSettingsRouteImport } from './routes/app.purchase-bill-settings'
 import { Route as AppPrintTransactionsRouteImport } from './routes/app.print-transactions'
@@ -64,6 +66,7 @@ import { Route as AppOtherIncomeRouteImport } from './routes/app.other-income'
 import { Route as AppOnlineStoreRouteImport } from './routes/app.online-store'
 import { Route as AppMobileAppRouteImport } from './routes/app.mobile-app'
 import { Route as AppMarketingToolsRouteImport } from './routes/app.marketing-tools'
+import { Route as AppItemsRouteImport } from './routes/app.items'
 import { Route as AppItemCategoriesRouteImport } from './routes/app.item-categories'
 import { Route as AppExpensesRouteImport } from './routes/app.expenses'
 import { Route as AppExpenseCategoriesRouteImport } from './routes/app.expense-categories'
@@ -346,6 +349,11 @@ const AppSettingsRoute = AppSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AppRoute,
 } as any)
+const AppSalesRoute = AppSalesRouteImport.update({
+  id: '/sales',
+  path: '/sales',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppSaleOrdersRoute = AppSaleOrdersRouteImport.update({
   id: '/sale-orders',
   path: '/sale-orders',
@@ -369,6 +377,11 @@ const AppSalaryPaymentsRoute = AppSalaryPaymentsRouteImport.update({
 const AppRecycleBinRoute = AppRecycleBinRouteImport.update({
   id: '/recycle-bin',
   path: '/recycle-bin',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPurchasesRoute = AppPurchasesRouteImport.update({
+  id: '/purchases',
+  path: '/purchases',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPurchaseOrdersRoute = AppPurchaseOrdersRouteImport.update({
@@ -439,6 +452,11 @@ const AppMobileAppRoute = AppMobileAppRouteImport.update({
 const AppMarketingToolsRoute = AppMarketingToolsRouteImport.update({
   id: '/marketing-tools',
   path: '/marketing-tools',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppItemsRoute = AppItemsRouteImport.update({
+  id: '/items',
+  path: '/items',
   getParentRoute: () => AppRoute,
 } as any)
 const AppItemCategoriesRoute = AppItemCategoriesRouteImport.update({
@@ -634,9 +652,9 @@ const AppUpgradePlanRoute = AppUpgradePlanRouteImport.update({
   getParentRoute: () => AppRoute,
 } as any)
 const AppSalesNewRoute = AppSalesNewRouteImport.update({
-  id: '/sales/new',
-  path: '/sales/new',
-  getParentRoute: () => AppRoute,
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AppSalesRoute,
 } as any)
 const AppSaleOrdersNewRoute = AppSaleOrdersNewRouteImport.update({
   id: '/new',
@@ -644,9 +662,9 @@ const AppSaleOrdersNewRoute = AppSaleOrdersNewRouteImport.update({
   getParentRoute: () => AppSaleOrdersRoute,
 } as any)
 const AppPurchasesNewRoute = AppPurchasesNewRouteImport.update({
-  id: '/purchases/new',
-  path: '/purchases/new',
-  getParentRoute: () => AppRoute,
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AppPurchasesRoute,
 } as any)
 const AppPurchaseOrdersNewRoute = AppPurchaseOrdersNewRouteImport.update({
   id: '/new',
@@ -669,9 +687,9 @@ const AppPartiesIdRoute = AppPartiesIdRouteImport.update({
   getParentRoute: () => AppPartiesRoute,
 } as any)
 const AppItemsIdRoute = AppItemsIdRouteImport.update({
-  id: '/items/$id',
-  path: '/items/$id',
-  getParentRoute: () => AppRoute,
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AppItemsRoute,
 } as any)
 const AppExpensesNewRoute = AppExpensesNewRouteImport.update({
   id: '/new',
@@ -822,9 +840,9 @@ const AppStockAdjustmentsIdEditRoute =
     getParentRoute: () => AppRoute,
   } as any)
 const AppSalesIdEditRoute = AppSalesIdEditRouteImport.update({
-  id: '/sales/$id/edit',
-  path: '/sales/$id/edit',
-  getParentRoute: () => AppRoute,
+  id: '/$id/edit',
+  path: '/$id/edit',
+  getParentRoute: () => AppSalesRoute,
 } as any)
 const AppSaleOrdersIdEditRoute = AppSaleOrdersIdEditRouteImport.update({
   id: '/$id/edit',
@@ -832,9 +850,9 @@ const AppSaleOrdersIdEditRoute = AppSaleOrdersIdEditRouteImport.update({
   getParentRoute: () => AppSaleOrdersRoute,
 } as any)
 const AppPurchasesIdEditRoute = AppPurchasesIdEditRouteImport.update({
-  id: '/purchases/$id/edit',
-  path: '/purchases/$id/edit',
-  getParentRoute: () => AppRoute,
+  id: '/$id/edit',
+  path: '/$id/edit',
+  getParentRoute: () => AppPurchasesRoute,
 } as any)
 const AppPurchaseOrdersIdEditRoute = AppPurchaseOrdersIdEditRouteImport.update({
   id: '/$id/edit',
@@ -979,6 +997,7 @@ export interface FileRoutesByFullPath {
   '/app/expense-categories': typeof AppExpenseCategoriesRoute
   '/app/expenses': typeof AppExpensesRouteWithChildren
   '/app/item-categories': typeof AppItemCategoriesRoute
+  '/app/items': typeof AppItemsRouteWithChildren
   '/app/marketing-tools': typeof AppMarketingToolsRoute
   '/app/mobile-app': typeof AppMobileAppRoute
   '/app/online-store': typeof AppOnlineStoreRoute
@@ -993,11 +1012,13 @@ export interface FileRoutesByFullPath {
   '/app/print-transactions': typeof AppPrintTransactionsRoute
   '/app/purchase-bill-settings': typeof AppPurchaseBillSettingsRoute
   '/app/purchase-orders': typeof AppPurchaseOrdersRouteWithChildren
+  '/app/purchases': typeof AppPurchasesRouteWithChildren
   '/app/recycle-bin': typeof AppRecycleBinRoute
   '/app/salary-payments': typeof AppSalaryPaymentsRoute
   '/app/salary-setup': typeof AppSalarySetupRoute
   '/app/sale-invoice-settings': typeof AppSaleInvoiceSettingsRoute
   '/app/sale-orders': typeof AppSaleOrdersRouteWithChildren
+  '/app/sales': typeof AppSalesRouteWithChildren
   '/app/settings': typeof AppSettingsRoute
   '/app/subscription': typeof AppSubscriptionRouteWithChildren
   '/app/support': typeof AppSupportRoute
@@ -1131,6 +1152,7 @@ export interface FileRoutesByTo {
   '/app/expense-categories': typeof AppExpenseCategoriesRoute
   '/app/expenses': typeof AppExpensesRouteWithChildren
   '/app/item-categories': typeof AppItemCategoriesRoute
+  '/app/items': typeof AppItemsRouteWithChildren
   '/app/marketing-tools': typeof AppMarketingToolsRoute
   '/app/mobile-app': typeof AppMobileAppRoute
   '/app/online-store': typeof AppOnlineStoreRoute
@@ -1145,11 +1167,13 @@ export interface FileRoutesByTo {
   '/app/print-transactions': typeof AppPrintTransactionsRoute
   '/app/purchase-bill-settings': typeof AppPurchaseBillSettingsRoute
   '/app/purchase-orders': typeof AppPurchaseOrdersRouteWithChildren
+  '/app/purchases': typeof AppPurchasesRouteWithChildren
   '/app/recycle-bin': typeof AppRecycleBinRoute
   '/app/salary-payments': typeof AppSalaryPaymentsRoute
   '/app/salary-setup': typeof AppSalarySetupRoute
   '/app/sale-invoice-settings': typeof AppSaleInvoiceSettingsRoute
   '/app/sale-orders': typeof AppSaleOrdersRouteWithChildren
+  '/app/sales': typeof AppSalesRouteWithChildren
   '/app/settings': typeof AppSettingsRoute
   '/app/subscription': typeof AppSubscriptionRouteWithChildren
   '/app/support': typeof AppSupportRoute
@@ -1286,6 +1310,7 @@ export interface FileRoutesById {
   '/app/expense-categories': typeof AppExpenseCategoriesRoute
   '/app/expenses': typeof AppExpensesRouteWithChildren
   '/app/item-categories': typeof AppItemCategoriesRoute
+  '/app/items': typeof AppItemsRouteWithChildren
   '/app/marketing-tools': typeof AppMarketingToolsRoute
   '/app/mobile-app': typeof AppMobileAppRoute
   '/app/online-store': typeof AppOnlineStoreRoute
@@ -1300,11 +1325,13 @@ export interface FileRoutesById {
   '/app/print-transactions': typeof AppPrintTransactionsRoute
   '/app/purchase-bill-settings': typeof AppPurchaseBillSettingsRoute
   '/app/purchase-orders': typeof AppPurchaseOrdersRouteWithChildren
+  '/app/purchases': typeof AppPurchasesRouteWithChildren
   '/app/recycle-bin': typeof AppRecycleBinRoute
   '/app/salary-payments': typeof AppSalaryPaymentsRoute
   '/app/salary-setup': typeof AppSalarySetupRoute
   '/app/sale-invoice-settings': typeof AppSaleInvoiceSettingsRoute
   '/app/sale-orders': typeof AppSaleOrdersRouteWithChildren
+  '/app/sales': typeof AppSalesRouteWithChildren
   '/app/settings': typeof AppSettingsRoute
   '/app/subscription': typeof AppSubscriptionRouteWithChildren
   '/app/support': typeof AppSupportRoute
@@ -1443,6 +1470,7 @@ export interface FileRouteTypes {
     | '/app/expense-categories'
     | '/app/expenses'
     | '/app/item-categories'
+    | '/app/items'
     | '/app/marketing-tools'
     | '/app/mobile-app'
     | '/app/online-store'
@@ -1457,11 +1485,13 @@ export interface FileRouteTypes {
     | '/app/print-transactions'
     | '/app/purchase-bill-settings'
     | '/app/purchase-orders'
+    | '/app/purchases'
     | '/app/recycle-bin'
     | '/app/salary-payments'
     | '/app/salary-setup'
     | '/app/sale-invoice-settings'
     | '/app/sale-orders'
+    | '/app/sales'
     | '/app/settings'
     | '/app/subscription'
     | '/app/support'
@@ -1595,6 +1625,7 @@ export interface FileRouteTypes {
     | '/app/expense-categories'
     | '/app/expenses'
     | '/app/item-categories'
+    | '/app/items'
     | '/app/marketing-tools'
     | '/app/mobile-app'
     | '/app/online-store'
@@ -1609,11 +1640,13 @@ export interface FileRouteTypes {
     | '/app/print-transactions'
     | '/app/purchase-bill-settings'
     | '/app/purchase-orders'
+    | '/app/purchases'
     | '/app/recycle-bin'
     | '/app/salary-payments'
     | '/app/salary-setup'
     | '/app/sale-invoice-settings'
     | '/app/sale-orders'
+    | '/app/sales'
     | '/app/settings'
     | '/app/subscription'
     | '/app/support'
@@ -1749,6 +1782,7 @@ export interface FileRouteTypes {
     | '/app/expense-categories'
     | '/app/expenses'
     | '/app/item-categories'
+    | '/app/items'
     | '/app/marketing-tools'
     | '/app/mobile-app'
     | '/app/online-store'
@@ -1763,11 +1797,13 @@ export interface FileRouteTypes {
     | '/app/print-transactions'
     | '/app/purchase-bill-settings'
     | '/app/purchase-orders'
+    | '/app/purchases'
     | '/app/recycle-bin'
     | '/app/salary-payments'
     | '/app/salary-setup'
     | '/app/sale-invoice-settings'
     | '/app/sale-orders'
+    | '/app/sales'
     | '/app/settings'
     | '/app/subscription'
     | '/app/support'
@@ -2157,6 +2193,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSettingsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/sales': {
+      id: '/app/sales'
+      path: '/sales'
+      fullPath: '/app/sales'
+      preLoaderRoute: typeof AppSalesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/sale-orders': {
       id: '/app/sale-orders'
       path: '/sale-orders'
@@ -2190,6 +2233,13 @@ declare module '@tanstack/react-router' {
       path: '/recycle-bin'
       fullPath: '/app/recycle-bin'
       preLoaderRoute: typeof AppRecycleBinRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/purchases': {
+      id: '/app/purchases'
+      path: '/purchases'
+      fullPath: '/app/purchases'
+      preLoaderRoute: typeof AppPurchasesRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/purchase-orders': {
@@ -2288,6 +2338,13 @@ declare module '@tanstack/react-router' {
       path: '/marketing-tools'
       fullPath: '/app/marketing-tools'
       preLoaderRoute: typeof AppMarketingToolsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/items': {
+      id: '/app/items'
+      path: '/items'
+      fullPath: '/app/items'
+      preLoaderRoute: typeof AppItemsRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/item-categories': {
@@ -2544,10 +2601,10 @@ declare module '@tanstack/react-router' {
     }
     '/app/sales/new': {
       id: '/app/sales/new'
-      path: '/sales/new'
+      path: '/new'
       fullPath: '/app/sales/new'
       preLoaderRoute: typeof AppSalesNewRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppSalesRoute
     }
     '/app/sale-orders/new': {
       id: '/app/sale-orders/new'
@@ -2558,10 +2615,10 @@ declare module '@tanstack/react-router' {
     }
     '/app/purchases/new': {
       id: '/app/purchases/new'
-      path: '/purchases/new'
+      path: '/new'
       fullPath: '/app/purchases/new'
       preLoaderRoute: typeof AppPurchasesNewRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppPurchasesRoute
     }
     '/app/purchase-orders/new': {
       id: '/app/purchase-orders/new'
@@ -2593,10 +2650,10 @@ declare module '@tanstack/react-router' {
     }
     '/app/items/$id': {
       id: '/app/items/$id'
-      path: '/items/$id'
+      path: '/$id'
       fullPath: '/app/items/$id'
       preLoaderRoute: typeof AppItemsIdRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppItemsRoute
     }
     '/app/expenses/new': {
       id: '/app/expenses/new'
@@ -2803,10 +2860,10 @@ declare module '@tanstack/react-router' {
     }
     '/app/sales/$id/edit': {
       id: '/app/sales/$id/edit'
-      path: '/sales/$id/edit'
+      path: '/$id/edit'
       fullPath: '/app/sales/$id/edit'
       preLoaderRoute: typeof AppSalesIdEditRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppSalesRoute
     }
     '/app/sale-orders/$id/edit': {
       id: '/app/sale-orders/$id/edit'
@@ -2817,10 +2874,10 @@ declare module '@tanstack/react-router' {
     }
     '/app/purchases/$id/edit': {
       id: '/app/purchases/$id/edit'
-      path: '/purchases/$id/edit'
+      path: '/$id/edit'
       fullPath: '/app/purchases/$id/edit'
       preLoaderRoute: typeof AppPurchasesIdEditRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppPurchasesRoute
     }
     '/app/purchase-orders/$id/edit': {
       id: '/app/purchase-orders/$id/edit'
@@ -3092,6 +3149,30 @@ const AppExpensesRouteWithChildren = AppExpensesRoute._addFileChildren(
   AppExpensesRouteChildren,
 )
 
+interface AppItemsIdRouteChildren {
+  AppItemsIdEditRoute: typeof AppItemsIdEditRoute
+}
+
+const AppItemsIdRouteChildren: AppItemsIdRouteChildren = {
+  AppItemsIdEditRoute: AppItemsIdEditRoute,
+}
+
+const AppItemsIdRouteWithChildren = AppItemsIdRoute._addFileChildren(
+  AppItemsIdRouteChildren,
+)
+
+interface AppItemsRouteChildren {
+  AppItemsIdRoute: typeof AppItemsIdRouteWithChildren
+}
+
+const AppItemsRouteChildren: AppItemsRouteChildren = {
+  AppItemsIdRoute: AppItemsIdRouteWithChildren,
+}
+
+const AppItemsRouteWithChildren = AppItemsRoute._addFileChildren(
+  AppItemsRouteChildren,
+)
+
 interface AppPartiesRouteChildren {
   AppPartiesIdRoute: typeof AppPartiesIdRoute
 }
@@ -3163,6 +3244,20 @@ const AppPurchaseOrdersRouteChildren: AppPurchaseOrdersRouteChildren = {
 const AppPurchaseOrdersRouteWithChildren =
   AppPurchaseOrdersRoute._addFileChildren(AppPurchaseOrdersRouteChildren)
 
+interface AppPurchasesRouteChildren {
+  AppPurchasesNewRoute: typeof AppPurchasesNewRoute
+  AppPurchasesIdEditRoute: typeof AppPurchasesIdEditRoute
+}
+
+const AppPurchasesRouteChildren: AppPurchasesRouteChildren = {
+  AppPurchasesNewRoute: AppPurchasesNewRoute,
+  AppPurchasesIdEditRoute: AppPurchasesIdEditRoute,
+}
+
+const AppPurchasesRouteWithChildren = AppPurchasesRoute._addFileChildren(
+  AppPurchasesRouteChildren,
+)
+
 interface AppSaleOrdersRouteChildren {
   AppSaleOrdersNewRoute: typeof AppSaleOrdersNewRoute
   AppSaleOrdersIdEditRoute: typeof AppSaleOrdersIdEditRoute
@@ -3175,6 +3270,20 @@ const AppSaleOrdersRouteChildren: AppSaleOrdersRouteChildren = {
 
 const AppSaleOrdersRouteWithChildren = AppSaleOrdersRoute._addFileChildren(
   AppSaleOrdersRouteChildren,
+)
+
+interface AppSalesRouteChildren {
+  AppSalesNewRoute: typeof AppSalesNewRoute
+  AppSalesIdEditRoute: typeof AppSalesIdEditRoute
+}
+
+const AppSalesRouteChildren: AppSalesRouteChildren = {
+  AppSalesNewRoute: AppSalesNewRoute,
+  AppSalesIdEditRoute: AppSalesIdEditRoute,
+}
+
+const AppSalesRouteWithChildren = AppSalesRoute._addFileChildren(
+  AppSalesRouteChildren,
 )
 
 interface AppSubscriptionRouteChildren {
@@ -3233,18 +3342,6 @@ const AppUtilitiesRouteWithChildren = AppUtilitiesRoute._addFileChildren(
   AppUtilitiesRouteChildren,
 )
 
-interface AppItemsIdRouteChildren {
-  AppItemsIdEditRoute: typeof AppItemsIdEditRoute
-}
-
-const AppItemsIdRouteChildren: AppItemsIdRouteChildren = {
-  AppItemsIdEditRoute: AppItemsIdEditRoute,
-}
-
-const AppItemsIdRouteWithChildren = AppItemsIdRoute._addFileChildren(
-  AppItemsIdRouteChildren,
-)
-
 interface AppRouteChildren {
   AppAttendanceRoute: typeof AppAttendanceRoute
   AppAuditRoute: typeof AppAuditRoute
@@ -3258,6 +3355,7 @@ interface AppRouteChildren {
   AppExpenseCategoriesRoute: typeof AppExpenseCategoriesRoute
   AppExpensesRoute: typeof AppExpensesRouteWithChildren
   AppItemCategoriesRoute: typeof AppItemCategoriesRoute
+  AppItemsRoute: typeof AppItemsRouteWithChildren
   AppMarketingToolsRoute: typeof AppMarketingToolsRoute
   AppMobileAppRoute: typeof AppMobileAppRoute
   AppOnlineStoreRoute: typeof AppOnlineStoreRoute
@@ -3272,11 +3370,13 @@ interface AppRouteChildren {
   AppPrintTransactionsRoute: typeof AppPrintTransactionsRoute
   AppPurchaseBillSettingsRoute: typeof AppPurchaseBillSettingsRoute
   AppPurchaseOrdersRoute: typeof AppPurchaseOrdersRouteWithChildren
+  AppPurchasesRoute: typeof AppPurchasesRouteWithChildren
   AppRecycleBinRoute: typeof AppRecycleBinRoute
   AppSalaryPaymentsRoute: typeof AppSalaryPaymentsRoute
   AppSalarySetupRoute: typeof AppSalarySetupRoute
   AppSaleInvoiceSettingsRoute: typeof AppSaleInvoiceSettingsRoute
   AppSaleOrdersRoute: typeof AppSaleOrdersRouteWithChildren
+  AppSalesRoute: typeof AppSalesRouteWithChildren
   AppSettingsRoute: typeof AppSettingsRoute
   AppSubscriptionRoute: typeof AppSubscriptionRouteWithChildren
   AppSupportRoute: typeof AppSupportRoute
@@ -3289,15 +3389,10 @@ interface AppRouteChildren {
   AppAdminPaymentSettingsRoute: typeof AppAdminPaymentSettingsRoute
   AppAdminPaymentsRoute: typeof AppAdminPaymentsRoute
   AppAdminSecurityTestsRoute: typeof AppAdminSecurityTestsRoute
-  AppItemsIdRoute: typeof AppItemsIdRouteWithChildren
-  AppPurchasesNewRoute: typeof AppPurchasesNewRoute
-  AppSalesNewRoute: typeof AppSalesNewRoute
   AppUpgradePlanRoute: typeof AppUpgradePlanRoute
   AppCashChequesIdRoute: typeof AppCashChequesIdRoute
   AppCashLoanPaymentsIdRoute: typeof AppCashLoanPaymentsIdRoute
   AppCashTransfersIdRoute: typeof AppCashTransfersIdRoute
-  AppPurchasesIdEditRoute: typeof AppPurchasesIdEditRoute
-  AppSalesIdEditRoute: typeof AppSalesIdEditRoute
   AppStockAdjustmentsIdEditRoute: typeof AppStockAdjustmentsIdEditRoute
   AppStockTransfersIdEditRoute: typeof AppStockTransfersIdEditRoute
 }
@@ -3315,6 +3410,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppExpenseCategoriesRoute: AppExpenseCategoriesRoute,
   AppExpensesRoute: AppExpensesRouteWithChildren,
   AppItemCategoriesRoute: AppItemCategoriesRoute,
+  AppItemsRoute: AppItemsRouteWithChildren,
   AppMarketingToolsRoute: AppMarketingToolsRoute,
   AppMobileAppRoute: AppMobileAppRoute,
   AppOnlineStoreRoute: AppOnlineStoreRoute,
@@ -3329,11 +3425,13 @@ const AppRouteChildren: AppRouteChildren = {
   AppPrintTransactionsRoute: AppPrintTransactionsRoute,
   AppPurchaseBillSettingsRoute: AppPurchaseBillSettingsRoute,
   AppPurchaseOrdersRoute: AppPurchaseOrdersRouteWithChildren,
+  AppPurchasesRoute: AppPurchasesRouteWithChildren,
   AppRecycleBinRoute: AppRecycleBinRoute,
   AppSalaryPaymentsRoute: AppSalaryPaymentsRoute,
   AppSalarySetupRoute: AppSalarySetupRoute,
   AppSaleInvoiceSettingsRoute: AppSaleInvoiceSettingsRoute,
   AppSaleOrdersRoute: AppSaleOrdersRouteWithChildren,
+  AppSalesRoute: AppSalesRouteWithChildren,
   AppSettingsRoute: AppSettingsRoute,
   AppSubscriptionRoute: AppSubscriptionRouteWithChildren,
   AppSupportRoute: AppSupportRoute,
@@ -3346,15 +3444,10 @@ const AppRouteChildren: AppRouteChildren = {
   AppAdminPaymentSettingsRoute: AppAdminPaymentSettingsRoute,
   AppAdminPaymentsRoute: AppAdminPaymentsRoute,
   AppAdminSecurityTestsRoute: AppAdminSecurityTestsRoute,
-  AppItemsIdRoute: AppItemsIdRouteWithChildren,
-  AppPurchasesNewRoute: AppPurchasesNewRoute,
-  AppSalesNewRoute: AppSalesNewRoute,
   AppUpgradePlanRoute: AppUpgradePlanRoute,
   AppCashChequesIdRoute: AppCashChequesIdRoute,
   AppCashLoanPaymentsIdRoute: AppCashLoanPaymentsIdRoute,
   AppCashTransfersIdRoute: AppCashTransfersIdRoute,
-  AppPurchasesIdEditRoute: AppPurchasesIdEditRoute,
-  AppSalesIdEditRoute: AppSalesIdEditRoute,
   AppStockAdjustmentsIdEditRoute: AppStockAdjustmentsIdEditRoute,
   AppStockTransfersIdEditRoute: AppStockTransfersIdEditRoute,
 }
