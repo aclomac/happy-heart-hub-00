@@ -6,20 +6,14 @@ import {
   useRouter,
   HeadContent,
   Scripts,
-  useLocation,
 } from "@tanstack/react-router";
-import { lazy, Suspense, useEffect, type ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { GlobalRouteOrchestrator } from "@/components/erp/GlobalRouteOrchestrator";
+import { PWAProvider } from "@/components/erp/PWAProvider";
 import { StartupWatchdog } from "@/components/erp/StartupWatchdog";
-import { isEmergencyLocalDemoMode } from "@/lib/emergency-local-demo";
-import { bootStep, isHardSafeMode, isPublicStartupPath, isStartupDisabled } from "@/lib/startup-switches";
-
-const PWAProvider = lazy(() =>
-  import("@/components/erp/PWAProvider").then((module) => ({ default: module.PWAProvider })),
-);
 
 function NotFoundComponent() {
   return (
@@ -153,40 +147,15 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
-function isSafeModeUrl() {
-  return isHardSafeMode();
-}
-
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const pathname = useLocation({ select: (s: { pathname: string }) => s.pathname });
-  const emergencyLocalDemo = isEmergencyLocalDemoMode();
-  const publicStartupPath = isPublicStartupPath(pathname);
-  const disableAuth = emergencyLocalDemo || isStartupDisabled("auth") || publicStartupPath;
-  const disableSync = emergencyLocalDemo || isStartupDisabled("sync") || publicStartupPath;
-  const disablePWA = emergencyLocalDemo || isStartupDisabled("pwa") || publicStartupPath;
 
   useEffect(() => {
-    bootStep("ERPOVO_PROVIDER_AUTH_START", { pathname, disabled: disableAuth });
-    if (isSafeModeUrl() || disableAuth) {
-      bootStep("ERPOVO_PROVIDER_AUTH_READY", { skipped: true });
-      bootStep("ERPOVO_PROVIDER_SYNC_START", { disabled: true });
-      bootStep("ERPOVO_PROVIDER_SYNC_READY", { skipped: true });
-      if (disablePWA) bootStep("ERPOVO_PROVIDER_PWA_READY", { skipped: true });
-      console.info("ERPOVO_AUTH_WIRING_SKIPPED", { pathname });
-      return;
-    }
-    bootStep("ERPOVO_PROVIDER_SYNC_START", { disabled: disableSync });
-    if (!disableSync) {
-      // Wire the Cloud Mode sales uploader so the manual replay button
-      // and the online-event auto-replay can drain queued invoices.
-      import("@/lib/transaction-sync/install").then(({ installSalesUploader }) => {
-        installSalesUploader();
-        bootStep("ERPOVO_PROVIDER_SYNC_READY");
-      });
-    } else {
-      bootStep("ERPOVO_PROVIDER_SYNC_READY", { skipped: true });
-    }
+    // Wire the Cloud Mode sales uploader so the manual replay button
+    // and the online-event auto-replay can drain queued invoices.
+    import("@/lib/transaction-sync/install").then(({ installSalesUploader }) => {
+      installSalesUploader();
+    });
     let mounted = true;
     let lastUserId: string | null | undefined = undefined;
     import("@/integrations/supabase/client").then(({ supabase }) => {
@@ -195,7 +164,6 @@ function RootComponent() {
         supabase.auth.getUser().then(({ data }) => {
           lastUserId = data.user?.id ?? null;
           if (data.user) registerDevice(data.user.id).catch(() => {});
-          bootStep("ERPOVO_PROVIDER_AUTH_READY");
         });
       });
 
@@ -289,30 +257,17 @@ function RootComponent() {
       const sub = (window as unknown as { __erpovoSub?: { unsubscribe: () => void } }).__erpovoSub;
       sub?.unsubscribe();
     };
-  }, [queryClient, pathname, disableAuth, disableSync]);
-
-  const appContent = (
-    <>
-      <StartupWatchdog />
-      <RouteReadyLogger />
-      {/* Required: nested routes render here. */}
-      <Outlet />
-    </>
-  );
+  }, [queryClient]);
 
   return (
     <QueryClientProvider client={queryClient}>
       <GlobalRouteOrchestrator>
-        {disablePWA ? appContent : <Suspense fallback={appContent}><PWAProvider>{appContent}</PWAProvider></Suspense>}
+        <PWAProvider>
+          <StartupWatchdog />
+          {/* Required: nested routes render here. */}
+          <Outlet />
+        </PWAProvider>
       </GlobalRouteOrchestrator>
     </QueryClientProvider>
   );
-}
-
-function RouteReadyLogger() {
-  const pathname = useLocation({ select: (s: { pathname: string }) => s.pathname });
-  useEffect(() => {
-    console.log("ERPOVO_ROUTE_READY", pathname);
-  }, [pathname]);
-  return null;
 }

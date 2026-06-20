@@ -1,7 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { logAudit } from "@/lib/audit";
-import { isDemoMode } from "@/lib/demo/localStore";
 
 export type RegularTemplateId =
   | "classic"
@@ -220,14 +219,11 @@ export function mergeSettings(raw: unknown): CompanySettings {
 }
 
 export function useCompanySettings(companyId: string | null | undefined) {
-  const demoMode = typeof window !== "undefined" && isDemoMode();
   return useQuery({
-    queryKey: ["company-settings", companyId, demoMode ? "demo" : "live"],
+    queryKey: ["company-settings", companyId],
     enabled: !!companyId,
-    initialData: demoMode ? DEFAULT_COMPANY_SETTINGS : undefined,
     queryFn: async (): Promise<CompanySettings> => {
       if (!companyId) return DEFAULT_COMPANY_SETTINGS;
-      if (demoMode) return DEFAULT_COMPANY_SETTINGS;
       const { data, error } = await supabase
         .from("companies")
         .select("settings")

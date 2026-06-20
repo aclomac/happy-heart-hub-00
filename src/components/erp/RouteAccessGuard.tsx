@@ -6,7 +6,6 @@ import { useCurrentRole } from "@/lib/use-current-role";
 import { matchRoute, requiredPlanFor } from "@/lib/route-permissions";
 import { PlanLockScreen } from "@/components/erp/PlanLockScreen";
 import { AccessDeniedScreen } from "@/components/erp/AccessDeniedScreen";
-import { isEmergencyLocalDemoMode } from "@/lib/emergency-local-demo";
 
 function GuardLoader() {
   return (
@@ -25,13 +24,6 @@ function GuardLoader() {
  * sidebar clicks.
  */
 export function RouteAccessGuard({ children }: { children: ReactNode }) {
-  if (isEmergencyLocalDemoMode()) return <>{children}</>;
-
-  return <RouteAccessGuardInner>{children}</RouteAccessGuardInner>;
-}
-
-function RouteAccessGuardInner({ children }: { children: ReactNode }) {
-
   const { pathname } = useLocation();
   const subQ = useSubscription();
   const roleQ = useCurrentRole();

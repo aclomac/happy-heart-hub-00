@@ -3,7 +3,6 @@ import { useI18n } from "@/lib/i18n";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { isDemoMode } from "@/lib/demo/localStore";
-import { getLaunchMode } from "@/lib/launch-mode";
 import {
   Dialog,
   DialogContent,
@@ -148,7 +147,7 @@ export function QuickAddCustomerDialog({
 
       // Non-demo: also persist to Supabase so the customer is visible across devices.
       // Failure here must NOT block the local save — the customer already exists locally.
-      if (!isDemoMode() && getLaunchMode() === "cloud") {
+      if (!isDemoMode()) {
         try {
           const { data: inserted, error } = await supabase
             .from("parties")

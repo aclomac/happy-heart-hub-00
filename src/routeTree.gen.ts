@@ -38,9 +38,6 @@ import { Route as SuperAdminCompaniesRouteImport } from './routes/super-admin.co
 import { Route as SuperAdminAuditLogsRouteImport } from './routes/super-admin.audit-logs'
 import { Route as SuperAdminAnnouncementsRouteImport } from './routes/super-admin.announcements'
 import { Route as StoreSlugRouteImport } from './routes/store.$slug'
-import { Route as DebugImportSalesRouteImport } from './routes/debug.import-sales'
-import { Route as DebugImportPurchasesRouteImport } from './routes/debug.import-purchases'
-import { Route as DebugImportItemsRouteImport } from './routes/debug.import-items'
 import { Route as AppWarehousesRouteImport } from './routes/app.warehouses'
 import { Route as AppUtilitiesRouteImport } from './routes/app.utilities'
 import { Route as AppSyncCenterRouteImport } from './routes/app.sync-center'
@@ -324,21 +321,6 @@ const SuperAdminAnnouncementsRoute = SuperAdminAnnouncementsRouteImport.update({
 const StoreSlugRoute = StoreSlugRouteImport.update({
   id: '/store/$slug',
   path: '/store/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DebugImportSalesRoute = DebugImportSalesRouteImport.update({
-  id: '/debug/import-sales',
-  path: '/debug/import-sales',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DebugImportPurchasesRoute = DebugImportPurchasesRouteImport.update({
-  id: '/debug/import-purchases',
-  path: '/debug/import-purchases',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DebugImportItemsRoute = DebugImportItemsRouteImport.update({
-  id: '/debug/import-items',
-  path: '/debug/import-items',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppWarehousesRoute = AppWarehousesRouteImport.update({
@@ -1106,9 +1088,6 @@ export interface FileRoutesByFullPath {
   '/app/sync-center': typeof AppSyncCenterRoute
   '/app/utilities': typeof AppUtilitiesRouteWithChildren
   '/app/warehouses': typeof AppWarehousesRoute
-  '/debug/import-items': typeof DebugImportItemsRoute
-  '/debug/import-purchases': typeof DebugImportPurchasesRoute
-  '/debug/import-sales': typeof DebugImportSalesRoute
   '/store/$slug': typeof StoreSlugRoute
   '/super-admin/announcements': typeof SuperAdminAnnouncementsRoute
   '/super-admin/audit-logs': typeof SuperAdminAuditLogsRoute
@@ -1272,9 +1251,6 @@ export interface FileRoutesByTo {
   '/app/sync': typeof AppSyncRoute
   '/app/sync-center': typeof AppSyncCenterRoute
   '/app/warehouses': typeof AppWarehousesRoute
-  '/debug/import-items': typeof DebugImportItemsRoute
-  '/debug/import-purchases': typeof DebugImportPurchasesRoute
-  '/debug/import-sales': typeof DebugImportSalesRoute
   '/store/$slug': typeof StoreSlugRoute
   '/super-admin/announcements': typeof SuperAdminAnnouncementsRoute
   '/super-admin/audit-logs': typeof SuperAdminAuditLogsRoute
@@ -1443,9 +1419,6 @@ export interface FileRoutesById {
   '/app/sync-center': typeof AppSyncCenterRoute
   '/app/utilities': typeof AppUtilitiesRouteWithChildren
   '/app/warehouses': typeof AppWarehousesRoute
-  '/debug/import-items': typeof DebugImportItemsRoute
-  '/debug/import-purchases': typeof DebugImportPurchasesRoute
-  '/debug/import-sales': typeof DebugImportSalesRoute
   '/store/$slug': typeof StoreSlugRoute
   '/super-admin/announcements': typeof SuperAdminAnnouncementsRoute
   '/super-admin/audit-logs': typeof SuperAdminAuditLogsRoute
@@ -1615,9 +1588,6 @@ export interface FileRouteTypes {
     | '/app/sync-center'
     | '/app/utilities'
     | '/app/warehouses'
-    | '/debug/import-items'
-    | '/debug/import-purchases'
-    | '/debug/import-sales'
     | '/store/$slug'
     | '/super-admin/announcements'
     | '/super-admin/audit-logs'
@@ -1781,9 +1751,6 @@ export interface FileRouteTypes {
     | '/app/sync'
     | '/app/sync-center'
     | '/app/warehouses'
-    | '/debug/import-items'
-    | '/debug/import-purchases'
-    | '/debug/import-sales'
     | '/store/$slug'
     | '/super-admin/announcements'
     | '/super-admin/audit-logs'
@@ -1951,9 +1918,6 @@ export interface FileRouteTypes {
     | '/app/sync-center'
     | '/app/utilities'
     | '/app/warehouses'
-    | '/debug/import-items'
-    | '/debug/import-purchases'
-    | '/debug/import-sales'
     | '/store/$slug'
     | '/super-admin/announcements'
     | '/super-admin/audit-logs'
@@ -2073,9 +2037,6 @@ export interface RootRouteChildren {
   SuperAdminRoute: typeof SuperAdminRouteWithChildren
   TrustRoute: typeof TrustRoute
   WelcomeRoute: typeof WelcomeRoute
-  DebugImportItemsRoute: typeof DebugImportItemsRoute
-  DebugImportPurchasesRoute: typeof DebugImportPurchasesRoute
-  DebugImportSalesRoute: typeof DebugImportSalesRoute
   StoreSlugRoute: typeof StoreSlugRoute
   ApiIntegrationsProxyRoute: typeof ApiIntegrationsProxyRoute
   ApiIntegrationsSteadfastCreateConsignmentRoute: typeof ApiIntegrationsSteadfastCreateConsignmentRoute
@@ -2289,27 +2250,6 @@ declare module '@tanstack/react-router' {
       path: '/store/$slug'
       fullPath: '/store/$slug'
       preLoaderRoute: typeof StoreSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/debug/import-sales': {
-      id: '/debug/import-sales'
-      path: '/debug/import-sales'
-      fullPath: '/debug/import-sales'
-      preLoaderRoute: typeof DebugImportSalesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/debug/import-purchases': {
-      id: '/debug/import-purchases'
-      path: '/debug/import-purchases'
-      fullPath: '/debug/import-purchases'
-      preLoaderRoute: typeof DebugImportPurchasesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/debug/import-items': {
-      id: '/debug/import-items'
-      path: '/debug/import-items'
-      fullPath: '/debug/import-items'
-      preLoaderRoute: typeof DebugImportItemsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app/warehouses': {
@@ -3849,9 +3789,6 @@ const rootRouteChildren: RootRouteChildren = {
   SuperAdminRoute: SuperAdminRouteWithChildren,
   TrustRoute: TrustRoute,
   WelcomeRoute: WelcomeRoute,
-  DebugImportItemsRoute: DebugImportItemsRoute,
-  DebugImportPurchasesRoute: DebugImportPurchasesRoute,
-  DebugImportSalesRoute: DebugImportSalesRoute,
   StoreSlugRoute: StoreSlugRoute,
   ApiIntegrationsProxyRoute: ApiIntegrationsProxyRoute,
   ApiIntegrationsSteadfastCreateConsignmentRoute:
@@ -3866,13 +3803,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

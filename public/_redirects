@@ -1,4 +1,0 @@
-# Netlify / Cloudflare Pages SPA fallback for ERPOVO.
-# Every non-asset path serves index.html so the client-side router can resolve
-# /login, /signup, /companies, /app, /app/*, etc.
-/*    /index.html   200

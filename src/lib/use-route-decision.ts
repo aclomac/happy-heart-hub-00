@@ -21,7 +21,6 @@ import {
   DEMO_COMPANY_ID,
 } from "@/lib/demo/localStore";
 import { hasChosenLaunchMode } from "@/lib/launch-mode";
-import { bootStep, isStartupDisabled } from "@/lib/startup-switches";
 
 export type RouteDecision =
   | { status: "loading"; debug: DecisionDebug }
@@ -63,8 +62,8 @@ function useAuthUser() {
     // Synchronously honor a demo session so the very first render is
     // already authenticated — prevents a brief "no user → /login" flicker
     // after refresh.
-    if (typeof window !== "undefined" && !isStartupDisabled("mode") && isDemoMode()) {
-      if (!isStartupDisabled("demoSeed") && hasRestorableDemoCookie() && !window.localStorage.getItem(DEMO_SESSION_KEY)) {
+    if (typeof window !== "undefined" && isDemoMode()) {
+      if (hasRestorableDemoCookie() && !window.localStorage.getItem(DEMO_SESSION_KEY)) {
         startDemoSession();
       }
       const s = getDemoSession();
@@ -82,17 +81,9 @@ function useAuthUser() {
 
   useEffect(() => {
     let active = true;
-    bootStep("ERPOVO_PROVIDER_AUTH_START", { disabled: isStartupDisabled("auth") });
-    if (isStartupDisabled("auth")) {
-      setState({ loading: false, userId: null, email: null });
-      bootStep("ERPOVO_PROVIDER_AUTH_READY", { skipped: true });
-      return () => {
-        active = false;
-      };
-    }
     // Demo session short-circuits Supabase auth entirely.
-    if (!isStartupDisabled("mode") && isDemoMode()) {
-      if (!isStartupDisabled("demoSeed") && hasRestorableDemoCookie() && !window.localStorage.getItem(DEMO_SESSION_KEY)) {
+    if (isDemoMode()) {
+      if (hasRestorableDemoCookie() && !window.localStorage.getItem(DEMO_SESSION_KEY)) {
         startDemoSession();
       }
       const s = getDemoSession();
@@ -104,8 +95,6 @@ function useAuthUser() {
         userId: s?.userId ?? DEMO_USER_ID,
         email: s?.email ?? DEMO_USER_EMAIL,
       });
-      bootStep("ERPOVO_PROVIDER_MODE_READY");
-      bootStep("ERPOVO_PROVIDER_AUTH_READY");
       return () => {
         active = false;
       };
@@ -122,7 +111,6 @@ function useAuthUser() {
             userId: res.data.user?.id ?? null,
             email: res.data.user?.email ?? null,
           });
-          bootStep("ERPOVO_PROVIDER_AUTH_READY");
           return;
         }
         const sessionRes = await Promise.race([
@@ -136,17 +124,12 @@ function useAuthUser() {
             userId: sessionRes.data.session?.user?.id ?? null,
             email: sessionRes.data.session?.user?.email ?? null,
           });
-          bootStep("ERPOVO_PROVIDER_AUTH_READY");
           return;
         }
         setState({ loading: false, userId: null, email: null });
-        bootStep("ERPOVO_PROVIDER_AUTH_READY");
       })
       .catch(() => {
-        if (active) {
-          setState({ loading: false, userId: null, email: null });
-          bootStep("ERPOVO_PROVIDER_AUTH_READY");
-        }
+        if (active) setState({ loading: false, userId: null, email: null });
       });
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
       if (!active) return;
@@ -167,12 +150,12 @@ function useAuthUser() {
 
 function useCompaniesCount(userId: string | null) {
   return useQuery({
-    queryKey: ["companies-count", userId, !isStartupDisabled("mode") && isDemoMode() ? "demo" : "live"],
+    queryKey: ["companies-count", userId, isDemoMode() ? "demo" : "live"],
     enabled: !!userId,
     staleTime: 30_000,
     queryFn: async () => {
       // Demo mode: read entirely from localStorage.
-      if (!isStartupDisabled("mode") && isDemoMode()) {
+      if (isDemoMode()) {
         const list = getVisibleDemoCompanies(userId ?? undefined);
         return { count: list.length, firstId: list[0]?.id ?? null };
       }
@@ -213,11 +196,6 @@ export function useRouteDecision(): RouteDecision {
   const companiesQ = useCompaniesCount(queriesEnabled ? auth.userId : null);
 
   useEffect(() => {
-    bootStep("ERPOVO_PROVIDER_COMPANY_START", { disabled: isStartupDisabled("company") });
-    if (isStartupDisabled("company")) {
-      bootStep("ERPOVO_PROVIDER_COMPANY_READY", { skipped: true });
-      return;
-    }
     const companies = companiesQ.data;
     const visibleLocalCompanies = isDemoMode() && auth.userId ? getVisibleDemoCompanies(auth.userId) : [];
     const selectedLocalCompanyValid = !isDemoMode() || !companyId || visibleLocalCompanies.some((c) => c.id === companyId);
@@ -248,7 +226,6 @@ export function useRouteDecision(): RouteDecision {
         setCurrentCompanyId(companies.firstId, auth.userId);
       }
     }
-    bootStep("ERPOVO_PROVIDER_COMPANY_READY");
   }, [auth.userId, companyId, companiesQ.data]);
 
   const debug: DecisionDebug = {

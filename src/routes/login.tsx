@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { seedDemoData } from "@/lib/demo/seedDemo";
 import { DEMO_EMAIL, DEMO_PASSWORD } from "@/lib/demo/constants";
 import { setCurrentCompanyId } from "@/lib/use-company";
 import {
@@ -21,21 +22,10 @@ import {
 
 
 import { findUserByEmailOrMobile, getLocalUsers, setLocalUsers } from "@/lib/demo/localUsers";
-import { bootStep, isStartupDisabled } from "@/lib/startup-switches";
-import { isEmergencyLocalDemoMode } from "@/lib/emergency-local-demo";
-
-const DEMO_SEED_ONCE_KEY = "erpovo:demoSeedAttempted:v1";
-
-import { isMinimalMode } from "@/lib/startup-switches";
+import { PWAInstallButton } from "@/components/erp/PWAInstallButton";
 
 export const Route = createFileRoute("/login")({
   beforeLoad: (ctx: any) => {
-    if (isEmergencyLocalDemoMode()) {
-      throw redirect({ to: "/app" });
-    }
-    // Minimal mode: skip ALL pre-route work (no localStorage reads, no demo
-    // detection, no redirect). Render plain login form only.
-    if (isMinimalMode()) return;
     if (ctx.serverContext?.demoAuth || isDemoMode()) {
       if (import.meta.env.DEV) {
         console.log("[demo-auth] /login route redirected demo user to /app");
@@ -45,7 +35,6 @@ export const Route = createFileRoute("/login")({
   },
   component: Login,
 });
-
 
 function Login() {
   const nav = useNavigate();
@@ -69,18 +58,9 @@ function Login() {
         startDemoSession();
         setCurrentCompanyId(DEMO_COMPANY_ID, DEMO_USER_ID);
         try {
-          if (!isStartupDisabled("demoSeed") && sessionStorage.getItem(DEMO_SEED_ONCE_KEY) !== "1") {
-            sessionStorage.setItem(DEMO_SEED_ONCE_KEY, "1");
-            bootStep("ERPOVO_PROVIDER_DEMO_SEED_START");
-            const { seedDemoData } = await import("@/lib/demo/seedDemo");
-            const report = await seedDemoData();
-            if (report.companyId) setCurrentCompanyId(report.companyId);
-            bootStep("ERPOVO_PROVIDER_DEMO_SEED_READY", { ok: report.ok });
-          } else {
-            bootStep("ERPOVO_PROVIDER_DEMO_SEED_READY", { skipped: true });
-          }
+          const report = await seedDemoData();
+          if (report.companyId) setCurrentCompanyId(report.companyId);
         } catch {
-          bootStep("ERPOVO_PROVIDER_DEMO_SEED_READY", { failed: true });
           /* best-effort */
         }
         toast.success("Signed in as Demo (local mode)");
@@ -304,6 +284,9 @@ function Login() {
             <Link to="/signup" className="text-primary font-medium hover:underline">
               Sign Up
             </Link>
+          </div>
+          <div className="mt-8 pt-8 border-t">
+            <PWAInstallButton variant="outline" className="w-full" />
           </div>
         </div>
       </div>

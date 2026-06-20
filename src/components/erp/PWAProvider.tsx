@@ -3,7 +3,6 @@ import { useI18n } from "@/lib/i18n";
 import { toast } from "sonner";
 import { WifiOff } from "lucide-react";
 import { registerErpovoServiceWorker, ERPOVO_SW_CACHE_VERSION } from "@/lib/pwa-cache-control";
-import { bootStep, isStartupDisabled } from "@/lib/startup-switches";
 
 interface PWAContextType {
   isOffline: boolean;
@@ -61,21 +60,6 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
     if (typeof window === "undefined" || !("serviceWorker" in navigator) || !import.meta.env.PROD)
       return;
     if (isCapacitorBundledRuntime()) return;
-    bootStep("ERPOVO_PROVIDER_PWA_START", { disabled: isStartupDisabled("pwa") });
-    if (isStartupDisabled("pwa")) {
-      bootStep("ERPOVO_PROVIDER_PWA_READY", { skipped: true });
-      return;
-    }
-    try {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get("safe") === "1" || params.get("panic") === "1") {
-        console.info("ERPOVO_SAFE_MODE_ACTIVE — skipping SW registration");
-        bootStep("ERPOVO_PROVIDER_PWA_READY", { skipped: true });
-        return;
-      }
-    } catch {
-      // ignore
-    }
 
     let disposed = false;
     let idleHandle: number | null = null;
@@ -96,11 +80,9 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
           }
           const dt = Math.round(performance.now() - t0);
           console.info("ERPOVO_SW_REGISTER_DONE", { ms: dt });
-          bootStep("ERPOVO_PROVIDER_PWA_READY", { ms: dt });
         })
         .catch((err) => {
           console.warn("ERPOVO_SW_REGISTER_FAILED", err);
-          bootStep("ERPOVO_PROVIDER_PWA_READY", { failed: true });
         });
     };
 

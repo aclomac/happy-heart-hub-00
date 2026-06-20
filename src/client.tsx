@@ -22,33 +22,23 @@
  *    same `getRouter()` factory and route tree the web build uses, so
  *    business logic, sync logic, and Local/Cloud mode are unchanged.
  */
-import { StrictMode, Suspense, startTransition } from "react";
+import { StrictMode, startTransition } from "react";
 import { createRoot, hydrateRoot } from "react-dom/client";
 import { RouterProvider } from "@tanstack/react-router";
 import { StartClient } from "@tanstack/react-start/client";
 
 import { getRouter } from "./router";
 import {
-  primeEmergencyLocalDemo,
-  redirectDisabledLoginToApp,
-} from "./lib/emergency-local-demo";
-import {
   DEPLOYED_BUILD_HASH,
   DEPLOYED_BUILD_TIMESTAMP,
   DEPLOYED_BUILD_VERSION,
   ERPOVO_SW_CACHE_VERSION,
 } from "./lib/build-info";
-import { bootStep, startupSwitchSnapshot } from "./lib/startup-switches";
 
 declare global {
   interface Window {
     __ERPOVO_CAPACITOR_BUNDLED__?: boolean;
-    __ERPOVO_STATIC_HOSTINGER__?: boolean;
-    __ERPOVO_RUNTIME_MODE__?: string;
     __ERPOVO_SHOW_STARTUP_ERROR__?: (reason: unknown) => void;
-    __ERPOVO_SHOW_ERROR__?: (reason: unknown) => void;
-    
-    __ERPOVO_BOOT_READY__?: boolean;
   }
 }
 
@@ -56,44 +46,10 @@ function isCapacitorBundled(): boolean {
   return typeof window !== "undefined" && window.__ERPOVO_CAPACITOR_BUNDLED__ === true;
 }
 
-function isStaticHostinger(): boolean {
-  return typeof window !== "undefined" && window.__ERPOVO_STATIC_HOSTINGER__ === true;
-}
-
-function shouldUseSpaMount(): boolean {
-  return isCapacitorBundled() || isStaticHostinger();
-}
-
-function hasSearchFlag(name: string): boolean {
-  if (typeof window === "undefined") return false;
-  try {
-    return new URLSearchParams(window.location.search).get(name) === "1";
-  } catch {
-    return false;
-  }
-}
-
-function NoRouterDiagnostic() {
-  return (
-    <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: 24 }}>
-      <section style={{ width: "min(640px, 100%)", border: "1px solid #cbd5e1", borderRadius: 8, padding: 24, background: "#fff" }}>
-        <h1 style={{ marginTop: 0 }}>ERPOVO No-Router Diagnostic</h1>
-        <p>The main bundle loaded, but TanStack Router and app providers were not created.</p>
-        <input aria-label="No router test input" placeholder="Type here" style={{ width: "100%", boxSizing: "border-box", padding: 10, marginBottom: 12 }} />
-        <button type="button" onClick={() => alert("No-router diagnostic is responsive")}>Click test</button>
-      </section>
-    </main>
-  );
-}
-
-function bootLog(name: string) {
-  bootStep(name);
-}
-
 function reportStartupError(error: unknown): void {
   if (typeof window === "undefined") return;
   try {
-    (window.__ERPOVO_SHOW_STARTUP_ERROR__ ?? window.__ERPOVO_SHOW_ERROR__)?.(error);
+    window.__ERPOVO_SHOW_STARTUP_ERROR__?.(error);
   } catch {
     // ignore — fallback panel is best-effort
   }
@@ -111,73 +67,42 @@ function showBootWatchdogPanel() {
 }
 
 if (typeof window !== "undefined") {
-  primeEmergencyLocalDemo();
-  redirectDisabledLoginToApp();
   window.__ERPOVO_BOOT_READY__ = false;
-  bootStep("ERPOVO_BOOT_START", {
+  console.info("ERPOVO_BOOT_START", {
     route: window.location.pathname,
     buildVersion: DEPLOYED_BUILD_VERSION,
     swVersion: ERPOVO_SW_CACHE_VERSION,
-  });
-  bootStep("ERPOVO_CLIENT_ENTRY_LOADED", {
-    route: window.location.pathname,
-    buildVersion: DEPLOYED_BUILD_VERSION,
-    swVersion: ERPOVO_SW_CACHE_VERSION,
-    switches: startupSwitchSnapshot(),
   });
   window.setTimeout(showBootWatchdogPanel, 8000);
 }
 
-if (shouldUseSpaMount()) {
-  const mode = isCapacitorBundled() ? "capacitor-bundled" : "hostinger-static";
+if (isCapacitorBundled()) {
   try {
     const host = document.getElementById("root");
     if (!host) {
       throw new Error(
-        `SPA mount (${mode}) requires <div id="root"> in dist/client/index.html`,
+        "Capacitor bundled boot requires <div id=\"root\"> in dist/client/index.html",
       );
     }
-    if (hasSearchFlag("noRouter")) {
-      bootLog("ERPOVO_ROUTER_SKIPPED_NO_ROUTER");
-      startTransition(() => {
-        createRoot(host).render(
-          <StrictMode>
-            <NoRouterDiagnostic />
-          </StrictMode>,
-        );
-        window.__ERPOVO_BOOT_READY__ = true;
-        bootLog("ERPOVO_BOOT_READY");
-      });
-    } else {
-    bootLog("ERPOVO_ROUTER_CREATE_START");
     const router = getRouter();
-    bootLog("ERPOVO_ROUTER_CREATED");
     console.info("ERPOVO_ROUTE_MATCH", {
-      mode,
       route: window.location.pathname,
       buildHash: DEPLOYED_BUILD_HASH,
       swVersion: ERPOVO_SW_CACHE_VERSION,
     });
     startTransition(() => {
-      bootLog("ERPOVO_APP_RENDER_START");
       createRoot(host).render(
         <StrictMode>
-          <Suspense fallback={null}>
-            <RouterProvider router={router} />
-          </Suspense>
+          <RouterProvider router={router} />
         </StrictMode>,
       );
       window.__ERPOVO_BOOT_READY__ = true;
-      bootLog("ERPOVO_APP_RENDER_READY");
-      bootLog("ERPOVO_BOOT_READY");
       console.info("ERPOVO_BOOT_READY", {
-        mode,
         route: window.location.pathname,
         buildVersion: DEPLOYED_BUILD_VERSION,
         swVersion: ERPOVO_SW_CACHE_VERSION,
       });
     });
-    }
   } catch (error) {
     reportStartupError(error);
     throw error;
