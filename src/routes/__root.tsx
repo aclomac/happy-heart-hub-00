@@ -264,10 +264,19 @@ function RootComponent() {
       <GlobalRouteOrchestrator>
         <PWAProvider>
           <StartupWatchdog />
+          <RouteReadyLogger />
           {/* Required: nested routes render here. */}
           <Outlet />
         </PWAProvider>
       </GlobalRouteOrchestrator>
     </QueryClientProvider>
   );
+}
+
+function RouteReadyLogger() {
+  const pathname = useLocation({ select: (s) => s.pathname });
+  useEffect(() => {
+    console.log("ERPOVO_ROUTE_READY", pathname);
+  }, [pathname]);
+  return null;
 }
