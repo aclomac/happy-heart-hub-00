@@ -267,7 +267,7 @@ ${cssLinks}
               "Entry: " + BUILD.entry,
               "Steps: " + steps.map(function (s) { return s.name; }).join(", "),
               "User agent: " + navigator.userAgent
-            ].join("\n");
+            ].join("\\n");
             navigator.clipboard && navigator.clipboard.writeText(payload).then(function () { write("Diagnostics copied."); }, function () { write(payload); });
           };
         }
