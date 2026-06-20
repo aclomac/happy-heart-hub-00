@@ -20,6 +20,15 @@ export function PWAInstallButton({
   if (typeof window !== "undefined" && (isStartupDisabled("pwa") || isPublicStartupPath())) {
     return null;
   }
+  return <PWAInstallButtonInner variant={variant} size={size} className={className} showIcon={showIcon} />;
+}
+
+function PWAInstallButtonInner({
+  variant = "default",
+  size = "default",
+  className,
+  showIcon = true,
+}: PWAInstallButtonProps) {
   const { isInstallAvailable, isInstalled, install } = usePWA();
   const { t } = useI18n();
 
