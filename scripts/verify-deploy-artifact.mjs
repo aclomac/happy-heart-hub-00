@@ -43,4 +43,15 @@ if (!/\/\*\s+\/index\.html\s+200/.test(redirects)) {
   process.exit(1);
 }
 
+// All script/link asset refs must be absolute (/assets/...), never ./assets or /app/assets
+const badRefs = [...indexHtml.matchAll(/(?:src|href)\s*=\s*"([^"]+)"/g)]
+  .map((m) => m[1])
+  .filter((u) => /assets\//.test(u) && !u.startsWith("/assets/"));
+if (badRefs.length) {
+  console.error("[verify-deploy-artifact] index.html has non-absolute asset refs:");
+  for (const r of badRefs) console.error("  - " + r);
+  process.exit(1);
+}
+
 console.log("ERPOVO_DEPLOY_ARTIFACT_OK");
+console.log("ERPOVO_ASSET_REFERENCES_OK");
