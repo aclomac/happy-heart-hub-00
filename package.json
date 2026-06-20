@@ -12,7 +12,7 @@
   "build:dev": "vite build --mode development",
   "build:capacitor-html": "tsx scripts/build-capacitor-html.ts",
   "preview": "vite preview",
-  "start": "node server.js",
+  "start": "node hostinger-server.js",
   "preview:vite": "vite preview --host 0.0.0.0 --port 3000",
   "lint": "eslint .",
   "lint:fix": "eslint . --fix",
