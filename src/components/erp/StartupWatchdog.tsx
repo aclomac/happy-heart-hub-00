@@ -32,7 +32,7 @@ export function StartupWatchdog() {
         setLastStep(lastBootStep());
         setSlowBoot(true);
       }
-    }, 6000);
+    }, 8000);
     return () => window.clearTimeout(timer);
   }, []);
 
