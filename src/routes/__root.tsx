@@ -150,27 +150,35 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 
 function isSafeModeUrl() {
-  if (typeof window === "undefined") return false;
-  try {
-    return new URLSearchParams(window.location.search).get("safe") === "1";
-  } catch {
-    return false;
-  }
+  return isHardSafeMode();
 }
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const pathname = useLocation({ select: (s: { pathname: string }) => s.pathname });
+  const publicStartupPath = isPublicStartupPath(pathname);
+  const disableAuth = isStartupDisabled("auth") || publicStartupPath;
+  const disableSync = isStartupDisabled("sync") || publicStartupPath;
+  const disablePWA = isStartupDisabled("pwa") || publicStartupPath;
 
   useEffect(() => {
-    if (isSafeModeUrl()) {
-      console.info("ERPOVO_SAFE_MODE_ACTIVE — skipping supabase auth wiring");
+    bootStep("ERPOVO_PROVIDER_AUTH_START", { pathname, disabled: disableAuth });
+    if (isSafeModeUrl() || disableAuth) {
+      bootStep("ERPOVO_PROVIDER_AUTH_READY", { skipped: true });
+      console.info("ERPOVO_AUTH_WIRING_SKIPPED", { pathname });
       return;
     }
-    // Wire the Cloud Mode sales uploader so the manual replay button
-    // and the online-event auto-replay can drain queued invoices.
-    import("@/lib/transaction-sync/install").then(({ installSalesUploader }) => {
-      installSalesUploader();
-    });
+    bootStep("ERPOVO_PROVIDER_SYNC_START", { disabled: disableSync });
+    if (!disableSync) {
+      // Wire the Cloud Mode sales uploader so the manual replay button
+      // and the online-event auto-replay can drain queued invoices.
+      import("@/lib/transaction-sync/install").then(({ installSalesUploader }) => {
+        installSalesUploader();
+        bootStep("ERPOVO_PROVIDER_SYNC_READY");
+      });
+    } else {
+      bootStep("ERPOVO_PROVIDER_SYNC_READY", { skipped: true });
+    }
     let mounted = true;
     let lastUserId: string | null | undefined = undefined;
     import("@/integrations/supabase/client").then(({ supabase }) => {
