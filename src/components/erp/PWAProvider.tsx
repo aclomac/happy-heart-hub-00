@@ -60,6 +60,14 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
     if (typeof window === "undefined" || !("serviceWorker" in navigator) || !import.meta.env.PROD)
       return;
     if (isCapacitorBundledRuntime()) return;
+    try {
+      if (new URLSearchParams(window.location.search).get("safe") === "1") {
+        console.info("ERPOVO_SAFE_MODE_ACTIVE — skipping SW registration");
+        return;
+      }
+    } catch {
+      // ignore
+    }
 
     let disposed = false;
     let idleHandle: number | null = null;
