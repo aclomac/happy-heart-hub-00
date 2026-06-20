@@ -338,7 +338,7 @@ ${cssLinks}
           lastError = e.reason instanceof Error ? e.reason : new Error(String(e.reason));
         });
 
-        window.addEventListener("DOMContentLoaded", function () {
+        if (!hasParam("safe") && !hasParam("panic")) window.addEventListener("DOMContentLoaded", function () {
           var host = document.getElementById("root");
           if (!host) return;
           var obs = new MutationObserver(function () {
