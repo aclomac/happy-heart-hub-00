@@ -1,7 +1,15 @@
+declare const __ERPOVO_BUILD_TIMESTAMP__: string;
+declare const __ERPOVO_BUILD_HASH__: string;
+declare const __ERPOVO_SW_CACHE_VERSION__: string;
+
 // Internal build metadata for ERPOVO. Updated when a new stable
 // checkpoint is approved by QA. Do not change casually.
 export const BUILD_LABEL = "ERPOVO Stable Build - 500k Performance Benchmark Passed";
 export const BUILD_STAMP = "2026-06-14";
+export const DEPLOYED_BUILD_TIMESTAMP = __ERPOVO_BUILD_TIMESTAMP__;
+export const DEPLOYED_BUILD_HASH = __ERPOVO_BUILD_HASH__;
+export const ERPOVO_SW_CACHE_VERSION = __ERPOVO_SW_CACHE_VERSION__;
+export const DEPLOYED_BUILD_VERSION = `${DEPLOYED_BUILD_TIMESTAMP}.${DEPLOYED_BUILD_HASH}`;
 export const BUILD_NOTES: string[] = [
   "500,000 PERF records stress test passed",
   "IndexedDB used exclusively for PERF records (isolated from real/demo data)",

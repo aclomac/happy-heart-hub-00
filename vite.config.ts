@@ -7,6 +7,15 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { VitePWA } from "vite-plugin-pwa";
 
+const ERPOVO_SW_CACHE_VERSION = "erpovo-sw-2026-06-20-cache-v4";
+const ERPOVO_BUILD_TIMESTAMP = new Date().toISOString();
+const ERPOVO_BUILD_HASH =
+  process.env.VITE_ERPOVO_BUILD_HASH ||
+  process.env.GITHUB_SHA?.slice(0, 12) ||
+  process.env.CF_PAGES_COMMIT_SHA?.slice(0, 12) ||
+  process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 12) ||
+  "local";
+
 export default defineConfig({
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
@@ -14,8 +23,14 @@ export default defineConfig({
     server: { entry: "server" },
   },
   vite: {
+    define: {
+      __ERPOVO_BUILD_TIMESTAMP__: JSON.stringify(ERPOVO_BUILD_TIMESTAMP),
+      __ERPOVO_BUILD_HASH__: JSON.stringify(ERPOVO_BUILD_HASH),
+      __ERPOVO_SW_CACHE_VERSION__: JSON.stringify(ERPOVO_SW_CACHE_VERSION),
+    },
     plugins: [
       VitePWA({
+        injectRegister: false,
         registerType: "autoUpdate",
         includeAssets: ["favicon.ico", "icon.svg", "apple-touch-icon.png", "offline.html"],
         manifest: {
@@ -44,6 +59,8 @@ export default defineConfig({
           ],
         },
         workbox: {
+          cacheId: ERPOVO_SW_CACHE_VERSION,
+          importScripts: ["/erpovo-sw-cleanup.js"],
           // Force the new SW to activate immediately on update so the Android
           // WebView (and PWA browsers) never serve a stale JS bundle after a
           // deploy. Combined with registerType: "autoUpdate" this guarantees
@@ -51,8 +68,8 @@ export default defineConfig({
           skipWaiting: true,
           clientsClaim: true,
           cleanupOutdatedCaches: true,
-          globPatterns: ["**/*.{js,css,html,ico,png,svg,webmanifest}"],
-          navigateFallback: "index.html",
+          globPatterns: ["**/*.{js,css,ico,png,svg,webmanifest}"],
+          navigateFallback: null,
           navigateFallbackDenylist: [
             /^\/api/,
             /^\/auth/,
@@ -70,14 +87,12 @@ export default defineConfig({
           runtimeCaching: [
             {
               // HTML navigations — always try network first so updated app
-              // shells reach users (and the Android WebView) immediately.
-              // Falls back to cache only when offline.
+              // shells reach users immediately. Do not cache navigations here;
+              // route fallback is handled by the host, not a stale app shell.
               urlPattern: ({ request }) => request.mode === "navigate",
-              handler: "NetworkFirst",
+              handler: "NetworkOnly",
               options: {
-                cacheName: "html-navigations",
-                networkTimeoutSeconds: 3,
-                expiration: { maxEntries: 32, maxAgeSeconds: 60 * 60 * 24 },
+                cacheName: `${ERPOVO_SW_CACHE_VERSION}-html-navigations`,
               },
             },
             {
@@ -87,7 +102,7 @@ export default defineConfig({
                 request.destination === "script" || request.destination === "style",
               handler: "NetworkFirst",
               options: {
-                cacheName: "static-assets",
+                cacheName: `${ERPOVO_SW_CACHE_VERSION}-static-assets`,
                 networkTimeoutSeconds: 3,
                 expiration: { maxEntries: 64, maxAgeSeconds: 60 * 60 * 24 * 7 },
               },
@@ -113,6 +128,7 @@ export default defineConfig({
             },
           ],
         },
+        devOptions: { enabled: false },
 
       }),
     ],
