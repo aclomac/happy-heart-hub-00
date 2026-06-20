@@ -95,28 +95,36 @@ if (typeof window !== "undefined") {
   window.setTimeout(showBootWatchdogPanel, 8000);
 }
 
-if (isCapacitorBundled()) {
+if (shouldUseSpaMount()) {
+  const mode = isCapacitorBundled() ? "capacitor-bundled" : "hostinger-static";
   try {
     const host = document.getElementById("root");
     if (!host) {
       throw new Error(
-        "Capacitor bundled boot requires <div id=\"root\"> in dist/client/index.html",
+        `SPA mount (${mode}) requires <div id="root"> in dist/client/index.html`,
       );
     }
+    bootLog("ERPOVO_CLIENT_ENTRY_LOADED");
     const router = getRouter();
+    bootLog("ERPOVO_ROUTER_CREATED");
     console.info("ERPOVO_ROUTE_MATCH", {
+      mode,
       route: window.location.pathname,
       buildHash: DEPLOYED_BUILD_HASH,
       swVersion: ERPOVO_SW_CACHE_VERSION,
     });
     startTransition(() => {
+      bootLog("ERPOVO_ROUTER_PROVIDER_RENDER_START");
       createRoot(host).render(
         <StrictMode>
           <RouterProvider router={router} />
         </StrictMode>,
       );
       window.__ERPOVO_BOOT_READY__ = true;
+      bootLog("ERPOVO_APP_RENDERED");
+      bootLog("ERPOVO_BOOT_READY");
       console.info("ERPOVO_BOOT_READY", {
+        mode,
         route: window.location.pathname,
         buildVersion: DEPLOYED_BUILD_VERSION,
         swVersion: ERPOVO_SW_CACHE_VERSION,
