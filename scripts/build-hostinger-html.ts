@@ -169,8 +169,10 @@ ${preloadLinks}
       </div>
     </div>
     <script>
+      window.__ERPOVO_STATIC_HOSTINGER__ = true;
+      window.__ERPOVO_RUNTIME_MODE__ = "hostinger-static";
       (function () {
-        var BUILD = ${jsonForInline({ version: buildVersion, time: buildTime, assetBase, entry })};
+        var BUILD = ${jsonForInline({ version: buildVersion, time: buildTime, assetBase, entry, mode: "hostinger-static" })};
         var steps = [];
         var lastError = null;
         var mounted = false;
@@ -182,6 +184,7 @@ ${preloadLinks}
         }
         window.__ERPOVO_BOOT__ = { steps: steps, build: BUILD, log: logStep };
         logStep("ERPOVO_BOOT_START");
+        logStep("ERPOVO_RUNTIME_MODE:hostinger-static");
 
         function showErrorPanel(err) {
           if (mounted) return;
