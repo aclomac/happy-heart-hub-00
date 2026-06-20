@@ -38,12 +38,31 @@ import {
 declare global {
   interface Window {
     __ERPOVO_CAPACITOR_BUNDLED__?: boolean;
+    __ERPOVO_STATIC_HOSTINGER__?: boolean;
+    __ERPOVO_RUNTIME_MODE__?: string;
     __ERPOVO_SHOW_STARTUP_ERROR__?: (reason: unknown) => void;
+    __ERPOVO_BOOT__?: { log?: (name: string) => void };
   }
 }
 
 function isCapacitorBundled(): boolean {
   return typeof window !== "undefined" && window.__ERPOVO_CAPACITOR_BUNDLED__ === true;
+}
+
+function isStaticHostinger(): boolean {
+  return typeof window !== "undefined" && window.__ERPOVO_STATIC_HOSTINGER__ === true;
+}
+
+function shouldUseSpaMount(): boolean {
+  return isCapacitorBundled() || isStaticHostinger();
+}
+
+function bootLog(name: string) {
+  try {
+    window.__ERPOVO_BOOT__?.log?.(name);
+  } catch {
+    /* ignore */
+  }
 }
 
 function reportStartupError(error: unknown): void {
