@@ -308,7 +308,14 @@ export function POS() {
   const [quickAddPrefill, setQuickAddPrefill] = useState<{ name?: string; phone?: string }>({});
 
   useEffect(() => {
-    migrateLegacyPosSalesOnce();
+    console.log("ERPOVO_POS_MOUNT", { pathname: typeof window !== "undefined" ? window.location.pathname : "" });
+    const run = () => migrateLegacyPosSalesOnce();
+    const w = typeof window !== "undefined" ? (window as Window & { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number }) : null;
+    if (w?.requestIdleCallback) {
+      w.requestIdleCallback(run, { timeout: 2000 });
+    } else {
+      setTimeout(run, 0);
+    }
   }, []);
 
   useEffect(() => {
