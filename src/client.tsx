@@ -86,6 +86,11 @@ function showBootWatchdogPanel() {
 
 if (typeof window !== "undefined") {
   window.__ERPOVO_BOOT_READY__ = false;
+  bootStep("ERPOVO_BOOT_START", {
+    route: window.location.pathname,
+    buildVersion: DEPLOYED_BUILD_VERSION,
+    swVersion: ERPOVO_SW_CACHE_VERSION,
+  });
   bootStep("ERPOVO_CLIENT_ENTRY_LOADED", {
     route: window.location.pathname,
     buildVersion: DEPLOYED_BUILD_VERSION,
