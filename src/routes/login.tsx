@@ -21,7 +21,6 @@ import {
 
 
 import { findUserByEmailOrMobile, getLocalUsers, setLocalUsers } from "@/lib/demo/localUsers";
-import { PWAInstallButton } from "@/components/erp/PWAInstallButton";
 import { bootStep, isStartupDisabled } from "@/lib/startup-switches";
 
 const DEMO_SEED_ONCE_KEY = "erpovo:demoSeedAttempted:v1";
@@ -295,9 +294,6 @@ function Login() {
             <Link to="/signup" className="text-primary font-medium hover:underline">
               Sign Up
             </Link>
-          </div>
-          <div className="mt-8 pt-8 border-t">
-            <PWAInstallButton variant="outline" className="w-full" />
           </div>
         </div>
       </div>
