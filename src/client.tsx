@@ -28,6 +28,12 @@ import { RouterProvider } from "@tanstack/react-router";
 import { StartClient } from "@tanstack/react-start/client";
 
 import { getRouter } from "./router";
+import {
+  DEPLOYED_BUILD_HASH,
+  DEPLOYED_BUILD_TIMESTAMP,
+  DEPLOYED_BUILD_VERSION,
+  ERPOVO_SW_CACHE_VERSION,
+} from "./lib/build-info";
 
 declare global {
   interface Window {
@@ -49,6 +55,27 @@ function reportStartupError(error: unknown): void {
   }
 }
 
+function showBootWatchdogPanel() {
+  if (typeof document === "undefined" || window.__ERPOVO_BOOT_READY__) return;
+  if (document.getElementById("erpovo-boot-watchdog")) return;
+  const panel = document.createElement("div");
+  panel.id = "erpovo-boot-watchdog";
+  panel.style.cssText =
+    "position:fixed;right:16px;bottom:16px;z-index:2147483647;max-width:360px;padding:16px;border:1px solid #fca5a5;border-radius:8px;background:#fff;color:#0f172a;box-shadow:0 20px 45px rgba(15,23,42,.18);font:13px/1.45 system-ui,-apple-system,Segoe UI,sans-serif";
+  panel.innerHTML = `<strong style="display:block;margin-bottom:8px">ERPOVO startup is taking longer than expected.</strong><div>Route: ${window.location.pathname}</div><div>Build: ${DEPLOYED_BUILD_TIMESTAMP}</div><div>Hash: ${DEPLOYED_BUILD_HASH}</div><div>Service worker: ${ERPOVO_SW_CACHE_VERSION}</div>`;
+  document.body.appendChild(panel);
+}
+
+if (typeof window !== "undefined") {
+  window.__ERPOVO_BOOT_READY__ = false;
+  console.info("ERPOVO_BOOT_START", {
+    route: window.location.pathname,
+    buildVersion: DEPLOYED_BUILD_VERSION,
+    swVersion: ERPOVO_SW_CACHE_VERSION,
+  });
+  window.setTimeout(showBootWatchdogPanel, 8000);
+}
+
 if (isCapacitorBundled()) {
   try {
     const host = document.getElementById("root");
@@ -58,12 +85,23 @@ if (isCapacitorBundled()) {
       );
     }
     const router = getRouter();
+    console.info("ERPOVO_ROUTE_MATCH", {
+      route: window.location.pathname,
+      buildHash: DEPLOYED_BUILD_HASH,
+      swVersion: ERPOVO_SW_CACHE_VERSION,
+    });
     startTransition(() => {
       createRoot(host).render(
         <StrictMode>
           <RouterProvider router={router} />
         </StrictMode>,
       );
+      window.__ERPOVO_BOOT_READY__ = true;
+      console.info("ERPOVO_BOOT_READY", {
+        route: window.location.pathname,
+        buildVersion: DEPLOYED_BUILD_VERSION,
+        swVersion: ERPOVO_SW_CACHE_VERSION,
+      });
     });
   } catch (error) {
     reportStartupError(error);
