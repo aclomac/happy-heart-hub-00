@@ -29,7 +29,7 @@ function NavDiagOverlay() {
 
 /**
   * Wraps the route Outlet and shows diagnostics. Feature routes themselves
-  * now render lightweight shells, so no route is gated behind "Load this page".
+  * now render lightweight shells, so route navigation never mounts old heavy pages.
  */
 export function NavSafeOutlet() {
   initNavSafeMode();
