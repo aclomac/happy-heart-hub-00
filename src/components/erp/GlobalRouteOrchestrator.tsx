@@ -47,32 +47,30 @@ export function GlobalRouteOrchestrator({ children }: { children: ReactNode }) {
     }
   }, [pathname]);
 
+  const decisionStatus = decision.status;
+  const decisionTarget = decision.status === "ready" ? decision.target : null;
+
   useEffect(() => {
     if (haltReason) return; // hard stop
-    if (decision.status !== "ready") return; // never nav during loading
-    const target = decision.target;
+    if (decisionStatus !== "ready") return; // never nav during loading
+    const target = decisionTarget;
     if (!target) return;
 
     // Idempotency: already on target, or just sent.
     if (target === pathname) {
-      setLastBlockReason(`already on ${target}`);
+      if (lastBlockReason !== `already on ${target}`) {
+        setLastBlockReason(`already on ${target}`);
+      }
       return;
     }
     if (lastRedirectRef.current === target) {
-      setLastBlockReason(`duplicate target ${target}`);
+      if (lastBlockReason !== `duplicate target ${target}`) {
+        setLastBlockReason(`duplicate target ${target}`);
+      }
       return;
     }
 
     const now = Date.now();
-    // Throttle: same target within 2 seconds.
-    if (
-      lastRedirectRef.current === null &&
-      target === decision.debug.redirectTarget &&
-      now - lastRedirectTimeRef.current < 2000 &&
-      redirectHistoryRef.current.length > 0
-    ) {
-      // Not strictly needed, the duplicate-target check above usually covers it.
-    }
 
     // Sliding window of 5 seconds.
     redirectHistoryRef.current = redirectHistoryRef.current.filter((t) => now - t < 5000);
@@ -88,9 +86,12 @@ export function GlobalRouteOrchestrator({ children }: { children: ReactNode }) {
     lastRedirectTimeRef.current = now;
     redirectHistoryRef.current.push(now);
     setRedirectCount((c) => c + 1);
-    setLastBlockReason(null);
+    if (lastBlockReason !== null) setLastBlockReason(null);
     navigate({ to: target as never, replace: true });
-  }, [decision, pathname, navigate, haltReason]);
+    // lastBlockReason intentionally omitted from deps — we read it as a guard
+    // to avoid redundant setState that would re-trigger this effect every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [decisionStatus, decisionTarget, pathname, navigate, haltReason]);
 
   // Debug panel: NEVER show in production.
   // In DEV, it only shows if explicitly enabled via localStorage "erpovo:debug" = "true"
