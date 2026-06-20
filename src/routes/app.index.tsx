@@ -206,7 +206,9 @@ function StatusPill({ kind }: { kind: "Paid" | "Partial" | "Due" | "Confirmed" |
 // ───────────────────────────────────────────────────────── page ────────
 function Dashboard() {
   const companyId = useCurrentCompanyId();
-  useDashboardMountLog();
+  useEffect(() => {
+    console.log("ERPOVO_DASHBOARD_MOUNT", { pathname: typeof window !== "undefined" ? window.location.pathname : "" });
+  }, []);
 
   const invQ = useQuery({
     queryKey: ["dashboard-inventory", companyId, isDemoMode() ? "demo" : "live"],
