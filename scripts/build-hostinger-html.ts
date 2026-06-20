@@ -126,9 +126,7 @@ const cssHrefs = collectCss(manifest);
 const cssLinks = cssHrefs
   .map((h) => `    <link rel="stylesheet" href="${escapeHtml(h)}" />`)
   .join("\n");
-const preloadLinks = extraPreloads
-  .map((p) => `    <link rel="modulepreload" href="${escapeHtml(p)}" />`)
-  .join("\n");
+const preloadLinks = extraPreloads;
 
 const buildTime = new Date().toISOString();
 const buildVersion = process.env.npm_package_version || "dev";
@@ -144,8 +142,6 @@ const html = `<!doctype html>
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
 ${cssLinks}
-    <link rel="modulepreload" href="${escapeHtml(entry)}" />
-${preloadLinks}
     <style>
       html, body, #root { height: 100%; }
       body { margin: 0; font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; color: #0f172a; background: #f6f8fc; }
@@ -158,6 +154,18 @@ ${preloadLinks}
       #erpovo-error-panel pre { background: #1e293b; padding: 12px; border-radius: 6px; overflow: auto; max-height: 40vh; margin: 12px 0; }
       #erpovo-error-panel button { background: #dc2626; color: #fff; border: 0; padding: 10px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; margin-right: 8px; }
       #erpovo-error-panel button.alt { background: #475569; }
+      .erpovo-safe { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: #f8fafc; color: #0f172a; }
+      .erpovo-safe-panel { width: min(760px, 100%); border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; box-shadow: 0 20px 50px rgba(15,23,42,.12); padding: 24px; }
+      .erpovo-safe-panel h1 { margin: 0 0 8px; font-size: 26px; }
+      .erpovo-safe-panel .muted { color: #475569; margin: 0 0 18px; }
+      .erpovo-safe-panel .grid { display: grid; grid-template-columns: 140px minmax(0,1fr); gap: 8px 12px; margin: 16px 0; }
+      .erpovo-safe-panel .k { color: #0369a1; font-weight: 700; }
+      .erpovo-safe-panel code { word-break: break-all; }
+      .erpovo-safe-panel .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+      .erpovo-safe-panel button, .erpovo-safe-panel a { appearance: none; border: 0; border-radius: 6px; background: #0f172a; color: #fff; padding: 10px 14px; font-weight: 700; text-decoration: none; cursor: pointer; }
+      .erpovo-safe-panel button.secondary, .erpovo-safe-panel a.secondary { background: #475569; }
+      .erpovo-safe-panel button.danger { background: #b91c1c; }
+      .erpovo-safe-panel pre { max-height: 220px; overflow: auto; background: #f1f5f9; border-radius: 6px; padding: 10px; color: #334155; }
     </style>
   </head>
   <body>
@@ -185,6 +193,85 @@ ${preloadLinks}
         window.__ERPOVO_BOOT__ = { steps: steps, build: BUILD, log: logStep };
         logStep("ERPOVO_BOOT_START");
         logStep("ERPOVO_RUNTIME_MODE:hostinger-static");
+
+        function hasParam(name) {
+          try { return new URLSearchParams(location.search).get(name) === "1"; }
+          catch (e) { return false; }
+        }
+
+        function erpovoCachesOnly(name) {
+          return name === "html-navigations" || name === "static-assets" || name.indexOf("erpovo") >= 0 || /^workbox-(precache|runtime)/.test(name);
+        }
+
+        function renderSafeMode() {
+          mounted = true;
+          logStep(hasParam("panic") ? "ERPOVO_PANIC_MODE_STATIC" : "ERPOVO_SAFE_MODE_STATIC");
+          var boot = document.getElementById("erpovo-boot");
+          if (boot && boot.parentNode) boot.parentNode.removeChild(boot);
+          var root = document.getElementById("root");
+          if (!root) return;
+          root.innerHTML =
+            '<main class="erpovo-safe" aria-labelledby="erpovo-safe-title">' +
+              '<section class="erpovo-safe-panel">' +
+                '<h1 id="erpovo-safe-title">ERPOVO Safe Mode</h1>' +
+                '<p class="muted">Plain diagnostic page. The React app, router, providers, demo seed, sync, chat, and service-worker registration were not loaded.</p>' +
+                '<div class="grid">' +
+                  '<div class="k">URL</div><code id="safe-url"></code>' +
+                  '<div class="k">Build</div><code>' + BUILD.version + ' @ ' + BUILD.time + '</code>' +
+                  '<div class="k">Asset base</div><code>' + BUILD.assetBase + '</code>' +
+                  '<div class="k">Entry chunk</div><code>' + BUILD.entry + '</code>' +
+                  '<div class="k">Mode</div><code>' + BUILD.mode + '</code>' +
+                '</div>' +
+                '<div class="actions">' +
+                  '<button type="button" class="danger" id="safe-clear-caches">Clear ERPOVO caches</button>' +
+                  '<button type="button" class="danger" id="safe-unregister-sw">Unregister Service Worker</button>' +
+                  '<button type="button" id="safe-continue">Continue normal app</button>' +
+                  '<button type="button" class="secondary" id="safe-copy">Copy diagnostics</button>' +
+                  '<a class="secondary" href="/health.html">Open health check</a>' +
+                '</div>' +
+                '<pre id="safe-output">Ready.</pre>' +
+              '</section>' +
+            '</main>';
+          document.getElementById("safe-url").textContent = location.href;
+          var output = document.getElementById("safe-output");
+          function write(msg) { output.textContent = msg; }
+          document.getElementById("safe-clear-caches").onclick = async function () {
+            if (!("caches" in window)) { write("Cache Storage is not available."); return; }
+            var names = await caches.keys();
+            var targets = names.filter(erpovoCachesOnly);
+            await Promise.allSettled(targets.map(function (name) { return caches.delete(name); }));
+            write("Deleted caches: " + (targets.length ? targets.join(", ") : "none"));
+          };
+          document.getElementById("safe-unregister-sw").onclick = async function () {
+            if (!("serviceWorker" in navigator)) { write("Service workers are not available."); return; }
+            var regs = await navigator.serviceWorker.getRegistrations();
+            var targets = regs.filter(function (r) {
+              var script = (r.active && r.active.scriptURL) || (r.waiting && r.waiting.scriptURL) || (r.installing && r.installing.scriptURL) || "";
+              return script.endsWith("/sw.js") || r.scope === location.origin + "/";
+            });
+            await Promise.allSettled(targets.map(function (r) { return r.unregister(); }));
+            write("Unregistered service workers: " + targets.length);
+          };
+          document.getElementById("safe-continue").onclick = function () {
+            var url = new URL(location.href);
+            url.searchParams.delete("safe");
+            url.searchParams.delete("panic");
+            location.replace(url.pathname + url.search + url.hash);
+          };
+          document.getElementById("safe-copy").onclick = function () {
+            var payload = [
+              "ERPOVO Safe Mode",
+              "URL: " + location.href,
+              "Build: " + BUILD.version + " @ " + BUILD.time,
+              "Asset base: " + BUILD.assetBase,
+              "Entry: " + BUILD.entry,
+              "Steps: " + steps.map(function (s) { return s.name; }).join(", "),
+              "User agent: " + navigator.userAgent
+            ].join("\n");
+            navigator.clipboard && navigator.clipboard.writeText(payload).then(function () { write("Diagnostics copied."); }, function () { write(payload); });
+          };
+        }
+        window.__ERPOVO_RENDER_SAFE_MODE__ = renderSafeMode;
 
         function showErrorPanel(err) {
           if (mounted) return;
@@ -242,6 +329,7 @@ ${preloadLinks}
           if (boot && boot.parentNode) boot.parentNode.removeChild(boot);
         }
         window.__ERPOVO_SHOW_ERROR__ = showErrorPanel;
+        window.__ERPOVO_SHOW_STARTUP_ERROR__ = showErrorPanel;
 
         window.addEventListener("error", function (e) {
           lastError = e.error || new Error(e.message || "Unknown error");
@@ -266,24 +354,58 @@ ${preloadLinks}
           obs.observe(host, { childList: true });
         });
 
+        if (hasParam("safe") || hasParam("panic")) {
+          if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", renderSafeMode, { once: true });
+          else renderSafeMode();
+          return;
+        }
+
         setTimeout(function () {
           if (!mounted) showErrorPanel(lastError || new Error("App did not mount within 8 seconds"));
         }, 8000);
       })();
     </script>
     <script type="module">
-      (function () { try { window.__ERPOVO_BOOT__ && window.__ERPOVO_BOOT__.log("ERPOVO_CLIENT_ENTRY_LOADED"); } catch (e) {} })();
-      import(${jsonForInline(entry)}).then(function () {
-        try { window.__ERPOVO_BOOT__ && window.__ERPOVO_BOOT__.log("ERPOVO_ROUTER_CREATED"); } catch (e) {}
-      }).catch(function (err) {
-        try { window.__ERPOVO_SHOW_ERROR__ && window.__ERPOVO_SHOW_ERROR__(err); } catch (e) {}
-      });
+      var params = new URLSearchParams(location.search);
+      if (params.get("safe") === "1" || params.get("panic") === "1") {
+        try { window.__ERPOVO_BOOT__ && window.__ERPOVO_BOOT__.log("ERPOVO_MAIN_BUNDLE_SKIPPED"); } catch (e) {}
+      } else {
+        try { window.__ERPOVO_BOOT__ && window.__ERPOVO_BOOT__.log("ERPOVO_CLIENT_ENTRY_IMPORT_START"); } catch (e) {}
+        import(${jsonForInline(entry)}).catch(function (err) {
+          try { window.__ERPOVO_SHOW_ERROR__ && window.__ERPOVO_SHOW_ERROR__(err); } catch (e) {}
+        });
+      }
     </script>
   </body>
 </html>
 `;
 
 fs.writeFileSync(path.join(distClient, "index.html"), html);
+fs.writeFileSync(
+  path.join(distClient, "health.html"),
+  `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ERPOVO Health Check</title>
+    <style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f8fafc;color:#0f172a;font:14px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}.panel{width:min(720px,calc(100% - 32px));background:#fff;border:1px solid #cbd5e1;border-radius:8px;box-shadow:0 20px 50px rgba(15,23,42,.12);padding:24px}h1{margin:0 0 8px;font-size:26px}.grid{display:grid;grid-template-columns:140px minmax(0,1fr);gap:8px 12px;margin-top:18px}.k{font-weight:700;color:#0369a1}code{word-break:break-all}</style>
+  </head>
+  <body>
+    <main class="panel">
+      <h1>ERPOVO Health Check</h1>
+      <p>This static file was served without loading the ERPOVO React app.</p>
+      <div class="grid">
+        <div class="k">Build</div><code>${escapeHtml(buildVersion)} @ ${escapeHtml(buildTime)}</code>
+        <div class="k">Asset base</div><code>${escapeHtml(assetBase)}</code>
+        <div class="k">Entry chunk</div><code>${escapeHtml(entry)}</code>
+        <div class="k">Status</div><code>ERPOVO_HEALTH_OK</code>
+      </div>
+    </main>
+  </body>
+</html>
+`,
+);
 console.log(
-  `[build-hostinger-html] wrote dist/client/index.html (entry=${entry}, css=${cssHrefs.length})`,
+  `[build-hostinger-html] wrote dist/client/index.html and health.html (entry=${entry}, css=${cssHrefs.length}, preloads-disabled=${preloadLinks.length + 1})`,
 );
