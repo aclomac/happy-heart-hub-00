@@ -8,6 +8,7 @@ const AppShell = lazy(() =>
 // Auth/company/subscription/device gating is handled centrally by
 // GlobalRouteOrchestrator in __root.tsx. Do NOT add beforeLoad redirects
 // here — they race the orchestrator and cause loops.
+// AppShell renders the nested <Outlet /> for /app child routes.
 export const Route = createFileRoute("/app")({
   component: AppLayout,
 });

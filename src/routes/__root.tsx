@@ -14,6 +14,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { GlobalRouteOrchestrator } from "@/components/erp/GlobalRouteOrchestrator";
 import { StartupWatchdog } from "@/components/erp/StartupWatchdog";
+import { isEmergencyLocalDemoMode } from "@/lib/emergency-local-demo";
 import { bootStep, isHardSafeMode, isPublicStartupPath, isStartupDisabled } from "@/lib/startup-switches";
 
 const PWAProvider = lazy(() =>
@@ -159,10 +160,11 @@ function isSafeModeUrl() {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useLocation({ select: (s: { pathname: string }) => s.pathname });
+  const emergencyLocalDemo = isEmergencyLocalDemoMode();
   const publicStartupPath = isPublicStartupPath(pathname);
-  const disableAuth = isStartupDisabled("auth") || publicStartupPath;
-  const disableSync = isStartupDisabled("sync") || publicStartupPath;
-  const disablePWA = isStartupDisabled("pwa") || publicStartupPath;
+  const disableAuth = emergencyLocalDemo || isStartupDisabled("auth") || publicStartupPath;
+  const disableSync = emergencyLocalDemo || isStartupDisabled("sync") || publicStartupPath;
+  const disablePWA = emergencyLocalDemo || isStartupDisabled("pwa") || publicStartupPath;
 
   useEffect(() => {
     bootStep("ERPOVO_PROVIDER_AUTH_START", { pathname, disabled: disableAuth });

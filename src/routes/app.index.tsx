@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { NoCompanySelected } from "@/components/erp/NoCompanySelected";
 import { PageHeader } from "@/components/erp/PageHeader";
 import { loadInventoryDashboard } from "@/lib/inventory-stats";
@@ -37,6 +37,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCurrentCompanyId } from "@/lib/use-company";
 import { useQuery } from "@tanstack/react-query";
 import { isDemoMode, isExplicitDemoMode, getDemoDashboardData } from "@/lib/demo/localStore";
+import { isEmergencyLocalDemoMode } from "@/lib/emergency-local-demo";
+import { ensureInventorySeed, getAdjustments, getItems, getStoreStock, getTransfers, getWarehouses } from "@/lib/demo/inventory";
 
 export const Route = createFileRoute("/app/")({ component: Dashboard });
 
@@ -206,16 +208,57 @@ function StatusPill({ kind }: { kind: "Paid" | "Partial" | "Due" | "Confirmed" |
 // ───────────────────────────────────────────────────────── page ────────
 function Dashboard() {
   const companyId = useCurrentCompanyId();
+  const emergencyLocalDemo = isEmergencyLocalDemoMode();
+  const [deferredDashboardReady, setDeferredDashboardReady] = useState(!emergencyLocalDemo);
   useEffect(() => {
     console.log("ERPOVO_DASHBOARD_MOUNT", { pathname: typeof window !== "undefined" ? window.location.pathname : "" });
   }, []);
+  useEffect(() => {
+    if (!emergencyLocalDemo || typeof window === "undefined") return;
+    const run = () => setDeferredDashboardReady(true);
+    const idle = (window as Window & { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number }).requestIdleCallback;
+    let timeoutId: number | null = null;
+    let idleId: number | null = null;
+    if (typeof idle === "function") idleId = idle(run, { timeout: 2500 });
+    else timeoutId = window.setTimeout(run, 1200);
+    return () => {
+      if (timeoutId !== null) window.clearTimeout(timeoutId);
+      if (idleId !== null) {
+        const cancelIdle = (window as Window & { cancelIdleCallback?: (id: number) => void }).cancelIdleCallback;
+        cancelIdle?.(idleId);
+      }
+    };
+  }, [emergencyLocalDemo]);
 
   const invQ = useQuery({
     queryKey: ["dashboard-inventory", companyId, isDemoMode() ? "demo" : "live"],
-    enabled: !!companyId,
+    enabled: !!companyId && deferredDashboardReady,
     retry: false,
     queryFn: async () => {
       try {
+        if (isDemoMode()) {
+          ensureInventorySeed();
+          const items = getItems().filter((item) => item.company_id === companyId && !item.deleted_at);
+          const warehouses = getWarehouses().filter((warehouse) => warehouse.company_id === companyId && !warehouse.deleted_at);
+          const storeStock = getStoreStock().filter((stock) => stock.company_id === companyId);
+          const adjustments = getAdjustments().filter((row) => row.company_id === companyId && !row.deleted_at).slice(0, 5);
+          const transfers = getTransfers().filter((row) => row.company_id === companyId && !row.deleted_at).slice(0, 5);
+          const priceMap = new Map(items.map((item) => [item.id, Number(item.purchase_price || 0)]));
+          return {
+            items,
+            warehouses,
+            storeStock,
+            adjustments,
+            transfers,
+            totals: {
+              stockValue: storeStock.reduce((sum, stock) => sum + Number(stock.qty || 0) * Number(priceMap.get(stock.item_id) ?? 0), 0),
+              totalItems: items.filter((item) => item.is_active !== false).length,
+              lowStock: items.filter((item) => !item.is_service && item.low_stock_alert != null && Number(item.stock) < Number(item.low_stock_alert)).length,
+              outOfStock: items.filter((item) => item.is_active !== false && !item.is_service && Number(item.stock) <= 0).length,
+              warehouses: warehouses.length,
+            },
+          };
+        }
         return await loadInventoryDashboard(companyId!);
       } catch {
         return {
@@ -232,7 +275,7 @@ function Dashboard() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["dashboard", companyId, isDemoMode() ? "demo" : "live"],
-    enabled: !!companyId,
+    enabled: !!companyId && deferredDashboardReady,
     retry: false,
     queryFn: async () => {
       const cid = companyId!;
@@ -423,10 +466,20 @@ function Dashboard() {
   // Recent sale orders for the Recent Orders panel — soft-fail.
   const ordersQ = useQuery({
     queryKey: ["dashboard-recent-orders", companyId, isDemoMode() ? "demo" : "live"],
-    enabled: !!companyId,
+    enabled: !!companyId && deferredDashboardReady,
     retry: false,
     queryFn: async () => {
       try {
+        if (isDemoMode()) {
+          return [] as Array<{
+            id: string;
+            order_no: string;
+            order_date: string;
+            total: number;
+            status: string | null;
+            parties: { name: string } | null;
+          }>;
+        }
         const { data: rows } = await supabase
           .from("sales")
           .select("id,invoice_no,invoice_date,total,status,parties(name)")

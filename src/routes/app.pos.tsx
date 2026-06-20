@@ -112,10 +112,14 @@ import { MoneyText } from "@/components/erp/MoneyText";
 import { useI18n } from "@/lib/i18n";
 import { QuickAddCustomerDialog } from "@/components/erp/QuickAddCustomerDialog";
 import { usePermission } from "@/lib/permissions";
+import { isDemoMode } from "@/lib/demo/localStore";
+import { ensureInventorySeed, getItems } from "@/lib/demo/inventory";
+import { ensurePartiesSeed, getParties } from "@/lib/demo/parties";
+import { isEmergencyLocalDemoMode } from "@/lib/emergency-local-demo";
 
 import { usePWAStatus } from "@/components/erp/PWAProvider";
 
-export const Route = createFileRoute("/app/pos")({ component: POS });
+export const Route = createFileRoute("/app/pos")({ component: POSRoute });
 
 const WALK_IN_VALUE = "__walkin__";
 
@@ -282,6 +286,97 @@ type Item = {
 };
 type Line = { item: Item; qty: number };
 
+function POSRoute() {
+  return isEmergencyLocalDemoMode() ? <EmergencyLocalPOS /> : <POS />;
+}
+
+function EmergencyLocalPOS() {
+  const companyId = useCurrentCompanyId();
+  const [search, setSearch] = useState("");
+  const [cart, setCart] = useState<Line[]>([]);
+  const items = useMemo(() => {
+    ensureInventorySeed();
+    return getItems()
+      .filter((item) => item.company_id === companyId && !item.deleted_at && item.is_active)
+      .slice(0, 24) as Item[];
+  }, [companyId]);
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return items;
+    return items.filter((item) => item.name.toLowerCase().includes(q) || (item.sku ?? "").toLowerCase().includes(q));
+  }, [items, search]);
+  const total = cart.reduce((sum, line) => sum + line.qty * Number(line.item.sale_price || 0), 0);
+
+  const addToCart = (item: Item) => {
+    setCart((current) => {
+      const existing = current.find((line) => line.item.id === item.id);
+      if (existing) {
+        return current.map((line) => line.item.id === item.id ? { ...line, qty: line.qty + 1 } : line);
+      }
+      return [...current, { item, qty: 1 }];
+    });
+  };
+
+  return (
+    <div>
+      <PageHeader title="POS · Point of Sale" subtitle="Emergency Local Demo Mode" />
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_360px]">
+        <section className="rounded-md border bg-card">
+          <div className="border-b p-3">
+            <Input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search items by name or SKU…"
+              autoFocus
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-2 p-3 sm:grid-cols-3 xl:grid-cols-4">
+            {filtered.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                className="rounded-md border bg-background p-3 text-left transition hover:border-primary hover:shadow-sm"
+                onClick={() => addToCart(item)}
+              >
+                <div className="text-sm font-semibold line-clamp-2">{item.name}</div>
+                <div className="mt-1 text-[11px] text-muted-foreground">{item.sku}</div>
+                <div className="mt-3 flex items-center justify-between gap-2">
+                  <span className="font-bold text-primary">৳ {Number(item.sale_price || 0).toLocaleString()}</span>
+                  <span className="text-[11px] text-muted-foreground">{Number(item.stock || 0)} {item.unit}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
+        <aside className="rounded-md border bg-card">
+          <div className="flex items-center justify-between border-b p-3">
+            <div className="font-semibold">Cart · {cart.length}</div>
+            <Button variant="ghost" size="sm" onClick={() => setCart([])} disabled={cart.length === 0}>Clear</Button>
+          </div>
+          <div className="min-h-64 divide-y">
+            {cart.length === 0 ? (
+              <div className="p-10 text-center text-sm text-muted-foreground">Click items to add to cart</div>
+            ) : cart.map((line) => (
+              <div key={line.item.id} className="flex items-center gap-2 p-3">
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-medium">{line.item.name}</div>
+                  <div className="text-xs text-muted-foreground">৳ {Number(line.item.sale_price || 0).toLocaleString()} × {line.qty}</div>
+                </div>
+                <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => setCart((rows) => rows.map((row) => row.item.id === line.item.id ? { ...row, qty: Math.max(1, row.qty - 1) } : row))}><Minus className="h-3 w-3" /></Button>
+                <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => setCart((rows) => rows.map((row) => row.item.id === line.item.id ? { ...row, qty: row.qty + 1 } : row))}><Plus className="h-3 w-3" /></Button>
+              </div>
+            ))}
+          </div>
+          <div className="space-y-3 border-t bg-muted/30 p-3">
+            <div className="flex justify-between text-lg font-bold"><span>Total</span><span>৳ {total.toLocaleString()}</span></div>
+            <Button className="w-full" variant="success" disabled={cart.length === 0} onClick={() => toast.success("Local demo POS is responsive")}>Charge ৳ {total.toLocaleString()}</Button>
+          </div>
+        </aside>
+      </div>
+    </div>
+  );
+}
+
 export function POS() {
   const companyId = useCurrentCompanyId();
   const { data: companySettings } = useCompanySettings(companyId);
@@ -335,6 +430,12 @@ export function POS() {
     queryKey: ["pos-items", companyId],
     enabled: !!companyId,
     queryFn: async () => {
+      if (isDemoMode()) {
+        ensureInventorySeed();
+        return getItems()
+          .filter((item) => item.company_id === companyId && !item.deleted_at && item.is_active)
+          .sort((a, b) => a.name.localeCompare(b.name)) as Item[];
+      }
       const { data, error } = await supabase
           .from("items")
           .select("id,name,sku,category,sale_price,tax_rate,unit,stock,is_service,image_url")
@@ -351,6 +452,13 @@ export function POS() {
     queryKey: ["pos-parties", companyId],
     enabled: !!companyId,
     queryFn: async () => {
+      if (isDemoMode()) {
+        ensurePartiesSeed();
+        return getParties()
+          .filter((party) => party.company_id === companyId && !party.deleted_at && (party.type === "customer" || party.type === "both"))
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .map((party) => ({ id: party.id, name: party.name, phone: party.phone, email: party.email }));
+      }
       const { data, error } = await supabase
         .from("parties")
         .select("id,name,phone,email")

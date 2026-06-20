@@ -67,6 +67,8 @@ import {
 } from "@/lib/inventory-posting-doctor";
 import { ItemEditDialog } from "@/components/erp/ItemEditDialog";
 import { ItemImagePicker } from "@/components/erp/ItemImagePicker";
+import { isDemoMode } from "@/lib/demo/localStore";
+import { ensureInventorySeed, getCategories, getItems, setItems } from "@/lib/demo/inventory";
 
 export const Route = createFileRoute("/app/items")({ component: ItemsShell });
 
@@ -176,6 +178,12 @@ function Items() {
     queryKey: ["items", companyId],
     enabled: !!companyId,
     queryFn: async () => {
+      if (isDemoMode()) {
+        ensureInventorySeed();
+        return getItems()
+          .filter((item) => item.company_id === companyId && !item.deleted_at)
+          .sort((a, b) => b.created_at.localeCompare(a.created_at)) as Item[];
+      }
       const { data, error } = await supabase
         .from("items")
         .select("*")
@@ -190,6 +198,29 @@ function Items() {
   const mut = useMutation({
     mutationFn: async (vars: any) => {
       const trimmedSku = vars.sku?.trim();
+      if (isDemoMode()) {
+        ensureInventorySeed();
+        const all = getItems();
+        if (trimmedSku && all.some((item) => item.company_id === companyId && !item.deleted_at && item.sku?.toLowerCase() === trimmedSku.toLowerCase() && item.id !== vars.id)) {
+          throw new Error("Item code already exists.");
+        }
+        const payload = { ...vars, sku: trimmedSku || null };
+        if (vars.id) {
+          setItems(all.map((item) => item.id === vars.id ? { ...item, ...payload, id: item.id } : item));
+          return { data: null, error: null };
+        }
+        const created = {
+          id: typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `demo-item-${Date.now()}`,
+          barcode: null,
+          category: null,
+          is_active: true,
+          deleted_at: null,
+          created_at: new Date().toISOString(),
+          ...payload,
+        };
+        setItems([created, ...all]);
+        return { data: created, error: null };
+      }
       if (trimmedSku) {
         const { data: existing } = await supabase
           .from("items")
@@ -211,6 +242,12 @@ function Items() {
     queryKey: ["item-categories", companyId],
     enabled: !!companyId,
     queryFn: async () => {
+      if (isDemoMode()) {
+        ensureInventorySeed();
+        return getCategories()
+          .filter((cat) => cat.company_id === companyId && !cat.deleted_at)
+          .sort((a, b) => a.name.localeCompare(b.name)) as Cat[];
+      }
       const { data, error } = await supabase
         .from("item_categories")
         .select("id,name,color")

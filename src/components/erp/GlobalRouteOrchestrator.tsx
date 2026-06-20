@@ -1,5 +1,6 @@
 import { lazy, Suspense, type ReactNode } from "react";
 import { useLocation } from "@tanstack/react-router";
+import { isEmergencyLocalDemoMode } from "@/lib/emergency-local-demo";
 import { bootStep, isStartupDisabled } from "@/lib/startup-switches";
 
 const FullRouteOrchestrator = lazy(() =>
@@ -53,6 +54,7 @@ function isLightweightPath(pathname: string) {
 export function GlobalRouteOrchestrator({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
   const bypassFullOrchestrator =
+    isEmergencyLocalDemoMode() ||
     isLightweightPath(pathname) ||
     isSafeMode() ||
     isStartupDisabled("auth") ||
