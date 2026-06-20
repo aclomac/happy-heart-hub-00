@@ -44,6 +44,9 @@ import { Route as AppSyncCenterRouteImport } from './routes/app.sync-center'
 import { Route as AppSyncRouteImport } from './routes/app.sync'
 import { Route as AppSupportRouteImport } from './routes/app.support'
 import { Route as AppSubscriptionRouteImport } from './routes/app.subscription'
+import { Route as AppStockTransfersRouteImport } from './routes/app.stock-transfers'
+import { Route as AppStockMovementsRouteImport } from './routes/app.stock-movements'
+import { Route as AppStockAdjustmentsRouteImport } from './routes/app.stock-adjustments'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
 import { Route as AppSalesReportsRouteImport } from './routes/app.sales-reports'
 import { Route as AppSalesRouteImport } from './routes/app.sales'
@@ -110,6 +113,7 @@ import { Route as AppUtilitiesBarcodeGeneratorRouteImport } from './routes/app.u
 import { Route as AppUpgradePlanRouteImport } from './routes/app.upgrade.$plan'
 import { Route as AppSalesNewRouteImport } from './routes/app.sales.new'
 import { Route as AppSaleOrdersNewRouteImport } from './routes/app.sale-orders.new'
+import { Route as AppReportsInventoryRouteImport } from './routes/app.reports.inventory'
 import { Route as AppPurchasesNewRouteImport } from './routes/app.purchases.new'
 import { Route as AppPurchaseOrdersNewRouteImport } from './routes/app.purchase-orders.new'
 import { Route as AppPaymentsInNewRouteImport } from './routes/app.payments-in.new'
@@ -347,6 +351,21 @@ const AppSupportRoute = AppSupportRouteImport.update({
 const AppSubscriptionRoute = AppSubscriptionRouteImport.update({
   id: '/subscription',
   path: '/subscription',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppStockTransfersRoute = AppStockTransfersRouteImport.update({
+  id: '/stock-transfers',
+  path: '/stock-transfers',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppStockMovementsRoute = AppStockMovementsRouteImport.update({
+  id: '/stock-movements',
+  path: '/stock-movements',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppStockAdjustmentsRoute = AppStockAdjustmentsRouteImport.update({
+  id: '/stock-adjustments',
+  path: '/stock-adjustments',
   getParentRoute: () => AppRoute,
 } as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
@@ -691,6 +710,11 @@ const AppSaleOrdersNewRoute = AppSaleOrdersNewRouteImport.update({
   path: '/new',
   getParentRoute: () => AppSaleOrdersRoute,
 } as any)
+const AppReportsInventoryRoute = AppReportsInventoryRouteImport.update({
+  id: '/inventory',
+  path: '/inventory',
+  getParentRoute: () => AppReportsRoute,
+} as any)
 const AppPurchasesNewRoute = AppPurchasesNewRouteImport.update({
   id: '/new',
   path: '/new',
@@ -859,15 +883,15 @@ const AppSubscriptionReceiptIdRoute =
     getParentRoute: () => AppSubscriptionRoute,
   } as any)
 const AppStockTransfersIdEditRoute = AppStockTransfersIdEditRouteImport.update({
-  id: '/stock-transfers/$id/edit',
-  path: '/stock-transfers/$id/edit',
-  getParentRoute: () => AppRoute,
+  id: '/$id/edit',
+  path: '/$id/edit',
+  getParentRoute: () => AppStockTransfersRoute,
 } as any)
 const AppStockAdjustmentsIdEditRoute =
   AppStockAdjustmentsIdEditRouteImport.update({
-    id: '/stock-adjustments/$id/edit',
-    path: '/stock-adjustments/$id/edit',
-    getParentRoute: () => AppRoute,
+    id: '/$id/edit',
+    path: '/$id/edit',
+    getParentRoute: () => AppStockAdjustmentsRoute,
   } as any)
 const AppSalesIdEditRoute = AppSalesIdEditRouteImport.update({
   id: '/$id/edit',
@@ -1047,7 +1071,7 @@ export interface FileRoutesByFullPath {
   '/app/purchase-reports': typeof AppPurchaseReportsRoute
   '/app/purchases': typeof AppPurchasesRouteWithChildren
   '/app/recycle-bin': typeof AppRecycleBinRoute
-  '/app/reports': typeof AppReportsRoute
+  '/app/reports': typeof AppReportsRouteWithChildren
   '/app/salary-payments': typeof AppSalaryPaymentsRoute
   '/app/salary-setup': typeof AppSalarySetupRoute
   '/app/sale-invoice-settings': typeof AppSaleInvoiceSettingsRoute
@@ -1055,6 +1079,9 @@ export interface FileRoutesByFullPath {
   '/app/sales': typeof AppSalesRouteWithChildren
   '/app/sales-reports': typeof AppSalesReportsRoute
   '/app/settings': typeof AppSettingsRoute
+  '/app/stock-adjustments': typeof AppStockAdjustmentsRouteWithChildren
+  '/app/stock-movements': typeof AppStockMovementsRoute
+  '/app/stock-transfers': typeof AppStockTransfersRouteWithChildren
   '/app/subscription': typeof AppSubscriptionRouteWithChildren
   '/app/support': typeof AppSupportRoute
   '/app/sync': typeof AppSyncRoute
@@ -1111,6 +1138,7 @@ export interface FileRoutesByFullPath {
   '/app/payments-in/new': typeof AppPaymentsInNewRoute
   '/app/purchase-orders/new': typeof AppPurchaseOrdersNewRoute
   '/app/purchases/new': typeof AppPurchasesNewRoute
+  '/app/reports/inventory': typeof AppReportsInventoryRoute
   '/app/sale-orders/new': typeof AppSaleOrdersNewRoute
   '/app/sales/new': typeof AppSalesNewRoute
   '/app/upgrade/$plan': typeof AppUpgradePlanRoute
@@ -1207,7 +1235,7 @@ export interface FileRoutesByTo {
   '/app/purchase-reports': typeof AppPurchaseReportsRoute
   '/app/purchases': typeof AppPurchasesRouteWithChildren
   '/app/recycle-bin': typeof AppRecycleBinRoute
-  '/app/reports': typeof AppReportsRoute
+  '/app/reports': typeof AppReportsRouteWithChildren
   '/app/salary-payments': typeof AppSalaryPaymentsRoute
   '/app/salary-setup': typeof AppSalarySetupRoute
   '/app/sale-invoice-settings': typeof AppSaleInvoiceSettingsRoute
@@ -1215,6 +1243,9 @@ export interface FileRoutesByTo {
   '/app/sales': typeof AppSalesRouteWithChildren
   '/app/sales-reports': typeof AppSalesReportsRoute
   '/app/settings': typeof AppSettingsRoute
+  '/app/stock-adjustments': typeof AppStockAdjustmentsRouteWithChildren
+  '/app/stock-movements': typeof AppStockMovementsRoute
+  '/app/stock-transfers': typeof AppStockTransfersRouteWithChildren
   '/app/subscription': typeof AppSubscriptionRouteWithChildren
   '/app/support': typeof AppSupportRoute
   '/app/sync': typeof AppSyncRoute
@@ -1270,6 +1301,7 @@ export interface FileRoutesByTo {
   '/app/payments-in/new': typeof AppPaymentsInNewRoute
   '/app/purchase-orders/new': typeof AppPurchaseOrdersNewRoute
   '/app/purchases/new': typeof AppPurchasesNewRoute
+  '/app/reports/inventory': typeof AppReportsInventoryRoute
   '/app/sale-orders/new': typeof AppSaleOrdersNewRoute
   '/app/sales/new': typeof AppSalesNewRoute
   '/app/upgrade/$plan': typeof AppUpgradePlanRoute
@@ -1370,7 +1402,7 @@ export interface FileRoutesById {
   '/app/purchase-reports': typeof AppPurchaseReportsRoute
   '/app/purchases': typeof AppPurchasesRouteWithChildren
   '/app/recycle-bin': typeof AppRecycleBinRoute
-  '/app/reports': typeof AppReportsRoute
+  '/app/reports': typeof AppReportsRouteWithChildren
   '/app/salary-payments': typeof AppSalaryPaymentsRoute
   '/app/salary-setup': typeof AppSalarySetupRoute
   '/app/sale-invoice-settings': typeof AppSaleInvoiceSettingsRoute
@@ -1378,6 +1410,9 @@ export interface FileRoutesById {
   '/app/sales': typeof AppSalesRouteWithChildren
   '/app/sales-reports': typeof AppSalesReportsRoute
   '/app/settings': typeof AppSettingsRoute
+  '/app/stock-adjustments': typeof AppStockAdjustmentsRouteWithChildren
+  '/app/stock-movements': typeof AppStockMovementsRoute
+  '/app/stock-transfers': typeof AppStockTransfersRouteWithChildren
   '/app/subscription': typeof AppSubscriptionRouteWithChildren
   '/app/support': typeof AppSupportRoute
   '/app/sync': typeof AppSyncRoute
@@ -1434,6 +1469,7 @@ export interface FileRoutesById {
   '/app/payments-in/new': typeof AppPaymentsInNewRoute
   '/app/purchase-orders/new': typeof AppPurchaseOrdersNewRoute
   '/app/purchases/new': typeof AppPurchasesNewRoute
+  '/app/reports/inventory': typeof AppReportsInventoryRoute
   '/app/sale-orders/new': typeof AppSaleOrdersNewRoute
   '/app/sales/new': typeof AppSalesNewRoute
   '/app/upgrade/$plan': typeof AppUpgradePlanRoute
@@ -1543,6 +1579,9 @@ export interface FileRouteTypes {
     | '/app/sales'
     | '/app/sales-reports'
     | '/app/settings'
+    | '/app/stock-adjustments'
+    | '/app/stock-movements'
+    | '/app/stock-transfers'
     | '/app/subscription'
     | '/app/support'
     | '/app/sync'
@@ -1599,6 +1638,7 @@ export interface FileRouteTypes {
     | '/app/payments-in/new'
     | '/app/purchase-orders/new'
     | '/app/purchases/new'
+    | '/app/reports/inventory'
     | '/app/sale-orders/new'
     | '/app/sales/new'
     | '/app/upgrade/$plan'
@@ -1703,6 +1743,9 @@ export interface FileRouteTypes {
     | '/app/sales'
     | '/app/sales-reports'
     | '/app/settings'
+    | '/app/stock-adjustments'
+    | '/app/stock-movements'
+    | '/app/stock-transfers'
     | '/app/subscription'
     | '/app/support'
     | '/app/sync'
@@ -1758,6 +1801,7 @@ export interface FileRouteTypes {
     | '/app/payments-in/new'
     | '/app/purchase-orders/new'
     | '/app/purchases/new'
+    | '/app/reports/inventory'
     | '/app/sale-orders/new'
     | '/app/sales/new'
     | '/app/upgrade/$plan'
@@ -1865,6 +1909,9 @@ export interface FileRouteTypes {
     | '/app/sales'
     | '/app/sales-reports'
     | '/app/settings'
+    | '/app/stock-adjustments'
+    | '/app/stock-movements'
+    | '/app/stock-transfers'
     | '/app/subscription'
     | '/app/support'
     | '/app/sync'
@@ -1921,6 +1968,7 @@ export interface FileRouteTypes {
     | '/app/payments-in/new'
     | '/app/purchase-orders/new'
     | '/app/purchases/new'
+    | '/app/reports/inventory'
     | '/app/sale-orders/new'
     | '/app/sales/new'
     | '/app/upgrade/$plan'
@@ -2244,6 +2292,27 @@ declare module '@tanstack/react-router' {
       path: '/subscription'
       fullPath: '/app/subscription'
       preLoaderRoute: typeof AppSubscriptionRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/stock-transfers': {
+      id: '/app/stock-transfers'
+      path: '/stock-transfers'
+      fullPath: '/app/stock-transfers'
+      preLoaderRoute: typeof AppStockTransfersRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/stock-movements': {
+      id: '/app/stock-movements'
+      path: '/stock-movements'
+      fullPath: '/app/stock-movements'
+      preLoaderRoute: typeof AppStockMovementsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/stock-adjustments': {
+      id: '/app/stock-adjustments'
+      path: '/stock-adjustments'
+      fullPath: '/app/stock-adjustments'
+      preLoaderRoute: typeof AppStockAdjustmentsRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/settings': {
@@ -2708,6 +2777,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSaleOrdersNewRouteImport
       parentRoute: typeof AppSaleOrdersRoute
     }
+    '/app/reports/inventory': {
+      id: '/app/reports/inventory'
+      path: '/inventory'
+      fullPath: '/app/reports/inventory'
+      preLoaderRoute: typeof AppReportsInventoryRouteImport
+      parentRoute: typeof AppReportsRoute
+    }
     '/app/purchases/new': {
       id: '/app/purchases/new'
       path: '/new'
@@ -2941,17 +3017,17 @@ declare module '@tanstack/react-router' {
     }
     '/app/stock-transfers/$id/edit': {
       id: '/app/stock-transfers/$id/edit'
-      path: '/stock-transfers/$id/edit'
+      path: '/$id/edit'
       fullPath: '/app/stock-transfers/$id/edit'
       preLoaderRoute: typeof AppStockTransfersIdEditRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppStockTransfersRoute
     }
     '/app/stock-adjustments/$id/edit': {
       id: '/app/stock-adjustments/$id/edit'
-      path: '/stock-adjustments/$id/edit'
+      path: '/$id/edit'
       fullPath: '/app/stock-adjustments/$id/edit'
       preLoaderRoute: typeof AppStockAdjustmentsIdEditRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppStockAdjustmentsRoute
     }
     '/app/sales/$id/edit': {
       id: '/app/sales/$id/edit'
@@ -3368,6 +3444,18 @@ const AppPurchasesRouteWithChildren = AppPurchasesRoute._addFileChildren(
   AppPurchasesRouteChildren,
 )
 
+interface AppReportsRouteChildren {
+  AppReportsInventoryRoute: typeof AppReportsInventoryRoute
+}
+
+const AppReportsRouteChildren: AppReportsRouteChildren = {
+  AppReportsInventoryRoute: AppReportsInventoryRoute,
+}
+
+const AppReportsRouteWithChildren = AppReportsRoute._addFileChildren(
+  AppReportsRouteChildren,
+)
+
 interface AppSaleOrdersRouteChildren {
   AppSaleOrdersNewRoute: typeof AppSaleOrdersNewRoute
   AppSaleOrdersIdEditRoute: typeof AppSaleOrdersIdEditRoute
@@ -3395,6 +3483,28 @@ const AppSalesRouteChildren: AppSalesRouteChildren = {
 const AppSalesRouteWithChildren = AppSalesRoute._addFileChildren(
   AppSalesRouteChildren,
 )
+
+interface AppStockAdjustmentsRouteChildren {
+  AppStockAdjustmentsIdEditRoute: typeof AppStockAdjustmentsIdEditRoute
+}
+
+const AppStockAdjustmentsRouteChildren: AppStockAdjustmentsRouteChildren = {
+  AppStockAdjustmentsIdEditRoute: AppStockAdjustmentsIdEditRoute,
+}
+
+const AppStockAdjustmentsRouteWithChildren =
+  AppStockAdjustmentsRoute._addFileChildren(AppStockAdjustmentsRouteChildren)
+
+interface AppStockTransfersRouteChildren {
+  AppStockTransfersIdEditRoute: typeof AppStockTransfersIdEditRoute
+}
+
+const AppStockTransfersRouteChildren: AppStockTransfersRouteChildren = {
+  AppStockTransfersIdEditRoute: AppStockTransfersIdEditRoute,
+}
+
+const AppStockTransfersRouteWithChildren =
+  AppStockTransfersRoute._addFileChildren(AppStockTransfersRouteChildren)
 
 interface AppSubscriptionRouteChildren {
   AppSubscriptionReceiptIdRoute: typeof AppSubscriptionReceiptIdRoute
@@ -3485,7 +3595,7 @@ interface AppRouteChildren {
   AppPurchaseReportsRoute: typeof AppPurchaseReportsRoute
   AppPurchasesRoute: typeof AppPurchasesRouteWithChildren
   AppRecycleBinRoute: typeof AppRecycleBinRoute
-  AppReportsRoute: typeof AppReportsRoute
+  AppReportsRoute: typeof AppReportsRouteWithChildren
   AppSalaryPaymentsRoute: typeof AppSalaryPaymentsRoute
   AppSalarySetupRoute: typeof AppSalarySetupRoute
   AppSaleInvoiceSettingsRoute: typeof AppSaleInvoiceSettingsRoute
@@ -3493,6 +3603,9 @@ interface AppRouteChildren {
   AppSalesRoute: typeof AppSalesRouteWithChildren
   AppSalesReportsRoute: typeof AppSalesReportsRoute
   AppSettingsRoute: typeof AppSettingsRoute
+  AppStockAdjustmentsRoute: typeof AppStockAdjustmentsRouteWithChildren
+  AppStockMovementsRoute: typeof AppStockMovementsRoute
+  AppStockTransfersRoute: typeof AppStockTransfersRouteWithChildren
   AppSubscriptionRoute: typeof AppSubscriptionRouteWithChildren
   AppSupportRoute: typeof AppSupportRoute
   AppSyncRoute: typeof AppSyncRoute
@@ -3505,8 +3618,6 @@ interface AppRouteChildren {
   AppAdminPaymentsRoute: typeof AppAdminPaymentsRoute
   AppAdminSecurityTestsRoute: typeof AppAdminSecurityTestsRoute
   AppUpgradePlanRoute: typeof AppUpgradePlanRoute
-  AppStockAdjustmentsIdEditRoute: typeof AppStockAdjustmentsIdEditRoute
-  AppStockTransfersIdEditRoute: typeof AppStockTransfersIdEditRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -3542,7 +3653,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppPurchaseReportsRoute: AppPurchaseReportsRoute,
   AppPurchasesRoute: AppPurchasesRouteWithChildren,
   AppRecycleBinRoute: AppRecycleBinRoute,
-  AppReportsRoute: AppReportsRoute,
+  AppReportsRoute: AppReportsRouteWithChildren,
   AppSalaryPaymentsRoute: AppSalaryPaymentsRoute,
   AppSalarySetupRoute: AppSalarySetupRoute,
   AppSaleInvoiceSettingsRoute: AppSaleInvoiceSettingsRoute,
@@ -3550,6 +3661,9 @@ const AppRouteChildren: AppRouteChildren = {
   AppSalesRoute: AppSalesRouteWithChildren,
   AppSalesReportsRoute: AppSalesReportsRoute,
   AppSettingsRoute: AppSettingsRoute,
+  AppStockAdjustmentsRoute: AppStockAdjustmentsRouteWithChildren,
+  AppStockMovementsRoute: AppStockMovementsRoute,
+  AppStockTransfersRoute: AppStockTransfersRouteWithChildren,
   AppSubscriptionRoute: AppSubscriptionRouteWithChildren,
   AppSupportRoute: AppSupportRoute,
   AppSyncRoute: AppSyncRoute,
@@ -3562,8 +3676,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppAdminPaymentsRoute: AppAdminPaymentsRoute,
   AppAdminSecurityTestsRoute: AppAdminSecurityTestsRoute,
   AppUpgradePlanRoute: AppUpgradePlanRoute,
-  AppStockAdjustmentsIdEditRoute: AppStockAdjustmentsIdEditRoute,
-  AppStockTransfersIdEditRoute: AppStockTransfersIdEditRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
