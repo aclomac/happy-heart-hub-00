@@ -34,6 +34,7 @@ import {
   DEPLOYED_BUILD_VERSION,
   ERPOVO_SW_CACHE_VERSION,
 } from "./lib/build-info";
+import { bootStep, startupSwitchSnapshot } from "./lib/startup-switches";
 
 declare global {
   interface Window {
@@ -41,7 +42,9 @@ declare global {
     __ERPOVO_STATIC_HOSTINGER__?: boolean;
     __ERPOVO_RUNTIME_MODE__?: string;
     __ERPOVO_SHOW_STARTUP_ERROR__?: (reason: unknown) => void;
+    __ERPOVO_SHOW_ERROR__?: (reason: unknown) => void;
     __ERPOVO_BOOT__?: { log?: (name: string) => void };
+    __ERPOVO_BOOT_READY__?: boolean;
   }
 }
 
@@ -58,17 +61,13 @@ function shouldUseSpaMount(): boolean {
 }
 
 function bootLog(name: string) {
-  try {
-    window.__ERPOVO_BOOT__?.log?.(name);
-  } catch {
-    /* ignore */
-  }
+  bootStep(name);
 }
 
 function reportStartupError(error: unknown): void {
   if (typeof window === "undefined") return;
   try {
-    window.__ERPOVO_SHOW_STARTUP_ERROR__?.(error);
+    (window.__ERPOVO_SHOW_STARTUP_ERROR__ ?? window.__ERPOVO_SHOW_ERROR__)?.(error);
   } catch {
     // ignore — fallback panel is best-effort
   }
@@ -87,10 +86,11 @@ function showBootWatchdogPanel() {
 
 if (typeof window !== "undefined") {
   window.__ERPOVO_BOOT_READY__ = false;
-  console.info("ERPOVO_BOOT_START", {
+  bootStep("ERPOVO_CLIENT_ENTRY_LOADED", {
     route: window.location.pathname,
     buildVersion: DEPLOYED_BUILD_VERSION,
     swVersion: ERPOVO_SW_CACHE_VERSION,
+    switches: startupSwitchSnapshot(),
   });
   window.setTimeout(showBootWatchdogPanel, 8000);
 }
@@ -104,7 +104,7 @@ if (shouldUseSpaMount()) {
         `SPA mount (${mode}) requires <div id="root"> in dist/client/index.html`,
       );
     }
-    bootLog("ERPOVO_CLIENT_ENTRY_LOADED");
+    bootLog("ERPOVO_ROUTER_CREATE_START");
     const router = getRouter();
     bootLog("ERPOVO_ROUTER_CREATED");
     console.info("ERPOVO_ROUTE_MATCH", {
@@ -114,14 +114,14 @@ if (shouldUseSpaMount()) {
       swVersion: ERPOVO_SW_CACHE_VERSION,
     });
     startTransition(() => {
-      bootLog("ERPOVO_ROUTER_PROVIDER_RENDER_START");
+      bootLog("ERPOVO_APP_RENDER_START");
       createRoot(host).render(
         <StrictMode>
           <RouterProvider router={router} />
         </StrictMode>,
       );
       window.__ERPOVO_BOOT_READY__ = true;
-      bootLog("ERPOVO_APP_RENDERED");
+      bootLog("ERPOVO_APP_RENDER_READY");
       bootLog("ERPOVO_BOOT_READY");
       console.info("ERPOVO_BOOT_READY", {
         mode,
