@@ -24,7 +24,24 @@ describe("PWA Configuration Hardening", () => {
     const configPath = path.resolve(process.cwd(), "vite.config.ts");
     const content = fs.readFileSync(configPath, "utf-8");
 
-    // Check globPatterns
-    expect(content).toContain('globPatterns: ["**/*.{js,css,html,ico,png,svg,webmanifest}"]');
+    // HTML app shells must not be precached, or deep links can reuse stale route chunks.
+    expect(content).toContain('globPatterns: ["**/*.{js,css,ico,png,svg,webmanifest}"]');
+    expect(content).toContain("navigateFallback: null");
+    expect(content).toContain('handler: "NetworkOnly"');
+  });
+
+  it("exposes and bumps the ERPOVO service worker cache version", () => {
+    const configPath = path.resolve(process.cwd(), "vite.config.ts");
+    const cleanupPath = path.resolve(process.cwd(), "public/erpovo-sw-cleanup.js");
+    const config = fs.readFileSync(configPath, "utf-8");
+    const cleanup = fs.readFileSync(cleanupPath, "utf-8");
+
+    expect(config).toContain("erpovo-sw-2026-06-20-cache-v4");
+    expect(config).toContain("__ERPOVO_BUILD_TIMESTAMP__");
+    expect(config).toContain("__ERPOVO_BUILD_HASH__");
+    expect(config).toContain("__ERPOVO_SW_CACHE_VERSION__");
+    expect(cleanup).toContain("skipWaiting");
+    expect(cleanup).toContain("clients.claim");
+    expect(cleanup).toContain("caches.delete");
   });
 });
