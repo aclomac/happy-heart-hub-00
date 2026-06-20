@@ -8,6 +8,11 @@ type AdvancedModuleButtonProps = {
 
 const productionDisabled = import.meta.env.PROD;
 
+function resolveDebugImportPath(importPath: string): string {
+  if (importPath.startsWith("/disabled-heavy-routes/")) return `/src${importPath}`;
+  return importPath;
+}
+
 export function AdvancedModuleButton({ moduleName, importPath }: AdvancedModuleButtonProps) {
   const [status, setStatus] = useState(productionDisabled ? "Disabled in production" : "Idle");
 
@@ -15,7 +20,7 @@ export function AdvancedModuleButton({ moduleName, importPath }: AdvancedModuleB
     setStatus(`Loading module: ${moduleName}`);
     recordAdvancedModuleStatus(moduleName, "loading");
     try {
-      await import(/* @vite-ignore */ importPath);
+      await import(/* @vite-ignore */ resolveDebugImportPath(importPath));
       setStatus(`Loaded module: ${moduleName}`);
       recordAdvancedModuleStatus(moduleName, "loaded");
     } catch (error) {

@@ -27,10 +27,13 @@ describe("emergency lightweight feature pages", () => {
   });
 
   it("keeps key feature routes as lightweight shells without heavy imports", () => {
+    const lightweightComponent = read("src/components/erp/LightweightFeaturePage.tsx");
+    const advancedButton = read("src/components/erp/AdvancedModuleButton.tsx");
+    expect(advancedButton).toContain("Load advanced version");
     for (const file of featureRoutes) {
       const route = read(file);
-      expect(route).toContain("Lightweight");
-      expect(route).toContain("Load advanced version");
+      expect(route.includes("LightweightFeaturePage") || route.includes("AdvancedModuleButton")).toBe(true);
+      expect(lightweightComponent).toContain("AdvancedModuleButton");
       expect(route).not.toContain("useQuery");
       expect(route).not.toContain("from \"recharts\"");
       expect(route).not.toContain("ensureInventorySeed");

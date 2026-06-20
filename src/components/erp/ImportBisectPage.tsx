@@ -6,6 +6,11 @@ type Step = { name: string; importPath: string };
 
 const delay = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
+function resolveDebugImportPath(importPath: string): string {
+  if (importPath.startsWith("/disabled-heavy-routes/")) return `/src${importPath}`;
+  return importPath;
+}
+
 export function ImportBisectPage({ title, steps }: { title: string; steps: Step[] }) {
   const [active, setActive] = useState("Idle");
   const [log, setLog] = useState<string[]>([]);
@@ -19,7 +24,7 @@ export function ImportBisectPage({ title, steps }: { title: string; steps: Step[
       await delay(1000);
       recordAdvancedModuleStatus(step.name, "bisect loading");
       try {
-        await import(/* @vite-ignore */ step.importPath);
+        await import(/* @vite-ignore */ resolveDebugImportPath(step.importPath));
         setLog((prev) => [...prev, `Loaded: ${step.name}`]);
         recordAdvancedModuleStatus(step.name, "bisect loaded");
       } catch (error) {
