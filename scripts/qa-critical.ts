@@ -28,6 +28,7 @@ const CRITICAL_FRAGMENTS = [
   "pwa-hardening",
   "production-routes-versioning",
   "lightweight-dashboard",
+  "lightweight-feature-pages",
 ];
 
 

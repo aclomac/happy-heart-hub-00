@@ -25,6 +25,8 @@ export type NavDiag = {
   lastClickTo?: string;
   lastChangeStart?: string;
   lastRenderReady?: string;
+  advancedModuleStatus?: string;
+  advancedModuleName?: string;
   lastChangeStartedAt?: number;
   lastRenderReadyAt?: number;
 };
@@ -76,6 +78,12 @@ export function recordRouteRenderReady(path: string): void {
   setDiag({ lastRenderReady: path, lastRenderReadyAt: Date.now() });
   // eslint-disable-next-line no-console
   console.info("[ERPOVO_ROUTE_RENDER_READY]", path);
+}
+
+export function recordAdvancedModuleStatus(moduleName: string, status: string): void {
+  setDiag({ advancedModuleName: moduleName, advancedModuleStatus: status });
+  // eslint-disable-next-line no-console
+  console.info("[ERPOVO_ADVANCED_MODULE]", moduleName, status);
 }
 
 export function getNavDiag(): NavDiag {

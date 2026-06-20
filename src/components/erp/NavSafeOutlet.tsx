@@ -1,5 +1,5 @@
 import { Outlet, useRouterState } from "@tanstack/react-router";
-import { Suspense, useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 import {
   getNavDiag,
   initNavSafeMode,
@@ -7,83 +7,6 @@ import {
   recordRouteChangeStart,
   recordRouteRenderReady,
 } from "@/lib/nav-safe";
-
-// Paths that are safe to render immediately (already lightweight).
-const ALWAYS_RENDER = new Set<string>([
-  "/app",
-  "/app/",
-  "/app/index",
-]);
-
-function pageTitleFor(pathname: string): string {
-  const tail = pathname.replace(/^\/app\/?/, "").split("?")[0].split("#")[0];
-  if (!tail) return "Dashboard";
-  return tail
-    .split("/")
-    .filter(Boolean)
-    .map((s) =>
-      s.startsWith("$") || s.startsWith(":") ? "" : s.replace(/-/g, " "),
-    )
-    .filter(Boolean)
-    .map((s) => s.replace(/\b\w/g, (c) => c.toUpperCase()))
-    .join(" / ") || "Page";
-}
-
-function NavSafeGate({ pathname, children }: { pathname: string; children: ReactNode }) {
-  const [loaded, setLoaded] = useState(false);
-  const lastPath = useRef(pathname);
-
-  // Reset gate when the route changes.
-  useEffect(() => {
-    if (lastPath.current !== pathname) {
-      lastPath.current = pathname;
-      setLoaded(false);
-    }
-  }, [pathname]);
-
-  if (loaded) {
-    return <Suspense fallback={<EmptyState title={pageTitleFor(pathname)} loading />}>{children}</Suspense>;
-  }
-  return (
-    <EmptyState
-      title={pageTitleFor(pathname)}
-      action={
-        <button
-          type="button"
-          onClick={() => setLoaded(true)}
-          className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow hover:opacity-90"
-        >
-          Load this page
-        </button>
-      }
-    />
-  );
-}
-
-function EmptyState({
-  title,
-  action,
-  loading,
-}: {
-  title: string;
-  action?: ReactNode;
-  loading?: boolean;
-}) {
-  return (
-    <section className="rounded-lg border bg-card p-6">
-      <header className="mb-2 flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-foreground">{title}</h1>
-        <span className="text-xs text-muted-foreground">Safe navigation</span>
-      </header>
-      <p className="text-sm text-muted-foreground">
-        {loading
-          ? "Loading…"
-          : "To keep the app responsive, heavy feature pages don't auto-load. Click below when you're ready."}
-      </p>
-      {action ? <div className="mt-4">{action}</div> : null}
-    </section>
-  );
-}
 
 function NavDiagOverlay() {
   const [, force] = useState(0);
@@ -98,14 +21,15 @@ function NavDiagOverlay() {
       {d.lastClickTo ? <div>click: {d.lastClickTo}</div> : null}
       {d.lastChangeStart ? <div>start: {d.lastChangeStart}</div> : null}
       {d.lastRenderReady ? <div>ready: {d.lastRenderReady}</div> : null}
+      {d.advancedModuleName ? <div>module: {d.advancedModuleName}</div> : null}
+      {d.advancedModuleStatus ? <div>status: {d.advancedModuleStatus}</div> : null}
     </div>
   );
 }
 
 /**
- * Wraps the route Outlet. When NAV_SAFE is active, gates non-dashboard
- * feature pages behind a "Load this page" button so route changes never
- * trigger heavy queries/effects synchronously.
+  * Wraps the route Outlet and shows diagnostics. Feature routes themselves
+  * now render lightweight shells, so route navigation never mounts old heavy pages.
  */
 export function NavSafeOutlet() {
   initNavSafeMode();
@@ -130,11 +54,9 @@ export function NavSafeOutlet() {
   }, [isPending, pathname]);
 
   const safe = isNavSafeMode();
-  const passthrough = !safe || ALWAYS_RENDER.has(pathname);
-
   return (
     <>
-      {passthrough ? <Outlet /> : <NavSafeGate pathname={pathname}><Outlet /></NavSafeGate>}
+      <Outlet />
       {safe ? <NavDiagOverlay /> : null}
     </>
   );
