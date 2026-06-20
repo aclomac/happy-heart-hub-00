@@ -23,6 +23,21 @@ export function isStartupDisabled(name: StartupSwitch): boolean {
   return params.get(key) === "1";
 }
 
+export function isPublicStartupPath(pathname = typeof window === "undefined" ? "" : window.location.pathname): boolean {
+  return (
+    pathname === "/" ||
+    pathname === "/login" ||
+    pathname === "/signup" ||
+    pathname === "/welcome" ||
+    pathname === "/forgot-password" ||
+    pathname === "/reset-password" ||
+    pathname === "/contact" ||
+    pathname === "/pricing" ||
+    pathname === "/trust" ||
+    pathname.startsWith("/store/")
+  );
+}
+
 export function bootStep(name: string, detail?: Record<string, unknown>): void {
   if (typeof window === "undefined") return;
   try {
