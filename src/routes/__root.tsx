@@ -8,14 +8,17 @@ import {
   Scripts,
   useLocation,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { GlobalRouteOrchestrator } from "@/components/erp/GlobalRouteOrchestrator";
-import { PWAProvider } from "@/components/erp/PWAProvider";
 import { StartupWatchdog } from "@/components/erp/StartupWatchdog";
 import { bootStep, isHardSafeMode, isPublicStartupPath, isStartupDisabled } from "@/lib/startup-switches";
+
+const PWAProvider = lazy(() =>
+  import("@/components/erp/PWAProvider").then((module) => ({ default: module.PWAProvider })),
+);
 
 function NotFoundComponent() {
   return (
@@ -298,7 +301,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <GlobalRouteOrchestrator>
-        {disablePWA ? appContent : <PWAProvider>{appContent}</PWAProvider>}
+        {disablePWA ? appContent : <Suspense fallback={appContent}><PWAProvider>{appContent}</PWAProvider></Suspense>}
       </GlobalRouteOrchestrator>
     </QueryClientProvider>
   );

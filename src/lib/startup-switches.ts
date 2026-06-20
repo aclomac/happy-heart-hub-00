@@ -1,6 +1,15 @@
 const SWITCH_PREFIX = "disable";
 
-export type StartupSwitch = "auth" | "mode" | "company" | "sync" | "pwa" | "chat" | "demoSeed";
+export type StartupSwitch =
+  | "router"
+  | "auth"
+  | "mode"
+  | "company"
+  | "sync"
+  | "pwa"
+  | "chat"
+  | "demoSeed"
+  | "redirects";
 
 declare global {
   interface Window {
@@ -53,7 +62,8 @@ export function isStartupDisabled(name: StartupSwitch): boolean {
   if (!params) return false;
   if (params.get("minimal") === "1") return true;
   const key = `${SWITCH_PREFIX}${name.charAt(0).toUpperCase()}${name.slice(1)}`;
-  return params.get(key) === "1";
+  const noKey = `no${name.charAt(0).toUpperCase()}${name.slice(1)}`;
+  return params.get(key) === "1" || params.get(noKey) === "1";
 }
 
 export function isPublicStartupPath(pathname = typeof window === "undefined" ? "" : window.location.pathname): boolean {
@@ -96,6 +106,7 @@ export function startupSwitchSnapshot(): Record<string, boolean> {
   return {
     minimal: isMinimalMode(),
     safe: isHardSafeMode(),
+    noRouter: isStartupDisabled("router"),
     disableAuth: isStartupDisabled("auth"),
     disableMode: isStartupDisabled("mode"),
     disableCompany: isStartupDisabled("company"),
@@ -103,6 +114,7 @@ export function startupSwitchSnapshot(): Record<string, boolean> {
     disablePWA: isStartupDisabled("pwa"),
     disableChat: isStartupDisabled("chat"),
     disableDemoSeed: isStartupDisabled("demoSeed"),
+    noRedirects: isStartupDisabled("redirects"),
   };
 }
 
