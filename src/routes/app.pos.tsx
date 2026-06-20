@@ -112,6 +112,9 @@ import { MoneyText } from "@/components/erp/MoneyText";
 import { useI18n } from "@/lib/i18n";
 import { QuickAddCustomerDialog } from "@/components/erp/QuickAddCustomerDialog";
 import { usePermission } from "@/lib/permissions";
+import { isDemoMode } from "@/lib/demo/localStore";
+import { ensureInventorySeed, getItems } from "@/lib/demo/inventory";
+import { ensurePartiesSeed, getParties } from "@/lib/demo/parties";
 
 import { usePWAStatus } from "@/components/erp/PWAProvider";
 
@@ -335,6 +338,12 @@ export function POS() {
     queryKey: ["pos-items", companyId],
     enabled: !!companyId,
     queryFn: async () => {
+      if (isDemoMode()) {
+        ensureInventorySeed();
+        return getItems()
+          .filter((item) => item.company_id === companyId && !item.deleted_at && item.is_active)
+          .sort((a, b) => a.name.localeCompare(b.name)) as Item[];
+      }
       const { data, error } = await supabase
           .from("items")
           .select("id,name,sku,category,sale_price,tax_rate,unit,stock,is_service,image_url")
@@ -351,6 +360,13 @@ export function POS() {
     queryKey: ["pos-parties", companyId],
     enabled: !!companyId,
     queryFn: async () => {
+      if (isDemoMode()) {
+        ensurePartiesSeed();
+        return getParties()
+          .filter((party) => party.company_id === companyId && !party.deleted_at && (party.type === "customer" || party.type === "both"))
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .map((party) => ({ id: party.id, name: party.name, phone: party.phone, email: party.email }));
+      }
       const { data, error } = await supabase
         .from("parties")
         .select("id,name,phone,email")
