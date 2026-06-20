@@ -15,6 +15,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { GlobalRouteOrchestrator } from "@/components/erp/GlobalRouteOrchestrator";
 import { PWAProvider } from "@/components/erp/PWAProvider";
 import { StartupWatchdog } from "@/components/erp/StartupWatchdog";
+import { bootStep, isHardSafeMode, isPublicStartupPath, isStartupDisabled } from "@/lib/startup-switches";
 
 function NotFoundComponent() {
   return (
