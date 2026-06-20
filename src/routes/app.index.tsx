@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { lazy, Suspense, useState } from "react";
 import { ArrowUpRight, Banknote, CircleDollarSign, Receipt, ShoppingCart, TrendingUp, Wallet } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const FullDashboard = lazy(() => import("@/components/erp/dashboard/FullDashboard"));
 
@@ -98,14 +99,9 @@ function LightweightDashboard({
         </div>
         <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
           {quickActions.map((q) => (
-            <Link
-              key={q.label}
-              to={q.to}
-              data-variant={q.variant}
-              className="inline-flex h-10 items-center justify-center rounded-md border border-[#E5EAF2] bg-background px-3 text-sm font-semibold text-[#0F172A] transition hover:bg-muted"
-            >
-              {q.label}
-            </Link>
+            <Button key={q.label} variant={q.variant} asChild>
+              <Link to={q.to}>{q.label}</Link>
+            </Button>
           ))}
         </div>
       </section>
