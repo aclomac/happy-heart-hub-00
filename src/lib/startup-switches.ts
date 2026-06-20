@@ -9,6 +9,7 @@ export type StartupSwitch =
   | "pwa"
   | "chat"
   | "demoSeed"
+  | "dashboard"
   | "redirects";
 
 declare global {
@@ -55,6 +56,19 @@ export function isHardSafeMode(): boolean {
 export function isMinimalMode(): boolean {
   const params = readSearchParams();
   return params?.get("minimal") === "1";
+}
+
+export function isLiteDashboardMode(): boolean {
+  const params = readSearchParams();
+  if (!params) return true;
+  if (params.get("fullDashboard") === "1") return false;
+  if (params.get("lite") === "1") return true;
+  return true;
+}
+
+export function isFullDashboardRequested(): boolean {
+  const params = readSearchParams();
+  return params?.get("fullDashboard") === "1";
 }
 
 export function isStartupDisabled(name: StartupSwitch): boolean {
@@ -114,6 +128,8 @@ export function startupSwitchSnapshot(): Record<string, boolean> {
     disablePWA: isStartupDisabled("pwa"),
     disableChat: isStartupDisabled("chat"),
     disableDemoSeed: isStartupDisabled("demoSeed"),
+    liteDashboard: isLiteDashboardMode(),
+    fullDashboard: isFullDashboardRequested(),
     noRedirects: isStartupDisabled("redirects"),
   };
 }
