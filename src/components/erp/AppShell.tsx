@@ -1,4 +1,3 @@
-import { Outlet } from "@tanstack/react-router";
 import { ERPSidebar } from "@/components/erp/Sidebar";
 import { ERPTopbar } from "@/components/erp/Topbar";
 import { RouteOrchestrator } from "@/components/erp/RouteOrchestrator";
@@ -7,6 +6,7 @@ import { MaintenanceGate } from "@/components/erp/MaintenanceGate";
 import { AnnouncementBanner } from "@/components/erp/AnnouncementBanner";
 import { DemoModeBanner } from "@/components/erp/DemoModeBanner";
 import { SupportChatWidget } from "@/components/erp/SupportChatWidget";
+import { NavSafeOutlet } from "@/components/erp/NavSafeOutlet";
 import { isEmergencyLocalDemoMode, scheduleDeferredEmergencyDemoSeed } from "@/lib/emergency-local-demo";
 import { I18nProvider } from "@/lib/i18n";
 import { mobileNavStore } from "@/lib/mobile-nav";
