@@ -45,13 +45,16 @@ import { Route as AppSyncRouteImport } from './routes/app.sync'
 import { Route as AppSupportRouteImport } from './routes/app.support'
 import { Route as AppSubscriptionRouteImport } from './routes/app.subscription'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
+import { Route as AppSalesReportsRouteImport } from './routes/app.sales-reports'
 import { Route as AppSalesRouteImport } from './routes/app.sales'
 import { Route as AppSaleOrdersRouteImport } from './routes/app.sale-orders'
 import { Route as AppSaleInvoiceSettingsRouteImport } from './routes/app.sale-invoice-settings'
 import { Route as AppSalarySetupRouteImport } from './routes/app.salary-setup'
 import { Route as AppSalaryPaymentsRouteImport } from './routes/app.salary-payments'
+import { Route as AppReportsRouteImport } from './routes/app.reports'
 import { Route as AppRecycleBinRouteImport } from './routes/app.recycle-bin'
 import { Route as AppPurchasesRouteImport } from './routes/app.purchases'
+import { Route as AppPurchaseReportsRouteImport } from './routes/app.purchase-reports'
 import { Route as AppPurchaseOrdersRouteImport } from './routes/app.purchase-orders'
 import { Route as AppPurchaseBillSettingsRouteImport } from './routes/app.purchase-bill-settings'
 import { Route as AppPrintTransactionsRouteImport } from './routes/app.print-transactions'
@@ -78,6 +81,7 @@ import { Route as AppDeviceLimitRouteImport } from './routes/app.device-limit'
 import { Route as AppDeliveryChallansRouteImport } from './routes/app.delivery-challans'
 import { Route as AppDebitNotesRouteImport } from './routes/app.debit-notes'
 import { Route as AppCreditNotesRouteImport } from './routes/app.credit-notes'
+import { Route as AppCashRouteImport } from './routes/app.cash'
 import { Route as AppAuditRouteImport } from './routes/app.audit'
 import { Route as AppAttendanceRouteImport } from './routes/app.attendance'
 import { Route as AppUtilitiesIndexRouteImport } from './routes/app.utilities.index'
@@ -350,6 +354,11 @@ const AppSettingsRoute = AppSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AppRoute,
 } as any)
+const AppSalesReportsRoute = AppSalesReportsRouteImport.update({
+  id: '/sales-reports',
+  path: '/sales-reports',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppSalesRoute = AppSalesRouteImport.update({
   id: '/sales',
   path: '/sales',
@@ -375,6 +384,11 @@ const AppSalaryPaymentsRoute = AppSalaryPaymentsRouteImport.update({
   path: '/salary-payments',
   getParentRoute: () => AppRoute,
 } as any)
+const AppReportsRoute = AppReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppRecycleBinRoute = AppRecycleBinRouteImport.update({
   id: '/recycle-bin',
   path: '/recycle-bin',
@@ -383,6 +397,11 @@ const AppRecycleBinRoute = AppRecycleBinRouteImport.update({
 const AppPurchasesRoute = AppPurchasesRouteImport.update({
   id: '/purchases',
   path: '/purchases',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPurchaseReportsRoute = AppPurchaseReportsRouteImport.update({
+  id: '/purchase-reports',
+  path: '/purchase-reports',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPurchaseOrdersRoute = AppPurchaseOrdersRouteImport.update({
@@ -513,6 +532,11 @@ const AppDebitNotesRoute = AppDebitNotesRouteImport.update({
 const AppCreditNotesRoute = AppCreditNotesRouteImport.update({
   id: '/credit-notes',
   path: '/credit-notes',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCashRoute = AppCashRouteImport.update({
+  id: '/cash',
+  path: '/cash',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAuditRoute = AppAuditRouteImport.update({
@@ -928,19 +952,19 @@ const AppCreditNotesIdEditRoute = AppCreditNotesIdEditRouteImport.update({
   getParentRoute: () => AppCreditNotesRoute,
 } as any)
 const AppCashTransfersIdRoute = AppCashTransfersIdRouteImport.update({
-  id: '/cash/transfers/$id',
-  path: '/cash/transfers/$id',
-  getParentRoute: () => AppRoute,
+  id: '/transfers/$id',
+  path: '/transfers/$id',
+  getParentRoute: () => AppCashRoute,
 } as any)
 const AppCashLoanPaymentsIdRoute = AppCashLoanPaymentsIdRouteImport.update({
-  id: '/cash/loan-payments/$id',
-  path: '/cash/loan-payments/$id',
-  getParentRoute: () => AppRoute,
+  id: '/loan-payments/$id',
+  path: '/loan-payments/$id',
+  getParentRoute: () => AppCashRoute,
 } as any)
 const AppCashChequesIdRoute = AppCashChequesIdRouteImport.update({
-  id: '/cash/cheques/$id',
-  path: '/cash/cheques/$id',
-  getParentRoute: () => AppRoute,
+  id: '/cheques/$id',
+  path: '/cheques/$id',
+  getParentRoute: () => AppCashRoute,
 } as any)
 const ApiIntegrationsWoocommerceTestRoute =
   ApiIntegrationsWoocommerceTestRouteImport.update({
@@ -993,6 +1017,7 @@ export interface FileRoutesByFullPath {
   '/welcome': typeof WelcomeRoute
   '/app/attendance': typeof AppAttendanceRoute
   '/app/audit': typeof AppAuditRoute
+  '/app/cash': typeof AppCashRouteWithChildren
   '/app/credit-notes': typeof AppCreditNotesRouteWithChildren
   '/app/debit-notes': typeof AppDebitNotesRouteWithChildren
   '/app/delivery-challans': typeof AppDeliveryChallansRouteWithChildren
@@ -1019,13 +1044,16 @@ export interface FileRoutesByFullPath {
   '/app/print-transactions': typeof AppPrintTransactionsRoute
   '/app/purchase-bill-settings': typeof AppPurchaseBillSettingsRoute
   '/app/purchase-orders': typeof AppPurchaseOrdersRouteWithChildren
+  '/app/purchase-reports': typeof AppPurchaseReportsRoute
   '/app/purchases': typeof AppPurchasesRouteWithChildren
   '/app/recycle-bin': typeof AppRecycleBinRoute
+  '/app/reports': typeof AppReportsRoute
   '/app/salary-payments': typeof AppSalaryPaymentsRoute
   '/app/salary-setup': typeof AppSalarySetupRoute
   '/app/sale-invoice-settings': typeof AppSaleInvoiceSettingsRoute
   '/app/sale-orders': typeof AppSaleOrdersRouteWithChildren
   '/app/sales': typeof AppSalesRouteWithChildren
+  '/app/sales-reports': typeof AppSalesReportsRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/subscription': typeof AppSubscriptionRouteWithChildren
   '/app/support': typeof AppSupportRoute
@@ -1150,6 +1178,7 @@ export interface FileRoutesByTo {
   '/welcome': typeof WelcomeRoute
   '/app/attendance': typeof AppAttendanceRoute
   '/app/audit': typeof AppAuditRoute
+  '/app/cash': typeof AppCashRouteWithChildren
   '/app/credit-notes': typeof AppCreditNotesRouteWithChildren
   '/app/debit-notes': typeof AppDebitNotesRouteWithChildren
   '/app/delivery-challans': typeof AppDeliveryChallansRouteWithChildren
@@ -1175,13 +1204,16 @@ export interface FileRoutesByTo {
   '/app/print-transactions': typeof AppPrintTransactionsRoute
   '/app/purchase-bill-settings': typeof AppPurchaseBillSettingsRoute
   '/app/purchase-orders': typeof AppPurchaseOrdersRouteWithChildren
+  '/app/purchase-reports': typeof AppPurchaseReportsRoute
   '/app/purchases': typeof AppPurchasesRouteWithChildren
   '/app/recycle-bin': typeof AppRecycleBinRoute
+  '/app/reports': typeof AppReportsRoute
   '/app/salary-payments': typeof AppSalaryPaymentsRoute
   '/app/salary-setup': typeof AppSalarySetupRoute
   '/app/sale-invoice-settings': typeof AppSaleInvoiceSettingsRoute
   '/app/sale-orders': typeof AppSaleOrdersRouteWithChildren
   '/app/sales': typeof AppSalesRouteWithChildren
+  '/app/sales-reports': typeof AppSalesReportsRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/subscription': typeof AppSubscriptionRouteWithChildren
   '/app/support': typeof AppSupportRoute
@@ -1308,6 +1340,7 @@ export interface FileRoutesById {
   '/welcome': typeof WelcomeRoute
   '/app/attendance': typeof AppAttendanceRoute
   '/app/audit': typeof AppAuditRoute
+  '/app/cash': typeof AppCashRouteWithChildren
   '/app/credit-notes': typeof AppCreditNotesRouteWithChildren
   '/app/debit-notes': typeof AppDebitNotesRouteWithChildren
   '/app/delivery-challans': typeof AppDeliveryChallansRouteWithChildren
@@ -1334,13 +1367,16 @@ export interface FileRoutesById {
   '/app/print-transactions': typeof AppPrintTransactionsRoute
   '/app/purchase-bill-settings': typeof AppPurchaseBillSettingsRoute
   '/app/purchase-orders': typeof AppPurchaseOrdersRouteWithChildren
+  '/app/purchase-reports': typeof AppPurchaseReportsRoute
   '/app/purchases': typeof AppPurchasesRouteWithChildren
   '/app/recycle-bin': typeof AppRecycleBinRoute
+  '/app/reports': typeof AppReportsRoute
   '/app/salary-payments': typeof AppSalaryPaymentsRoute
   '/app/salary-setup': typeof AppSalarySetupRoute
   '/app/sale-invoice-settings': typeof AppSaleInvoiceSettingsRoute
   '/app/sale-orders': typeof AppSaleOrdersRouteWithChildren
   '/app/sales': typeof AppSalesRouteWithChildren
+  '/app/sales-reports': typeof AppSalesReportsRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/subscription': typeof AppSubscriptionRouteWithChildren
   '/app/support': typeof AppSupportRoute
@@ -1469,6 +1505,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/app/attendance'
     | '/app/audit'
+    | '/app/cash'
     | '/app/credit-notes'
     | '/app/debit-notes'
     | '/app/delivery-challans'
@@ -1495,13 +1532,16 @@ export interface FileRouteTypes {
     | '/app/print-transactions'
     | '/app/purchase-bill-settings'
     | '/app/purchase-orders'
+    | '/app/purchase-reports'
     | '/app/purchases'
     | '/app/recycle-bin'
+    | '/app/reports'
     | '/app/salary-payments'
     | '/app/salary-setup'
     | '/app/sale-invoice-settings'
     | '/app/sale-orders'
     | '/app/sales'
+    | '/app/sales-reports'
     | '/app/settings'
     | '/app/subscription'
     | '/app/support'
@@ -1626,6 +1666,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/app/attendance'
     | '/app/audit'
+    | '/app/cash'
     | '/app/credit-notes'
     | '/app/debit-notes'
     | '/app/delivery-challans'
@@ -1651,13 +1692,16 @@ export interface FileRouteTypes {
     | '/app/print-transactions'
     | '/app/purchase-bill-settings'
     | '/app/purchase-orders'
+    | '/app/purchase-reports'
     | '/app/purchases'
     | '/app/recycle-bin'
+    | '/app/reports'
     | '/app/salary-payments'
     | '/app/salary-setup'
     | '/app/sale-invoice-settings'
     | '/app/sale-orders'
     | '/app/sales'
+    | '/app/sales-reports'
     | '/app/settings'
     | '/app/subscription'
     | '/app/support'
@@ -1783,6 +1827,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/app/attendance'
     | '/app/audit'
+    | '/app/cash'
     | '/app/credit-notes'
     | '/app/debit-notes'
     | '/app/delivery-challans'
@@ -1809,13 +1854,16 @@ export interface FileRouteTypes {
     | '/app/print-transactions'
     | '/app/purchase-bill-settings'
     | '/app/purchase-orders'
+    | '/app/purchase-reports'
     | '/app/purchases'
     | '/app/recycle-bin'
+    | '/app/reports'
     | '/app/salary-payments'
     | '/app/salary-setup'
     | '/app/sale-invoice-settings'
     | '/app/sale-orders'
     | '/app/sales'
+    | '/app/sales-reports'
     | '/app/settings'
     | '/app/subscription'
     | '/app/support'
@@ -2205,6 +2253,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSettingsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/sales-reports': {
+      id: '/app/sales-reports'
+      path: '/sales-reports'
+      fullPath: '/app/sales-reports'
+      preLoaderRoute: typeof AppSalesReportsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/sales': {
       id: '/app/sales'
       path: '/sales'
@@ -2240,6 +2295,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSalaryPaymentsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/reports': {
+      id: '/app/reports'
+      path: '/reports'
+      fullPath: '/app/reports'
+      preLoaderRoute: typeof AppReportsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/recycle-bin': {
       id: '/app/recycle-bin'
       path: '/recycle-bin'
@@ -2252,6 +2314,13 @@ declare module '@tanstack/react-router' {
       path: '/purchases'
       fullPath: '/app/purchases'
       preLoaderRoute: typeof AppPurchasesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/purchase-reports': {
+      id: '/app/purchase-reports'
+      path: '/purchase-reports'
+      fullPath: '/app/purchase-reports'
+      preLoaderRoute: typeof AppPurchaseReportsRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/purchase-orders': {
@@ -2434,6 +2503,13 @@ declare module '@tanstack/react-router' {
       path: '/credit-notes'
       fullPath: '/app/credit-notes'
       preLoaderRoute: typeof AppCreditNotesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/cash': {
+      id: '/app/cash'
+      path: '/cash'
+      fullPath: '/app/cash'
+      preLoaderRoute: typeof AppCashRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/audit': {
@@ -2991,24 +3067,24 @@ declare module '@tanstack/react-router' {
     }
     '/app/cash/transfers/$id': {
       id: '/app/cash/transfers/$id'
-      path: '/cash/transfers/$id'
+      path: '/transfers/$id'
       fullPath: '/app/cash/transfers/$id'
       preLoaderRoute: typeof AppCashTransfersIdRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppCashRoute
     }
     '/app/cash/loan-payments/$id': {
       id: '/app/cash/loan-payments/$id'
-      path: '/cash/loan-payments/$id'
+      path: '/loan-payments/$id'
       fullPath: '/app/cash/loan-payments/$id'
       preLoaderRoute: typeof AppCashLoanPaymentsIdRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppCashRoute
     }
     '/app/cash/cheques/$id': {
       id: '/app/cash/cheques/$id'
-      path: '/cash/cheques/$id'
+      path: '/cheques/$id'
       fullPath: '/app/cash/cheques/$id'
       preLoaderRoute: typeof AppCashChequesIdRouteImport
-      parentRoute: typeof AppRoute
+      parentRoute: typeof AppCashRoute
     }
     '/api/integrations/woocommerce/test': {
       id: '/api/integrations/woocommerce/test'
@@ -3054,6 +3130,21 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AppCashRouteChildren {
+  AppCashChequesIdRoute: typeof AppCashChequesIdRoute
+  AppCashLoanPaymentsIdRoute: typeof AppCashLoanPaymentsIdRoute
+  AppCashTransfersIdRoute: typeof AppCashTransfersIdRoute
+}
+
+const AppCashRouteChildren: AppCashRouteChildren = {
+  AppCashChequesIdRoute: AppCashChequesIdRoute,
+  AppCashLoanPaymentsIdRoute: AppCashLoanPaymentsIdRoute,
+  AppCashTransfersIdRoute: AppCashTransfersIdRoute,
+}
+
+const AppCashRouteWithChildren =
+  AppCashRoute._addFileChildren(AppCashRouteChildren)
 
 interface AppCreditNotesRouteChildren {
   AppCreditNotesNewRoute: typeof AppCreditNotesNewRoute
@@ -3364,6 +3455,7 @@ const AppUtilitiesRouteWithChildren = AppUtilitiesRoute._addFileChildren(
 interface AppRouteChildren {
   AppAttendanceRoute: typeof AppAttendanceRoute
   AppAuditRoute: typeof AppAuditRoute
+  AppCashRoute: typeof AppCashRouteWithChildren
   AppCreditNotesRoute: typeof AppCreditNotesRouteWithChildren
   AppDebitNotesRoute: typeof AppDebitNotesRouteWithChildren
   AppDeliveryChallansRoute: typeof AppDeliveryChallansRouteWithChildren
@@ -3390,13 +3482,16 @@ interface AppRouteChildren {
   AppPrintTransactionsRoute: typeof AppPrintTransactionsRoute
   AppPurchaseBillSettingsRoute: typeof AppPurchaseBillSettingsRoute
   AppPurchaseOrdersRoute: typeof AppPurchaseOrdersRouteWithChildren
+  AppPurchaseReportsRoute: typeof AppPurchaseReportsRoute
   AppPurchasesRoute: typeof AppPurchasesRouteWithChildren
   AppRecycleBinRoute: typeof AppRecycleBinRoute
+  AppReportsRoute: typeof AppReportsRoute
   AppSalaryPaymentsRoute: typeof AppSalaryPaymentsRoute
   AppSalarySetupRoute: typeof AppSalarySetupRoute
   AppSaleInvoiceSettingsRoute: typeof AppSaleInvoiceSettingsRoute
   AppSaleOrdersRoute: typeof AppSaleOrdersRouteWithChildren
   AppSalesRoute: typeof AppSalesRouteWithChildren
+  AppSalesReportsRoute: typeof AppSalesReportsRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppSubscriptionRoute: typeof AppSubscriptionRouteWithChildren
   AppSupportRoute: typeof AppSupportRoute
@@ -3410,9 +3505,6 @@ interface AppRouteChildren {
   AppAdminPaymentsRoute: typeof AppAdminPaymentsRoute
   AppAdminSecurityTestsRoute: typeof AppAdminSecurityTestsRoute
   AppUpgradePlanRoute: typeof AppUpgradePlanRoute
-  AppCashChequesIdRoute: typeof AppCashChequesIdRoute
-  AppCashLoanPaymentsIdRoute: typeof AppCashLoanPaymentsIdRoute
-  AppCashTransfersIdRoute: typeof AppCashTransfersIdRoute
   AppStockAdjustmentsIdEditRoute: typeof AppStockAdjustmentsIdEditRoute
   AppStockTransfersIdEditRoute: typeof AppStockTransfersIdEditRoute
 }
@@ -3420,6 +3512,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAttendanceRoute: AppAttendanceRoute,
   AppAuditRoute: AppAuditRoute,
+  AppCashRoute: AppCashRouteWithChildren,
   AppCreditNotesRoute: AppCreditNotesRouteWithChildren,
   AppDebitNotesRoute: AppDebitNotesRouteWithChildren,
   AppDeliveryChallansRoute: AppDeliveryChallansRouteWithChildren,
@@ -3446,13 +3539,16 @@ const AppRouteChildren: AppRouteChildren = {
   AppPrintTransactionsRoute: AppPrintTransactionsRoute,
   AppPurchaseBillSettingsRoute: AppPurchaseBillSettingsRoute,
   AppPurchaseOrdersRoute: AppPurchaseOrdersRouteWithChildren,
+  AppPurchaseReportsRoute: AppPurchaseReportsRoute,
   AppPurchasesRoute: AppPurchasesRouteWithChildren,
   AppRecycleBinRoute: AppRecycleBinRoute,
+  AppReportsRoute: AppReportsRoute,
   AppSalaryPaymentsRoute: AppSalaryPaymentsRoute,
   AppSalarySetupRoute: AppSalarySetupRoute,
   AppSaleInvoiceSettingsRoute: AppSaleInvoiceSettingsRoute,
   AppSaleOrdersRoute: AppSaleOrdersRouteWithChildren,
   AppSalesRoute: AppSalesRouteWithChildren,
+  AppSalesReportsRoute: AppSalesReportsRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppSubscriptionRoute: AppSubscriptionRouteWithChildren,
   AppSupportRoute: AppSupportRoute,
@@ -3466,9 +3562,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppAdminPaymentsRoute: AppAdminPaymentsRoute,
   AppAdminSecurityTestsRoute: AppAdminSecurityTestsRoute,
   AppUpgradePlanRoute: AppUpgradePlanRoute,
-  AppCashChequesIdRoute: AppCashChequesIdRoute,
-  AppCashLoanPaymentsIdRoute: AppCashLoanPaymentsIdRoute,
-  AppCashTransfersIdRoute: AppCashTransfersIdRoute,
   AppStockAdjustmentsIdEditRoute: AppStockAdjustmentsIdEditRoute,
   AppStockTransfersIdEditRoute: AppStockTransfersIdEditRoute,
 }
