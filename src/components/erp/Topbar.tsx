@@ -444,6 +444,7 @@ export function ERPTopbar() {
         </Button>
         <PWAInstallButton variant="outline" size="sm" className="hidden md:flex" />
         <SyncStatusBadge className="hidden sm:inline-flex" />
+        <AutoSyncIndicator className="hidden sm:inline-flex" />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="utility" size="sm">
