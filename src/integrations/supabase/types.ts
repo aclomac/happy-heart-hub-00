@@ -1131,6 +1131,42 @@ export type Database = {
           },
         ]
       }
+      device_sync_state: {
+        Row: {
+          company_id: string
+          created_at: string
+          cursor: string | null
+          device_id: string
+          id: string
+          last_pull_at: string | null
+          last_push_at: string | null
+          table_name: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          cursor?: string | null
+          device_id: string
+          id?: string
+          last_pull_at?: string | null
+          last_push_at?: string | null
+          table_name: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          cursor?: string | null
+          device_id?: string
+          id?: string
+          last_pull_at?: string | null
+          last_push_at?: string | null
+          table_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       devices: {
         Row: {
           created_at: string
@@ -4506,6 +4542,93 @@ export type Database = {
           subject?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      sync_changes: {
+        Row: {
+          company_id: string
+          created_at: string
+          deleted_at: string | null
+          device_id: string | null
+          id: string
+          idempotency_key: string
+          operation: string
+          payload: Json
+          record_id: string
+          table_name: string
+          updated_at: string
+          user_id: string | null
+          version: number
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          deleted_at?: string | null
+          device_id?: string | null
+          id?: string
+          idempotency_key: string
+          operation: string
+          payload?: Json
+          record_id: string
+          table_name: string
+          updated_at?: string
+          user_id?: string | null
+          version?: number
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          deleted_at?: string | null
+          device_id?: string | null
+          id?: string
+          idempotency_key?: string
+          operation?: string
+          payload?: Json
+          record_id?: string
+          table_name?: string
+          updated_at?: string
+          user_id?: string | null
+          version?: number
+        }
+        Relationships: []
+      }
+      sync_conflicts: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          local_payload: Json | null
+          reason: string | null
+          record_id: string
+          remote_payload: Json | null
+          status: string
+          table_name: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          local_payload?: Json | null
+          reason?: string | null
+          record_id: string
+          remote_payload?: Json | null
+          status?: string
+          table_name: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          local_payload?: Json | null
+          reason?: string | null
+          record_id?: string
+          remote_payload?: Json | null
+          status?: string
+          table_name?: string
+          updated_at?: string
         }
         Relationships: []
       }
