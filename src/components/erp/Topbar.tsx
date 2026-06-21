@@ -48,6 +48,7 @@ import { NotificationsPanel } from "@/components/erp/NotificationsPanel";
 import { PaymentReminderPanel } from "@/components/erp/PaymentReminderPanel";
 import { PWAInstallButton } from "@/components/erp/PWAInstallButton";
 import { SyncStatusBadge } from "@/components/erp/SyncStatusBadge";
+import { AutoSyncIndicator } from "@/components/erp/AutoSyncIndicator";
 import { useQuery } from "@tanstack/react-query";
 import { CompanySwitcher } from "@/components/erp/CompanySwitcher";
 import {
@@ -320,6 +321,8 @@ export function ERPTopbar() {
             <TooltipContent>{t("Notifications")}</TooltipContent>
           </Tooltip>
           <SyncStatusBadge className="hidden sm:inline-flex" />
+          <AutoSyncIndicator className="hidden sm:inline-flex" />
+
 
 
           <Tooltip>
@@ -441,6 +444,7 @@ export function ERPTopbar() {
         </Button>
         <PWAInstallButton variant="outline" size="sm" className="hidden md:flex" />
         <SyncStatusBadge className="hidden sm:inline-flex" />
+        <AutoSyncIndicator className="hidden sm:inline-flex" />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="utility" size="sm">

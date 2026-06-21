@@ -23,6 +23,44 @@ import { installQueueAutoReplay, replayQueue } from "./replay";
 const COMPANY_KEY = "erpovo:companyId";
 const DEFAULT_INTERVAL_MS = 60_000;
 
+export type AutoSyncStatus = {
+  running: boolean;
+  lastSyncAt: number | null;
+  lastErrorAt: number | null;
+  lastError: string | null;
+  nextScheduledAt: number | null;
+  intervalMs: number;
+};
+
+const status: AutoSyncStatus = {
+  running: false,
+  lastSyncAt: null,
+  lastErrorAt: null,
+  lastError: null,
+  nextScheduledAt: null,
+  intervalMs: DEFAULT_INTERVAL_MS,
+};
+
+type Listener = (s: AutoSyncStatus) => void;
+const listeners = new Set<Listener>();
+
+function emit() {
+  const snap = { ...status };
+  for (const l of Array.from(listeners)) {
+    try { l(snap); } catch { /* ignore */ }
+  }
+}
+
+export function subscribeAutoSync(listener: Listener): () => void {
+  listeners.add(listener);
+  listener({ ...status });
+  return () => { listeners.delete(listener); };
+}
+
+export function getAutoSyncStatus(): AutoSyncStatus {
+  return { ...status };
+}
+
 function currentCompanyId(): string | null {
   if (typeof window === "undefined") return null;
   try {
@@ -44,15 +82,32 @@ function triggerReplay(reason: string): void {
   const companyId = currentCompanyId();
   if (!companyId) return;
   try {
+    status.running = true;
+    emit();
     void replayQueue({ companyId, uploader: getActiveUploader() })
+      .then(() => {
+        status.lastSyncAt = Date.now();
+        status.lastError = null;
+      })
       .catch((err) => {
-        // Swallow — replay records its own outcome; we don't want this
-        // background task to surface unhandled rejections.
+        status.lastErrorAt = Date.now();
+        status.lastError = err instanceof Error ? err.message : String(err);
         if (typeof console !== "undefined") {
           console.debug("[auto-sync] replay error", reason, err);
         }
+      })
+      .finally(() => {
+        status.running = false;
+        if (status.nextScheduledAt !== null) {
+          status.nextScheduledAt = Date.now() + status.intervalMs;
+        }
+        emit();
       });
   } catch (err) {
+    status.running = false;
+    status.lastErrorAt = Date.now();
+    status.lastError = err instanceof Error ? err.message : String(err);
+    emit();
     if (typeof console !== "undefined") {
       console.debug("[auto-sync] trigger error", reason, err);
     }
@@ -111,8 +166,18 @@ export function installAutoSync(opts: AutoSyncOptions = {}): () => void {
   // 5. Periodic interval. Cheap because replayQueue short-circuits when
   //    the queue is empty (preflight + snapshot) and when offline.
   const intervalMs = Math.max(5_000, opts.intervalMs ?? DEFAULT_INTERVAL_MS);
-  const intervalId = window.setInterval(() => triggerReplay("interval"), intervalMs);
-  disposers.push(() => window.clearInterval(intervalId));
+  status.intervalMs = intervalMs;
+  status.nextScheduledAt = Date.now() + intervalMs;
+  emit();
+  const intervalId = window.setInterval(() => {
+    status.nextScheduledAt = Date.now() + intervalMs;
+    triggerReplay("interval");
+  }, intervalMs);
+  disposers.push(() => {
+    window.clearInterval(intervalId);
+    status.nextScheduledAt = null;
+    emit();
+  });
 
   // 6. Supabase sign-in — drain anything queued from a prior session as
   //    soon as the new bearer token is available.
