@@ -63,7 +63,7 @@ function Login() {
         } catch {
           /* best-effort */
         }
-        toast.success("Signed in as Demo (local mode)");
+        toast.success("Signed in as Demo");
       } catch {
         toast.error("Could not start demo mode");
         setLoading(false);
