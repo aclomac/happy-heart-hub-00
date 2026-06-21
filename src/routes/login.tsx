@@ -63,7 +63,7 @@ function Login() {
         } catch {
           /* best-effort */
         }
-        toast.success("Signed in as Demo (local mode)");
+        toast.success("Signed in as Demo");
       } catch {
         toast.error("Could not start demo mode");
         setLoading(false);
@@ -266,7 +266,7 @@ function Login() {
                 {loading ? "Loading demo..." : "Use Demo Login"}
               </Button>
               <p className="text-[11px] text-muted-foreground text-center -mt-1">
-                Demo: demo@erpovo.com / 123456 (local mode, no backend)
+                Demo: demo@erpovo.com / 123456
               </p>
               <Link to="/signup">
                 <Button variant="outline" className="w-full" type="button">
