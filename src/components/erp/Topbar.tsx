@@ -321,6 +321,8 @@ export function ERPTopbar() {
             <TooltipContent>{t("Notifications")}</TooltipContent>
           </Tooltip>
           <SyncStatusBadge className="hidden sm:inline-flex" />
+          <AutoSyncIndicator className="hidden sm:inline-flex" />
+
 
 
           <Tooltip>
