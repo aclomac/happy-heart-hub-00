@@ -1,40 +1,33 @@
 /**
  * Unified Sync Center.
  *
- * Single dashboard showing every transaction-sync kind that's wired up:
- *   • Sales invoices  (Phase A)
- *   • Stock movements (Phase C)
- *   • Purchases       (Phase D)
- *   • Payments In/Out (Phase F)
- *
- * Renders pending / syncing / failed / synced counts per kind plus a
- * single "Replay offline queue" button. In Local Mode shows a friendly
- * note — cloud sync is intentionally disabled.
+ * Shows pending / syncing / failed / synced counts per transaction kind,
+ * cloud connection status, and a conflict log. No user-facing
+ * "Local Mode" / "Cloud Mode" wording — sync is always on for real
+ * users; demo sessions stay local automatically.
  */
 import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { CloudOff, RefreshCw } from "lucide-react";
+import { CheckCircle2, RefreshCw, XCircle, AlertTriangle } from "lucide-react";
 
 import { PageHeader } from "@/components/erp/PageHeader";
 import { NoCompanySelected } from "@/components/erp/NoCompanySelected";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { OfflineQueueReplayButton } from "@/components/erp/OfflineQueueReplayButton";
 
 import { useCurrentCompanyId } from "@/lib/use-company";
-import { getLaunchMode } from "@/lib/launch-mode";
 import { listRecords } from "@/lib/transaction-sync";
+import { getCloudSyncAdapter } from "@/lib/transaction-sync/cloud-adapter";
 import type { TxnKind, TxnSyncRecord } from "@/lib/transaction-sync/types";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/app/sync-center")({
   component: SyncCenterPage,
 });
 
-type Section = {
-  kind: TxnKind;
-  label: string;
-  description: string;
-};
+type Section = { kind: TxnKind; label: string; description: string };
 
 const SECTIONS: Section[] = [
   { kind: "sale_invoice", label: "Sales invoices", description: "POS + invoice cloud sync" },
@@ -52,12 +45,21 @@ function summarize(records: TxnSyncRecord[]) {
   return init;
 }
 
+type ConnState = "unknown" | "checking" | "ok" | "error";
+
 function SyncCenterPage() {
   const companyId = useCurrentCompanyId();
   const [tick, setTick] = useState(0);
+  const [conn, setConn] = useState<ConnState>("unknown");
+  const [connError, setConnError] = useState<string | null>(null);
+  const [conflicts, setConflicts] = useState<Array<{
+    id: string;
+    table_name: string;
+    record_id: string;
+    reason: string | null;
+    created_at: string;
+  }>>([]);
 
-  // Refresh on cross-tab storage events + a soft poll so newly synced
-  // rows reflect without manual navigation.
   useEffect(() => {
     if (typeof window === "undefined") return;
     const refresh = () => setTick((n) => n + 1);
@@ -69,7 +71,38 @@ function SyncCenterPage() {
     };
   }, []);
 
-  const mode = getLaunchMode();
+  const runConnectionTest = async () => {
+    setConn("checking");
+    setConnError(null);
+    const res = await getCloudSyncAdapter().testConnection();
+    if (res.ok) setConn("ok");
+    else {
+      setConn("error");
+      setConnError(res.error);
+    }
+  };
+
+  useEffect(() => {
+    void runConnectionTest();
+  }, []);
+
+  useEffect(() => {
+    if (!companyId) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await (supabase as any)
+        .from("sync_conflicts")
+        .select("id,table_name,record_id,reason,created_at")
+        .eq("company_id", companyId)
+        .eq("status", "open")
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (!cancelled) setConflicts((data as typeof conflicts) ?? []);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [companyId, tick]);
 
   return (
     <div className="space-y-4">
@@ -78,14 +111,28 @@ function SyncCenterPage() {
         subtitle="Monitor and retry cloud sync across all transaction types."
       />
 
-      {mode !== "cloud" ? (
-        <Card data-testid="sync-center-local-mode">
-          <CardContent className="flex items-center gap-3 py-6 text-sm text-muted-foreground">
-            <CloudOff className="h-5 w-5" />
-            Cloud Sync is only available in Cloud Mode. All data stays on this device.
-          </CardContent>
-        </Card>
-      ) : !companyId ? (
+      <Card data-testid="sync-connection-card">
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between gap-2">
+            <CardTitle className="text-sm">Cloud connection</CardTitle>
+            <ConnectionBadge state={conn} />
+          </div>
+        </CardHeader>
+        <CardContent className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          {connError ? <span className="text-destructive">{connError}</span> : null}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={runConnectionTest}
+            disabled={conn === "checking"}
+            data-testid="sync-test-connection"
+          >
+            {conn === "checking" ? "Testing…" : "Test connection"}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {!companyId ? (
         <NoCompanySelected />
       ) : (
         <>
@@ -133,12 +180,73 @@ function SyncCenterPage() {
               );
             })}
           </div>
+
+          <Card data-testid="sync-conflicts-card">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between gap-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4" />
+                  Conflict log
+                </CardTitle>
+                <Badge variant={conflicts.length > 0 ? "destructive" : "outline"}>
+                  {conflicts.length} open
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-2 text-xs">
+              {conflicts.length === 0 ? (
+                <p className="text-muted-foreground">No open conflicts.</p>
+              ) : (
+                conflicts.map((c) => (
+                  <div
+                    key={c.id}
+                    className="rounded-md border border-border bg-muted/30 p-2"
+                    data-testid={`conflict-${c.id}`}
+                  >
+                    <div className="font-medium">
+                      {c.table_name} · {c.record_id}
+                    </div>
+                    <div className="text-muted-foreground">
+                      {c.reason ?? "no reason"} · {new Date(c.created_at).toLocaleString()}
+                    </div>
+                  </div>
+                ))
+              )}
+            </CardContent>
+          </Card>
+
           <p className="flex items-center gap-2 text-xs text-muted-foreground">
             <RefreshCw className="h-3 w-3" /> Counts refresh every 2 seconds.
           </p>
         </>
       )}
     </div>
+  );
+}
+
+function ConnectionBadge({ state }: { state: ConnState }) {
+  if (state === "ok")
+    return (
+      <Badge variant="outline" className="gap-1 text-emerald-600 border-emerald-500/40">
+        <CheckCircle2 className="h-3 w-3" /> Connected
+      </Badge>
+    );
+  if (state === "error")
+    return (
+      <Badge variant="destructive" className="gap-1">
+        <XCircle className="h-3 w-3" /> Error
+      </Badge>
+    );
+  if (state === "checking")
+    return (
+      <Badge variant="outline" className="gap-1 text-muted-foreground">
+        <RefreshCw className="h-3 w-3 animate-spin" /> Checking
+      </Badge>
+    );
+  return (
+    <Badge variant="outline" className="text-muted-foreground">
+      Unknown
+    </Badge>
   );
 }
 
