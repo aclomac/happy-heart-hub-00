@@ -151,10 +151,12 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   useEffect(() => {
-    // Wire the Cloud Mode sales uploader so the manual replay button
-    // and the online-event auto-replay can drain queued invoices.
-    import("@/lib/transaction-sync/install").then(({ installSalesUploader }) => {
-      installSalesUploader();
+    // Phase 3D — install the auto-sync orchestrator. This also wires the
+    // Cloud Mode uploader, the online-event replay, periodic interval,
+    // visibility re-sync, and the post-sign-in drain.
+    let disposeAutoSync: (() => void) | null = null;
+    import("@/lib/transaction-sync/auto-sync").then(({ installAutoSync }) => {
+      disposeAutoSync = installAutoSync();
     });
     let mounted = true;
     let lastUserId: string | null | undefined = undefined;
@@ -256,6 +258,7 @@ function RootComponent() {
       mounted = false;
       const sub = (window as unknown as { __erpovoSub?: { unsubscribe: () => void } }).__erpovoSub;
       sub?.unsubscribe();
+      disposeAutoSync?.();
     };
   }, [queryClient]);
 

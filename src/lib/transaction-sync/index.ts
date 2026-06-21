@@ -13,3 +13,5 @@ export * from "./stock";
 export * from "./purchases";
 export * from "./payments";
 export * from "./install";
+export * from "./auto-sync";
+export * from "./cloud-adapter";
