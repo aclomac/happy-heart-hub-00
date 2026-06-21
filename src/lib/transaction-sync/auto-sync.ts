@@ -166,8 +166,18 @@ export function installAutoSync(opts: AutoSyncOptions = {}): () => void {
   // 5. Periodic interval. Cheap because replayQueue short-circuits when
   //    the queue is empty (preflight + snapshot) and when offline.
   const intervalMs = Math.max(5_000, opts.intervalMs ?? DEFAULT_INTERVAL_MS);
-  const intervalId = window.setInterval(() => triggerReplay("interval"), intervalMs);
-  disposers.push(() => window.clearInterval(intervalId));
+  status.intervalMs = intervalMs;
+  status.nextScheduledAt = Date.now() + intervalMs;
+  emit();
+  const intervalId = window.setInterval(() => {
+    status.nextScheduledAt = Date.now() + intervalMs;
+    triggerReplay("interval");
+  }, intervalMs);
+  disposers.push(() => {
+    window.clearInterval(intervalId);
+    status.nextScheduledAt = null;
+    emit();
+  });
 
   // 6. Supabase sign-in — drain anything queued from a prior session as
   //    soon as the new bearer token is available.
