@@ -42,7 +42,6 @@ export const Route = createFileRoute("/signup")({
 function Signup() {
   const { signupEnabled, brand } = Route.useLoaderData();
   const nav = useNavigate();
-  const [mode, setMode] = useState<"local" | "cloud">("local");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [mobile, setMobile] = useState("");
@@ -61,54 +60,43 @@ function Signup() {
       return;
     }
 
-    // Persist launch-mode choice so /welcome gate is satisfied.
-    setLaunchMode(mode);
+    // Auto Sync Mode: everyone gets a cloud account. Data is saved
+    // locally first by the outbox queue and synced when online.
+    setLaunchMode("cloud");
 
-    // Cloud sign-up — real Supabase auth, data syncs across devices.
-    if (mode === "cloud") {
-      setLoading(true);
-      try {
-        const redirectUrl = `${window.location.origin}/companies`;
-        const { error } = await supabase.auth.signUp({
-          email: email.trim(),
-          password: pass,
-          options: {
-            emailRedirectTo: redirectUrl,
-            data: { full_name: name, mobile },
-          },
-        });
-        if (error) {
-          const msg = /registered|exists/i.test(error.message)
-            ? "Account already exists. Please sign in."
-            : error.message;
-          setErrs({ email: msg });
-          toast.error(msg);
-          return;
-        }
-        toast.success(
-          "Cloud account created. Check your email to confirm, then sign in.",
-        );
-        nav({ to: "/login" });
-      } catch (err) {
-        const reason = (err as Error)?.message ?? "unknown error";
-        toast.error(`Cloud signup failed: ${reason}`);
-      } finally {
-        setLoading(false);
+    setLoading(true);
+    try {
+      const redirectUrl = `${window.location.origin}/companies`;
+      const { error } = await supabase.auth.signUp({
+        email: email.trim(),
+        password: pass,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: { full_name: name, mobile },
+        },
+      });
+      if (error) {
+        const msg = /registered|exists/i.test(error.message)
+          ? "Account already exists. Please sign in."
+          : error.message;
+        setErrs({ email: msg });
+        toast.error(msg);
+        return;
       }
-      return;
+      toast.success("Account created. Check your email to confirm, then sign in.");
+      nav({ to: "/login" });
+    } catch (err) {
+      const reason = (err as Error)?.message ?? "unknown error";
+      toast.error(`Signup failed: ${reason}`);
+    } finally {
+      setLoading(false);
     }
-
-    // Local-mode signup path (existing): local-only account in localStorage.
-    if (userExists(email, "")) {
-      const reason = "Account already exists. Please sign in.";
-      setErrs({ email: reason });
-      toast.error(reason);
-      return;
-    }
-
-    setPendingSignup({ fullName: name, email, mobile, password: pass });
-    setVerificationCode("");
-    toast.success("Verification code ready");
+    // Suppress unused legacy helpers under Auto Sync Mode.
+    void createLocalSignupAccount;
+    void userExists;
+    void DEMO_EMAIL_VERIFICATION_CODE;
+    void setPendingSignup;
+    void setVerificationCode;
   };
 
   const onVerifyEmail = (e?: FormEvent) => {
