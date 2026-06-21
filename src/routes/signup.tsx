@@ -42,7 +42,6 @@ export const Route = createFileRoute("/signup")({
 function Signup() {
   const { signupEnabled, brand } = Route.useLoaderData();
   const nav = useNavigate();
-  const [mode, setMode] = useState<"local" | "cloud">("local");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [mobile, setMobile] = useState("");
@@ -61,54 +60,43 @@ function Signup() {
       return;
     }
 
-    // Persist launch-mode choice so /welcome gate is satisfied.
-    setLaunchMode(mode);
+    // Auto Sync Mode: everyone gets a cloud account. Data is saved
+    // locally first by the outbox queue and synced when online.
+    setLaunchMode("cloud");
 
-    // Cloud sign-up — real Supabase auth, data syncs across devices.
-    if (mode === "cloud") {
-      setLoading(true);
-      try {
-        const redirectUrl = `${window.location.origin}/companies`;
-        const { error } = await supabase.auth.signUp({
-          email: email.trim(),
-          password: pass,
-          options: {
-            emailRedirectTo: redirectUrl,
-            data: { full_name: name, mobile },
-          },
-        });
-        if (error) {
-          const msg = /registered|exists/i.test(error.message)
-            ? "Account already exists. Please sign in."
-            : error.message;
-          setErrs({ email: msg });
-          toast.error(msg);
-          return;
-        }
-        toast.success(
-          "Cloud account created. Check your email to confirm, then sign in.",
-        );
-        nav({ to: "/login" });
-      } catch (err) {
-        const reason = (err as Error)?.message ?? "unknown error";
-        toast.error(`Cloud signup failed: ${reason}`);
-      } finally {
-        setLoading(false);
+    setLoading(true);
+    try {
+      const redirectUrl = `${window.location.origin}/companies`;
+      const { error } = await supabase.auth.signUp({
+        email: email.trim(),
+        password: pass,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: { full_name: name, mobile },
+        },
+      });
+      if (error) {
+        const msg = /registered|exists/i.test(error.message)
+          ? "Account already exists. Please sign in."
+          : error.message;
+        setErrs({ email: msg });
+        toast.error(msg);
+        return;
       }
-      return;
+      toast.success("Account created. Check your email to confirm, then sign in.");
+      nav({ to: "/login" });
+    } catch (err) {
+      const reason = (err as Error)?.message ?? "unknown error";
+      toast.error(`Signup failed: ${reason}`);
+    } finally {
+      setLoading(false);
     }
-
-    // Local-mode signup path (existing): local-only account in localStorage.
-    if (userExists(email, "")) {
-      const reason = "Account already exists. Please sign in.";
-      setErrs({ email: reason });
-      toast.error(reason);
-      return;
-    }
-
-    setPendingSignup({ fullName: name, email, mobile, password: pass });
-    setVerificationCode("");
-    toast.success("Verification code ready");
+    // Suppress unused legacy helpers under Auto Sync Mode.
+    void createLocalSignupAccount;
+    void userExists;
+    void DEMO_EMAIL_VERIFICATION_CODE;
+    void setPendingSignup;
+    void setVerificationCode;
   };
 
   const onVerifyEmail = (e?: FormEvent) => {
@@ -191,42 +179,9 @@ function Signup() {
             <>
               <h2 className="text-2xl font-bold mb-1">Create your ERPOVO account</h2>
               <p className="text-sm text-muted-foreground mb-4">
-                Choose how you want your data stored
+                Auto Sync Mode — data saves locally and syncs to the cloud automatically when online.
               </p>
 
-              {!pendingSignup && (
-                <div className="grid grid-cols-2 gap-2 mb-5 p-1 bg-muted rounded-md">
-                  <button
-                    type="button"
-                    onClick={() => setMode("local")}
-                    className={`text-xs font-medium py-2 rounded transition-colors ${
-                      mode === "local"
-                        ? "bg-card shadow-sm text-foreground"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    📱 Local / Personal
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setMode("cloud")}
-                    className={`text-xs font-medium py-2 rounded transition-colors ${
-                      mode === "cloud"
-                        ? "bg-card shadow-sm text-foreground"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    ☁️ Cloud Sync
-                  </button>
-                </div>
-              )}
-              {!pendingSignup && (
-                <p className="text-[11px] text-muted-foreground mb-4 -mt-2">
-                  {mode === "local"
-                    ? "Data stays on this device only. No internet required after setup."
-                    : "Data syncs across PC, mobile browser, and Android app via Lovable Cloud."}
-                </p>
-              )}
 
 
               {pendingSignup ? (
@@ -317,19 +272,12 @@ function Signup() {
                   className="w-full"
                   disabled={loading}
                 >
-                  {loading
-                    ? mode === "cloud"
-                      ? "Creating cloud account…"
-                      : "Creating account..."
-                    : mode === "cloud"
-                      ? "Create Cloud Account"
-                      : "Create Local Account"}
+                  {loading ? "Creating account…" : "Create Account"}
                 </Button>
                 <p className="text-[11px] text-muted-foreground text-center">
-                  {mode === "cloud"
-                    ? "Cloud account: data syncs across all your devices."
-                    : "Local account stored on this device after email verification."}
+                  Data saves locally first, then syncs to the cloud automatically.
                 </p>
+
               </form>
               )}
               <div className="mt-6 text-sm text-center">
