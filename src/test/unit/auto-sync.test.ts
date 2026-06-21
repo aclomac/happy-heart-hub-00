@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 
 // Mock supabase client before importing auto-sync
