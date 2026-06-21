@@ -258,6 +258,7 @@ function RootComponent() {
       mounted = false;
       const sub = (window as unknown as { __erpovoSub?: { unsubscribe: () => void } }).__erpovoSub;
       sub?.unsubscribe();
+      disposeAutoSync?.();
     };
   }, [queryClient]);
 
