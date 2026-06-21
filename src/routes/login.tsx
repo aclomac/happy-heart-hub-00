@@ -227,7 +227,10 @@ function Login() {
             className="space-y-3"
             onSubmit={(e) => {
               e.preventDefault();
-              void handleLogin();
+              const isDemoCreds =
+                (email.trim() === DEMO_EMAIL || email.trim() === DEMO_USER_EMAIL) &&
+                pass === DEMO_PASSWORD;
+              void handleLogin(undefined, undefined, isDemoCreds);
             }}
           >
               <div>
